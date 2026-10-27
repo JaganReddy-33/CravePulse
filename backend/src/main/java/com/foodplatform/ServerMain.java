@@ -1,10 +1,8 @@
 package com.foodplatform;
 
 import com.foodplatform.config.AppProperties;
-import com.foodplatform.filter.CorsFilter;
-import com.foodplatform.filter.JwtAuthFilter;
-import com.foodplatform.filter.RateLimitFilter;
-import com.foodplatform.filter.RequestLoggingFilter;
+import com.foodplatform.config.DatabaseMigrationRunner;
+import com.foodplatform.filter.*;
 import com.foodplatform.servlet.*;
 import com.foodplatform.websocket.RealtimeEndpoint;
 import jakarta.servlet.DispatcherType;
@@ -23,6 +21,10 @@ public class ServerMain {
     private static final Logger logger = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
+        // Run database migrations on startup
+        logger.info("Initializing CravePulse database migrations...");
+        DatabaseMigrationRunner.runMigrations();
+
         int port = AppProperties.getServerPort();
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -38,7 +40,8 @@ public class ServerMain {
         // Register WebSocket SCI
         ctx.addServletContainerInitializer(new WsSci(), Set.of(RealtimeEndpoint.class));
 
-        // Register Filters
+        // Register Filters in proper security order
+        addFilter(ctx, "SecurityHeadersFilter", new SecurityHeadersFilter(), "/*");
         addFilter(ctx, "CorsFilter", new CorsFilter(), "/*");
         addFilter(ctx, "RateLimitFilter", new RateLimitFilter(), "/*");
         addFilter(ctx, "RequestLoggingFilter", new RequestLoggingFilter(), "/*");
@@ -59,6 +62,10 @@ public class ServerMain {
         Tomcat.addServlet(ctx, "AuthServlet", new AuthServlet()).setAsyncSupported(true);
         ctx.addServletMappingDecoded("/api/auth/*", "AuthServlet");
         ctx.addServletMappingDecoded("/api/auth", "AuthServlet");
+
+        Tomcat.addServlet(ctx, "OnboardingServlet", new OnboardingServlet()).setAsyncSupported(true);
+        ctx.addServletMappingDecoded("/api/partner/apply", "OnboardingServlet");
+        ctx.addServletMappingDecoded("/api/rider/apply", "OnboardingServlet");
 
         Tomcat.addServlet(ctx, "RestaurantServlet", new RestaurantServlet()).setAsyncSupported(true);
         ctx.addServletMappingDecoded("/api/restaurants/*", "RestaurantServlet");
@@ -96,7 +103,7 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/api/events/sse", "SseServlet");
 
         Tomcat.addServlet(ctx, "InvoiceServlet", new InvoiceServlet()).setAsyncSupported(true);
-        ctx.addServletMappingDecoded("/api/orders/*/invoice", "InvoiceServlet");
+        ctx.addServletMappingDecoded("/api/invoices/*", "InvoiceServlet");
 
         try {
             logger.info("Starting FoodPlatform Embedded Tomcat on http://localhost:{}", port);

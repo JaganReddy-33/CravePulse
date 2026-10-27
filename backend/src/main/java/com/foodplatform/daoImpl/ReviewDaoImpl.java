@@ -89,6 +89,27 @@ public class ReviewDaoImpl implements ReviewDao {
     }
 
     @Override
+    public Review findById(long reviewId) {
+        String sql = "SELECT rw.*, u.full_name AS cust_name, u.avatar_url AS cust_avatar, r.name AS rest_name " +
+                "FROM reviews rw " +
+                "JOIN users u ON rw.customer_id = u.id " +
+                "JOIN restaurant_profiles r ON rw.restaurant_id = r.id " +
+                "WHERE rw.id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, reviewId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapReview(rs);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding review by id: {}", reviewId, e);
+        }
+        return null;
+    }
+
+    @Override
     public List<Review> listRestaurantReviews(long restaurantId, int limit, int offset) {
         List<Review> list = new ArrayList<>();
         String sql = "SELECT rw.*, u.full_name AS cust_name, u.avatar_url AS cust_avatar, r.name AS rest_name " +

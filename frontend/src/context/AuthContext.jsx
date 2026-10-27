@@ -4,22 +4,6 @@ import realtime from '../services/websocket';
 
 const AuthContext = createContext(null);
 
-const EMAIL_ALIASES = {
-  'jaganmohan.reddy@cravepulse.in': 'customer@foodora.com',
-  'chef.lohith@cravepulse.in': 'chef@foodanalytics.com',
-  'captain.prasad@cravepulse.in': 'rider@swiftlogistics.com',
-  'admin.jagan@cravepulse.in': 'admin@foodplatform.com',
-  'partner@foodplatform.com': 'chef@foodanalytics.com',
-  'rider@foodplatform.com': 'rider@swiftlogistics.com',
-};
-
-const DEMO_USERS = {
-  CUSTOMER: { email: 'customer@foodora.com', password: 'Password@123' },
-  RESTAURANT_OWNER: { email: 'chef@foodanalytics.com', password: 'Password@123' },
-  RIDER: { email: 'rider@swiftlogistics.com', password: 'Password@123' },
-  ADMIN: { email: 'admin@foodplatform.com', password: 'Password@123' },
-};
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
@@ -39,8 +23,9 @@ export const AuthProvider = ({ children }) => {
             realtime.connect();
           }
         } catch (e) {
-          // Token invalid
+          // Token invalid or expired
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
           setUser(null);
         }
@@ -52,8 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const resolvedEmail = EMAIL_ALIASES[cleanEmail] || email;
-    const res = await api.post('/auth/login', { email: resolvedEmail, password });
+    const res = await api.post('/auth/login', { email: cleanEmail, password });
     if (res.success) {
       const { accessToken, refreshToken, user: u } = res.data;
       localStorage.setItem('accessToken', accessToken);
@@ -65,8 +49,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (fullName, email, phone, password, role) => {
-    const res = await api.post('/auth/register', { fullName, email, phone, password, role });
+  const register = async (fullName, email, phone, password) => {
+    const res = await api.post('/auth/register', { 
+      fullName: fullName ? fullName.trim() : '', 
+      email: email ? email.trim().toLowerCase() : '', 
+      phone: phone ? phone.trim() : '', 
+      password 
+    });
     if (res.success) {
       const { accessToken, refreshToken, user: u } = res.data;
       localStorage.setItem('accessToken', accessToken);
@@ -78,24 +67,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setUser(null);
-    realtime.disconnect();
-  };
-
-  // Quick switch for portfolio reviewers and technical interviews!
-  const switchDemoRole = async (roleKey) => {
-    const creds = DEMO_USERS[roleKey];
-    if (creds) {
-      return await login(creds.email, creds.password);
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      await api.post('/auth/logout', { refreshToken });
+    } catch (e) {
+      // Ignore network errors on logout cleanup
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
+      realtime.disconnect();
     }
   };
+
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, switchDemoRole }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isDemoMode }}>
       {children}
     </AuthContext.Provider>
   );

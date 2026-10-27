@@ -29,8 +29,8 @@ public class RiderServlet extends BaseServlet {
         Long userId = getAuthenticatedUserId(req);
         RiderProfile profile = riderDao.findByUserId(userId);
         if (profile == null) {
-            // fallback to demo rider 1
-            profile = riderDao.findById(1);
+            JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Rider profile not found for authenticated user");
+            return;
         }
 
         switch (path) {
@@ -51,7 +51,13 @@ public class RiderServlet extends BaseServlet {
         Long userId = getAuthenticatedUserId(req);
         RiderProfile profile = riderDao.findByUserId(userId);
         if (profile == null) {
-            profile = riderDao.findById(1);
+            JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Rider profile not found for authenticated user");
+            return;
+        }
+
+        if (!profile.isKycApproved() && !"/profile".equals(path)) {
+            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Rider account is pending KYC approval from platform administrators.");
+            return;
         }
 
         if ("/toggle-online".equals(path)) {

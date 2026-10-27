@@ -39,7 +39,7 @@ public class ReviewServlet extends BaseServlet {
             long orderId = body.get("orderId").getAsLong();
             Order order = orderDao.findById(orderId);
             if (order == null || !order.getCustomerId().equals(customerId)) {
-                JsonUtil.sendError(res, 400, "Invalid order for review");
+                JsonUtil.sendError(res, 403, "Access forbidden: you may only review orders you placed");
                 return;
             }
             if (!"DELIVERED".equals(order.getStatus())) {
@@ -64,8 +64,18 @@ public class ReviewServlet extends BaseServlet {
         }
 
         if (path.endsWith("/reply")) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long reviewId = parseIdFromPath(req);
+            if (reviewId == null) {
+                JsonUtil.sendError(res, 400, "Review ID is required");
+                return;
+            }
+            Review rw = reviewDao.findById(reviewId);
+            if (rw == null) {
+                JsonUtil.sendError(res, 404, "Review not found");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, rw.getRestaurantId())) return;
+
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             String reply = body != null && body.has("replyText") ? body.get("replyText").getAsString() : "";
 

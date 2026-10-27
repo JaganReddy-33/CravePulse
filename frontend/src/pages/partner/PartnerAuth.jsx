@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import AuthBackground from '../../components/AuthBackground';
 
 const PartnerAuth = ({ initialMode = 'login' }) => {
@@ -17,7 +18,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const { user, login, register, switchDemoRole } = useAuth();
+  const { user, login, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,23 +43,25 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
         if (!restaurantName.trim() || !fssaiLicense.trim() || !email.trim() || !password.trim()) {
           throw new Error('Please enter all required restaurant and contact fields');
         }
-        await register(
-          fullName || 'Chef Lohith',
-          email,
-          phone || '+91 98490 11223',
+        await api.post('/partner/apply', {
+          fullName: fullName.trim() || 'Restaurant Partner',
+          email: email.trim().toLowerCase(),
+          phone: phone.trim() || '+919876543210',
           password,
-          'RESTAURANT_OWNER'
-        );
-        setSuccessMsg('Kitchen application submitted! Redirecting to food studio...');
+          restaurantName: restaurantName.trim(),
+          fssaiLicense: fssaiLicense.trim(),
+          cuisineTypes: cuisineTypes.trim() || 'Multi-Cuisine'
+        });
+        setSuccessMsg('Partner onboarding application submitted! Your account is in PENDING_KYC status pending admin review.');
       } else {
         if (!email.trim() || !password.trim()) {
           throw new Error('Please enter both partner email and password');
         }
         await login(email, password);
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 500);
       }
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 500);
     } catch (err) {
       setError(err.message || 'Restaurant partner authentication failed.');
     } finally {
@@ -70,7 +73,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      await switchDemoRole('RESTAURANT_OWNER');
+      await login('chef@foodanalytics.com', 'Password@123');
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Demo partner login failed');
@@ -268,46 +271,48 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona 1-Click Login Card */}
-          <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                Verified Merchant Demo
-              </span>
-              <span className="badge rounded-pill bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50" style={{ fontSize: 10 }}>
-                1-CLICK LOGIN
-              </span>
-            </div>
-
-            <div 
-              className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-              onClick={handleDemoFill}
-            >
-              <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                <div 
-                  className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
-                  style={{ width: 36, height: 36, background: '#f59e0b' }}
-                >
-                  👨‍🍳
-                </div>
-                <div className="text-truncate">
-                  <div className="fw-bold text-white small lh-1 mb-1">Chef Lohith (Spice Symphony)</div>
-                  <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                    chef.lohith@cravepulse.in
-                  </div>
-                </div>
+          {/* Test Persona Demo Login Card - only visible in demo mode */}
+          {isDemoMode && (
+            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
+                  Demo Mode Fast Access
+                </span>
+                <span className="badge rounded-pill bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50" style={{ fontSize: 10 }}>
+                  DEMO MERCHANT
+                </span>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-warning rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                style={{ fontSize: 11 }}
-                disabled={loading}
+              <div 
+                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
+                onClick={handleDemoFill}
               >
-                Access →
-              </button>
+                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
+                  <div 
+                    className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
+                    style={{ width: 36, height: 36, background: '#f59e0b' }}
+                  >
+                    👨‍🍳
+                  </div>
+                  <div className="text-truncate">
+                    <div className="fw-bold text-white small lh-1 mb-1">Demo Partner Restaurant</div>
+                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
+                      chef@foodanalytics.com
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-warning rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
+                  style={{ fontSize: 11 }}
+                  disabled={loading}
+                >
+                  Access →
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
             <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">← Back to Customer App</Link>

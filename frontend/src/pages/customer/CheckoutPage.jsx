@@ -16,7 +16,7 @@ const DEFAULT_ADDRESSES = [
 
 const CheckoutPage = () => {
   const { cart, billDetails, couponCode, setCouponCode, clearCart } = useCart();
-  const { user, switchDemoRole } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState(DEFAULT_ADDRESSES);
@@ -94,9 +94,12 @@ const CheckoutPage = () => {
   const executeOrderCreation = async (mode, payStatus) => {
     setSubmitting(true);
     try {
-      // Ensure user session exists, if guest auto-login demo
+      // Ensure user session exists
       if (!user) {
-        await switchDemoRole('CUSTOMER');
+        setError('Please sign in to place your order.');
+        setSubmitting(false);
+        navigate('/customer/auth');
+        return;
       }
 
       const payload = {
@@ -170,14 +173,14 @@ const CheckoutPage = () => {
         <div className="col-span-12 lg:col-span-7 flex flex-col gap-4 w-full min-w-0">
           {/* User Sign-in notification if Guest */}
           {!user && (
-            <div className="card border-0 rounded-4 shadow-sm p-3 bg-primary-subtle text-primary border border-primary-subtle d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <div className="card border-0 rounded-4 shadow-sm p-3 bg-warning-subtle text-dark border border-warning-subtle d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
               <div>
-                <strong className="d-block small">Ordering as Guest: John Doe</strong>
-                <small className="text-muted">For live SMS and delivery ETA tracking, demo session is active.</small>
+                <strong className="d-block small">Sign in to place your order</strong>
+                <small className="text-muted">You need an active customer account for live tracking, order history, and invoices.</small>
               </div>
-              <button className="btn btn-sm btn-primary rounded-pill px-3 text-nowrap" onClick={() => switchDemoRole('CUSTOMER')}>
-                Sign In ✓
-              </button>
+              <Link to="/customer/auth" className="btn btn-sm btn-primary rounded-pill px-3 text-nowrap">
+                Sign In / Register
+              </Link>
             </div>
           )}
 

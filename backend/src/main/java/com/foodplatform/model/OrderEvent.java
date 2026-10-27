@@ -9,6 +9,7 @@ public class OrderEvent {
     private String previousStatus;
     private String newStatus;
     private Long triggeredByUserId;
+    private String actorRole;
     private String reason;
     private BigDecimal latitude;
     private BigDecimal longitude;
@@ -31,6 +32,9 @@ public class OrderEvent {
 
     public Long getTriggeredByUserId() { return triggeredByUserId; }
     public void setTriggeredByUserId(Long triggeredByUserId) { this.triggeredByUserId = triggeredByUserId; }
+
+    public String getActorRole() { return actorRole; }
+    public void setActorRole(String actorRole) { this.actorRole = actorRole; }
 
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }

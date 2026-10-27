@@ -24,5 +24,7 @@ public interface RestaurantDao {
 
     void updateKyc(long id, boolean approved);
 
+    Long createRestaurant(Restaurant restaurant);
+
     List<Restaurant> listAllRestaurants(int limit, int offset);
 }

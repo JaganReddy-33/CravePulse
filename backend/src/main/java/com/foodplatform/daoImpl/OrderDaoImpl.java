@@ -21,8 +21,8 @@ public class OrderDaoImpl implements OrderDao {
         String sql = "INSERT INTO orders (order_number, customer_id, restaurant_id, delivery_address_id, status, " +
                 "subtotal, restaurant_discount, coupon_id, coupon_discount, packaging_fee, delivery_fee, platform_fee, gst_tax, " +
                 "total_amount, payment_mode, payment_status, idempotency_key, eta_min_minutes, eta_max_minutes, " +
-                "estimated_delivery_at, special_instructions) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "estimated_delivery_at, special_instructions, delivery_otp) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderNumber());
@@ -47,6 +47,7 @@ public class OrderDaoImpl implements OrderDao {
             ps.setInt(19, order.getEtaMaxMinutes());
             ps.setTimestamp(20, order.getEstimatedDeliveryAt());
             ps.setString(21, order.getSpecialInstructions());
+            ps.setString(22, order.getDeliveryOtp());
 
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -118,17 +119,18 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public void recordOrderEvent(Connection conn, OrderEvent event) throws SQLException {
-        String sql = "INSERT INTO order_events (order_id, previous_status, new_status, triggered_by_user_id, reason, latitude, longitude) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO order_events (order_id, previous_status, new_status, triggered_by_user_id, actor_role, reason, latitude, longitude) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, event.getOrderId());
             ps.setString(2, event.getPreviousStatus());
             ps.setString(3, event.getNewStatus());
             if (event.getTriggeredByUserId() != null) ps.setLong(4, event.getTriggeredByUserId());
             else ps.setNull(4, Types.BIGINT);
-            ps.setString(5, event.getReason());
-            ps.setBigDecimal(6, event.getLatitude());
-            ps.setBigDecimal(7, event.getLongitude());
+            ps.setString(5, event.getActorRole());
+            ps.setString(6, event.getReason());
+            ps.setBigDecimal(7, event.getLatitude());
+            ps.setBigDecimal(8, event.getLongitude());
             ps.executeUpdate();
         }
     }
@@ -406,6 +408,7 @@ public class OrderDaoImpl implements OrderDao {
         o.setActualDeliveryAt(rs.getTimestamp("actual_delivery_at"));
         o.setGoodwillCreditAwarded(rs.getBoolean("is_goodwill_credit_awarded"));
         o.setSpecialInstructions(rs.getString("special_instructions"));
+        o.setDeliveryOtp(rs.getString("delivery_otp"));
         o.setCancellationReason(rs.getString("cancellation_reason"));
         o.setCreatedAt(rs.getTimestamp("created_at"));
         o.setUpdatedAt(rs.getTimestamp("updated_at"));

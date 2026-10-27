@@ -57,16 +57,19 @@ public final class AppProperties {
     }
 
     public static String getJwtSecret() {
-        return getProperty("jwt.secret", "JWT_SECRET",
-                "CravePulseSuperSecureProductionSecretKeyForSigning2026JaganmohanReddy!");
+        String secret = getProperty("jwt.secret", "JWT_SECRET", null);
+        if (secret == null || secret.trim().length() < 32) {
+            throw new IllegalStateException("JWT_SECRET is missing or shorter than 32 bytes. Refusing to start without a secure secret key.");
+        }
+        return secret.trim();
     }
 
     public static long getJwtExpirationMillis() {
-        String val = getProperty("jwt.expirationMillis", "JWT_EXPIRATION_MILLIS", "86400000");
+        String val = getProperty("jwt.expirationMillis", "JWT_EXPIRATION_MILLIS", "900000"); // 15 minutes
         try {
             return Long.parseLong(val);
         } catch (NumberFormatException e) {
-            return 86400000L;
+            return 900000L;
         }
     }
 

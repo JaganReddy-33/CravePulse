@@ -10,6 +10,8 @@ public interface ReviewDao {
 
     Review findByOrderId(long orderId);
 
+    Review findById(long reviewId);
+
     List<Review> listRestaurantReviews(long restaurantId, int limit, int offset);
 
     void replyToReview(long reviewId, String replyText);

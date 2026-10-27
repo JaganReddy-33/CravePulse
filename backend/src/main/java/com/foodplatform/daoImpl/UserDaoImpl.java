@@ -34,6 +34,23 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public User findByPhone(String phone) {
+        String sql = "SELECT * FROM users WHERE phone = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, phone);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUser(rs);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding user by phone: {}", phone, e);
+        }
+        return null;
+    }
+
+    @Override
     public User findById(long id) {
         String sql = "SELECT * FROM users WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -147,6 +164,18 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error revoking refresh token", e);
+        }
+    }
+
+    @Override
+    public void revokeAllUserTokens(long userId) {
+        String sql = "UPDATE user_tokens SET revoked = TRUE WHERE user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error revoking all refresh tokens for user: {}", userId, e);
         }
     }
 

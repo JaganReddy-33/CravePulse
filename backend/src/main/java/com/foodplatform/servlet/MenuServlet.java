@@ -64,8 +64,18 @@ public class MenuServlet extends BaseServlet {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
 
         if (path.endsWith("/toggle-availability")) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long itemId = parseIdFromPath(req);
+            if (itemId == null) {
+                JsonUtil.sendError(res, 400, "Item ID is required");
+                return;
+            }
+            MenuItem item = menuDao.getItemById(itemId);
+            if (item == null) {
+                JsonUtil.sendError(res, 404, "Menu item not found");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
+
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             boolean isAvailable = body != null && body.has("isAvailable") && body.get("isAvailable").getAsBoolean();
 
@@ -75,8 +85,18 @@ public class MenuServlet extends BaseServlet {
         }
 
         if (path.endsWith("/price-parity")) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long itemId = parseIdFromPath(req);
+            if (itemId == null) {
+                JsonUtil.sendError(res, 400, "Item ID is required");
+                return;
+            }
+            MenuItem item = menuDao.getItemById(itemId);
+            if (item == null) {
+                JsonUtil.sendError(res, 404, "Menu item not found");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
+
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body == null || !body.has("platformPrice") || !body.has("dineInPrice")) {
                 JsonUtil.sendError(res, 400, "platformPrice and dineInPrice are required");
@@ -97,12 +117,13 @@ public class MenuServlet extends BaseServlet {
         }
 
         if ("/item".equals(path)) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             MenuItem item = JsonUtil.readRequestBody(req, MenuItem.class);
-            if (item == null || item.getName() == null || item.getPlatformPrice() == null) {
-                JsonUtil.sendError(res, 400, "Item name and platformPrice are required");
+            if (item == null || item.getName() == null || item.getPlatformPrice() == null || item.getRestaurantId() == null) {
+                JsonUtil.sendError(res, 400, "restaurantId, item name and platformPrice are required");
                 return;
             }
+            if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
+
             if (item.getDineInPrice() == null) {
                 item.setDineInPrice(item.getPlatformPrice());
             }

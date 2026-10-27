@@ -31,6 +31,7 @@ public class Order {
     private Timestamp actualDeliveryAt;
     private boolean isGoodwillCreditAwarded;
     private String specialInstructions;
+    private String deliveryOtp;
     private String cancellationReason;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -171,4 +172,7 @@ public class Order {
 
     public List<OrderEvent> getTimeline() { return timeline; }
     public void setTimeline(List<OrderEvent> timeline) { this.timeline = timeline; }
+
+    public String getDeliveryOtp() { return deliveryOtp; }
+    public void setDeliveryOtp(String deliveryOtp) { this.deliveryOtp = deliveryOtp; }
 }

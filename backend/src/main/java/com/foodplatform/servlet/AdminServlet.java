@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @WebServlet("/api/admin/*")
 public class AdminServlet extends BaseServlet {
@@ -68,6 +69,18 @@ public class AdminServlet extends BaseServlet {
                 mapData.put("riders", riders);
                 JsonUtil.sendSuccess(res, 200, "Live ops map data", mapData);
             }
+            case "/approvals/pending", "/pending-approvals" -> {
+                List<Restaurant> pendingRestaurants = restaurantDao.listAllRestaurants(100, 0).stream()
+                        .filter(r -> !r.isKycApproved())
+                        .collect(Collectors.toList());
+                List<RiderProfile> pendingRiders = riderDao.listAllRiders(100, 0).stream()
+                        .filter(r -> !r.isKycApproved())
+                        .collect(Collectors.toList());
+                Map<String, Object> pending = new HashMap<>();
+                pending.put("restaurants", pendingRestaurants);
+                pending.put("riders", pendingRiders);
+                JsonUtil.sendSuccess(res, 200, "Pending KYC approvals", pending);
+            }
             default -> JsonUtil.sendError(res, 404, "Admin endpoint not found: " + path);
         }
     }
@@ -78,13 +91,25 @@ public class AdminServlet extends BaseServlet {
 
         if (!requireRole(req, res, "ADMIN")) return;
 
-        if (path.startsWith("/restaurant/") && path.endsWith("/kyc")) {
+        if ((path.startsWith("/restaurant/") && path.endsWith("/kyc")) || path.startsWith("/approvals/restaurant/")) {
             Long restId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean approved = body != null && body.has("approved") && body.get("approved").getAsBoolean();
+            boolean approved = body != null && (!body.has("approved") || body.get("approved").getAsBoolean());
 
             restaurantDao.updateKyc(restId, approved);
-            JsonUtil.sendSuccess(res, 200, "Restaurant KYC updated", Map.of("restaurantId", restId, "isKycApproved", approved));
+            JsonUtil.sendSuccess(res, 200, "Restaurant KYC " + (approved ? "approved" : "rejected"),
+                    Map.of("restaurantId", restId, "isKycApproved", approved));
+            return;
+        }
+
+        if ((path.startsWith("/rider/") && path.endsWith("/kyc")) || path.startsWith("/approvals/rider/")) {
+            Long riderId = parseIdFromPath(req);
+            JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+            boolean approved = body != null && (!body.has("approved") || body.get("approved").getAsBoolean());
+
+            riderDao.updateKyc(riderId, approved);
+            JsonUtil.sendSuccess(res, 200, "Rider KYC " + (approved ? "approved" : "rejected"),
+                    Map.of("riderId", riderId, "isKycApproved", approved));
             return;
         }
 

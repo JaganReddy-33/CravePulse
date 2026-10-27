@@ -285,6 +285,53 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
+    public Long createRiderProfile(RiderProfile rp) {
+        String sql = "INSERT INTO rider_profiles (user_id, vehicle_type, vehicle_number, driving_license, is_kyc_approved, " +
+                "is_online, is_available, current_latitude, current_longitude, wallet_balance) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, rp.getUserId());
+            ps.setString(2, rp.getVehicleType() != null ? rp.getVehicleType() : "Motorcycle");
+            ps.setString(3, rp.getVehicleNumber() != null ? rp.getVehicleNumber() : "NEW-REG");
+            ps.setString(4, rp.getDrivingLicense() != null ? rp.getDrivingLicense() : "PENDING-VERIFY");
+            ps.setBoolean(5, rp.isKycApproved());
+            ps.setBoolean(6, rp.isOnline());
+            ps.setBoolean(7, rp.isAvailable());
+            ps.setBigDecimal(8, rp.getCurrentLatitude() != null ? rp.getCurrentLatitude() : BigDecimal.valueOf(12.9715987));
+            ps.setBigDecimal(9, rp.getCurrentLongitude() != null ? rp.getCurrentLongitude() : BigDecimal.valueOf(77.5945627));
+            ps.setBigDecimal(10, rp.getWalletBalance() != null ? rp.getWalletBalance() : BigDecimal.ZERO);
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        long genId = rs.getLong(1);
+                        rp.setId(genId);
+                        return genId;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error creating rider profile for user: {}", rp.getUserId(), e);
+        }
+        return null;
+    }
+
+    @Override
+    public void updateKyc(long riderId, boolean approved) {
+        String sql = "UPDATE rider_profiles SET is_kyc_approved = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, approved);
+            ps.setLong(2, riderId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error updating kyc for rider: {}", riderId, e);
+        }
+    }
+
+    @Override
     public List<RiderProfile> listAllRiders(int limit, int offset) {
         List<RiderProfile> list = new ArrayList<>();
         String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +

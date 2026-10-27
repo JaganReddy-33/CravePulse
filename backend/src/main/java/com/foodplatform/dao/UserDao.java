@@ -13,6 +13,8 @@ public interface UserDao {
 
     User findByEmail(String email);
 
+    User findByPhone(String phone);
+
     User findById(long id);
 
     Long createUser(User user);
@@ -26,6 +28,8 @@ public interface UserDao {
     Long findUserIdByValidRefreshToken(String token);
 
     void revokeRefreshToken(String token);
+
+    void revokeAllUserTokens(long userId);
 
     void updateWalletBalance(Connection conn, long userId, BigDecimal newBalance) throws SQLException;
 

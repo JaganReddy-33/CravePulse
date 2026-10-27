@@ -7,7 +7,6 @@ import com.foodplatform.dao.UserDao;
 import com.foodplatform.daoImpl.OrderDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.daoImpl.UserDaoImpl;
-import com.foodplatform.model.Address;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.OrderItem;
 import com.foodplatform.model.Restaurant;
@@ -111,6 +110,7 @@ public class OrderServlet extends BaseServlet {
                 PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, inputItems, null, null, couponCode);
 
                 String orderNumber = "ORD-" + DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now()) + "-" + (int) (1000 + Math.random() * 9000);
+                String deliveryOtp = String.format("%04d", (int) (1000 + Math.random() * 9000));
 
                 Order order = new Order();
                 order.setOrderNumber(orderNumber);
@@ -134,6 +134,7 @@ public class OrderServlet extends BaseServlet {
                 order.setEtaMaxMinutes(calc.etaMaxMinutes);
                 order.setEstimatedDeliveryAt(Timestamp.from(Instant.now().plusSeconds(calc.etaMaxMinutes * 60L)));
                 order.setSpecialInstructions(instructions);
+                order.setDeliveryOtp(deliveryOtp);
 
                 List<OrderItem> orderItems = new ArrayList<>();
                 for (Map<String, Object> billItem : calc.itemisedBill) {
@@ -163,6 +164,7 @@ public class OrderServlet extends BaseServlet {
                         ev.setOrderId(orderId);
                         ev.setNewStatus("PLACED");
                         ev.setTriggeredByUserId(customerId);
+                        ev.setActorRole("CUSTOMER");
                         ev.setReason("Order placed via platform");
                         orderDao.recordOrderEvent(conn, ev);
 
@@ -202,7 +204,13 @@ public class OrderServlet extends BaseServlet {
         if (path.endsWith("/status")) {
             if (!requireAuthenticated(req, res)) return;
             Long orderId = parseIdFromPath(req);
+            if (orderId == null) {
+                JsonUtil.sendError(res, 400, "Order ID is required");
+                return;
+            }
+
             Long userId = getAuthenticatedUserId(req);
+            String role = getAuthenticatedRole(req);
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body == null || !body.has("status")) {
@@ -211,15 +219,18 @@ public class OrderServlet extends BaseServlet {
             }
 
             String targetStatus = body.get("status").getAsString();
-            String reason = body.has("reason") ? body.get("reason").getAsString() : null;
-            Double lat = body.has("latitude") ? body.get("latitude").getAsDouble() : null;
-            Double lng = body.has("longitude") ? body.get("longitude").getAsDouble() : null;
+            String reason = body.has("reason") && !body.get("reason").isJsonNull() ? body.get("reason").getAsString() : null;
+            String deliveryOtp = body.has("deliveryOtp") && !body.get("deliveryOtp").isJsonNull() ? body.get("deliveryOtp").getAsString() : null;
+            Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : null;
+            Double lng = body.has("longitude") && !body.get("longitude").isJsonNull() ? body.get("longitude").getAsDouble() : null;
 
             try {
-                Order updated = stateMachine.transition(orderId, targetStatus, userId, reason, lat, lng);
+                Order updated = stateMachine.transition(orderId, targetStatus, userId, role, deliveryOtp, reason, lat, lng);
                 JsonUtil.sendSuccess(res, 200, "Order transitioned to " + targetStatus, updated);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | IllegalStateException e) {
                 JsonUtil.sendError(res, 400, e.getMessage());
+            } catch (Exception e) {
+                JsonUtil.sendError(res, 500, "Order transition error: " + e.getMessage());
             }
             return;
         }
@@ -244,6 +255,12 @@ public class OrderServlet extends BaseServlet {
 
         if (path.startsWith("/restaurant/")) {
             Long restaurantId = parseIdFromPath(req);
+            if (restaurantId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restaurantId)) return;
+
             String status = req.getParameter("status");
             int limit = parseIntParam(req, "limit", 50);
             int offset = parseIntParam(req, "offset", 0);
@@ -261,6 +278,8 @@ public class OrderServlet extends BaseServlet {
                 JsonUtil.sendError(res, 404, "Order not found");
                 return;
             }
+            if (!requireOwnerOfOrder(req, res, o.getId())) return;
+
             JsonUtil.sendSuccess(res, 200, "Order details", o);
             return;
         }
@@ -278,11 +297,19 @@ public class OrderServlet extends BaseServlet {
 
         Long orderId = parseIdFromPath(req);
         if (orderId != null) {
+            if (!requireOwnerOfOrder(req, res, orderId)) return;
+
             Order o = orderDao.findById(orderId);
             if (o == null) {
                 JsonUtil.sendError(res, 404, "Order not found");
                 return;
             }
+
+            if (path.endsWith("/invoice")) {
+                InvoiceServlet.renderInvoiceHtml(o, res);
+                return;
+            }
+
             JsonUtil.sendSuccess(res, 200, "Order details", o);
             return;
         }

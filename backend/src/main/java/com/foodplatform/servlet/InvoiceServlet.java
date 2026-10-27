@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-@WebServlet("/api/orders/*/invoice")
+@WebServlet("/api/invoices/*")
 public class InvoiceServlet extends BaseServlet {
 
     private final OrderDao orderDao = new OrderDaoImpl();
@@ -21,14 +21,17 @@ public class InvoiceServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String uri = req.getRequestURI();
-        String[] parts = uri.split("/");
-        Long orderId = null;
-        for (int i = 0; i < parts.length; i++) {
-            if ("orders".equals(parts[i]) && i + 1 < parts.length) {
-                try {
-                    orderId = Long.parseLong(parts[i + 1]);
-                    break;
-                } catch (NumberFormatException ignored) {
+        Long orderId = parseIdFromPath(req);
+
+        if (orderId == null) {
+            String[] parts = uri.split("/");
+            for (int i = 0; i < parts.length; i++) {
+                if ("orders".equals(parts[i]) && i + 1 < parts.length) {
+                    try {
+                        orderId = Long.parseLong(parts[i + 1]);
+                        break;
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
         }
@@ -38,16 +41,26 @@ public class InvoiceServlet extends BaseServlet {
             return;
         }
 
+        // Strict ownership check: Only owner customer, restaurant, rider, or admin can access invoice
+        if (!requireOwnerOfOrder(req, res, orderId)) {
+            return;
+        }
+
         Order order = orderDao.findById(orderId);
         if (order == null) {
             res.sendError(HttpServletResponse.SC_NOT_FOUND, "Order not found");
             return;
         }
 
+        renderInvoiceHtml(order, res);
+    }
+
+    public static void renderInvoiceHtml(Order order, HttpServletResponse res) throws IOException {
         res.setContentType("text/html;charset=UTF-8");
         PrintWriter out = res.getWriter();
 
-        BigDecimal cgst = order.getGstTax().divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+        BigDecimal gst = order.getGstTax() != null ? order.getGstTax() : BigDecimal.ZERO;
+        BigDecimal cgst = gst.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
         BigDecimal sgst = cgst;
 
         out.println("<!DOCTYPE html>");
@@ -73,35 +86,37 @@ public class InvoiceServlet extends BaseServlet {
         out.println("<div class='invoice-box'>");
         out.println("<button class='print-btn' onclick='window.print()'>🖨️ Print Invoice</button>");
         out.println("<div class='header'>");
-        out.println("<div><div class='logo'>Foodora Platform</div><div style='font-size: 13px; color: #64748b;'>Tax Invoice & Food Delivery Receipt</div></div>");
-        out.println("<div style='text-align: right;'><span class='badge'>PAID IN FULL</span><div style='font-weight: 700; margin-top: 5px;'>" + order.getOrderNumber() + "</div><div style='font-size: 12px; color: #94a3b8;'>" + order.getCreatedAt() + "</div></div>");
+        out.println("<div><div class='logo'>CravePulse Platform</div><div style='font-size: 13px; color: #64748b;'>Tax Invoice & Food Delivery Receipt</div></div>");
+        out.println("<div style='text-align: right;'><span class='badge'>PAID IN FULL</span><div style='font-weight: 700; margin-top: 5px;'>" + order.getOrderNumber() + "</div><div style='font-size: 12px; color: #94a3b8;'>" + (order.getCreatedAt() != null ? order.getCreatedAt() : "") + "</div></div>");
         out.println("</div>");
 
         out.println("<div class='info-grid'>");
-        out.println("<div><strong>Billed From:</strong><br>" + order.getRestaurantName() + "<br>FSSAI Lic: 11223344556677<br>GSTIN: 29AABCU9603R1ZM<br>Indiranagar, Bengaluru</div>");
-        out.println("<div><strong>Delivered To:</strong><br>" + order.getCustomerName() + "<br>Phone: " + (order.getCustomerPhone() != null ? order.getCustomerPhone() : "N/A") + "<br>" + order.getDeliveryAddressText() + "</div>");
+        out.println("<div><strong>Billed From:</strong><br>" + (order.getRestaurantName() != null ? order.getRestaurantName() : "Restaurant Partner") + "<br>FSSAI Lic: 11223344556677<br>GSTIN: 29AABCU9603R1ZM<br>Indiranagar, Bengaluru</div>");
+        out.println("<div><strong>Delivered To:</strong><br>" + (order.getCustomerName() != null ? order.getCustomerName() : "Customer") + "<br>Phone: " + (order.getCustomerPhone() != null ? order.getCustomerPhone() : "N/A") + "<br>" + (order.getDeliveryAddressText() != null ? order.getDeliveryAddressText() : "") + "</div>");
         out.println("</div>");
 
         out.println("<table><thead><tr><th>Item Description</th><th>Variant / Addons</th><th>Qty</th><th>Price</th><th style='text-align: right;'>Amount</th></tr></thead><tbody>");
-        for (OrderItem it : order.getItems()) {
-            out.println("<tr>");
-            out.println("<td><strong>" + it.getItemName() + "</strong></td>");
-            out.println("<td style='color: #64748b; font-size: 12px;'>" + (it.getVariantName() != null ? it.getVariantName() : "-") + (it.getAddonNames() != null ? "<br>+ " + it.getAddonNames() : "") + "</td>");
-            out.println("<td>" + it.getQuantity() + "</td>");
-            out.println("<td>₹" + it.getUnitPrice() + "</td>");
-            out.println("<td style='text-align: right; font-weight: 600;'>₹" + it.getTotalPrice() + "</td>");
-            out.println("</tr>");
+        if (order.getItems() != null) {
+            for (OrderItem it : order.getItems()) {
+                out.println("<tr>");
+                out.println("<td><strong>" + it.getItemName() + "</strong></td>");
+                out.println("<td style='color: #64748b; font-size: 12px;'>" + (it.getVariantName() != null ? it.getVariantName() : "-") + (it.getAddonNames() != null ? "<br>+ " + it.getAddonNames() : "") + "</td>");
+                out.println("<td>" + it.getQuantity() + "</td>");
+                out.println("<td>₹" + it.getUnitPrice() + "</td>");
+                out.println("<td style='text-align: right; font-weight: 600;'>₹" + it.getTotalPrice() + "</td>");
+                out.println("</tr>");
+            }
         }
         out.println("</tbody></table>");
 
         out.println("<div class='totals'>");
         out.println("<div class='totals-row'><span>Item Subtotal:</span><span>₹" + order.getSubtotal() + "</span></div>");
-        if (order.getCouponDiscount().compareTo(BigDecimal.ZERO) > 0) {
+        if (order.getCouponDiscount() != null && order.getCouponDiscount().compareTo(BigDecimal.ZERO) > 0) {
             out.println("<div class='totals-row' style='color: #16a34a;'><span>Coupon Discount:</span><span>-₹" + order.getCouponDiscount() + "</span></div>");
         }
-        out.println("<div class='totals-row'><span>Packaging Fee:</span><span>₹" + order.getPackagingFee() + "</span></div>");
-        out.println("<div class='totals-row'><span>Delivery Partner Fee:</span><span>₹" + order.getDeliveryFee() + "</span></div>");
-        out.println("<div class='totals-row'><span>Platform Convenience Fee:</span><span>₹" + order.getPlatformFee() + "</span></div>");
+        out.println("<div class='totals-row'><span>Packaging Fee:</span><span>₹" + (order.getPackagingFee() != null ? order.getPackagingFee() : BigDecimal.ZERO) + "</span></div>");
+        out.println("<div class='totals-row'><span>Delivery Partner Fee:</span><span>₹" + (order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO) + "</span></div>");
+        out.println("<div class='totals-row'><span>Platform Convenience Fee:</span><span>₹" + (order.getPlatformFee() != null ? order.getPlatformFee() : BigDecimal.ZERO) + "</span></div>");
         out.println("<div class='totals-row'><span>CGST (2.5%):</span><span>₹" + cgst + "</span></div>");
         out.println("<div class='totals-row'><span>SGST (2.5%):</span><span>₹" + sgst + "</span></div>");
         out.println("<div class='totals-row totals-grand'><span>Total Paid (" + order.getPaymentMode() + "):</span><span>₹" + order.getTotalAmount() + "</span></div>");

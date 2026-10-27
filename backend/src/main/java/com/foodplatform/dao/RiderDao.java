@@ -32,5 +32,9 @@ public interface RiderDao {
 
     DeliveryDispatch getRiderActiveDispatch(long riderId);
 
+    Long createRiderProfile(RiderProfile profile);
+
+    void updateKyc(long riderId, boolean approved);
+
     List<RiderProfile> listAllRiders(int limit, int offset);
 }

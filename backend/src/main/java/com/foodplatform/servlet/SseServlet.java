@@ -23,7 +23,6 @@ public class SseServlet extends BaseServlet {
         res.setCharacterEncoding("UTF-8");
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Connection", "keep-alive");
-        res.setHeader("Access-Control-Allow-Origin", "*");
 
         PrintWriter writer = res.getWriter();
         clients.add(writer);

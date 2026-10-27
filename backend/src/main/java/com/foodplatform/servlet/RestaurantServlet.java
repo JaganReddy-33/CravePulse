@@ -46,8 +46,8 @@ public class RestaurantServlet extends BaseServlet {
             Long userId = getAuthenticatedUserId(req);
             Restaurant rest = restaurantDao.findByUserId(userId);
             if (rest == null) {
-                // If admin or test, fetch restaurant 1 as default
-                rest = restaurantDao.findById(1);
+                JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Restaurant profile not found for authenticated user");
+                return;
             }
             JsonUtil.sendSuccess(res, 200, "Restaurant profile", rest);
             return;
@@ -59,12 +59,13 @@ public class RestaurantServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, "Restaurant ID missing");
                 return;
             }
+            if (!requireRestaurantOwner(req, res, restId)) return;
             Map<String, Object> analytics = analyticsService.getRestaurantAnalytics(restId);
             JsonUtil.sendSuccess(res, 200, "Restaurant analytics", analytics);
             return;
         }
 
-        // Fetch single restaurant by ID
+        // Fetch single restaurant by ID (Public discovery)
         Long restId = parseIdFromPath(req);
         if (restId != null) {
             Restaurant r = restaurantDao.findById(restId);
@@ -84,8 +85,13 @@ public class RestaurantServlet extends BaseServlet {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
 
         if (path.endsWith("/toggle-open")) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             boolean isOpen = body != null && body.has("isOpen") && body.get("isOpen").getAsBoolean();
 
@@ -96,8 +102,13 @@ public class RestaurantServlet extends BaseServlet {
         }
 
         if (path.endsWith("/toggle-throttle")) {
-            if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             boolean throttled = body != null && body.has("throttled") && body.get("throttled").getAsBoolean();
 
@@ -110,7 +121,7 @@ public class RestaurantServlet extends BaseServlet {
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
     }
 
-    private Double parseDoubleParam(HttpServletRequest req, String name, Double defVal) {
+    private Double parseDoubleParam(HttpServletRequest req, String name, double defVal) {
         String s = req.getParameter(name);
         if (s != null && !s.isBlank()) {
             try {

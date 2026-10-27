@@ -6,12 +6,12 @@ import AuthBackground from '../../components/AuthBackground';
 const AdminAuth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passkey, setPasskey] = useState('ROOT-SEC-2026');
+  const [passkey, setPasskey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { user, login, switchDemoRole } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,19 +38,6 @@ const AdminAuth = () => {
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Platform administrator authentication failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoFill = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await switchDemoRole('ADMIN');
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.message || 'Demo admin login failed');
     } finally {
       setLoading(false);
     }
@@ -120,7 +107,7 @@ const AdminAuth = () => {
                 <input
                   type="email"
                   className="auth-input"
-                  placeholder="admin.jagan@cravepulse.in"
+                  placeholder="admin@foodplatform.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -152,12 +139,13 @@ const AdminAuth = () => {
             </div>
 
             <div className="mb-4">
-              <label className="form-label small fw-semibold text-light text-opacity-90">Hardware / MFA Root Passkey</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90">Hardware / MFA Root Passkey (Optional)</label>
               <div className="auth-unified-input-group">
                 <span className="auth-icon"><i className="bi bi-cpu"></i></span>
                 <input
                   type="text"
                   className="auth-input font-monospace"
+                  placeholder="YubiKey / Security Key Token"
                   value={passkey}
                   onChange={(e) => setPasskey(e.target.value)}
                 />
@@ -174,47 +162,6 @@ const AdminAuth = () => {
               Authorize Console Access →
             </button>
           </form>
-
-          {/* Test Persona 1-Click Login Card */}
-          <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                Lead Ops Admin Demo
-              </span>
-              <span className="badge rounded-pill bg-info bg-opacity-25 text-info border border-info border-opacity-50" style={{ fontSize: 10 }}>
-                1-CLICK LOGIN
-              </span>
-            </div>
-
-            <div 
-              className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-              onClick={handleDemoFill}
-            >
-              <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                <div 
-                  className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
-                  style={{ width: 36, height: 36, background: '#38bdf8' }}
-                >
-                  JR
-                </div>
-                <div className="text-truncate">
-                  <div className="fw-bold text-white small lh-1 mb-1">Jaganmohan Reddy (Founder & Ops)</div>
-                  <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                    admin.jagan@cravepulse.in
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                style={{ fontSize: 11 }}
-                disabled={loading}
-              >
-                Access →
-              </button>
-            </div>
-          </div>
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
             <Link to="/" className="text-secondary text-decoration-none hover-underline">← Return to Consumer Home</Link>

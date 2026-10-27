@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import AuthBackground from '../../components/AuthBackground';
 
 const RiderAuth = ({ initialMode = 'login' }) => {
@@ -17,7 +18,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const { user, login, register, switchDemoRole } = useAuth();
+  const { user, login, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,23 +43,25 @@ const RiderAuth = ({ initialMode = 'login' }) => {
         if (!fullName.trim() || !email.trim() || !drivingLicense.trim() || !password.trim()) {
           throw new Error('Please fill in your name, license number, email and password');
         }
-        await register(
-          fullName || 'Prasad Rao',
-          email,
-          phone || '+91 98490 56789',
+        await api.post('/rider/apply', {
+          fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim() || '+919876543210',
           password,
-          'RIDER'
-        );
-        setSuccessMsg('Rider application registered! Connecting to fleet network...');
+          vehicleType,
+          vehicleNumber: 'KA-04-REG-2026',
+          drivingLicense: drivingLicense.trim()
+        });
+        setSuccessMsg('Rider onboarding application submitted! Your account is in PENDING_KYC status pending admin review.');
       } else {
         if (!email.trim() || !password.trim()) {
           throw new Error('Please enter rider registered email and password');
         }
         await login(email, password);
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 500);
       }
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 500);
     } catch (err) {
       setError(err.message || 'Delivery fleet authentication failed.');
     } finally {
@@ -70,7 +73,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      await switchDemoRole('RIDER');
+      await login('rider@swiftlogistics.com', 'Password@123');
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Demo fleet login failed');
@@ -257,46 +260,48 @@ const RiderAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona 1-Click Login Card */}
-          <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                Verified Fleet Captain Demo
-              </span>
-              <span className="badge rounded-pill bg-success bg-opacity-25 text-success border border-success border-opacity-50" style={{ fontSize: 10 }}>
-                1-CLICK LOGIN
-              </span>
-            </div>
-
-            <div 
-              className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-              onClick={handleDemoFill}
-            >
-              <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120"
-                  alt="Prasad Rao"
-                  className="rounded-circle border border-success flex-shrink-0"
-                  style={{ width: 36, height: 36, objectFit: 'cover' }}
-                />
-                <div className="text-truncate">
-                  <div className="fw-bold text-white small lh-1 mb-1">Captain Prasad Rao</div>
-                  <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                    prasad.rao@cravepulse.in
-                  </div>
-                </div>
+          {/* Test Persona Demo Login Card - only visible in demo mode */}
+          {isDemoMode && (
+            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
+                  Demo Mode Fast Access
+                </span>
+                <span className="badge rounded-pill bg-success bg-opacity-25 text-success border border-success border-opacity-50" style={{ fontSize: 10 }}>
+                  DEMO RIDER
+                </span>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                style={{ fontSize: 11 }}
-                disabled={loading}
+              <div 
+                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
+                onClick={handleDemoFill}
               >
-                Launch →
-              </button>
+                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
+                  <div 
+                    className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
+                    style={{ width: 36, height: 36, background: '#00e676' }}
+                  >
+                    ⚡
+                  </div>
+                  <div className="text-truncate">
+                    <div className="fw-bold text-white small lh-1 mb-1">Demo Delivery Fleet Captain</div>
+                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
+                      rider@swiftlogistics.com
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
+                  style={{ fontSize: 11 }}
+                  disabled={loading}
+                >
+                  Launch →
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
             <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">← Back to Customer App</Link>

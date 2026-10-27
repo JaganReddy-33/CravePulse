@@ -13,7 +13,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { user, login, register, switchDemoRole } = useAuth();
+  const { user, login, register, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,7 +40,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
         if (!fullName.trim() || !email.trim() || !password.trim()) {
           throw new Error('Please fill in all required fields');
         }
-        await register(fullName, email, phone || '+91 98490 12345', password, 'CUSTOMER');
+        await register(fullName, email, phone, password);
       } else {
         if (!email.trim() || !password.trim()) {
           throw new Error('Please enter both email and password');
@@ -59,7 +59,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      await switchDemoRole('CUSTOMER');
+      await login('customer@foodora.com', 'Password@123');
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Demo login failed');
@@ -227,46 +227,48 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona 1-Click Login Card */}
-          <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                Demo Quick Access
-              </span>
-              <span className="badge rounded-pill bg-primary bg-opacity-25 text-white border border-primary border-opacity-50" style={{ fontSize: 10 }}>
-                1-CLICK LOGIN
-              </span>
-            </div>
-
-            <div 
-              className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-              onClick={handleDemoFill}
-            >
-              <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                <div 
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
-                  style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}
-                >
-                  JR
-                </div>
-                <div className="text-truncate">
-                  <div className="fw-bold text-white small lh-1 mb-1">Jaganmohan Reddy</div>
-                  <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                    jaganmohan.reddy@cravepulse.in
-                  </div>
-                </div>
+          {/* Test Persona Demo Login Card - only visible in demo mode */}
+          {isDemoMode && (
+            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
+                  Demo Mode Fast Access
+                </span>
+                <span className="badge rounded-pill bg-primary bg-opacity-25 text-white border border-primary border-opacity-50" style={{ fontSize: 10 }}>
+                  DEMO USER
+                </span>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-light rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                style={{ fontSize: 11 }}
-                disabled={loading}
+              <div 
+                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
+                onClick={handleDemoFill}
               >
-                Sign In →
-              </button>
+                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
+                  <div 
+                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
+                    style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}
+                  >
+                    CU
+                  </div>
+                  <div className="text-truncate">
+                    <div className="fw-bold text-white small lh-1 mb-1">Demo Customer Account</div>
+                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
+                      customer@foodora.com
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-light rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
+                  style={{ fontSize: 11 }}
+                  disabled={loading}
+                >
+                  Sign In →
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Cross-Portal Switcher */}
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">

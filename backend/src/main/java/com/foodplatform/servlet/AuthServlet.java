@@ -38,9 +38,9 @@ public class AuthServlet extends BaseServlet {
                     }
                     String fullName = body.get("fullName").getAsString();
                     String email = body.get("email").getAsString();
-                    String phone = body.has("phone") ? body.get("phone").getAsString() : "+919870000000";
+                    String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : "";
                     String password = body.get("password").getAsString();
-                    String role = body.has("role") ? body.get("role").getAsString() : "CUSTOMER";
+                    String role = body.has("role") && !body.get("role").isJsonNull() ? body.get("role").getAsString() : "CUSTOMER";
 
                     Map<String, Object> resp = authService.register(fullName, email, phone, password, role);
                     JsonUtil.sendSuccess(res, 201, "Registration successful", resp);
@@ -66,6 +66,20 @@ public class AuthServlet extends BaseServlet {
                     String rt = body.get("refreshToken").getAsString();
                     Map<String, Object> resp = authService.refreshToken(rt);
                     JsonUtil.sendSuccess(res, 200, "Token refreshed successfully", resp);
+                }
+                case "/logout" -> {
+                    Long userId = getAuthenticatedUserId(req);
+                    JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+                    String rt = (body != null && body.has("refreshToken")) ? body.get("refreshToken").getAsString() : null;
+                    authService.logout(userId, rt);
+                    JsonUtil.sendSuccess(res, 200, "Logged out successfully. All refresh tokens revoked.", null);
+                }
+                case "/revoke-token" -> {
+                    JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+                    if (body != null && body.has("refreshToken")) {
+                        authService.logout(null, body.get("refreshToken").getAsString());
+                    }
+                    JsonUtil.sendSuccess(res, 200, "Token revoked", null);
                 }
                 case "/addresses" -> {
                     if (!requireAuthenticated(req, res)) return;
@@ -120,8 +134,9 @@ public class AuthServlet extends BaseServlet {
                         "id", user.getId(),
                         "fullName", user.getFullName(),
                         "email", user.getEmail(),
-                        "phone", user.getPhone(),
+                        "phone", user.getPhone() != null ? user.getPhone() : "",
                         "role", user.getRole(),
+                        "status", user.getStatus(),
                         "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
                         "walletBalance", user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO
                 ));
@@ -132,7 +147,7 @@ public class AuthServlet extends BaseServlet {
             case "/wallet" -> {
                 User u = userDao.findById(userId);
                 JsonUtil.sendSuccess(res, 200, "Wallet details", Map.of(
-                        "balance", u.getWalletBalance() != null ? u.getWalletBalance() : BigDecimal.ZERO,
+                        "balance", u != null && u.getWalletBalance() != null ? u.getWalletBalance() : BigDecimal.ZERO,
                         "transactions", walletDao.getUserTransactions(userId)
                 ));
             }
