@@ -50,6 +50,10 @@ import DisputeQueue from './pages/admin/DisputeQueue';
 import ApprovalsPage from './pages/admin/ApprovalsPage';
 import AdminRestaurants from './pages/admin/AdminRestaurants';
 import AdminRiders from './pages/admin/AdminRiders';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminCoupons from './pages/admin/AdminCoupons';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminAuditLogs from './pages/admin/AdminAuditLogs';
 import AdminJobs from './pages/admin/AdminJobs';
 import AdminAuth from './pages/admin/AdminAuth';
 
@@ -218,10 +222,18 @@ function App() {
                 <Route path="console/disputes-and-refunds" element={<DisputeQueue />} />
                 <Route path="approvals" element={<ApprovalsPage />} />
                 <Route path="console/merchant-onboarding-approvals" element={<ApprovalsPage />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="console/users-directory-moderation" element={<AdminUsers />} />
                 <Route path="restaurants" element={<AdminRestaurants />} />
                 <Route path="console/merchant-partners-directory" element={<AdminRestaurants />} />
                 <Route path="riders" element={<AdminRiders />} />
                 <Route path="console/fleet-captains-directory" element={<AdminRiders />} />
+                <Route path="coupons" element={<AdminCoupons />} />
+                <Route path="console/promotional-coupons" element={<AdminCoupons />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="console/platform-dynamic-settings" element={<AdminSettings />} />
+                <Route path="audit-logs" element={<AdminAuditLogs />} />
+                <Route path="console/audit-trail-and-exports" element={<AdminAuditLogs />} />
                 <Route path="careers" element={<AdminJobs />} />
                 <Route path="console/talent-and-job-postings" element={<AdminJobs />} />
               </Route>

@@ -243,27 +243,78 @@ public class AnalyticsService {
                 "(SELECT COUNT(*) FROM users WHERE role = 'CUSTOMER') AS total_customers, " +
                 "(SELECT COUNT(*) FROM restaurant_profiles) AS total_restaurants, " +
                 "(SELECT COUNT(*) FROM rider_profiles) AS total_riders, " +
+                "(SELECT COUNT(*) FROM rider_profiles WHERE is_online = TRUE) AS active_riders, " +
                 "(SELECT COUNT(*) FROM orders) AS total_orders, " +
+                "(SELECT COUNT(*) FROM orders WHERE status = 'DELIVERED') AS delivered_orders, " +
+                "(SELECT COUNT(*) FROM orders WHERE status = 'CANCELLED') AS cancelled_orders, " +
+                "(SELECT COUNT(*) FROM orders WHERE status IN ('ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP')) AS active_deliveries, " +
                 "(SELECT IFNULL(SUM(total_amount), 0) FROM orders WHERE status = 'DELIVERED') AS gmv, " +
+                "(SELECT IFNULL(AVG(total_amount), 0) FROM orders WHERE status = 'DELIVERED') AS aov, " +
+                "(SELECT IFNULL(AVG(TIMESTAMPDIFF(MINUTE, created_at, actual_delivery_at)), 0) FROM orders WHERE status = 'DELIVERED' AND actual_delivery_at IS NOT NULL) AS avg_delivery_time, " +
                 "(SELECT IFNULL(SUM(platform_fee), 0) FROM orders WHERE status = 'DELIVERED') AS platform_fees, " +
-                "(SELECT COUNT(*) FROM disputes WHERE admin_status = 'PENDING') AS pending_disputes";
+                "(SELECT (SELECT IFNULL(SUM(amount), 0) FROM wallet_transactions WHERE transaction_type = 'CREDIT' AND reason LIKE '%Refund%') + " +
+                "        (SELECT IFNULL(SUM(amount), 0) FROM payments WHERE status = 'REFUNDED')) AS total_refunds, " +
+                "(SELECT COUNT(*) FROM disputes WHERE admin_status = 'PENDING') AS pending_disputes, " +
+                "(SELECT COUNT(*) FROM restaurant_profiles WHERE is_kyc_approved = FALSE) AS pending_rest_kyc, " +
+                "(SELECT COUNT(*) FROM rider_profiles WHERE is_kyc_approved = FALSE) AS pending_rider_kyc";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
+                int totalOrders = rs.getInt("total_orders");
+                int delivered = rs.getInt("delivered_orders");
+                int cancelled = rs.getInt("cancelled_orders");
+                double gmv = rs.getDouble("gmv");
+                double aov = rs.getDouble("aov");
+                double avgDeliveryTime = rs.getDouble("avg_delivery_time");
+                double totalRefunds = rs.getDouble("total_refunds");
+
                 map.put("totalCustomers", rs.getInt("total_customers"));
                 map.put("totalRestaurants", rs.getInt("total_restaurants"));
                 map.put("totalRiders", rs.getInt("total_riders"));
-                map.put("totalOrders", rs.getInt("total_orders"));
-                map.put("grossMerchandiseValue", rs.getDouble("gmv"));
-                map.put("platformRevenue", rs.getDouble("platform_fees"));
+                map.put("activeRiders", rs.getInt("active_riders"));
+                map.put("totalOrders", totalOrders);
+                map.put("deliveredOrders", delivered);
+                map.put("cancelledOrders", cancelled);
+                map.put("activeDeliveriesCount", rs.getInt("active_deliveries"));
+                map.put("grossMerchandiseValue", Math.round(gmv * 100.0) / 100.0);
+                map.put("averageOrderValue", Math.round(aov * 10.0) / 10.0);
+                map.put("avgDeliveryTimeMinutes", Math.round(avgDeliveryTime * 10.0) / 10.0);
+                map.put("platformRevenue", Math.round(rs.getDouble("platform_fees") * 100.0) / 100.0);
+                map.put("totalRefunds", Math.round(totalRefunds * 100.0) / 100.0);
                 map.put("pendingDisputes", rs.getInt("pending_disputes"));
-                map.put("activeDeliveriesCount", 2);
+                map.put("pendingRestaurantKyc", rs.getInt("pending_rest_kyc"));
+                map.put("pendingRiderKyc", rs.getInt("pending_rider_kyc"));
+
+                double cancelRate = totalOrders > 0 ? (cancelled * 100.0 / totalOrders) : 0.0;
+                map.put("cancellationRate", Math.round(cancelRate * 10.0) / 10.0);
             }
         } catch (SQLException e) {
             logger.error("Error fetching admin platform metrics", e);
         }
+
+        // 7-day daily volume trend for admin chart
+        List<Map<String, Object>> trend = new ArrayList<>();
+        String trendSql = "SELECT DATE_FORMAT(created_at, '%d %b') AS day_label, COUNT(id) AS ord_cnt, " +
+                "IFNULL(SUM(CASE WHEN status = 'DELIVERED' THEN total_amount ELSE 0 END), 0) AS rev " +
+                "FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) " +
+                "GROUP BY DATE(created_at), DATE_FORMAT(created_at, '%d %b') ORDER BY DATE(created_at) ASC";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(trendSql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                trend.add(Map.of(
+                        "date", rs.getString("day_label"),
+                        "orders", rs.getInt("ord_cnt"),
+                        "revenue", rs.getDouble("rev")
+                ));
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching admin volume trend", e);
+        }
+        map.put("volumeTrend", trend);
+
         return map;
     }
 }

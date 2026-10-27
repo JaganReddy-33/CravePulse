@@ -221,13 +221,13 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 8 – Admin Console
 
-- [ ] **Real metrics:** GMV, orders, AOV, active riders, delivery time, cancellation rate, refunds.
-- [ ] Live map from real data; user directory with search and suspend.
-- [ ] Restaurant and rider approvals with document view.
-- [ ] Dispute queue with evidence images and audit trail.
-- [ ] Coupon CRUD; platform settings (fees, GST, radius, surge, COD limit).
-- [ ] Audit log of all admin actions; CSV export.
-- [ ] **Rule-based dispute auto-approval** allowed only for `DELIVERED` orders, once per order, within a time window and a configurable cap, with a fraud-flag counter per user.
+- [x] **Real metrics:** GMV, orders, AOV, active riders, delivery time, cancellation rate, refunds.
+- [x] Live map from real data; user directory with search and suspend.
+- [x] Restaurant and rider approvals with document view.
+- [x] Dispute queue with evidence images and audit trail.
+- [x] Coupon CRUD; platform settings (fees, GST, radius, surge, COD limit).
+- [x] Audit log of all admin actions; CSV export.
+- [x] **Rule-based dispute auto-approval** allowed only for `DELIVERED` orders, once per order, within a time window and a configurable cap, with a fraud-flag counter per user.
 
 ---
 

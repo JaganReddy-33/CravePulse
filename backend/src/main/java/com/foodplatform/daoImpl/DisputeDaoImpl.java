@@ -125,6 +125,72 @@ public class DisputeDaoImpl implements DisputeDao {
         }
     }
 
+    @Override
+    public List<Dispute> listAllDisputes(String status, int limit, int offset) {
+        List<Dispute> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT d.*, u.full_name AS cust_name, o.order_number, r.name AS rest_name ")
+                .append("FROM disputes d ")
+                .append("JOIN users u ON d.customer_id = u.id ")
+                .append("JOIN orders o ON d.order_id = o.id ")
+                .append("JOIN restaurant_profiles r ON o.restaurant_id = r.id ");
+
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            sql.append("WHERE d.admin_status = ? ");
+        }
+        sql.append("ORDER BY d.id DESC LIMIT ? OFFSET ?");
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+                ps.setString(idx++, status.trim().toUpperCase());
+            }
+            ps.setInt(idx++, limit > 0 ? limit : 50);
+            ps.setInt(idx, Math.max(offset, 0));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapDispute(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error listing all disputes with status: {}", status, e);
+        }
+        return list;
+    }
+
+    @Override
+    public boolean existsForOrder(long orderId) {
+        String sql = "SELECT 1 FROM disputes WHERE order_id = ? LIMIT 1";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Error checking dispute existence for order: {}", orderId, e);
+        }
+        return false;
+    }
+
+    @Override
+    public int countCustomerDisputesInWindow(long customerId, int days) {
+        String sql = "SELECT COUNT(*) FROM disputes WHERE customer_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, customerId);
+            ps.setInt(2, Math.max(days, 1));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting customer disputes in window: customerId={}, days={}", customerId, days, e);
+        }
+        return 0;
+    }
+
     private Dispute mapDispute(ResultSet rs) throws SQLException {
         Dispute d = new Dispute();
         d.setId(rs.getLong("id"));

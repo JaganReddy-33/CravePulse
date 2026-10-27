@@ -349,21 +349,93 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public List<User> listAllUsers(int limit, int offset) {
+        return searchUsers(null, null, null, limit, offset);
+    }
+
+    @Override
+    public List<User> searchUsers(String query, String role, String status, int limit, int offset) {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?";
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (query != null && !query.trim().isEmpty()) {
+            sql.append("AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ");
+            String q = "%" + query.trim() + "%";
+            params.add(q);
+            params.add(q);
+            params.add(q);
+        }
+        if (role != null && !role.trim().isEmpty() && !"ALL".equalsIgnoreCase(role)) {
+            sql.append("AND role = ? ");
+            params.add(role.trim().toUpperCase());
+        }
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            sql.append("AND status = ? ");
+            params.add(status.trim().toUpperCase());
+        }
+
+        sql.append("ORDER BY id DESC LIMIT ? OFFSET ?");
+        params.add(limit > 0 ? limit : 50);
+        params.add(Math.max(offset, 0));
+
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            ps.setInt(2, offset);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                Object p = params.get(i);
+                if (p instanceof String) ps.setString(i + 1, (String) p);
+                else if (p instanceof Integer) ps.setInt(i + 1, (Integer) p);
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapUser(rs));
                 }
             }
         } catch (SQLException e) {
-            logger.error("Error listing users", e);
+            logger.error("Error searching users with query: {}, role: {}, status: {}", query, role, status, e);
         }
         return list;
+    }
+
+    @Override
+    public void updateUserStatus(long userId, String status) {
+        String sql = "UPDATE users SET status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setLong(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error updating user status: {} for user: {}", status, userId, e);
+        }
+    }
+
+    @Override
+    public void incrementFraudFlag(long userId) {
+        String sql = "UPDATE users SET fraud_flag_count = fraud_flag_count + 1 WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error incrementing fraud flag for user: {}", userId, e);
+        }
+    }
+
+    @Override
+    public int getFraudFlagCount(long userId) {
+        String sql = "SELECT fraud_flag_count FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("fraud_flag_count");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error reading fraud flag count for user: {}", userId, e);
+        }
+        return 0;
     }
 
     private User mapUser(ResultSet rs) throws SQLException {
@@ -381,6 +453,9 @@ public class UserDaoImpl implements UserDao {
         u.setWalletBalance(rs.getBigDecimal("wallet_balance"));
         u.setCreatedAt(rs.getTimestamp("created_at"));
         u.setUpdatedAt(rs.getTimestamp("updated_at"));
+        try {
+            u.setFraudFlagCount(rs.getInt("fraud_flag_count"));
+        } catch (SQLException ignored) {}
         return u;
     }
 }

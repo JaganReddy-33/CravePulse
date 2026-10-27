@@ -18,6 +18,8 @@ public class User {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    private int fraudFlagCount;
+
     public User() {
     }
 
@@ -53,6 +55,9 @@ public class User {
 
     public BigDecimal getWalletBalance() { return walletBalance; }
     public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
+
+    public int getFraudFlagCount() { return fraudFlagCount; }
+    public void setFraudFlagCount(int fraudFlagCount) { this.fraudFlagCount = fraudFlagCount; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

@@ -841,3 +841,147 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 - **Endpoint:** `POST /api/menu/item/{id}/variants` (Add portion variant)
 - **Endpoint:** `POST /api/menu/item/{id}/addons` (Add customer add-on)
 
+---
+
+## 12. Admin Console & Platform Operations
+
+### 12.1 Real-Time Operations Telemetry & SQL Platform Metrics
+- **Endpoint:** `GET /api/admin/metrics`
+- **Auth Required:** Yes (`ADMIN` role)
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "gmv": 128500.00,
+    "totalOrders": 342,
+    "deliveredOrders": 310,
+    "cancelledOrders": 12,
+    "cancellationRate": 3.51,
+    "aov": 375.73,
+    "activeRidersCount": 18,
+    "activeDeliveriesCount": 9,
+    "avgDeliveryTimeMinutes": 28,
+    "platformRevenue": 6840.00,
+    "totalRefunds": 1450.00,
+    "pendingRestaurantApprovals": 2,
+    "pendingRiderApprovals": 3,
+    "dailyTrend7Days": [
+      { "date": "2026-10-21", "orders": 42, "revenue": 16400.00 },
+      { "date": "2026-10-22", "orders": 48, "revenue": 18200.00 }
+    ]
+  }
+}
+```
+
+### 12.2 Operations Live Fleet & Order Radar
+- **Endpoint:** `GET /api/admin/live-map`
+- **Auth Required:** Yes (`ADMIN` role)
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "restaurants": [
+      { "id": 1, "name": "Meghana Foods", "latitude": 12.9716, "longitude": 77.5946, "isOpen": true }
+    ],
+    "riders": [
+      { "id": 4, "name": "Rider Rajesh", "latitude": 12.9730, "longitude": 77.5960, "isActive": true, "assignedOrderId": 108 }
+    ],
+    "activeOrders": [
+      {
+        "orderId": 108,
+        "orderNumber": "ORD-1729881000",
+        "status": "OUT_FOR_DELIVERY",
+        "totalAmount": 450.00,
+        "restaurantName": "Meghana Foods",
+        "riderName": "Rider Rajesh",
+        "customerAddress": "104 Indiranagar, Bengaluru"
+      }
+    ]
+  }
+}
+```
+
+### 12.3 User Directory Moderation & Fraud Risk Management
+- **Search Users:** `GET /api/admin/users?q={query}&role={CUSTOMER|RESTAURANT|RIDER|ADMIN}&status={ACTIVE|SUSPENDED}&limit=50&offset=0`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Response (200 OK):** Paginated array of users including `id`, `fullName`, `email`, `phone`, `role`, `status`, `fraudFlagCount`, and `createdAt`.
+
+- **Update User Status:** `POST /api/admin/users/{id}/status`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Request Body:**
+  ```json
+  {
+    "status": "SUSPENDED",
+    "reason": "Suspected payment chargeback fraud"
+  }
+  ```
+
+- **Escalate Fraud Flag:** `POST /api/admin/users/{id}/fraud-flag`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Request Body:**
+  ```json
+  {
+    "reason": "Multiple unverified missing item claims"
+  }
+  ```
+
+### 12.4 Coupon Engine Lifecycle Management
+- **List All Coupons:** `GET /api/admin/coupons`
+  - **Auth Required:** Yes (`ADMIN` role)
+- **Create Coupon:** `POST /api/admin/coupons`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Request Body:**
+  ```json
+  {
+    "code": "FESTIVE50",
+    "description": "50% off up to ₹100",
+    "discountType": "PERCENTAGE",
+    "discountValue": 50.00,
+    "minOrderAmount": 199.00,
+    "maxDiscountAmount": 100.00,
+    "validFrom": "2026-10-27T00:00:00",
+    "validTo": "2026-11-15T23:59:59",
+    "usageLimitPerUser": 3,
+    "firstOrderOnly": false
+  }
+  ```
+- **Update Coupon:** `POST /api/admin/coupons/{id}/update`
+- **Toggle Active Status:** `POST /api/admin/coupons/{id}/toggle`
+- **Delete Coupon:** `DELETE /api/admin/coupons/{id}`
+
+### 12.5 Dynamic Platform Operational Settings
+- **Retrieve Settings:** `GET /api/admin/settings`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Response (200 OK):** Key-value dictionary of platform operational parameters (`platform_fee`, `delivery_fee_base`, `gst_rate_percent`, `max_delivery_radius_km`, `surge_multiplier`, `cod_order_limit`, `dispute_auto_refund_cap`, `dispute_window_hours`).
+- **Update Settings:** `POST /api/admin/settings`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Request Body:** JSON dictionary of updated settings (e.g. `{ "surge_multiplier": 1.25, "dispute_auto_refund_cap": 200.00 }`).
+
+### 12.6 Immutable Admin Audit Trail
+- **Retrieve Audit Logs:** `GET /api/admin/audit-logs?limit=100`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Response (200 OK):** Immutable event log containing `id`, `adminId`, `targetType`, `targetId`, `action`, `details`, `ipAddress`, and `createdAt`.
+
+### 12.7 Operations CSV Data Streaming Export
+- **Stream CSV Data:** `GET /api/admin/export?type={orders|users|disputes|audit-logs}`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Response Headers:**
+    - `Content-Type: text/csv; charset=UTF-8`
+    - `Content-Disposition: attachment; filename="cravepulse_{type}_export.csv"`
+  - **Body:** RFC 4180 streaming CSV payload.
+
+### 12.8 Dispute Resolution & Supervisor Escalation
+- **Resolve Dispute:** `POST /api/disputes/{id}/resolve`
+  - **Auth Required:** Yes (`ADMIN` role)
+  - **Request Body:**
+  ```json
+  {
+    "resolution": "REFUNDED",
+    "adminNote": "Customer provided valid photographic proof of spilled packaging",
+    "refundAmount": 120.00,
+    "flagUser": false
+  }
+  ```
+

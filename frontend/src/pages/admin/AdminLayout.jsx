@@ -49,6 +49,12 @@ const AdminLayout = () => {
             <i className="bi bi-person-check-fill"></i> KYC Approvals
           </Link>
           <Link
+            to="/admin/users"
+            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/admin/users' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
+          >
+            <i className="bi bi-people-fill text-info"></i> User Directory
+          </Link>
+          <Link
             to="/admin/restaurants"
             className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/admin/restaurants' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
           >
@@ -61,10 +67,28 @@ const AdminLayout = () => {
             <i className="bi bi-bicycle"></i> Fleet Radar
           </Link>
           <Link
+            to="/admin/coupons"
+            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/admin/coupons' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
+          >
+            <i className="bi bi-ticket-perforated-fill text-warning"></i> Coupons & Deals
+          </Link>
+          <Link
+            to="/admin/settings"
+            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/admin/settings' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
+          >
+            <i className="bi bi-sliders text-success"></i> Platform Settings
+          </Link>
+          <Link
+            to="/admin/audit-logs"
+            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/admin/audit-logs' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
+          >
+            <i className="bi bi-journal-text text-danger"></i> Audit & Exports
+          </Link>
+          <Link
             to="/admin/careers"
             className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname.startsWith('/admin/careers') ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}
           >
-            <i className="bi bi-briefcase-fill text-warning"></i> Careers & Job Posts
+            <i className="bi bi-briefcase-fill text-secondary"></i> Careers Studio
           </Link>
         </div>
 
@@ -162,14 +186,26 @@ const AdminLayout = () => {
           <Link to="/admin/approvals" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/approvals' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
             KYC Approvals
           </Link>
+          <Link to="/admin/users" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/users' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
+            Users
+          </Link>
           <Link to="/admin/restaurants" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/restaurants' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
             Restaurants
           </Link>
           <Link to="/admin/riders" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/riders' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
             Fleet Radar
           </Link>
+          <Link to="/admin/coupons" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/coupons' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
+            Coupons
+          </Link>
+          <Link to="/admin/settings" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/settings' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
+            Settings
+          </Link>
+          <Link to="/admin/audit-logs" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/audit-logs' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
+            Audit & CSV
+          </Link>
           <Link to="/admin/careers" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname.startsWith('/admin/careers') ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
-            Careers & Jobs
+            Careers
           </Link>
         </div>
 

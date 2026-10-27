@@ -48,4 +48,12 @@ public interface UserDao {
     void updateProfile(long userId, String fullName, String phone, String avatarUrl);
 
     List<User> listAllUsers(int limit, int offset);
+
+    List<User> searchUsers(String query, String role, String status, int limit, int offset);
+
+    void updateUserStatus(long userId, String status);
+
+    void incrementFraudFlag(long userId);
+
+    int getFraudFlagCount(long userId);
 }
