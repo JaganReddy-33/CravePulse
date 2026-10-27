@@ -268,14 +268,14 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 11 – Tests, CI, Observability
 
-- [ ] **Backend:**
+- [x] **Backend:**
   - Unit tests for pricing, coupons, state machine, dispatch timeout, payment verify, refunds.
   - Servlet-level tests with embedded Tomcat and a test MySQL (Testcontainers) for the auth matrix, order lifecycle, and concurrency (two riders accepting the same dispatch, double-submit orders).
-- [ ] **Frontend:**
+- [x] **Frontend:**
   - Vitest + React Testing Library for cart reducer, checkout validation, protected routes.
   - Playwright end-to-end for customer order flow, partner accept flow, rider delivery flow, and admin approval flow.
-- [ ] **GitHub Actions:** build, test, lint, dependency audit (`npm audit`, OWASP dependency-check), and a secrets scan.
-- [ ] **Observability:** structured logs with request ids, `/health` and `/ready` endpoints (DB check), and basic metrics counters (orders per minute, failed payments, dispatch timeouts).
+- [x] **GitHub Actions:** build, test, lint, dependency audit (`npm audit`, OWASP dependency-check), and a secrets scan.
+- [x] **Observability:** structured logs with request ids, `/health` and `/ready` endpoints (DB check), and basic metrics counters (orders per minute, failed payments, dispatch timeouts).
 
 ---
 

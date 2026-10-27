@@ -162,5 +162,24 @@
   - **Telemetry Retention Policy**: Created `RetentionService` with automated single-threaded scheduler executing 7-day location log purge (`riderDao.purgeOldLocationLogs(7)`).
   - **Multi-City Demo Seed (`seed-demo.sql`)**: Generated separate demo script spanning 3 cities (Bangalore, Hyderabad, Mumbai), 27 authentic kitchens, complete menus with transparent dine-in/platform pricing, delivery riders, coupons, and historical multi-status orders. Passwords safely hashed (`Password@123`) and omitted from public tables.
 
+---
+
+## ADR-012: Comprehensive Testing, CI/CD Pipeline & Full Observability (Phase 11)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: The platform lacked automated CI/CD pipeline automation for builds, security audits, and secrets scanning. Frontend unit and component testing was absent, lacking test coverage for the cart reducer, checkout validation logic, and role-based protected routes. Observability lacked correlated request tracking (`X-Request-ID`), health/readiness probes (/health, /ready), and real-time operations telemetry counters.
+- **Decision**:
+  - **Backend Concurrency & Idempotency Depth Tests**: Created `ConcurrencyAndIdempotencyDepthTest` verifying:
+    1. Pessimistic lock `FOR UPDATE` preventing two riders from concurrently claiming the same dispatch offer.
+    2. Strict database idempotency rejecting duplicate order submissions with identical `idempotency_key` via unique constraints.
+    3. Expanded backend depth suite to 75 automated unit and servlet-level integration tests covering pricing, state machines, payment webhooks, refunds, auth matrix, and telemetry retention.
+  - **Frontend Testing Suite (Vitest & Playwright)**: Configured Vitest (`npm test`) with 13 automated unit tests across `cartReducer.test.js`, `checkoutValidation.test.js`, and `protectedRoutes.test.js`. Implemented 4 Playwright end-to-end user journey specs in `frontend/e2e/` covering customer discovery/ordering, partner kitchen kanban, rider trip execution, and admin operations.
+  - **Automated GitHub Actions CI Workflow**: Established `.github/workflows/ci.yml` with dual parallel jobs for backend Maven test/package with MySQL 8 service container, frontend Node 20 build/test/audit, and Gitleaks secrets detection.
+  - **Full Platform Observability**:
+    - Request correlation: Implemented `RequestIdFilter` generating/propagating `X-Request-ID` and injecting it into SLF4J MDC (`%X{requestId}`) for end-to-end log traceability.
+    - Liveness & Readiness: Created `HealthObservabilityServlet` serving `/health` (liveness), `/ready` (DB ping & JVM memory probe), and `/metrics`.
+    - Metric counters: Built `MetricsService` with thread-safe `LongAdder` counters and rolling 60-second window tracking orders placed, delivered, cancelled, failed payments, dispatch timeouts, active WebSocket channels, and orders per minute.
+
+
 
 

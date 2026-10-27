@@ -47,16 +47,14 @@ public class ServerMain {
         addFilter(ctx, "RequestLoggingFilter", new RequestLoggingFilter(), "/*");
         addFilter(ctx, "JwtAuthFilter", new JwtAuthFilter(), "/*");
 
-        // Health & Status Servlet
-        Tomcat.addServlet(ctx, "HealthServlet", new jakarta.servlet.http.HttpServlet() {
-            @Override
-            protected void doGet(jakarta.servlet.http.HttpServletRequest req, jakarta.servlet.http.HttpServletResponse resp) throws java.io.IOException {
-                resp.setContentType("application/json;charset=UTF-8");
-                resp.getWriter().write("{\"status\":\"UP\",\"service\":\"CravePulse Platform\",\"version\":\"1.0.0\"}");
-            }
-        });
-        ctx.addServletMappingDecoded("/health", "HealthServlet");
-        ctx.addServletMappingDecoded("/api/health", "HealthServlet");
+        // Observability & Health Servlets
+        Tomcat.addServlet(ctx, "HealthObservabilityServlet", new HealthObservabilityServlet());
+        ctx.addServletMappingDecoded("/health", "HealthObservabilityServlet");
+        ctx.addServletMappingDecoded("/api/health", "HealthObservabilityServlet");
+        ctx.addServletMappingDecoded("/ready", "HealthObservabilityServlet");
+        ctx.addServletMappingDecoded("/api/ready", "HealthObservabilityServlet");
+        ctx.addServletMappingDecoded("/metrics", "HealthObservabilityServlet");
+        ctx.addServletMappingDecoded("/api/metrics", "HealthObservabilityServlet");
 
         // Register Servlets
         Tomcat.addServlet(ctx, "AuthServlet", new AuthServlet()).setAsyncSupported(true);
@@ -120,8 +118,8 @@ public class ServerMain {
         try {
             logger.info("Starting FoodPlatform Embedded Tomcat on http://localhost:{}", port);
             tomcat.start();
-            logger.info("FoodPlatform Backend API running successfully on http://localhost:{}", port);
             com.foodplatform.service.DispatchService.startDispatchWorker();
+            new com.foodplatform.service.RetentionService().startScheduledRetention();
             tomcat.getServer().await();
         } catch (Exception e) {
             logger.error("Error starting server", e);
