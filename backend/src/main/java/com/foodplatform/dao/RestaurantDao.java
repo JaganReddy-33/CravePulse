@@ -29,4 +29,12 @@ public interface RestaurantDao {
     Long createRestaurant(Restaurant restaurant);
 
     List<Restaurant> listAllRestaurants(int limit, int offset);
+
+    void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes);
+
+    java.util.List<java.util.Map<String, Object>> getOperatingHours(long restaurantId);
+
+    void updateOperatingHours(long restaurantId, java.util.List<java.util.Map<String, Object>> hours);
+
+    java.util.List<java.util.Map<String, Object>> getPayouts(long restaurantId);
 }

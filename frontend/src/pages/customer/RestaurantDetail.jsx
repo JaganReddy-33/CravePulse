@@ -536,13 +536,6 @@ const RestaurantDetail = () => {
           loadedItems = catalogFallback.items;
         }
 
-        // Merge any newly added custom dishes saved by restaurant owner from localStorage
-        const customDishes = JSON.parse(localStorage.getItem('cravepulse_custom_dishes') || '[]');
-        const restaurantCustoms = customDishes.filter(d => Number(d.restaurantId) === activeRestId);
-        if (restaurantCustoms.length > 0) {
-          loadedItems = [...restaurantCustoms, ...loadedItems];
-        }
-
         setCategories(loadedCats);
         setItems(loadedItems);
       } catch (e) {

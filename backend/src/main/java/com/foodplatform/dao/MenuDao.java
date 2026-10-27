@@ -25,4 +25,18 @@ public interface MenuDao {
     void updatePrices(long itemId, BigDecimal platformPrice, BigDecimal dineInPrice);
 
     Long createItem(MenuItem item);
+
+    void updateItem(MenuItem item);
+
+    void deleteItem(long itemId);
+
+    void bulkUpdateAvailability(long restaurantId, List<Long> itemIds, boolean isAvailable);
+
+    void reorderItems(long restaurantId, List<Long> itemIds);
+
+    Long createCategory(long restaurantId, String name, int displayOrder);
+
+    void addVariant(MenuItemVariant variant);
+
+    void addAddon(MenuItemAddon addon);
 }

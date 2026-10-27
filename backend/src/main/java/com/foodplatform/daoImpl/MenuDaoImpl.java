@@ -42,7 +42,7 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public List<MenuItem> getItemsByRestaurantId(long restaurantId) {
         List<MenuItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM menu_items WHERE restaurant_id = ? ORDER BY category_id ASC, id ASC";
+        String sql = "SELECT * FROM menu_items WHERE restaurant_id = ? AND is_deleted = FALSE ORDER BY display_order ASC, category_id ASC, id ASC";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, restaurantId);
@@ -185,6 +185,143 @@ public class MenuDaoImpl implements MenuDao {
         return null;
     }
 
+    @Override
+    public void updateItem(MenuItem item) {
+        String sql = "UPDATE menu_items SET name = ?, description = ?, category_id = ?, dine_in_price = ?, platform_price = ?, " +
+                "image_url = ?, is_veg = ?, prep_time_minutes = ?, calorie_count = ?, food_type = ?, spice_level = ?, " +
+                "packaging_charge = ?, is_bestseller = ?, is_chef_special = ?, allergen_info = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, item.getName());
+            ps.setString(2, item.getDescription());
+            ps.setLong(3, item.getCategoryId());
+            ps.setBigDecimal(4, item.getDineInPrice());
+            ps.setBigDecimal(5, item.getPlatformPrice());
+            ps.setString(6, item.getImageUrl());
+            ps.setBoolean(7, item.isVeg());
+            ps.setInt(8, item.getPrepTimeMinutes());
+            ps.setInt(9, item.getCalorieCount());
+            ps.setString(10, item.getFoodType() != null ? item.getFoodType() : (item.isVeg() ? "VEG" : "NON_VEG"));
+            ps.setString(11, item.getSpiceLevel() != null ? item.getSpiceLevel() : "MEDIUM");
+            ps.setBigDecimal(12, item.getPackagingCharge() != null ? item.getPackagingCharge() : BigDecimal.ZERO);
+            ps.setBoolean(13, item.isBestseller());
+            ps.setBoolean(14, item.isChefSpecial());
+            ps.setString(15, item.getAllergenInfo());
+            ps.setLong(16, item.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error updating menu item: {}", item.getId(), e);
+        }
+    }
+
+    @Override
+    public void deleteItem(long itemId) {
+        String sql = "UPDATE menu_items SET is_deleted = TRUE, is_available = FALSE WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, itemId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error soft deleting menu item: {}", itemId, e);
+        }
+    }
+
+    @Override
+    public void bulkUpdateAvailability(long restaurantId, List<Long> itemIds, boolean isAvailable) {
+        if (itemIds == null || itemIds.isEmpty()) return;
+        StringBuilder sql = new StringBuilder("UPDATE menu_items SET is_available = ? WHERE restaurant_id = ? AND id IN (");
+        for (int i = 0; i < itemIds.size(); i++) {
+            if (i > 0) sql.append(",");
+            sql.append("?");
+        }
+        sql.append(")");
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setBoolean(1, isAvailable);
+            ps.setLong(2, restaurantId);
+            for (int i = 0; i < itemIds.size(); i++) {
+                ps.setLong(3 + i, itemIds.get(i));
+            }
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error in bulkUpdateAvailability for restaurant: {}", restaurantId, e);
+        }
+    }
+
+    @Override
+    public void reorderItems(long restaurantId, List<Long> itemIds) {
+        if (itemIds == null || itemIds.isEmpty()) return;
+        String sql = "UPDATE menu_items SET display_order = ? WHERE id = ? AND restaurant_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < itemIds.size(); i++) {
+                ps.setInt(1, i + 1);
+                ps.setLong(2, itemIds.get(i));
+                ps.setLong(3, restaurantId);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            logger.error("Error reordering items for restaurant: {}", restaurantId, e);
+        }
+    }
+
+    @Override
+    public Long createCategory(long restaurantId, String name, int displayOrder) {
+        String sql = "INSERT INTO menu_categories (restaurant_id, name, display_order, is_active) VALUES (?, ?, ?, TRUE)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, restaurantId);
+            ps.setString(2, name);
+            ps.setInt(3, displayOrder);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Error creating category for restaurant: {}", restaurantId, e);
+        }
+        return null;
+    }
+
+    @Override
+    public void addVariant(MenuItemVariant variant) {
+        String sql = "INSERT INTO menu_item_variants (menu_item_id, variant_name, price_adjustment, is_default, is_available) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, variant.getMenuItemId());
+            ps.setString(2, variant.getVariantName());
+            ps.setBigDecimal(3, variant.getPriceAdjustment() != null ? variant.getPriceAdjustment() : BigDecimal.ZERO);
+            ps.setBoolean(4, variant.isDefault());
+            ps.setBoolean(5, variant.isAvailable());
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) variant.setId(rs.getLong(1));
+            }
+        } catch (SQLException e) {
+            logger.error("Error adding variant: {}", variant.getVariantName(), e);
+        }
+    }
+
+    @Override
+    public void addAddon(MenuItemAddon addon) {
+        String sql = "INSERT INTO menu_item_addons (menu_item_id, addon_name, price, is_available) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, addon.getMenuItemId());
+            ps.setString(2, addon.getAddonName());
+            ps.setBigDecimal(3, addon.getPrice() != null ? addon.getPrice() : BigDecimal.ZERO);
+            ps.setBoolean(4, addon.isAvailable());
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) addon.setId(rs.getLong(1));
+            }
+        } catch (SQLException e) {
+            logger.error("Error adding addon: {}", addon.getAddonName(), e);
+        }
+    }
+
     private MenuItem mapMenuItem(ResultSet rs) throws SQLException {
         MenuItem item = new MenuItem();
         item.setId(rs.getLong("id"));
@@ -211,6 +348,12 @@ public class MenuDaoImpl implements MenuDao {
             item.setBestseller(rs.getBoolean("is_bestseller"));
             item.setChefSpecial(rs.getBoolean("is_chef_special"));
             item.setAllergenInfo(rs.getString("allergen_info"));
+            item.setDeleted(rs.getBoolean("is_deleted"));
+            item.setDisplayOrder(rs.getInt("display_order"));
+            Time af = rs.getTime("available_from");
+            if (af != null) item.setAvailableFrom(af.toString());
+            Time at = rs.getTime("available_to");
+            if (at != null) item.setAvailableTo(at.toString());
         } catch (SQLException ignored) {}
         return item;
     }

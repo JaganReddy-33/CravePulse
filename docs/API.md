@@ -736,3 +736,60 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 }
 ```
 - **Response (201 Created):** Created `OrderMessage` object, automatically broadcasted via WebSocket `new_chat_message`.
+
+---
+
+## 11. Partner (Restaurant) Portal APIs
+
+### 11.1 Dynamic Partner Profile Resolution
+- **Endpoint:** `GET /api/restaurants/my-profile`
+- **Auth Required:** Yes (`RESTAURANT_OWNER` or `ADMIN`)
+- **Response (200 OK):** Current authenticated partner's `Restaurant` profile.
+
+### 11.2 Restaurant Settings & Payout Banking
+- **Endpoint:** `GET /api/restaurants/{id}/settings`
+- **Auth Required:** Yes (Owner of restaurant or `ADMIN`)
+- **Response (200 OK):** Settings object with masked bank account (`••••••••••9931`), IFSC, beneficiary, UPI ID, auto-reject SLA minutes, throttle status, and operating hours.
+
+- **Endpoint:** `POST /api/restaurants/{id}/settings`
+- **Auth Required:** Yes (Owner of restaurant or `ADMIN`)
+- **Request Body:**
+```json
+{
+  "name": "Meghana Foods Indiranagar",
+  "phone": "+918025219999",
+  "address": "544, 1st Cross, CMH Road, Indiranagar, Bengaluru",
+  "bannerImage": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200",
+  "bankAccountNumber": "50200088129931",
+  "bankIfsc": "HDFC0001234",
+  "bankBeneficiaryName": "Meghana Foods Pvt Ltd",
+  "upiId": "meghana.foods@okhdfcbank",
+  "autoRejectMinutes": 10
+}
+```
+
+### 11.3 Weekly Operating Hours Schedule
+- **Endpoint:** `GET /api/restaurants/{id}/hours` & `POST /api/restaurants/{id}/hours`
+- **Auth Required:** Yes (Owner or `ADMIN`)
+- **Payload:** Array of `{ "dayOfWeek": "Monday", "openTime": "11:00", "closeTime": "23:00", "isClosed": false }`.
+
+### 11.4 Partner Financial Settlements Ledger
+- **Endpoint:** `GET /api/restaurants/{id}/payouts`
+- **Auth Required:** Yes (Owner or `ADMIN`)
+- **Response (200 OK):** Array of historical settlement statements containing `payoutReference`, `grossSales`, `commissionAmount`, `netPayout`, `status`, and bank `utrNumber`.
+
+### 11.5 Real-Time SQL Analytics
+- **Endpoint:** `GET /api/restaurants/{id}/analytics`
+- **Auth Required:** Yes (Owner or `ADMIN`)
+- **Response (200 OK):** Computed SQL metrics containing `summaryToday`, `summary7Days`, `summary30Days`, `summaryAllTime`, `cancellation` (rate & count), `peakHours`, `dailyTrend7Days`, `topDishes`, and `ratings`.
+
+### 11.6 Menu Management & Soft Deletion
+- **Endpoint:** `POST /api/menu/item` (Create dish with image URL validation)
+- **Endpoint:** `POST /api/menu/item/{id}/update` (Update dish details and prices)
+- **Endpoint:** `POST /api/menu/item/{id}/delete` (Soft delete dish, setting `is_deleted = TRUE`)
+- **Endpoint:** `POST /api/menu/restaurant/{id}/bulk-availability` (Bulk mark sold-out or in-stock)
+- **Endpoint:** `POST /api/menu/restaurant/{id}/reorder` (Update item display ordering)
+- **Endpoint:** `POST /api/menu/categories` (Add new category)
+- **Endpoint:** `POST /api/menu/item/{id}/variants` (Add portion variant)
+- **Endpoint:** `POST /api/menu/item/{id}/addons` (Add customer add-on)
+

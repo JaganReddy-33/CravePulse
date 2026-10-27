@@ -1,21 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const PartnerLayout = () => {
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [restaurant, setRestaurant] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const chefName = localStorage.getItem('cravepulse_partner_chef_name') || user?.fullName || 'Chef Lohith';
-  const restName = localStorage.getItem('cravepulse_partner_rest_name') || 'Spice Symphony & Grill';
-  const chefPhoto = localStorage.getItem('cravepulse_partner_chef_photo') || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150';
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/restaurants/my-profile');
+      if (res.success && res.data) {
+        setRestaurant(res.data);
+      }
+    } catch (err) {
+      console.warn('Failed to resolve authenticated partner restaurant profile:', err);
+      setError(err.message || 'Restaurant profile not found');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/partner/login', { replace: true });
   };
+
+  const chefName = user?.fullName || 'Partner Chef';
+  const restName = restaurant?.name || 'Kitchen Partner';
+  const chefPhoto = restaurant?.logoImage || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150';
 
   return (
     <div className="partner-portal d-flex min-vh-100" style={{ background: '#f5f6fa' }}>
@@ -86,7 +109,16 @@ const PartnerLayout = () => {
             </Link>
             <div>
               <h5 className="fw-extrabold mb-0 text-dark">{restName}</h5>
-              <small className="text-muted">FSSAI-11223344556677 • Indiranagar Hub</small>
+              <small className="text-muted">
+                {restaurant?.fssaiLicense ? `${restaurant.fssaiLicense} • ` : ''}
+                {restaurant?.locality || 'Bengaluru Central'}
+                {restaurant && !restaurant.isOpen && (
+                  <span className="badge bg-danger ms-2">STORE CLOSED</span>
+                )}
+                {restaurant?.isAutoThrottled && (
+                  <span className="badge bg-warning text-dark ms-2">THROTTLED</span>
+                )}
+              </small>
             </div>
           </div>
 
@@ -135,14 +167,16 @@ const PartnerLayout = () => {
                   >
                     <i className="bi bi-egg-fried text-warning"></i> Manage Menu & Prices
                   </Link>
-                  <Link
-                    to="/restaurant/1"
-                    className="dropdown-item py-2 px-3 text-dark small rounded-3 d-flex align-items-center gap-2 hover-bg-light"
-                    onClick={() => setShowProfileMenu(false)}
-                    target="_blank"
-                  >
-                    <i className="bi bi-box-arrow-up-right text-primary"></i> Live Consumer View ↗
-                  </Link>
+                  {restaurant?.id && (
+                    <Link
+                      to={`/restaurant/${restaurant.id}`}
+                      className="dropdown-item py-2 px-3 text-dark small rounded-3 d-flex align-items-center gap-2 hover-bg-light"
+                      onClick={() => setShowProfileMenu(false)}
+                      target="_blank"
+                    >
+                      <i className="bi bi-box-arrow-up-right text-primary"></i> Live Consumer View ↗
+                    </Link>
+                  )}
                   <hr className="my-1" />
                   <button
                     className="dropdown-item py-2 px-3 text-danger small rounded-3 d-flex align-items-center gap-2 w-100 text-start"
@@ -177,7 +211,19 @@ const PartnerLayout = () => {
 
         {/* Content View */}
         <main className="flex-grow-1 p-3 p-md-4 overflow-auto">
-          <Outlet />
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="text-muted small mt-2">Loading restaurant workspace...</p>
+            </div>
+          ) : error && !restaurant ? (
+            <div className="alert alert-danger rounded-4 p-4 shadow-sm">
+              <h5>Restaurant Profile Not Found</h5>
+              <p className="mb-0">{error}. Please contact administrator to link your partner account to a restaurant.</p>
+            </div>
+          ) : (
+            <Outlet context={{ restaurant, refreshRestaurant: fetchProfile, loading }} />
+          )}
         </main>
       </div>
     </div>

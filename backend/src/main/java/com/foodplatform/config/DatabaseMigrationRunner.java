@@ -25,7 +25,8 @@ public class DatabaseMigrationRunner {
             "V5__phase3_catalog_schema.sql",
             "V6__phase3_bangalore_catalog.sql",
             "V7__phase4_rider_dispatch_and_cod.sql",
-            "V8__phase5_order_chat_and_realtime.sql"
+            "V8__phase5_order_chat_and_realtime.sql",
+            "V9__phase6_partner_portal.sql"
     };
 
     public static void runMigrations() {

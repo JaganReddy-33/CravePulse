@@ -29,6 +29,10 @@ public class MenuItem {
     private boolean isBestseller;
     private boolean isChefSpecial;
     private String allergenInfo;
+    private boolean isDeleted = false;
+    private int displayOrder = 0;
+    private String availableFrom;
+    private String availableTo;
     private List<MenuItemVariant> variants = new ArrayList<>();
     private List<MenuItemAddon> addons = new ArrayList<>();
 
@@ -109,4 +113,16 @@ public class MenuItem {
 
     public String getAllergenInfo() { return allergenInfo; }
     public void setAllergenInfo(String allergenInfo) { this.allergenInfo = allergenInfo; }
+
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean deleted) { isDeleted = deleted; }
+
+    public int getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+
+    public String getAvailableFrom() { return availableFrom; }
+    public void setAvailableFrom(String availableFrom) { this.availableFrom = availableFrom; }
+
+    public String getAvailableTo() { return availableTo; }
+    public void setAvailableTo(String availableTo) { this.availableTo = availableTo; }
 }

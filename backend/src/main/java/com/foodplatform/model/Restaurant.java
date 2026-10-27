@@ -39,6 +39,11 @@ public class Restaurant {
     private String locality;
     private String landmark;
     private String pincode;
+    private String bankAccountNumber;
+    private String bankIfsc;
+    private String bankBeneficiaryName;
+    private String upiId;
+    private int autoRejectMinutes = 10;
 
     public Restaurant() {
     }
@@ -147,4 +152,29 @@ public class Restaurant {
 
     public String getPincode() { return pincode; }
     public void setPincode(String pincode) { this.pincode = pincode; }
+
+    public String getBankAccountNumber() { return bankAccountNumber; }
+    public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
+
+    public String getMaskedBankAccount() {
+        if (bankAccountNumber == null) {
+            return null;
+        }
+        if (bankAccountNumber.length() < 4) {
+            return bankAccountNumber;
+        }
+        return "••••••••••" + bankAccountNumber.substring(bankAccountNumber.length() - 4);
+    }
+
+    public String getBankIfsc() { return bankIfsc; }
+    public void setBankIfsc(String bankIfsc) { this.bankIfsc = bankIfsc; }
+
+    public String getBankBeneficiaryName() { return bankBeneficiaryName; }
+    public void setBankBeneficiaryName(String bankBeneficiaryName) { this.bankBeneficiaryName = bankBeneficiaryName; }
+
+    public String getUpiId() { return upiId; }
+    public void setUpiId(String upiId) { this.upiId = upiId; }
+
+    public int getAutoRejectMinutes() { return autoRejectMinutes; }
+    public void setAutoRejectMinutes(int autoRejectMinutes) { this.autoRejectMinutes = autoRejectMinutes; }
 }

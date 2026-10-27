@@ -17,93 +17,222 @@ public class AnalyticsService {
     public Map<String, Object> getRestaurantAnalytics(long restaurantId) {
         Map<String, Object> data = new HashMap<>();
 
-        // Real aggregated numbers from database
+        // 1. All-time summary
         String summarySql = "SELECT " +
                 "COUNT(id) AS total_orders, " +
                 "IFNULL(SUM(total_amount), 0) AS total_revenue, " +
                 "IFNULL(AVG(total_amount), 0) AS avg_order_value " +
                 "FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED'";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(summarySql)) {
-            ps.setLong(1, restaurantId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int totalOrders = rs.getInt("total_orders");
-                    double totalRev = rs.getDouble("total_revenue");
-                    double aov = rs.getDouble("avg_order_value");
+        // 2. Today's summary
+        String todaySql = "SELECT " +
+                "COUNT(id) AS todays_orders, " +
+                "IFNULL(SUM(total_amount), 0) AS todays_revenue " +
+                "FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED' AND created_at >= CURDATE()";
 
-                    // Seed with baseline realism if fresh
-                    data.put("totalRevenue", totalRev > 0 ? totalRev : 32450.00);
-                    data.put("totalRevenueGrowth", 8.2);
-                    data.put("totalOrders", totalOrders > 0 ? totalOrders : 168);
-                    data.put("totalOrdersGrowth", 6.2);
-                    data.put("newCustomers", 52);
-                    data.put("newCustomersGrowth", 4.1);
-                    data.put("averageOrderValue", aov > 0 ? Math.round(aov) : 193);
-                    data.put("aovGrowth", 3.7);
+        // 3. 7-Day & 30-Day summaries
+        String sevenDaySql = "SELECT COUNT(id) AS cnt, IFNULL(SUM(total_amount), 0) AS rev FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+        String thirtyDaySql = "SELECT COUNT(id) AS cnt, IFNULL(SUM(total_amount), 0) AS rev FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
 
-                    data.put("todaysRevenue", 8020.00);
-                    data.put("todaysOrders", 32);
-                    data.put("peakRevenue", "₹5,600 | 4 PM");
-                    data.put("peakOrders", "28 | 4 PM");
+        // 4. Cancellation rate
+        String cancelSql = "SELECT COUNT(id) AS cancelled_count FROM orders WHERE restaurant_id = ? AND status = 'CANCELLED'";
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            // Run 1: Summary
+            try (PreparedStatement ps = conn.prepareStatement(summarySql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        int totalOrders = rs.getInt("total_orders");
+                        double totalRev = rs.getDouble("total_revenue");
+                        double aov = rs.getDouble("avg_order_value");
+                        data.put("totalOrders", totalOrders);
+                        data.put("totalRevenue", totalRev);
+                        data.put("averageOrderValue", Math.round(aov));
+                        data.put("isEmpty", totalOrders == 0);
+                    }
                 }
             }
+
+            // Run 2: Today
+            try (PreparedStatement ps = conn.prepareStatement(todaySql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        data.put("todaysOrders", rs.getInt("todays_orders"));
+                        data.put("todaysRevenue", rs.getDouble("todays_revenue"));
+                    }
+                }
+            }
+
+            // Run 3: 7 Days & 30 Days
+            try (PreparedStatement ps = conn.prepareStatement(sevenDaySql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        data.put("sevenDayOrders", rs.getInt("cnt"));
+                        data.put("sevenDayRevenue", rs.getDouble("rev"));
+                    }
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(thirtyDaySql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        data.put("thirtyDayOrders", rs.getInt("cnt"));
+                        data.put("thirtyDayRevenue", rs.getDouble("rev"));
+                    }
+                }
+            }
+
+            // Run 4: Cancellation count and rate
+            try (PreparedStatement ps = conn.prepareStatement(cancelSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        int cancelled = rs.getInt("cancelled_count");
+                        data.put("cancelledOrders", cancelled);
+                        int valid = (int) data.getOrDefault("totalOrders", 0);
+                        double totalAll = valid + cancelled;
+                        double rate = totalAll > 0 ? (cancelled * 100.0 / totalAll) : 0.0;
+                        data.put("cancellationRate", Math.round(rate * 10.0) / 10.0);
+                    }
+                }
+            }
+
+            // 5. Daily Trend (last 7 days from SQL)
+            List<Map<String, Object>> trend = new ArrayList<>();
+            String trendSql = "SELECT DATE_FORMAT(created_at, '%d %b') AS day_label, COUNT(id) AS ord_cnt, IFNULL(SUM(total_amount), 0) AS rev " +
+                    "FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) " +
+                    "GROUP BY DATE(created_at), DATE_FORMAT(created_at, '%d %b') ORDER BY DATE(created_at) ASC";
+            try (PreparedStatement ps = conn.prepareStatement(trendSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        trend.add(Map.of(
+                                "time", rs.getString("day_label"),
+                                "orders", rs.getInt("ord_cnt"),
+                                "revenue", rs.getDouble("rev")
+                        ));
+                    }
+                }
+            }
+            data.put("trend", trend);
+
+            // 6. Top Selling Dishes (from real order_items joined with menu_items)
+            List<Map<String, Object>> topDishes = new ArrayList<>();
+            String topDishesSql = "SELECT oi.item_name, SUM(oi.quantity) AS total_orders, IFNULL(SUM(oi.total_price), 0) AS total_rev, " +
+                    "IFNULL(MAX(mi.image_url), 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=100') AS img " +
+                    "FROM order_items oi JOIN orders o ON oi.order_id = o.id " +
+                    "LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id " +
+                    "WHERE o.restaurant_id = ? AND o.status != 'CANCELLED' " +
+                    "GROUP BY oi.item_name ORDER BY total_orders DESC LIMIT 5";
+            try (PreparedStatement ps = conn.prepareStatement(topDishesSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        topDishes.add(Map.of(
+                                "name", rs.getString("item_name"),
+                                "orders", rs.getInt("total_orders"),
+                                "revenue", rs.getDouble("total_rev"),
+                                "image", rs.getString("img")
+                        ));
+                    }
+                }
+            }
+            data.put("topDishes", topDishes);
+
+            // 7. Orders by Category
+            List<Map<String, Object>> categories = new ArrayList<>();
+            String catSql = "SELECT mc.name AS cat_name, COUNT(oi.id) AS cnt, IFNULL(SUM(oi.total_price), 0) AS rev " +
+                    "FROM order_items oi JOIN orders o ON oi.order_id = o.id " +
+                    "JOIN menu_items mi ON oi.menu_item_id = mi.id " +
+                    "JOIN menu_categories mc ON mi.category_id = mc.id " +
+                    "WHERE o.restaurant_id = ? AND o.status != 'CANCELLED' " +
+                    "GROUP BY mc.id, mc.name ORDER BY cnt DESC LIMIT 5";
+            try (PreparedStatement ps = conn.prepareStatement(catSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        categories.add(Map.of(
+                                "category", rs.getString("cat_name"),
+                                "orders", rs.getInt("cnt"),
+                                "revenue", rs.getDouble("rev")
+                        ));
+                    }
+                }
+            }
+            data.put("categories", categories);
+
+            // 8. Peak Hourly Ordering Window
+            String peakSql = "SELECT HOUR(created_at) AS hr, COUNT(id) AS cnt, IFNULL(SUM(total_amount), 0) AS rev " +
+                    "FROM orders WHERE restaurant_id = ? AND status != 'CANCELLED' " +
+                    "GROUP BY HOUR(created_at) ORDER BY cnt DESC LIMIT 1";
+            try (PreparedStatement ps = conn.prepareStatement(peakSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        int hr = rs.getInt("hr");
+                        String peakTime = (hr % 12 == 0 ? 12 : hr % 12) + " " + (hr >= 12 ? "PM" : "AM");
+                        data.put("peakRevenue", "₹" + Math.round(rs.getDouble("rev")) + " | " + peakTime);
+                        data.put("peakOrders", rs.getInt("cnt") + " | " + peakTime);
+                    } else {
+                        data.put("peakRevenue", "₹0 | --");
+                        data.put("peakOrders", "0 | --");
+                    }
+                }
+            }
+
+            // 9. Status Gauge Breakdown
+            Map<String, Integer> statusCounts = new HashMap<>();
+            String gaugeSql = "SELECT status, COUNT(id) AS cnt FROM orders WHERE restaurant_id = ? GROUP BY status";
+            int allCount = 0;
+            try (PreparedStatement ps = conn.prepareStatement(gaugeSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String st = rs.getString("status");
+                        int count = rs.getInt("cnt");
+                        statusCounts.put(st, count);
+                        allCount += count;
+                    }
+                }
+            }
+            int comp = statusCounts.getOrDefault("DELIVERED", 0);
+            int prep = statusCounts.getOrDefault("PREPARING", 0) + statusCounts.getOrDefault("ACCEPTED", 0);
+            int pend = statusCounts.getOrDefault("PLACED", 0);
+            int canc = statusCounts.getOrDefault("CANCELLED", 0) + statusCounts.getOrDefault("REJECTED", 0);
+
+            data.put("statusGauge", Map.of(
+                    "completedPct", allCount > 0 ? (comp * 100 / allCount) : 0,
+                    "completedCount", comp,
+                    "preparingPct", allCount > 0 ? (prep * 100 / allCount) : 0,
+                    "preparingCount", prep,
+                    "pendingPct", allCount > 0 ? (pend * 100 / allCount) : 0,
+                    "pendingCount", pend,
+                    "cancelledPct", allCount > 0 ? (canc * 100 / allCount) : 0,
+                    "cancelledCount", canc
+            ));
+
+            // 10. Multi-dimensional Reviews Summary
+            String revSql = "SELECT COUNT(id) AS cnt, IFNULL(AVG(food_rating), 0) AS avg_food, " +
+                    "IFNULL(AVG(packaging_rating), 0) AS avg_pkg, IFNULL(AVG(delivery_rating), 0) AS avg_del " +
+                    "FROM reviews WHERE restaurant_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(revSql)) {
+                ps.setLong(1, restaurantId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        data.put("reviewCount", rs.getInt("cnt"));
+                        data.put("avgFoodRating", Math.round(rs.getDouble("avg_food") * 10.0) / 10.0);
+                        data.put("avgPackagingRating", Math.round(rs.getDouble("avg_pkg") * 10.0) / 10.0);
+                        data.put("avgDeliveryRating", Math.round(rs.getDouble("avg_del") * 10.0) / 10.0);
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             logger.error("Error fetching restaurant analytics", e);
         }
-
-        // Revenue & Orders Trend (hourly points matching reference image 2)
-        List<Map<String, Object>> trend = List.of(
-                Map.of("time", "12 AM", "revenue", 1200, "orders", 6),
-                Map.of("time", "4 AM", "revenue", 400, "orders", 2),
-                Map.of("time", "8 AM", "revenue", 2100, "orders", 12),
-                Map.of("time", "12 PM", "revenue", 5200, "orders", 26),
-                Map.of("time", "4 PM", "revenue", 5600, "orders", 28),
-                Map.of("time", "8 PM", "revenue", 4800, "orders", 24),
-                Map.of("time", "11 PM", "revenue", 2900, "orders", 14)
-        );
-        data.put("trend", trend);
-
-        // Orders by Category
-        List<Map<String, Object>> categories = List.of(
-                Map.of("category", "Main Course", "percentage", 55, "orders", 93, "color", "#ff6b4a"),
-                Map.of("category", "Snacks", "percentage", 20, "orders", 34, "color", "#f9a825"),
-                Map.of("category", "Beverages", "percentage", 15, "orders", 25, "color", "#00b894"),
-                Map.of("category", "Desserts", "percentage", 10, "orders", 16, "color", "#0984e3")
-        );
-        data.put("categories", categories);
-        data.put("topCategory", "Main Course is the most ordered category this week.");
-
-        // Top Selling Dishes matching reference image 2
-        List<Map<String, Object>> topDishes = List.of(
-                Map.of("name", "Paneer Butter Masala", "orders", 124, "revenue", 6450, "image", "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=100"),
-                Map.of("name", "Chicken Biryani", "orders", 98, "revenue", 5320, "image", "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100"),
-                Map.of("name", "Veg Pizza", "orders", 76, "revenue", 4280, "image", "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=100"),
-                Map.of("name", "Masala Dosa", "orders", 58, "revenue", 3120, "image", "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=100"),
-                Map.of("name", "Chocolate Lava Cake", "orders", 38, "revenue", 2280, "image", "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=100")
-        );
-        data.put("topDishes", topDishes);
-
-        // Order Status gauge stats matching image 2
-        data.put("statusGauge", Map.of(
-                "completedPct", 64,
-                "completedCount", 108,
-                "preparingPct", 22,
-                "preparingCount", 37,
-                "pendingPct", 10,
-                "pendingCount", 17,
-                "cancelledPct", 4,
-                "cancelledCount", 6
-        ));
-
-        // Business Insights card
-        data.put("businessInsights", Map.of(
-                "growth", "+8.2% vs Yesterday",
-                "topItem", "Paneer Butter Masala",
-                "bestSeller", "Chicken Biryani",
-                "peakHour", "1:00 PM - 2:00 PM"
-        ));
 
         return data;
     }

@@ -155,11 +155,11 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 6 – Partner (Restaurant) Portal
 
-- [ ] Resolve the restaurant from the authenticated owner everywhere; delete all hard-coded `restaurant/1` calls.
-- [ ] **Menu management through the API only:** create, edit, delete (soft), reorder, categories, variants, add-ons, images (validated upload, size and type limits), availability, schedule, and bulk sold-out. Remove the localStorage dish merge.
-- [ ] **Kitchen Kanban** driven by WebSocket plus polling fallback: new-order sound, accept with prep time, reject with reason, mark ready, auto-reject timer if not accepted in N minutes, overload throttle, store open/closed with business hours.
-- [ ] **Real analytics from SQL** (today, 7 and 30 days, top items, peak hours, cancellation rate, ratings), with no fabricated constants; empty states when there is no data.
-- [ ] **Settings** (profile, banner, bank and UPI payout details) saved to the database, with sensitive fields encrypted or masked; payout ledger and settlement statements.
+- [x] Resolve the restaurant from the authenticated owner everywhere; delete all hard-coded `restaurant/1` calls.
+- [x] **Menu management through the API only:** create, edit, delete (soft), reorder, categories, variants, add-ons, images (validated upload, size and type limits), availability, schedule, and bulk sold-out. Remove the localStorage dish merge.
+- [x] **Kitchen Kanban** driven by WebSocket plus polling fallback: new-order sound, accept with prep time, reject with reason, mark ready, auto-reject timer if not accepted in N minutes, overload throttle, store open/closed with business hours.
+- [x] **Real analytics from SQL** (today, 7 and 30 days, top items, peak hours, cancellation rate, ratings), with no fabricated constants; empty states when there is no data.
+- [x] **Settings** (profile, banner, bank and UPI payout details) saved to the database, with sensitive fields encrypted or masked; payout ledger and settlement statements.
 
 ---
 

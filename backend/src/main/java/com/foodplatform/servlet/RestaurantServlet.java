@@ -45,6 +45,20 @@ public class RestaurantServlet extends BaseServlet {
             if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long userId = getAuthenticatedUserId(req);
             Restaurant rest = restaurantDao.findByUserId(userId);
+            if (rest == null && "ADMIN".equalsIgnoreCase(getAuthenticatedRole(req))) {
+                String reqRestId = req.getParameter("restaurantId");
+                if (reqRestId != null) {
+                    try {
+                        rest = restaurantDao.findById(Long.parseLong(reqRestId));
+                    } catch (NumberFormatException ignored) {}
+                }
+                if (rest == null) {
+                    List<Restaurant> all = restaurantDao.listAllRestaurants(1, 0);
+                    if (!all.isEmpty()) {
+                        rest = all.get(0);
+                    }
+                }
+            }
             if (rest == null) {
                 JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Restaurant profile not found for authenticated user");
                 return;
@@ -62,6 +76,62 @@ public class RestaurantServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, restId)) return;
             Map<String, Object> analytics = analyticsService.getRestaurantAnalytics(restId);
             JsonUtil.sendSuccess(res, 200, "Restaurant analytics", analytics);
+            return;
+        }
+
+        if (path.endsWith("/settings")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID missing");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+            Restaurant rest = restaurantDao.findById(restId);
+            if (rest == null) {
+                JsonUtil.sendError(res, 404, "Restaurant not found");
+                return;
+            }
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("id", rest.getId());
+            settings.put("name", rest.getName());
+            settings.put("phone", rest.getPhone());
+            settings.put("address", rest.getAddress());
+            settings.put("bannerImage", rest.getBannerImage());
+            settings.put("logoImage", rest.getLogoImage());
+            settings.put("fssaiLicense", rest.getFssaiLicense());
+            settings.put("gstNumber", rest.getGstNumber());
+            settings.put("commissionRate", rest.getCommissionRate());
+            settings.put("bankAccountNumber", rest.getMaskedBankAccount());
+            settings.put("bankIfsc", rest.getBankIfsc());
+            settings.put("bankBeneficiaryName", rest.getBankBeneficiaryName());
+            settings.put("upiId", rest.getUpiId());
+            settings.put("autoRejectMinutes", rest.getAutoRejectMinutes());
+            settings.put("isAutoThrottled", rest.isAutoThrottled());
+            settings.put("isOpen", rest.isOpen());
+            settings.put("operatingHours", restaurantDao.getOperatingHours(restId));
+            JsonUtil.sendSuccess(res, 200, "Restaurant settings", settings);
+            return;
+        }
+
+        if (path.endsWith("/hours")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID missing");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+            JsonUtil.sendSuccess(res, 200, "Restaurant operating hours", restaurantDao.getOperatingHours(restId));
+            return;
+        }
+
+        if (path.endsWith("/payouts")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID missing");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+            JsonUtil.sendSuccess(res, 200, "Restaurant payouts ledger", restaurantDao.getPayouts(restId));
             return;
         }
 
@@ -129,7 +199,54 @@ public class RestaurantServlet extends BaseServlet {
             return;
         }
 
+        if (path.endsWith("/settings")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+
+            JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (body != null) {
+                String name = body.has("name") && !body.get("name").isJsonNull() ? body.get("name").getAsString() : null;
+                String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : null;
+                String address = body.has("address") && !body.get("address").isJsonNull() ? body.get("address").getAsString() : null;
+                String banner = body.has("bannerImage") && !body.get("bannerImage").isJsonNull() ? body.get("bannerImage").getAsString() : null;
+                String bankAccount = body.has("bankAccountNumber") && !body.get("bankAccountNumber").isJsonNull() ? body.get("bankAccountNumber").getAsString() : null;
+                String ifsc = body.has("bankIfsc") && !body.get("bankIfsc").isJsonNull() ? body.get("bankIfsc").getAsString() : null;
+                String beneficiary = body.has("bankBeneficiaryName") && !body.get("bankBeneficiaryName").isJsonNull() ? body.get("bankBeneficiaryName").getAsString() : null;
+                String upi = body.has("upiId") && !body.get("upiId").isJsonNull() ? body.get("upiId").getAsString() : null;
+                int autoReject = body.has("autoRejectMinutes") ? body.get("autoRejectMinutes").getAsInt() : 10;
+
+                restaurantDao.updateSettings(restId, name, phone, address, banner, bankAccount, ifsc, beneficiary, upi, autoReject);
+                JsonUtil.sendSuccess(res, 200, "Restaurant settings updated successfully", Map.of("restaurantId", restId));
+                return;
+            }
+        }
+
+        if (path.endsWith("/hours")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+
+            List<Map<String, Object>> hoursList = JsonUtil.readRequestBody(req, List.class);
+            if (hoursList != null) {
+                restaurantDao.updateOperatingHours(restId, hoursList);
+                JsonUtil.sendSuccess(res, 200, "Operating hours updated", Map.of("restaurantId", restId));
+                return;
+            }
+        }
+
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        doPost(req, res);
     }
 
     private Double parseDoubleParam(HttpServletRequest req, String name, double defVal) {
