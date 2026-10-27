@@ -22,6 +22,7 @@ public class Order {
     private BigDecimal platformFee;
     private BigDecimal gstTax;
     private BigDecimal totalAmount;
+    private BigDecimal tipAmount = BigDecimal.ZERO;
     private String paymentMode; // COD, RAZORPAY
     private String paymentStatus; // PENDING, PAID, FAILED, REFUNDED
     private String idempotencyKey;
@@ -106,6 +107,9 @@ public class Order {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public BigDecimal getTipAmount() { return tipAmount != null ? tipAmount : BigDecimal.ZERO; }
+    public void setTipAmount(BigDecimal tipAmount) { this.tipAmount = tipAmount; }
 
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }

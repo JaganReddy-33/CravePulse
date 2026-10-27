@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const RIDER_AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
@@ -17,22 +19,23 @@ const OPERATIONAL_HUBS = [
 ];
 
 const RiderProfile = () => {
+  const { user } = useAuth();
   const { profile } = useOutletContext() || {};
 
   const [riderName, setRiderName] = useState(() => {
-    return localStorage.getItem('cravepulse_rider_name') || profile?.riderName || 'Captain Prasad Rao';
+    return localStorage.getItem('cravepulse_rider_name') || profile?.riderName || user?.fullName || 'Delivery Partner';
   });
   const [phone, setPhone] = useState(() => {
-    return localStorage.getItem('cravepulse_rider_phone') || profile?.phone || '+91 98490 56789';
+    return localStorage.getItem('cravepulse_rider_phone') || profile?.phone || user?.phone || '';
   });
   const [avatarUrl, setAvatarUrl] = useState(() => {
     return localStorage.getItem('cravepulse_rider_avatar') || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150';
   });
-  const [vehicleType, setVehicleType] = useState('ELECTRIC_BIKE');
+  const [vehicleType, setVehicleType] = useState(() => profile?.vehicleType || 'ELECTRIC_BIKE');
   const [vehicleModel, setVehicleModel] = useState(() => {
-    return localStorage.getItem('cravepulse_rider_vehicle') || 'Ather 450X EV (KA-03-EQ-4421)';
+    return localStorage.getItem('cravepulse_rider_vehicle') || profile?.vehicleNumber || 'Electric Two-Wheeler';
   });
-  const [licenseNumber, setLicenseNumber] = useState('DL-KA-2022-0098412');
+  const [licenseNumber, setLicenseNumber] = useState(() => profile?.drivingLicense || 'DL-KA-2024-XXXX');
   const [cityZone, setCityZone] = useState('Indiranagar Culinary District (Primary)');
   const [shiftPreference, setShiftPreference] = useState('EVENING_PEAK');
   const [saved, setSaved] = useState(false);
@@ -52,12 +55,22 @@ const RiderProfile = () => {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     localStorage.setItem('cravepulse_rider_name', riderName.trim());
     localStorage.setItem('cravepulse_rider_phone', phone.trim());
     localStorage.setItem('cravepulse_rider_avatar', avatarUrl.trim());
     localStorage.setItem('cravepulse_rider_vehicle', vehicleModel.trim());
+
+    try {
+      await api.post('/rider/profile', {
+        vehicleType,
+        vehicleNumber: vehicleModel.trim(),
+        drivingLicense: licenseNumber.trim()
+      });
+    } catch (err) {
+      console.warn('Error syncing profile with backend', err);
+    }
 
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

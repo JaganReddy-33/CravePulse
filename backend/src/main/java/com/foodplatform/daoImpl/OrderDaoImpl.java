@@ -8,6 +8,7 @@ import com.foodplatform.model.OrderItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +22,8 @@ public class OrderDaoImpl implements OrderDao {
         String sql = "INSERT INTO orders (order_number, customer_id, restaurant_id, delivery_address_id, status, " +
                 "subtotal, restaurant_discount, coupon_id, coupon_discount, packaging_fee, delivery_fee, platform_fee, gst_tax, " +
                 "total_amount, payment_mode, payment_status, idempotency_key, eta_min_minutes, eta_max_minutes, " +
-                "estimated_delivery_at, special_instructions, delivery_otp) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "estimated_delivery_at, special_instructions, delivery_otp, tip_amount) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderNumber());
@@ -48,6 +49,7 @@ public class OrderDaoImpl implements OrderDao {
             ps.setTimestamp(20, order.getEstimatedDeliveryAt());
             ps.setString(21, order.getSpecialInstructions());
             ps.setString(22, order.getDeliveryOtp());
+            ps.setBigDecimal(23, order.getTipAmount() != null ? order.getTipAmount() : BigDecimal.ZERO);
 
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -411,6 +413,41 @@ public class OrderDaoImpl implements OrderDao {
         }
     }
 
+    @Override
+    public List<Order> findUnassignedOrders(int limit) {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+                "u.full_name AS cust_name, u.phone AS cust_phone, " +
+                "NULL AS rd_name, NULL AS rd_phone, " +
+                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
+                "a.latitude AS addr_lat, a.longitude AS addr_lng " +
+                "FROM orders o " +
+                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+                "JOIN users u ON o.customer_id = u.id " +
+                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+                "WHERE o.rider_id IS NULL " +
+                "AND o.status IN ('PLACED', 'ACCEPTED', 'PREPARING', 'READY') " +
+                "AND NOT EXISTS (" +
+                "    SELECT 1 FROM delivery_dispatches d " +
+                "    WHERE d.order_id = o.id AND d.dispatch_status = 'OFFERED'" +
+                ") " +
+                "ORDER BY o.id ASC LIMIT ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Order o = mapOrder(rs);
+                    hydrateOrderDetails(o, rs);
+                    list.add(o);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding unassigned orders for dispatch", e);
+        }
+        return list;
+    }
+
     private void hydrateOrderDetails(Order o, ResultSet rs) throws SQLException {
         o.setRestaurantName(rs.getString("rest_name"));
         o.setRestaurantLat(rs.getDouble("rest_lat"));
@@ -444,6 +481,10 @@ public class OrderDaoImpl implements OrderDao {
         o.setPlatformFee(rs.getBigDecimal("platform_fee"));
         o.setGstTax(rs.getBigDecimal("gst_tax"));
         o.setTotalAmount(rs.getBigDecimal("total_amount"));
+        try {
+            BigDecimal tip = rs.getBigDecimal("tip_amount");
+            if (tip != null) o.setTipAmount(tip);
+        } catch (SQLException ignored) {}
         o.setPaymentMode(rs.getString("payment_mode"));
         o.setPaymentStatus(rs.getString("payment_status"));
         o.setIdempotencyKey(rs.getString("idempotency_key"));

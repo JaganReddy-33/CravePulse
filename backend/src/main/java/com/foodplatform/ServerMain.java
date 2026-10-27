@@ -121,6 +121,7 @@ public class ServerMain {
             logger.info("Starting FoodPlatform Embedded Tomcat on http://localhost:{}", port);
             tomcat.start();
             logger.info("FoodPlatform Backend API running successfully on http://localhost:{}", port);
+            com.foodplatform.service.DispatchService.startDispatchWorker();
             tomcat.getServer().await();
         } catch (Exception e) {
             logger.error("Error starting server", e);

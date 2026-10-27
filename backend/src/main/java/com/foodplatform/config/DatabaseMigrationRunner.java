@@ -23,7 +23,8 @@ public class DatabaseMigrationRunner {
             "V3__phase1_security_and_otp.sql",
             "V4__phase2_payments_wallet.sql",
             "V5__phase3_catalog_schema.sql",
-            "V6__phase3_bangalore_catalog.sql"
+            "V6__phase3_bangalore_catalog.sql",
+            "V7__phase4_rider_dispatch_and_cod.sql"
     };
 
     public static void runMigrations() {

@@ -44,4 +44,6 @@ public interface OrderDao {
     int getCustomerOrderCount(long customerId);
 
     void setGoodwillCreditAwarded(Connection conn, long orderId, boolean awarded) throws SQLException;
+
+    List<Order> findUnassignedOrders(int limit);
 }

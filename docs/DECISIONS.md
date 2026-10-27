@@ -50,3 +50,17 @@
   - **Real-Time Notification Pipeline**: Created `notifications` table and `NotificationService` pushing state transition events over authenticated WebSockets with mark-read/clear REST endpoints.
   - **Bangalore Real-World Catalog**: Seeded 72 authentic Bangalore culinary institutions across 10 iconic food zones with 1,047 dishes, complete with spice levels, allergens, hygiene certifications, and exact 0% markup dine-in price parity proofs. Supported `/city/bangalore/:restaurantSlug` routing with slug-based DAO lookup.
 
+---
+
+## ADR-005: Single Scheduled Dispatch Worker, Fair Wait Compensation, 100% Tip Pass-Through & COD Ledger (Phase 4)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: Dispatching previously lacked autonomous background scheduling (relied on ad-hoc per-order threads), lacked progressive search radius expansion, allowed client-reported wait times, did not guarantee 100% customer tip pass-through to fleet partners, and had no Cash on Delivery collection ledger or cash-in-hand tracking.
+- **Decision**:
+  - **Single Scheduled Dispatch Executor**: Implemented a daemon `ScheduledExecutorService` (single worker thread) initialized in `ServerMain`. Every 5 seconds, scans for offers where `dispatch_status = 'OFFERED'` exceeding `riderAcceptTimeoutSeconds` (30s SLA), transitions them to `TIMED_OUT`, and re-dispatches. Scans for unassigned active orders (`status IN ('PLACED', 'ACCEPTED', 'PREPARING', 'READY') AND rider_id IS NULL`).
+  - **Progressive Search Radius Expansion & SLA Escalation**: Excludes riders who previously declined or timed out for an order. Expands search radius progressively (3.5 km → 6.5 km → 10.0 km → 15.0 km max). Automatically escalates SLA breaches to the Admin console via WebSockets and notifications if unassigned after 3 attempts.
+  - **100% Tip Pass-Through**: Customer tip chosen during checkout is stored on the order, passed 100% into the upfront dispatch offer payload, and deposited into the rider's wallet upon verified delivery.
+  - **Server-Timestamped Fair Wait-Time Compensation**: Replaced client-supplied wait duration with server timestamps (`arrived_at_restaurant_at` to `picked_up_at` or `CURRENT_TIMESTAMP`). Automatically deducts an 8-minute kitchen prep grace period, computes compensation at ₹2.00/min, caps payouts at ₹100.00 per order, and enforces atomic one-time claim protection (`wait_compensation_claimed = TRUE`).
+  - **4-Digit Delivery PIN Verification**: Requires customer 4-digit handover PIN verification before transitioning order status to `DELIVERED`, crediting trip earnings, and releasing rider availability.
+  - **Cash on Delivery (COD) Settlement Ledger**: Added `rider_profiles.cash_in_hand` tracking and `rider_cod_settlements` double-entry ledger. Cash collected on delivery increments `cash_in_hand` and writes `COLLECTED` entries; hub cash turn-in decrements `cash_in_hand` and writes `DEPOSITED` entries with transaction references.
+  - **Authenticated & Throttled Rider Telemetry**: Restricted rider GPS telemetry updates (`POST /api/rider/telemetry`) to authenticated fleet captains assigned to the order, updating coordinates and broadcasting live location strictly to the customer active order room.

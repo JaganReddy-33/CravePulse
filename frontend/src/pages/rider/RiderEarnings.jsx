@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import ModalPortal from '../../components/ModalPortal';
+import { useAuth } from '../../context/AuthContext';
 
-const BANK_ACCOUNTS = [
+const getBankAccounts = (holderName) => [
   {
     id: 'bank-1',
     bankName: 'HDFC Bank Ltd',
     accountNumber: '•••• •••• 4412',
     ifsc: 'HDFC0001234',
-    accountHolder: 'Prasad Rao',
+    accountHolder: holderName || 'Verified Fleet Captain',
     type: 'PRIMARY',
     isUpi: false
   },
@@ -17,22 +18,24 @@ const BANK_ACCOUNTS = [
     bankName: 'ICICI Bank',
     accountNumber: '•••• •••• 8921',
     ifsc: 'ICIC0005678',
-    accountHolder: 'Prasad Rao',
+    accountHolder: holderName || 'Verified Fleet Captain',
     type: 'SECONDARY',
     isUpi: false
   },
   {
     id: 'upi-1',
     bankName: 'BHIM UPI Auto-Pay',
-    accountNumber: 'prasad.rao@oksbi',
+    accountNumber: (holderName ? holderName.toLowerCase().replace(/\s+/g, '.') : 'captain') + '@oksbi',
     ifsc: 'State Bank of India',
-    accountHolder: 'Prasad Rao',
+    accountHolder: holderName || 'Verified Fleet Captain',
     type: 'INSTANT_UPI',
     isUpi: true
   }
 ];
 
 const RiderEarnings = () => {
+  const { user } = useAuth();
+  const BANK_ACCOUNTS = getBankAccounts(user?.fullName);
   const [wallet, setWallet] = useState({ 
     balance: 0.00, 
     todayEarned: 0.00,
@@ -40,6 +43,8 @@ const RiderEarnings = () => {
     incentiveEarned: 0.00,
     runsCompleted: 0,
     runsTarget: 20,
+    cashInHand: 0.00,
+    maxCashLimit: 5000.00,
     transactions: [] 
   });
   const [loading, setLoading] = useState(false);
@@ -55,26 +60,41 @@ const RiderEarnings = () => {
   const [payoutSuccess, setPayoutSuccess] = useState(false);
 
   useEffect(() => {
-    api.get('/auth/wallet').then(res => {
+    api.get('/rider/earnings').then(res => {
       if (res.success && res.data) {
-        const txs = Array.isArray(res.data.transactions) ? res.data.transactions : [];
-        const bal = parseFloat(res.data.balance || 0);
-        // Calculate earnings from real transactions
-        const credits = txs.filter(t => parseFloat(t.amount) > 0);
-        const earned = credits.reduce((acc, t) => acc + parseFloat(t.amount), 0);
-
         setWallet({
-          balance: bal,
-          todayEarned: earned,
-          weekEarned: earned,
+          balance: parseFloat(res.data.walletBalance || 0),
+          todayEarned: parseFloat(res.data.todayEarned || 0),
+          weekEarned: parseFloat(res.data.weekEarned || 0),
           incentiveEarned: 0.00,
-          runsCompleted: credits.length,
+          runsCompleted: parseInt(res.data.runsCompleted || 0, 10),
           runsTarget: 20,
-          transactions: txs
+          cashInHand: parseFloat(res.data.cashInHand || 0),
+          maxCashLimit: parseFloat(res.data.maxCashLimit || 5000),
+          transactions: Array.isArray(res.data.transactions) ? res.data.transactions : []
         });
-        setPayoutAmount(bal.toString());
+        setPayoutAmount((res.data.walletBalance || 0).toString());
       }
-    }).catch(() => {});
+    }).catch(() => {
+      api.get('/auth/wallet').then(res => {
+        if (res.success && res.data) {
+          const txs = Array.isArray(res.data.transactions) ? res.data.transactions : [];
+          const bal = parseFloat(res.data.balance || 0);
+          const credits = txs.filter(t => parseFloat(t.amount) > 0);
+          const earned = credits.reduce((acc, t) => acc + parseFloat(t.amount), 0);
+          setWallet({
+            balance: bal,
+            todayEarned: earned,
+            weekEarned: earned,
+            incentiveEarned: 0.00,
+            runsCompleted: credits.length,
+            runsTarget: 20,
+            transactions: txs
+          });
+          setPayoutAmount(bal.toString());
+        }
+      });
+    });
   }, []);
 
   const handleInstantPayout = (e) => {

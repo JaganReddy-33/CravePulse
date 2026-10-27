@@ -19,6 +19,8 @@ public class RiderProfile {
     private BigDecimal rating;
     private Long activeOrderId;
     private BigDecimal walletBalance;
+    private BigDecimal cashInHand = BigDecimal.ZERO;
+    private BigDecimal maxCashLimit = BigDecimal.valueOf(5000.00);
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -76,6 +78,12 @@ public class RiderProfile {
 
     public BigDecimal getWalletBalance() { return walletBalance; }
     public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
+
+    public BigDecimal getCashInHand() { return cashInHand != null ? cashInHand : BigDecimal.ZERO; }
+    public void setCashInHand(BigDecimal cashInHand) { this.cashInHand = cashInHand; }
+
+    public BigDecimal getMaxCashLimit() { return maxCashLimit != null ? maxCashLimit : BigDecimal.valueOf(5000.00); }
+    public void setMaxCashLimit(BigDecimal maxCashLimit) { this.maxCashLimit = maxCashLimit; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

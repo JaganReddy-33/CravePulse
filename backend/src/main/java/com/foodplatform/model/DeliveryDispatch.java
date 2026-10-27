@@ -18,6 +18,11 @@ public class DeliveryDispatch {
     private int waitTimeMinutes;
     private BigDecimal waitTimePay;
     private String rejectionReason;
+    private Timestamp arrivedAtRestaurantAt;
+    private Timestamp pickedUpAt;
+    private Timestamp arrivedAtCustomerAt;
+    private Timestamp deliveredAt;
+    private boolean waitCompensationClaimed;
 
     // Joined fields
     private String orderNumber;
@@ -113,4 +118,25 @@ public class DeliveryDispatch {
 
     public String getPaymentMode() { return paymentMode; }
     public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+
+    public Timestamp getArrivedAtRestaurantAt() { return arrivedAtRestaurantAt; }
+    public void setArrivedAtRestaurantAt(Timestamp arrivedAtRestaurantAt) { this.arrivedAtRestaurantAt = arrivedAtRestaurantAt; }
+
+    public Timestamp getPickedUpAt() { return pickedUpAt; }
+    public void setPickedUpAt(Timestamp pickedUpAt) { this.pickedUpAt = pickedUpAt; }
+
+    public Timestamp getArrivedAtCustomerAt() { return arrivedAtCustomerAt; }
+    public void setArrivedAtCustomerAt(Timestamp arrivedAtCustomerAt) { this.arrivedAtCustomerAt = arrivedAtCustomerAt; }
+
+    public Timestamp getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(Timestamp deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    private java.util.List<OrderItem> items;
+
+    public java.util.List<OrderItem> getItems() { return items; }
+    public void setItems(java.util.List<OrderItem> items) { this.items = items; }
+
+    public boolean isWaitCompensationClaimed() { return waitCompensationClaimed; }
+    public Boolean getWaitCompensationClaimed() { return waitCompensationClaimed; }
+    public void setWaitCompensationClaimed(boolean waitCompensationClaimed) { this.waitCompensationClaimed = waitCompensationClaimed; }
 }

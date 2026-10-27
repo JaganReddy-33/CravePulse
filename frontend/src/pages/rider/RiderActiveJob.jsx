@@ -122,46 +122,67 @@ const RiderActiveJob = () => {
 
   const allItemsVerified = activeJob?.items?.length > 0 && activeJob.items.every(i => verifiedItems[i.id]);
 
-  const handleArriveAtKitchen = () => {
+  const handleArriveAtKitchen = async () => {
     setWaitingAtKitchen(true);
-    setWaitTimerMinutes(10); // Simulated 10 mins wait (> 8m threshold)
+    setWaitTimerMinutes(10);
     setCurrentStep('AT_KITCHEN');
+    if (activeJob) {
+      try {
+        await api.post(`/rider/orders/${activeJob.orderId}/status`, { status: 'ARRIVED_AT_RESTAURANT' });
+      } catch (e) {
+        console.warn('Failed to record kitchen arrival milestone', e);
+      }
+    }
   };
 
   const handleClaimWaitCompensation = async () => {
-    const compensation = Math.max(0, waitTimerMinutes - 8) * 2;
-    if (compensation > 0) {
+    if (activeJob) {
       try {
-        await api.post(`/rider/orders/${activeJob.orderId}/wait-compensation`, {
-          waitMinutes: waitTimerMinutes,
-          amount: compensation
-        });
-      } catch (e) {}
-      setClaimedWaitPay(compensation);
+        const res = await api.post(`/rider/orders/${activeJob.orderId}/wait-compensation`);
+        if (res.success && res.data && res.data.compensationCredited !== undefined) {
+          setClaimedWaitPay(parseFloat(res.data.compensationCredited));
+        } else {
+          setClaimedWaitPay(Math.max(0, waitTimerMinutes - 8) * 2);
+        }
+      } catch (e) {
+        setClaimedWaitPay(Math.max(0, waitTimerMinutes - 8) * 2);
+      }
       setWaitingAtKitchen(false);
     } else {
       setWaitingAtKitchen(false);
     }
   };
 
-  const handleConfirmPickup = () => {
+  const handleConfirmPickup = async () => {
     setCurrentStep('PICKED_UP');
+    if (activeJob) {
+      try {
+        await api.post(`/rider/orders/${activeJob.orderId}/status`, { status: 'PICKED_UP' });
+      } catch (e) {
+        console.warn('Failed to record pickup milestone', e);
+      }
+    }
   };
 
   const handleConfirmFinalDelivery = async () => {
     try {
-      await api.post(`/rider/orders/${activeJob.orderId}/status`, { 
+      const res = await api.post(`/rider/orders/${activeJob.orderId}/status`, { 
         status: 'DELIVERED',
         deliveryOtp,
         proofPhoto: deliveryProofPhoto 
       });
-    } catch (e) {}
-
-    setDeliveryComplete(true);
-    setTimeout(() => {
-      setShowDeliveryModal(false);
-      setActiveJob(null);
-    }, 2200);
+      if (res.success) {
+        setDeliveryComplete(true);
+        setTimeout(() => {
+          setShowDeliveryModal(false);
+          setActiveJob(null);
+        }, 2200);
+      } else {
+        alert(res.message || 'Delivery confirmation failed');
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Invalid delivery PIN or error completing delivery');
+    }
   };
 
   const handleProofPhotoUpload = (e) => {

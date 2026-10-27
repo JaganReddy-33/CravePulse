@@ -24,7 +24,13 @@ public final class AppProperties {
         }
     }
 
+    private static final AppProperties INSTANCE = new AppProperties();
+
     private AppProperties() {
+    }
+
+    public static AppProperties getInstance() {
+        return INSTANCE;
     }
 
     private static String getProperty(String key, String envVar, String defaultValue) {
@@ -114,6 +120,42 @@ public final class AppProperties {
             return new java.math.BigDecimal(val.trim());
         } catch (Exception e) {
             return new java.math.BigDecimal("2000.00");
+        }
+    }
+
+    public static int getRiderAcceptTimeoutSeconds() {
+        String val = getProperty("dispatch.riderAcceptTimeoutSeconds", "DISPATCH_RIDER_ACCEPT_TIMEOUT_SECONDS", "30");
+        try {
+            return Integer.parseInt(val.trim());
+        } catch (Exception e) {
+            return 30;
+        }
+    }
+
+    public static double getDispatchMaxSearchRadiusKm() {
+        String val = getProperty("dispatch.maxSearchRadiusKm", "DISPATCH_MAX_SEARCH_RADIUS_KM", "15.0");
+        try {
+            return Double.parseDouble(val.trim());
+        } catch (Exception e) {
+            return 15.0;
+        }
+    }
+
+    public static java.math.BigDecimal getFairPayBaseFare() {
+        String val = getProperty("dispatch.fairPayBaseFare", "DISPATCH_FAIR_PAY_BASE_FARE", "35.00");
+        try {
+            return new java.math.BigDecimal(val.trim());
+        } catch (Exception e) {
+            return new java.math.BigDecimal("35.00");
+        }
+    }
+
+    public static java.math.BigDecimal getFairPayPerKmRate() {
+        String val = getProperty("dispatch.fairPayPerKmRate", "DISPATCH_FAIR_PAY_PER_KM_RATE", "12.00");
+        try {
+            return new java.math.BigDecimal(val.trim());
+        } catch (Exception e) {
+            return new java.math.BigDecimal("12.00");
         }
     }
 }

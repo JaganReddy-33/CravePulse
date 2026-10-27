@@ -16,6 +16,30 @@ public interface RiderDao {
 
     List<RiderProfile> findNearestAvailableRiders(double restLat, double restLng, double maxDistanceKm, int limit);
 
+    List<RiderProfile> findNearestAvailableRidersExcluding(double restLat, double restLng, double maxDistanceKm, int limit, List<Long> excludedRiderIds);
+
+    List<Long> getExcludedRiderIdsForOrder(long orderId);
+
+    List<DeliveryDispatch> getTimedOutOffers(int timeoutSeconds);
+
+    List<DeliveryDispatch> getActiveOffersForRider(long riderId);
+
+    DeliveryDispatch findDispatchByOrderId(long orderId);
+
+    void recordRiderMilestoneTimestamp(Connection conn, long dispatchId, String milestoneColumn) throws SQLException;
+
+    void updateRiderProfileDetails(long riderId, String vehicleType, String vehicleNumber, String drivingLicense);
+
+    void recordCodCollection(Connection conn, long riderId, long orderId, BigDecimal amount) throws SQLException;
+
+    BigDecimal recordCodDeposit(long riderId, BigDecimal amount, String referenceNumber, String notes);
+
+    List<com.foodplatform.model.RiderCodSettlement> getCodSettlements(long riderId, int limit, int offset);
+
+    java.util.Map<String, Object> getRiderEarningsSummary(long riderId);
+
+    List<DeliveryDispatch> getRiderCompletedTrips(long riderId, int limit, int offset);
+
     void updateOnlineStatus(long riderId, boolean isOnline);
 
     void updateRiderLocation(long riderId, double lat, double lng, double speed, double heading, Long orderId);

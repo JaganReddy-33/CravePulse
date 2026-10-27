@@ -217,6 +217,18 @@ public class OrderServlet extends BaseServlet {
                 order.setPlatformFee(calc.platformFee);
                 order.setGstTax(calc.gstTax);
                 order.setTotalAmount(calc.totalAmount);
+
+                BigDecimal tipAmount = BigDecimal.ZERO;
+                if (body.has("tipAmount") && !body.get("tipAmount").isJsonNull()) {
+                    try {
+                        tipAmount = body.get("tipAmount").getAsBigDecimal();
+                    } catch (Exception ignored) {}
+                }
+                if (tipAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    order.setTotalAmount(order.getTotalAmount().add(tipAmount));
+                }
+                order.setTipAmount(tipAmount);
+
                 order.setPaymentMode(paymentMode);
                 order.setPaymentStatus("PENDING");
                 order.setIdempotencyKey(idempotencyKey);

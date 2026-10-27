@@ -12,38 +12,69 @@ const RiderHistory = () => {
   const [selectedTrip, setSelectedTrip] = useState(null);
 
   useEffect(() => {
-    api.get('/orders').then(res => {
-      if (res.success && Array.isArray(res.data)) {
-        const mapped = res.data.map(ord => ({
-          id: ord.id,
-          orderNumber: ord.orderNumber,
-          restaurantName: ord.restaurantName || 'CravePulse Kitchen',
-          chefName: ord.chefName || 'Chef Partner',
-          restaurantAddress: ord.restaurantAddress || 'Indiranagar Hub',
-          customerName: ord.customerName || 'Customer',
-          deliveryAddress: ord.deliveryAddress || 'Bengaluru',
-          deliveryPhone: ord.deliveryPhone || '+91 9876543210',
-          distanceKm: ord.distanceKm || 2.4,
-          basePay: 35.00,
-          distancePay: (ord.distanceKm ? Math.max(0, ord.distanceKm - 2) * 12 : 18.00),
-          waitPay: 0.00,
-          waitMinutes: 0,
-          tipAmount: 20.00,
-          totalEarning: 35.00 + (ord.distanceKm ? Math.max(0, ord.distanceKm - 2) * 12 : 18.00) + 20.00,
-          deliveredAt: ord.deliveredAt || ord.createdAt || 'Delivered',
+    api.get('/rider/history').then(res => {
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const mapped = res.data.map(d => ({
+          id: d.id,
+          orderId: d.orderId,
+          orderNumber: d.orderNumber || `CP-ORD-${d.orderId}`,
+          restaurantName: d.restaurantName || 'Partner Kitchen',
+          chefName: 'Head Chef',
+          restaurantAddress: d.restaurantAddress || 'Bengaluru',
+          customerName: d.customerName || 'Customer',
+          deliveryAddress: d.deliveryAddress || 'Bengaluru',
+          deliveryPhone: d.customerPhone || '',
+          distanceKm: d.distanceKm || 2.5,
+          basePay: parseFloat(d.basePay || 35.00),
+          distancePay: parseFloat(d.distancePay || 0.00),
+          waitPay: parseFloat(d.waitCompensation || 0.00),
+          waitMinutes: d.waitMinutes || 0,
+          tipAmount: parseFloat(d.tipAmount || 0.00),
+          totalEarning: parseFloat(d.totalEarning || 35.00),
+          deliveredAt: d.deliveredAt || 'Delivered',
           rating: 5.0,
           reviewNote: 'Delivered safely and on time.',
-          otpVerified: '4829',
+          otpVerified: '✓ PIN Verified',
           sealVerified: true,
           timeHorizon: 'TODAY',
-          itemsSummary: ord.items?.map(it => it.itemName).join(', ') || 'Delivered items'
+          itemsSummary: 'Order #' + (d.orderNumber || d.orderId)
         }));
         setTrips(mapped);
       } else {
-        setTrips([]);
+        // Fallback to /orders if empty or legacy
+        api.get('/orders').then(ordersRes => {
+          if (ordersRes.success && Array.isArray(ordersRes.data)) {
+            const mapped = ordersRes.data.map(ord => ({
+              id: ord.id,
+              orderNumber: ord.orderNumber,
+              restaurantName: ord.restaurantName || 'CravePulse Kitchen',
+              chefName: ord.chefName || 'Chef Partner',
+              restaurantAddress: ord.restaurantAddress || 'Bengaluru',
+              customerName: ord.customerName || 'Customer',
+              deliveryAddress: ord.deliveryAddress || 'Bengaluru',
+              deliveryPhone: ord.deliveryPhone || '',
+              distanceKm: ord.distanceKm || 2.4,
+              basePay: 35.00,
+              distancePay: (ord.distanceKm ? Math.max(0, ord.distanceKm - 2) * 12 : 18.00),
+              waitPay: 0.00,
+              waitMinutes: 0,
+              tipAmount: parseFloat(ord.tipAmount || 0.00),
+              totalEarning: 35.00 + (ord.distanceKm ? Math.max(0, ord.distanceKm - 2) * 12 : 18.00) + parseFloat(ord.tipAmount || 0.00),
+              deliveredAt: ord.deliveredAt || ord.createdAt || 'Delivered',
+              rating: 5.0,
+              reviewNote: 'Delivered safely and on time.',
+              otpVerified: 'PIN Verified',
+              sealVerified: true,
+              timeHorizon: 'TODAY',
+              itemsSummary: ord.items?.map(it => it.itemName).join(', ') || 'Delivered items'
+            }));
+            setTrips(mapped);
+          } else {
+            setTrips([]);
+          }
+        }).catch(() => setTrips([]));
       }
-    }).catch(err => {
-      console.warn('Error fetching completed trips', err);
+    }).catch(() => {
       setTrips([]);
     }).finally(() => setLoading(false));
   }, []);

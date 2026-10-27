@@ -3,6 +3,7 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.RiderDao;
 import com.foodplatform.model.DeliveryDispatch;
+import com.foodplatform.model.RiderCodSettlement;
 import com.foodplatform.model.RiderProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RiderDaoImpl implements RiderDao {
 
@@ -82,6 +85,51 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding nearest riders", e);
+        }
+        return list;
+    }
+
+    @Override
+    public List<RiderProfile> findNearestAvailableRidersExcluding(double restLat, double restLng, double maxDistanceKm, int limit, List<Long> excludedRiderIds) {
+        if (excludedRiderIds == null || excludedRiderIds.isEmpty()) {
+            return findNearestAvailableRiders(restLat, restLng, maxDistanceKm, limit);
+        }
+
+        List<RiderProfile> list = new ArrayList<>();
+        StringBuilder inClause = new StringBuilder();
+        for (int i = 0; i < excludedRiderIds.size(); i++) {
+            if (i > 0) inClause.append(",");
+            inClause.append("?");
+        }
+
+        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url, " +
+                "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(rp.current_latitude)) * COS(RADIANS(rp.current_longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(rp.current_latitude))))) AS distance_km " +
+                "FROM rider_profiles rp " +
+                "JOIN users u ON rp.user_id = u.id " +
+                "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
+                "AND rp.id NOT IN (" + inClause + ") " +
+                "HAVING distance_km <= ? " +
+                "ORDER BY distance_km ASC LIMIT ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int idx = 1;
+            ps.setDouble(idx++, restLat);
+            ps.setDouble(idx++, restLng);
+            ps.setDouble(idx++, restLat);
+            for (Long excludedId : excludedRiderIds) {
+                ps.setLong(idx++, excludedId);
+            }
+            ps.setDouble(idx++, maxDistanceKm);
+            ps.setInt(idx++, limit);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRider(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding nearest riders with exclusions", e);
         }
         return list;
     }
@@ -247,41 +295,344 @@ public class RiderDaoImpl implements RiderDao {
             ps.setLong(1, riderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    DeliveryDispatch d = new DeliveryDispatch();
-                    d.setId(rs.getLong("id"));
-                    d.setOrderId(rs.getLong("order_id"));
-                    d.setRiderId(rs.getLong("rider_id"));
-                    d.setDispatchStatus(rs.getString("dispatch_status"));
-                    d.setOfferedAt(rs.getTimestamp("offered_at"));
-                    d.setRespondedAt(rs.getTimestamp("responded_at"));
-                    d.setBasePay(rs.getBigDecimal("base_pay"));
-                    d.setDistancePay(rs.getBigDecimal("distance_pay"));
-                    d.setSurgePay(rs.getBigDecimal("surge_pay"));
-                    d.setTipAmount(rs.getBigDecimal("tip_amount"));
-                    d.setTotalEarning(rs.getBigDecimal("total_earning"));
-                    d.setWaitTimeMinutes(rs.getInt("wait_time_minutes"));
-                    d.setWaitTimePay(rs.getBigDecimal("wait_time_pay"));
-                    d.setRejectionReason(rs.getString("rejection_reason"));
-
-                    d.setOrderNumber(rs.getString("order_number"));
-                    d.setOrderTotal(rs.getBigDecimal("total_amount"));
-                    d.setPaymentMode(rs.getString("payment_mode"));
-                    d.setRestaurantName(rs.getString("rest_name"));
-                    d.setRestaurantAddress(rs.getString("rest_addr"));
-                    d.setRestaurantLat(rs.getDouble("rest_lat"));
-                    d.setRestaurantLng(rs.getDouble("rest_lng"));
-                    d.setCustomerName(rs.getString("cust_name"));
-                    d.setCustomerPhone(rs.getString("cust_phone"));
-                    d.setCustomerAddress(rs.getString("cust_addr"));
-                    d.setCustomerLat(rs.getDouble("cust_lat"));
-                    d.setCustomerLng(rs.getDouble("cust_lng"));
-                    return d;
+                    return mapDispatch(rs);
                 }
             }
         } catch (SQLException e) {
             logger.error("Error getting active dispatch for rider: {}", riderId, e);
         }
         return null;
+    }
+
+    @Override
+    public List<Long> getExcludedRiderIdsForOrder(long orderId) {
+        List<Long> ids = new ArrayList<>();
+        String sql = "SELECT rider_id FROM delivery_dispatches WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT')";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getLong("rider_id"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting excluded rider ids for order: {}", orderId, e);
+        }
+        return ids;
+    }
+
+    @Override
+    public List<DeliveryDispatch> getTimedOutOffers(int timeoutSeconds) {
+        List<DeliveryDispatch> list = new ArrayList<>();
+        String sql = "SELECT * FROM delivery_dispatches WHERE dispatch_status = 'OFFERED' " +
+                "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, timeoutSeconds);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DeliveryDispatch d = new DeliveryDispatch();
+                    d.setId(rs.getLong("id"));
+                    d.setOrderId(rs.getLong("order_id"));
+                    d.setRiderId(rs.getLong("rider_id"));
+                    d.setDispatchStatus(rs.getString("dispatch_status"));
+                    list.add(d);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding timed out offers", e);
+        }
+        return list;
+    }
+
+    @Override
+    public List<DeliveryDispatch> getActiveOffersForRider(long riderId) {
+        List<DeliveryDispatch> list = new ArrayList<>();
+        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+                "u.full_name AS cust_name, u.phone AS cust_phone, " +
+                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "FROM delivery_dispatches d " +
+                "JOIN orders o ON d.order_id = o.id " +
+                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+                "JOIN users u ON o.customer_id = u.id " +
+                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+                "WHERE d.rider_id = ? AND d.dispatch_status = 'OFFERED' " +
+                "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
+                "ORDER BY d.id DESC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapDispatch(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting active offers for rider: {}", riderId, e);
+        }
+        return list;
+    }
+
+    @Override
+    public DeliveryDispatch findDispatchByOrderId(long orderId) {
+        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+                "u.full_name AS cust_name, u.phone AS cust_phone, " +
+                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "FROM delivery_dispatches d " +
+                "JOIN orders o ON d.order_id = o.id " +
+                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+                "JOIN users u ON o.customer_id = u.id " +
+                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+                "WHERE d.order_id = ? AND d.dispatch_status = 'ACCEPTED' " +
+                "ORDER BY d.id DESC LIMIT 1";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapDispatch(rs);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding dispatch by order id: {}", orderId, e);
+        }
+        return null;
+    }
+
+    @Override
+    public void recordRiderMilestoneTimestamp(Connection conn, long dispatchId, String milestoneColumn) throws SQLException {
+        if (!milestoneColumn.matches("^(arrived_at_restaurant_at|picked_up_at|arrived_at_customer_at|delivered_at)$")) {
+            throw new IllegalArgumentException("Invalid milestone column: " + milestoneColumn);
+        }
+        String sql = "UPDATE delivery_dispatches SET " + milestoneColumn + " = CURRENT_TIMESTAMP WHERE id = ? AND " + milestoneColumn + " IS NULL";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, dispatchId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
+    public void updateRiderProfileDetails(long riderId, String vehicleType, String vehicleNumber, String drivingLicense) {
+        String sql = "UPDATE rider_profiles SET vehicle_type = COALESCE(?, vehicle_type), " +
+                "vehicle_number = COALESCE(?, vehicle_number), driving_license = COALESCE(?, driving_license) WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, vehicleType);
+            ps.setString(2, vehicleNumber);
+            ps.setString(3, drivingLicense);
+            ps.setLong(4, riderId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error updating rider profile details: {}", riderId, e);
+        }
+    }
+
+    @Override
+    public void recordCodCollection(Connection conn, long riderId, long orderId, BigDecimal amount) throws SQLException {
+        String updateCashSql = "UPDATE rider_profiles SET cash_in_hand = cash_in_hand + ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(updateCashSql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setLong(2, riderId);
+            ps.executeUpdate();
+        }
+
+        String ledgerSql = "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, notes) " +
+                "VALUES (?, ?, ?, 'COLLECTED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), 'Cash collected on delivery')";
+        try (PreparedStatement ps = conn.prepareStatement(ledgerSql)) {
+            ps.setLong(1, riderId);
+            ps.setLong(2, orderId);
+            ps.setBigDecimal(3, amount);
+            ps.setLong(4, riderId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
+    public BigDecimal recordCodDeposit(long riderId, BigDecimal amount, String referenceNumber, String notes) {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                String updateSql = "UPDATE rider_profiles SET cash_in_hand = GREATEST(0.00, cash_in_hand - ?) WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setBigDecimal(1, amount);
+                    ps.setLong(2, riderId);
+                    ps.executeUpdate();
+                }
+
+                String ledgerSql = "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, reference_number, notes) " +
+                        "VALUES (?, NULL, ?, 'DEPOSITED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), ?, ?)";
+                try (PreparedStatement ps = conn.prepareStatement(ledgerSql)) {
+                    ps.setLong(1, riderId);
+                    ps.setBigDecimal(2, amount);
+                    ps.setLong(3, riderId);
+                    ps.setString(4, referenceNumber);
+                    ps.setString(5, notes != null ? notes : "COD cash deposit to platform");
+                    ps.executeUpdate();
+                }
+
+                BigDecimal newCash = BigDecimal.ZERO;
+                String querySql = "SELECT cash_in_hand FROM rider_profiles WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(querySql)) {
+                    ps.setLong(1, riderId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) newCash = rs.getBigDecimal("cash_in_hand");
+                    }
+                }
+
+                conn.commit();
+                return newCash;
+            } catch (SQLException e) {
+                conn.rollback();
+                logger.error("Error depositing COD cash for rider: {}", riderId, e);
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            logger.error("Connection error during COD deposit", e);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    @Override
+    public List<RiderCodSettlement> getCodSettlements(long riderId, int limit, int offset) {
+        List<RiderCodSettlement> list = new ArrayList<>();
+        String sql = "SELECT * FROM rider_cod_settlements WHERE rider_id = ? ORDER BY id DESC LIMIT ? OFFSET ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    RiderCodSettlement s = new RiderCodSettlement();
+                    s.setId(rs.getLong("id"));
+                    s.setRiderId(rs.getLong("rider_id"));
+                    long ordId = rs.getLong("order_id");
+                    if (!rs.wasNull()) s.setOrderId(ordId);
+                    s.setAmount(rs.getBigDecimal("amount"));
+                    s.setTransactionType(rs.getString("transaction_type"));
+                    s.setRunningCashInHand(rs.getBigDecimal("running_cash_in_hand"));
+                    s.setReferenceNumber(rs.getString("reference_number"));
+                    s.setNotes(rs.getString("notes"));
+                    s.setCreatedAt(rs.getTimestamp("created_at"));
+                    list.add(s);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting COD settlements for rider: {}", riderId, e);
+        }
+        return list;
+    }
+
+    @Override
+    public Map<String, Object> getRiderEarningsSummary(long riderId) {
+        Map<String, Object> map = new HashMap<>();
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN DATE(d.offered_at) = CURRENT_DATE THEN d.total_earning ELSE 0 END), 0) AS today_earned, " +
+                "COALESCE(SUM(CASE WHEN YEARWEEK(d.offered_at, 1) = YEARWEEK(CURRENT_DATE, 1) THEN d.total_earning ELSE 0 END), 0) AS week_earned, " +
+                "COALESCE(SUM(d.tip_amount), 0) AS total_tips, " +
+                "COALESCE(SUM(d.wait_time_pay), 0) AS total_wait_pay, " +
+                "COUNT(CASE WHEN d.dispatch_status = 'ACCEPTED' AND d.delivered_at IS NOT NULL THEN 1 END) AS runs_completed " +
+                "FROM delivery_dispatches d WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED'";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    map.put("todayEarned", rs.getBigDecimal("today_earned"));
+                    map.put("weekEarned", rs.getBigDecimal("week_earned"));
+                    map.put("totalTips", rs.getBigDecimal("total_tips"));
+                    map.put("totalWaitPay", rs.getBigDecimal("total_wait_pay"));
+                    map.put("runsCompleted", rs.getInt("runs_completed"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting earnings summary for rider: {}", riderId, e);
+        }
+        return map;
+    }
+
+    @Override
+    public List<DeliveryDispatch> getRiderCompletedTrips(long riderId, int limit, int offset) {
+        List<DeliveryDispatch> list = new ArrayList<>();
+        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+                "u.full_name AS cust_name, u.phone AS cust_phone, " +
+                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "FROM delivery_dispatches d " +
+                "JOIN orders o ON d.order_id = o.id " +
+                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+                "JOIN users u ON o.customer_id = u.id " +
+                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+                "WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED' " +
+                "ORDER BY d.id DESC LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            ps.setInt(2, limit);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapDispatch(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting completed trips for rider: {}", riderId, e);
+        }
+        return list;
+    }
+
+    private DeliveryDispatch mapDispatch(ResultSet rs) throws SQLException {
+        DeliveryDispatch d = new DeliveryDispatch();
+        d.setId(rs.getLong("id"));
+        d.setOrderId(rs.getLong("order_id"));
+        d.setRiderId(rs.getLong("rider_id"));
+        d.setDispatchStatus(rs.getString("dispatch_status"));
+        d.setOfferedAt(rs.getTimestamp("offered_at"));
+        d.setRespondedAt(rs.getTimestamp("responded_at"));
+        d.setBasePay(rs.getBigDecimal("base_pay"));
+        d.setDistancePay(rs.getBigDecimal("distance_pay"));
+        d.setSurgePay(rs.getBigDecimal("surge_pay"));
+        d.setTipAmount(rs.getBigDecimal("tip_amount"));
+        d.setTotalEarning(rs.getBigDecimal("total_earning"));
+        d.setWaitTimeMinutes(rs.getInt("wait_time_minutes"));
+        d.setWaitTimePay(rs.getBigDecimal("wait_time_pay"));
+        d.setRejectionReason(rs.getString("rejection_reason"));
+
+        try {
+            d.setArrivedAtRestaurantAt(rs.getTimestamp("arrived_at_restaurant_at"));
+            d.setPickedUpAt(rs.getTimestamp("picked_up_at"));
+            d.setArrivedAtCustomerAt(rs.getTimestamp("arrived_at_customer_at"));
+            d.setDeliveredAt(rs.getTimestamp("delivered_at"));
+            d.setWaitCompensationClaimed(rs.getBoolean("wait_compensation_claimed"));
+        } catch (SQLException ignored) {}
+
+        try {
+            d.setOrderNumber(rs.getString("order_number"));
+            d.setOrderTotal(rs.getBigDecimal("total_amount"));
+            d.setPaymentMode(rs.getString("payment_mode"));
+            d.setRestaurantName(rs.getString("rest_name"));
+            d.setRestaurantAddress(rs.getString("rest_addr"));
+            d.setRestaurantLat(rs.getDouble("rest_lat"));
+            d.setRestaurantLng(rs.getDouble("rest_lng"));
+            d.setCustomerName(rs.getString("cust_name"));
+            d.setCustomerPhone(rs.getString("cust_phone"));
+            d.setCustomerAddress(rs.getString("cust_addr"));
+            d.setCustomerLat(rs.getDouble("cust_lat"));
+            d.setCustomerLng(rs.getDouble("cust_lng"));
+        } catch (SQLException ignored) {}
+
+        return d;
     }
 
     @Override

@@ -62,7 +62,10 @@ public class DispatchEngineTest {
         r.setLongitude(BigDecimal.valueOf(77.6350000));
         when(restaurantDao.findById(1L)).thenReturn(r);
 
-        when(riderDao.findNearestAvailableRiders(anyDouble(), anyDouble(), anyDouble(), anyInt()))
+        lenient().when(riderDao.getExcludedRiderIdsForOrder(10L)).thenReturn(Collections.emptyList());
+        lenient().when(riderDao.findNearestAvailableRidersExcluding(anyDouble(), anyDouble(), anyDouble(), anyInt(), anyList()))
+                .thenReturn(Collections.emptyList());
+        lenient().when(riderDao.findNearestAvailableRiders(anyDouble(), anyDouble(), anyDouble(), anyInt()))
                 .thenReturn(Collections.emptyList());
 
         boolean dispatched = dispatchService.dispatchOrder(10L);
