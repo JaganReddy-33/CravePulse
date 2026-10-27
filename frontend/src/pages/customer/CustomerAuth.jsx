@@ -146,7 +146,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
                   <input
                     type="text"
                     className="auth-input"
-                    placeholder="e.g. Jaganmohan Reddy"
+                    placeholder="e.g. Rahul Sharma"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -162,7 +162,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
                 <input
                   type="email"
                   className="auth-input"
-                  placeholder="jaganmohan.reddy@cravepulse.in"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

@@ -3,6 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import ParticleBackground from '../../components/ParticleBackground';
+import MobileBottomNav from '../../components/MobileBottomNav';
 import { useCart } from '../../context/CartContext';
 import PriceBreakdownModal from '../../components/PriceBreakdownModal';
 import ModalPortal from '../../components/ModalPortal';
@@ -275,6 +276,9 @@ const CustomerLayout = () => {
 
       {/* Rich Multi-Column Production-Grade Footer */}
       <Footer />
+
+      {/* Mobile-First Bottom Navigation Bar (Visible on screens < 768px) */}
+      <MobileBottomNav onOpenCart={() => setShowCartDrawer(true)} />
     </div>
   );
 };

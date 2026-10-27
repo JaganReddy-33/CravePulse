@@ -20,9 +20,9 @@ const FALLBACK_RESTAURANTS = [
   {
     id: 1,
     name: 'Spice Symphony & Grill',
-    headChef: 'Chef Lohith',
+    headChef: 'Executive Chef',
     slug: 'spice-symphony-grill',
-    description: 'Authentic gourmet North Indian curries, royal dum biryanis, and tandoori kebabs curated by Chef Lohith.',
+    description: 'Authentic gourmet North Indian curries, royal dum biryanis, and tandoori kebabs curated by master culinary chefs.',
     bannerImage: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200',
     cuisineTypes: 'North Indian, Biryani, Mughlai',
     rating: 4.8,

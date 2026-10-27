@@ -174,7 +174,7 @@ const ContactPage = () => {
             <h6 className="fw-bold mb-2">Escalation & Grievance Officer</h6>
             <p className="text-muted small mb-1">In compliance with Consumer Protection (E-Commerce) Rules, 2020:</p>
             <div className="small text-secondary">
-              <strong>Jaganmohan Reddy</strong> (Lead Operations Officer)<br />
+              <strong>Nodal Grievance Officer</strong> (Compliance & Legal Operations)<br />
               Email: <code>grievance@cravepulse.in</code><br />
               Resolution SLA: 48 business hours
             </div>

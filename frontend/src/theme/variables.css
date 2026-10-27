@@ -1,6 +1,7 @@
 /* ==============================================================================
    FOOD PLATFORM: MULTI-PORTAL DESIGN SYSTEM & CSS VARIABLES
    ============================================================================== */
+@import './design-tokens.css';
 
 :root {
   /* Customer Theme: CravePulse Warm Appetising Glassmorphism */

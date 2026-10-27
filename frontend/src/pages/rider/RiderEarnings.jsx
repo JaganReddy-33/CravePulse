@@ -387,7 +387,7 @@ const RiderEarnings = () => {
             <i className="bi bi-search position-absolute top-50 translate-middle-y text-secondary" style={{ left: 16 }}></i>
             <input
               type="text"
-              placeholder="Search by Order ID, Customer name (e.g. Jaganmohan Reddy), or Reference..."
+              placeholder="Search by Order ID, Customer name, or Reference..."
               className="form-control rounded-pill ps-5 py-2.5 text-white"
               style={{ background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.12)', fontSize: 13 }}
               value={searchQuery}

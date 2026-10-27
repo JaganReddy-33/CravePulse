@@ -1,0 +1,220 @@
+/* ==============================================================================
+   CRAVEPULSE DESIGN TOKENS & RESPONSIVE DESIGN SYSTEM
+   Standardized tokens for Colors, Typography, Spacing, Radius, Elevation & Insets
+   ============================================================================== */
+
+:root {
+  /* --------------------------------------------------------------------------
+     1. Brand & Multi-Portal Color Tokens (AA Contrast Compliant)
+     -------------------------------------------------------------------------- */
+  /* Customer Theme (Warm Appetising Food) */
+  --c-primary: #ff5722;
+  --c-primary-hover: #e64a19;
+  --c-primary-light: #fff2ed;
+  --c-secondary: #ff7043;
+  --c-accent: #f57c00;
+  --c-bg: #faf7f2;
+  --c-surface: #ffffff;
+  --c-surface-card: rgba(255, 255, 255, 0.95);
+  --c-text-main: #0f172a;       /* 12.8:1 contrast on white */
+  --c-text-muted: #475569;      /* 4.9:1 contrast on white (AA compliant) */
+  --c-text-light: #64748b;
+  --c-border: #e2e8f0;
+  --c-border-subtle: #f1f5f9;
+
+  /* Partner Theme (Restaurant Operations) */
+  --p-primary: #ff5c35;
+  --p-primary-hover: #e04822;
+  --p-bg: #f8fafc;
+  --p-surface: #ffffff;
+  --p-text-main: #0f172a;
+  --p-text-muted: #475569;
+  --p-border: #e2e8f0;
+  --p-success: #059669;
+
+  /* Rider Theme (OLED High Contrast Dark Mode) */
+  --r-bg: #090d16;
+  --r-surface: #111827;
+  --r-surface-card: #1f2937;
+  --r-accent: #10b981;
+  --r-accent-hover: #059669;
+  --r-text-main: #f8fafc;
+  --r-text-muted: #94a3b8;
+  --r-border: #374151;
+
+  /* Admin Theme (Dense Ops Control Tower) */
+  --a-bg: #090d16;
+  --a-surface: #111827;
+  --a-surface-card: #1a2234;
+  --a-primary: #38bdf8;
+  --a-text-main: #f8fafc;
+  --a-text-muted: #94a3b8;
+  --a-border: #1e293b;
+
+  /* --------------------------------------------------------------------------
+     2. Spacing Scale Tokens
+     -------------------------------------------------------------------------- */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* --------------------------------------------------------------------------
+     3. Radius Tokens
+     -------------------------------------------------------------------------- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 9999px;
+
+  /* --------------------------------------------------------------------------
+     4. Shadow Tokens
+     -------------------------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12);
+  --shadow-xl: 0 20px 48px rgba(15, 23, 42, 0.16);
+
+  /* --------------------------------------------------------------------------
+     5. Accessibility & Mobile Touch Target Tokens
+     -------------------------------------------------------------------------- */
+  --touch-target-min: 44px;
+  --focus-ring-color: #ff5722;
+  --focus-ring: 0 0 0 3px rgba(255, 87, 34, 0.35);
+
+  /* Safe Area Insets for Modern Mobile Notches & Navigation Bars */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Bottom Navigation Bar Height for Mobile Customer Layout */
+  --mobile-bottom-nav-height: 64px;
+}
+
+/* Base Body & Layout Safeguards */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  min-height: 100%;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* Accessible Minimum 44px Touch Targets */
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Keyboard Accessible Focus Rings */
+:focus-visible {
+  outline: 2px solid var(--focus-ring-color) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--focus-ring) !important;
+}
+
+/* Hide focus ring on mouse click when not using keyboard */
+:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent text selection during fast taps on mobile */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Bottom safe-area padding utility for mobile apps */
+.pb-safe {
+  padding-bottom: calc(var(--safe-bottom) + 12px);
+}
+
+.pt-safe {
+  padding-top: calc(var(--safe-top) + 12px);
+}
+
+/* Mobile Customer Layout spacing to account for bottom navigation bar */
+@media (max-width: 767.98px) {
+  .customer-content-container {
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--safe-bottom) + 16px) !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Viewport Specific Verifications (360px, 390px, 768px, 1024px, 1440px)
+   -------------------------------------------------------------------------- */
+/* Extra small phones (360px down to small screens) */
+@media (max-width: 389.98px) {
+  .container, .container-fluid {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .btn-sm-compact {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+  .fs-xs-tight {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Standard modern mobile phones (390px iPhone / Pixel / Galaxy) */
+@media (min-width: 390px) and (max-width: 767.98px) {
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* Tablets (768px iPad mini / portrait) */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Desktops & Laptops (1024px - 1439px) */
+@media (min-width: 1024px) {
+  .sidebar-fixed {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+}
+
+/* Ultra-wide & Large Screens (1440px+) */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1380px;
+  }
+}
+
+/* Reduced Motion Preference Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

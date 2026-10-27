@@ -15,7 +15,7 @@ const UpiPaymentDrawer = ({
   onSuccess
 }) => {
   const [activeTab, setActiveTab] = useState('apps'); // 'apps', 'vpa', 'qr'
-  const [customVpa, setCustomVpa] = useState('jaganmohan@okaxis');
+  const [customVpa, setCustomVpa] = useState('');
   const [vpaValid, setVpaValid] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);

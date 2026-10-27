@@ -273,7 +273,7 @@ const PartnerSettings = () => {
                 <input
                   type="text"
                   className="form-control rounded-3"
-                  placeholder="e.g. Lohith Kitchens Pvt Ltd"
+                  placeholder="e.g. Gourmet Kitchens Pvt Ltd"
                   value={bankBeneficiaryName}
                   onChange={(e) => setBankBeneficiaryName(e.target.value)}
                 />

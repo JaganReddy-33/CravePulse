@@ -11,8 +11,8 @@ const SettlementLedger = ({
   sampleTotal = 250.00,
   orderNumber = 'ORD-20261026-002',
   restaurantName = 'Spice Symphony & Grill',
-  chefName = 'Chef Lohith',
-  riderName = 'Captain Prasad Rao'
+  chefName = 'Partner Chef',
+  riderName = 'Delivery Captain'
 }) => {
   const [activePreset, setActivePreset] = useState(250);
   const [disbursing, setDisbursing] = useState(false);
@@ -28,7 +28,7 @@ const SettlementLedger = ({
         restaurantPackaging: 15.00,
         restaurantTotal: 190.00,
         restaurantAccount: 'HDFC Bank (A/C ****8812)',
-        restaurantVpa: 'lohith.kitchen@okhdfcbank',
+        restaurantVpa: 'partner.kitchen@okhdfcbank',
 
         // 2. Rider Fair-Pay Transit Settlement
         riderBase: 35.00,
@@ -38,7 +38,7 @@ const SettlementLedger = ({
         riderTip: 20.00, // 100% direct pass-through
         riderTotal: 73.00,
         riderAccount: 'State Bank of India (A/C ****4412)',
-        riderVpa: 'prasad.rao@oksbi',
+        riderVpa: 'captain.fleet@oksbi',
 
         // 3. CravePulse Platform Core
         platformFee: 5.00, // Honest ₹5 flat fee
@@ -52,7 +52,7 @@ const SettlementLedger = ({
         restaurantPackaging: 25.00,
         restaurantTotal: 405.00,
         restaurantAccount: 'HDFC Bank (A/C ****8812)',
-        restaurantVpa: 'lohith.kitchen@okhdfcbank',
+        restaurantVpa: 'partner.kitchen@okhdfcbank',
 
         riderBase: 35.00,
         riderDistance: 32.00,
@@ -61,7 +61,7 @@ const SettlementLedger = ({
         riderTip: 35.00,
         riderTotal: 110.00,
         riderAccount: 'State Bank of India (A/C ****4412)',
-        riderVpa: 'prasad.rao@oksbi',
+        riderVpa: 'captain.fleet@oksbi',
 
         platformFee: 7.00,
         gstTax: 21.00,
@@ -75,7 +75,7 @@ const SettlementLedger = ({
         restaurantPackaging: 40.00,
         restaurantTotal: 1000.00,
         restaurantAccount: 'HDFC Bank (A/C ****8812)',
-        restaurantVpa: 'lohith.kitchen@okhdfcbank',
+        restaurantVpa: 'partner.kitchen@okhdfcbank',
 
         riderBase: 35.00,
         riderDistance: 56.00,
@@ -84,7 +84,7 @@ const SettlementLedger = ({
         riderTip: 60.00,
         riderTotal: 165.00,
         riderAccount: 'State Bank of India (A/C ****4412)',
-        riderVpa: 'prasad.rao@oksbi',
+        riderVpa: 'captain.fleet@oksbi',
 
         platformFee: 10.00,
         gstTax: 50.00,

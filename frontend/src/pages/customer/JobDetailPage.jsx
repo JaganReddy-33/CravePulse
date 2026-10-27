@@ -16,7 +16,7 @@ const DEFAULT_JOBS = [
       'Design and scale high-throughput Jakarta Servlets and WebSocket endpoints handling 50k+ concurrent delivery events.',
       'Build responsive, accessible, mobile-first React components with smooth micro-animations and zero layout shift.',
       'Implement pessimistic database row-locking and idempotency keys to eliminate double-dispatch race conditions.',
-      'Collaborate closely with founder Jaganmohan Reddy and engineering leadership to ship core platform features.'
+      'Collaborate closely with platform founders and engineering leadership to ship core platform features.'
     ],
     requirements: [
       'Strong proficiency in modern Java (17+), JDBC, connection pooling, and relational database modeling (MySQL/PostgreSQL).',
@@ -44,7 +44,7 @@ const DEFAULT_JOBS = [
       'Refine Haversine spatial routing algorithms to optimize order assignment within a 2.5 km radius.',
       'Maintain the Rider Wait-Time Compensation Meter and guarantee 100% tip pass-through to delivery partners.',
       'Analyze fleet telemetry, drop-off cluster density, and order fulfillment SLAs across 8 Indian metros.',
-      'Work directly with Fleet Captain Prasad Rao and city logistics teams to improve rider safety and welfare.'
+      'Work directly with fleet captains and city logistics teams to improve rider safety and welfare.'
     ],
     requirements: [
       'Demonstrated experience in hyper-local logistics, routing heuristics, or fleet dispatch systems.',
@@ -71,7 +71,7 @@ const DEFAULT_JOBS = [
     responsibilities: [
       'Onboard premium restaurants and iconic culinary heritage kitchens across Delhi-NCR and Chennai.',
       'Conduct regular menu price parity audits ensuring printed dine-in menu prices equal platform delivery prices.',
-      'Train restaurant owners and head chefs (like Chef Lohith and Chef Ajay Kumar) on the FoodAnalytics Dashboard and Kitchen Kanban.',
+      'Train restaurant owners and head chefs on the FoodAnalytics Dashboard and Kitchen Kanban.',
       'Resolve restaurant payout discrepancies and optimize order preparation batching times.'
     ],
     requirements: [
@@ -352,7 +352,7 @@ const JobDetailPage = () => {
                     type="text"
                     className="form-control"
                     required
-                    placeholder="e.g. Jaganmohan Reddy"
+                    placeholder="e.g. Vikram Sharma"
                     value={applicantName}
                     onChange={(e) => setApplicantName(e.target.value)}
                   />

@@ -215,7 +215,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
                 <input
                   type="text"
                   className="auth-input"
-                  placeholder="e.g. Chef Lohith"
+                  placeholder="e.g. Partner Owner / Head Chef"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                 />
@@ -229,7 +229,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
                 <input
                   type="email"
                   className="auth-input"
-                  placeholder="chef.lohith@cravepulse.in"
+                  placeholder="partner@kitchen.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

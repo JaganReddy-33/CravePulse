@@ -11,20 +11,20 @@ const DEFAULT_INVOICE_DATA = {
   reverseCharge: 'No',
   restaurant: {
     name: 'Spice Symphony & Grill',
-    headChef: 'Chef Lohith',
+    headChef: 'Executive Chef',
     address: 'Plot 88, 100 Feet Rd, HAL 2nd Stage, Indiranagar, Bengaluru, Karnataka 560038',
     fssaiLicense: 'FSSAI-11223344556677',
     gstin: '29AAECS8812K1Z4'
   },
   customer: {
-    name: 'Jaganmohan Reddy',
-    email: 'jaganmohan.reddy@cravepulse.in',
+    name: 'Verified Customer',
+    email: 'customer@cravepulse.in',
     phone: '+91 98490 12345',
     address: 'Apartment 402, Sunshine Heights, 12th Main Road, Indiranagar, Bengaluru, 560038',
     mapsUrl: 'https://maps.google.com/?q=12.978369,77.640835'
   },
   deliveryPartner: {
-    name: 'Captain Prasad Rao',
+    name: 'Delivery Captain',
     fleetId: 'CP-FLT-882',
     vehicle: 'Electric 2-Wheeler (Zero Emission)',
     contact: '+91 98490 11223'

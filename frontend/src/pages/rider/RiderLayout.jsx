@@ -43,7 +43,7 @@ const RiderLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const riderName = localStorage.getItem('cravepulse_rider_name') || user?.fullName || 'Captain Prasad Rao';
+  const riderName = localStorage.getItem('cravepulse_rider_name') || user?.fullName || 'Delivery Captain';
   const riderAvatar = localStorage.getItem('cravepulse_rider_avatar') || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150';
   const vehicleModel = localStorage.getItem('cravepulse_rider_vehicle') || 'Ather 450X EV (KA-03-EQ-4421)';
 

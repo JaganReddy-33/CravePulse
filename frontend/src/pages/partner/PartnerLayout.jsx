@@ -6,6 +6,7 @@ import api from '../../services/api';
 const PartnerLayout = () => {
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,9 +41,49 @@ const PartnerLayout = () => {
   const restName = restaurant?.name || 'Kitchen Partner';
   const chefPhoto = restaurant?.logoImage || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150';
 
+  const navLinks = (
+    <div className="nav flex-column gap-1 flex-grow-1">
+      <Link
+        to="/partner"
+        onClick={() => setShowMobileSidebar(false)}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+      >
+        <i className="bi bi-grid-fill"></i> Dashboard
+      </Link>
+      <Link
+        to="/partner/kanban"
+        onClick={() => setShowMobileSidebar(false)}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/kanban' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+      >
+        <i className="bi bi-kanban-fill"></i> Kitchen Kanban
+      </Link>
+      <Link
+        to="/partner/menu"
+        onClick={() => setShowMobileSidebar(false)}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/menu' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+      >
+        <i className="bi bi-menu-button-wide-fill"></i> Menu & Parity
+      </Link>
+      <Link
+        to="/partner/orders"
+        onClick={() => setShowMobileSidebar(false)}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/orders' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+      >
+        <i className="bi bi-receipt"></i> Orders Ledger
+      </Link>
+      <Link
+        to="/partner/settings"
+        onClick={() => setShowMobileSidebar(false)}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/settings' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+      >
+        <i className="bi bi-gear-fill"></i> Kitchen Settings
+      </Link>
+    </div>
+  );
+
   return (
     <div className="partner-portal d-flex min-vh-100" style={{ background: '#f5f6fa' }}>
-      {/* FoodAnalytics Left Sidebar */}
+      {/* FoodAnalytics Left Sidebar (Desktop) */}
       <aside className="d-none d-lg-flex flex-column p-3 bg-white border-end shadow-sm" style={{ width: 250, minHeight: '100vh', zIndex: 10 }}>
         {/* Brand */}
         <div className="d-flex align-items-center gap-2 mb-4 px-2">
@@ -56,38 +97,7 @@ const PartnerLayout = () => {
         </div>
 
         {/* Sidebar Nav Items */}
-        <div className="nav flex-column gap-1 flex-grow-1">
-          <Link
-            to="/partner"
-            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/partner' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
-          >
-            <i className="bi bi-grid-fill"></i> Dashboard
-          </Link>
-          <Link
-            to="/partner/kanban"
-            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/partner/kanban' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
-          >
-            <i className="bi bi-kanban-fill"></i> Kitchen Kanban
-          </Link>
-          <Link
-            to="/partner/menu"
-            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/partner/menu' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
-          >
-            <i className="bi bi-menu-button-wide-fill"></i> Menu & Parity
-          </Link>
-          <Link
-            to="/partner/orders"
-            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/partner/orders' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
-          >
-            <i className="bi bi-receipt"></i> Orders Ledger
-          </Link>
-          <Link
-            to="/partner/settings"
-            className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold ${location.pathname === '/partner/settings' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
-          >
-            <i className="bi bi-gear-fill"></i> Kitchen Settings
-          </Link>
-        </div>
+        {navLinks}
 
         {/* FSSAI Badge & Live Compliance Box */}
         <div className="p-3 rounded-4 mt-auto text-center" style={{ background: '#fff7ed', border: '1px solid #fed7aa' }}>
@@ -99,17 +109,65 @@ const PartnerLayout = () => {
         </div>
       </aside>
 
+      {/* Mobile Offcanvas Sidebar Drawer */}
+      {showMobileSidebar && (
+        <div 
+          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-lg-none"
+          style={{ zIndex: 10050, backdropFilter: 'blur(3px)' }}
+          onClick={() => setShowMobileSidebar(false)}
+        >
+          <div 
+            className="position-fixed top-0 start-0 h-100 bg-white shadow-lg p-3 d-flex flex-column"
+            style={{ width: 280, maxWidth: '85%', zIndex: 10060 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="d-flex align-items-center gap-2">
+                <div className="rounded-3 d-flex align-items-center justify-content-center text-white" style={{ width: 34, height: 34, background: '#ff5c35', fontSize: 18 }}>
+                  🍳
+                </div>
+                <div className="fw-extrabold fs-6" style={{ color: '#ff5c35' }}>FoodAnalytics</div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-close touch-target" 
+                onClick={() => setShowMobileSidebar(false)}
+                aria-label="Close sidebar"
+              ></button>
+            </div>
+            {navLinks}
+            <div className="border-top pt-3 mt-auto">
+              <div className="small fw-bold text-dark">{restName}</div>
+              <small className="text-muted d-block">{chefName}</small>
+              <button onClick={handleLogout} className="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill touch-target">
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Body */}
       <div className="flex-grow-1 d-flex flex-column overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/" className="btn btn-sm btn-outline-secondary rounded-pill d-lg-none" title="Return to Consumer View">
-              <i className="bi bi-arrow-left"></i>
+        <header className="bg-white border-bottom px-3 px-md-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
+          <div className="d-flex align-items-center gap-2 gap-md-3">
+            {/* Hamburger Button for Mobile */}
+            <button
+              type="button"
+              className="btn btn-light border d-lg-none touch-target rounded-3 p-1"
+              onClick={() => setShowMobileSidebar(true)}
+              aria-label="Open navigation menu"
+            >
+              <i className="bi bi-list fs-5"></i>
+            </button>
+            <Link to="/" className="btn btn-sm btn-outline-secondary rounded-pill d-none d-sm-inline-flex align-items-center" title="Return to Consumer View">
+              <i className="bi bi-arrow-left me-1"></i>
+              <span className="small">Customer View</span>
             </Link>
             <div>
-              <h5 className="fw-extrabold mb-0 text-dark">{restName}</h5>
-              <small className="text-muted">
+              <h5 className="fw-extrabold mb-0 text-dark fs-6 fs-md-5">{restName}</h5>
+              <small className="text-muted d-none d-sm-inline">
                 {restaurant?.fssaiLicense ? `${restaurant.fssaiLicense} • ` : ''}
                 {restaurant?.locality || 'Bengaluru Central'}
                 {restaurant && !restaurant.isOpen && (

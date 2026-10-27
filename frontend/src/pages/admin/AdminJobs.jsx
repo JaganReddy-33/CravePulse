@@ -96,14 +96,14 @@ const INITIAL_APPLICATIONS = [
   },
   {
     id: 'APP-103',
-    candidateName: 'Lohith K',
-    email: 'chef.lohith@culinarypartners.in',
+    candidateName: 'Lalit Kumar',
+    email: 'lalit.kumar@culinarypartners.in',
     phone: '+91 98490 34567',
     appliedRole: 'Culinary Partner Success Manager',
     experience: '5 Years (F&B Hospitality)',
     status: 'INTERVIEW_SCHEDULED',
     appliedAt: '24 Oct, 02:00 PM',
-    resumeUrl: 'https://cravepulse.in/resumes/lohith_k_cv.pdf',
+    resumeUrl: 'https://cravepulse.in/resumes/lalit_k_cv.pdf',
     note: 'Deep ties with Bengaluru artisanal kitchens and restaurant associations.'
   }
 ];

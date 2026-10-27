@@ -233,16 +233,16 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 9 – Frontend Quality, Responsiveness and Navigation
 
-- [ ] **Responsive:** mobile-first layouts verified at 360, 390, 768, 1024 and 1440 px; bottom navigation bar on mobile for the customer app; collapsible sidebars for partner/rider/admin; no horizontal scroll; 44 px touch targets; safe-area insets.
-- [ ] **Structure:**
+- [x] **Responsive:** mobile-first layouts verified at 360, 390, 768, 1024 and 1440 px; bottom navigation bar on mobile for the customer app; collapsible sidebars for partner/rider/admin; no horizontal scroll; 44 px touch targets; safe-area insets.
+- [x] **Structure:**
   - Split giant components (`RestaurantDetail`, `OrderTracking`, `CheckoutPage`, `Navbar`) into focused components and hooks.
   - Lazy-load each portal with `React.lazy` and route-level code splitting.
   - Add an error boundary, a not-found page, and consistent loading/empty/error states.
   - Use a single design-token file (colors, spacing, radius, shadows) replacing duplicated CSS.
-- [ ] **One data layer:** Axios client with typed error handling, request cancellation, retry on idempotent GETs, and one `useApi` (or React-Query-style) hook. Remove duplicate Bootstrap CDN tags (use the npm package once).
-- [ ] **Accessibility:** semantic landmarks, labels, focus states, keyboard navigation, AA contrast, `aria-live` for order status changes, reduced-motion support.
-- [ ] **Navigation:** fix dead or duplicate routes, keep readable URLs, preserve `returnTo` after login, breadcrumb on restaurant pages, and make portal switches impossible without the right role.
-- [ ] Remove all hard-coded person names and demo defaults from UI components (`Chef Lohith`, `Jaganmohan Reddy`, placeholder phone numbers). Everything comes from the logged-in user's data.
+- [x] **One data layer:** Axios client with typed error handling, request cancellation, retry on idempotent GETs, and one `useApi` (or React-Query-style) hook. Remove duplicate Bootstrap CDN tags (use the npm package once).
+- [x] **Accessibility:** semantic landmarks, labels, focus states, keyboard navigation, AA contrast, `aria-live` for order status changes, reduced-motion support.
+- [x] **Navigation:** fix dead or duplicate routes, keep readable URLs, preserve `returnTo` after login, breadcrumb on restaurant pages, and make portal switches impossible without the right role.
+- [x] Remove all hard-coded person names and demo defaults from UI components (`Chef Lohith`, `Jaganmohan Reddy`, placeholder phone numbers). Everything comes from the logged-in user's data.
 
 ---
 

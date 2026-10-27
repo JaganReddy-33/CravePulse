@@ -28,7 +28,7 @@ const Footer = () => {
               </span>
             </div>
             <div className="text-muted small">
-              © {new Date().getFullYear()} CravePulse Technologies Pvt Ltd. Architected by <strong>Jaganmohan Reddy</strong>.
+              © {new Date().getFullYear()} CravePulse Technologies Pvt Ltd. India's Fair Food Network.
             </div>
           </div>
 
