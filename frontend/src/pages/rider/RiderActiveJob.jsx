@@ -280,10 +280,10 @@ const RiderActiveJob = () => {
                 </div>
 
                 <a 
-                  href={`tel:${activeJob.restaurantPhone}`} 
+                  href="tel:+918047483333" 
                   className="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
                   style={{ width: 44, height: 44, borderColor: 'rgba(255, 255, 255, 0.2)' }}
-                  title="Call Kitchen Head Chef"
+                  title="Call Kitchen via CravePulse Masked Proxy (+91 80 4748 3333)"
                 >
                   <i className="bi bi-telephone-fill text-warning fs-6"></i>
                 </a>
@@ -489,10 +489,10 @@ const RiderActiveJob = () => {
                 </div>
 
                 <a 
-                  href={`tel:${activeJob.customerPhone}`} 
+                  href="tel:+918047483333" 
                   className="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
                   style={{ width: 44, height: 44, borderColor: 'rgba(255, 255, 255, 0.2)' }}
-                  title="Call Customer (Privacy Masked)"
+                  title="Call Customer via CravePulse Masked Proxy (+91 80 4748 3333)"
                 >
                   <i className="bi bi-telephone-fill text-info fs-6"></i>
                 </a>

@@ -511,41 +511,228 @@ Common HTTP status codes returned:
 
 ---
 
-## 9. WebSocket Realtime Protocol
+## 9. WebSocket & Real-Time Protocol
 
-- **Connection URL:** `ws://localhost:8080/ws/realtime` (or `wss://...` in production)
-- **Handshake Authentication:** Pass `?token=<JWT>` in URL query parameter.
+- **Connection URL:** `ws://localhost:8081/ws/realtime?token=<jwt>` (or `wss://...` in production)
+- **Handshake Authentication:** Pass `?token=<jwt>` as a query parameter on the connection URL.
+  - If the token is missing, expired, or invalid, the server immediately closes the connection with code `1008 (VIOLATED_POLICY)` and reason `"Invalid authentication token"`.
+- **Session Limits & Protection:**
+  - Maximum frame payload size: 64 KB (oversized frames close connection with code `1009`).
+  - Sliding window rate limit: 40 messages per 10 seconds per session. Excess messages receive an error event or trigger session termination.
 
-### 9.1 Subscribe Message Frame
+### 9.1 Client Inbound Frames
+
+#### Heartbeat Ping
 ```json
 {
-  "action": "SUBSCRIBE",
+  "action": "ping"
+}
+```
+*Server replies with:* `{"action": "pong", "timestamp": 1729881025000}`
+
+#### Channel Subscription
+```json
+{
+  "action": "subscribe",
   "channel": "order:501"
 }
 ```
 
-### 9.2 Server Event Frames
-#### New Order Alert (Kitchen)
+##### Subscription Authorization Matrix
+| Channel Pattern | Allowed Roles | Enforcement Logic |
+| :--- | :--- | :--- |
+| `admin:feed` | `ADMIN` | Role check from authenticated JWT token. |
+| `user:{id}` | `ADMIN`, Matching User | User ID from JWT must match channel ID. |
+| `rider:{id}` | `ADMIN`, Matching Rider | Rider profile ID must belong to authenticated rider. |
+| `restaurant:{id}` | `ADMIN`, Restaurant Partner | Restaurant partner owner or admin. |
+| `order:{id}` | `ADMIN`, Order Customer, Order Rider, Order Restaurant | User must be buyer, assigned rider, or merchant for order. |
+
+If subscription is rejected:
 ```json
 {
-  "type": "NEW_ORDER",
-  "channel": "restaurant:1",
-  "orderId": 501,
-  "orderNumber": "ORD-20261025-501",
-  "itemCount": 2,
-  "totalAmount": 1314.00,
-  "timestamp": 1729881020000
+  "action": "subscribe_error",
+  "channel": "order:999",
+  "error": "Forbidden: Not authorized to subscribe to channel order:999"
 }
 ```
 
-#### Rider Live GPS Update
+#### Channel Unsubscription
 ```json
 {
-  "type": "RIDER_LOCATION",
-  "channel": "order:501",
-  "latitude": 12.9734,
-  "longitude": 77.5998,
-  "heading": 185.4,
-  "speedKmh": 28.5
+  "action": "unsubscribe",
+  "channel": "order:501"
 }
 ```
+
+#### Rider Live GPS Telemetry
+```json
+{
+  "action": "rider_telemetry",
+  "latitude": 12.9783692,
+  "longitude": 77.6408356,
+  "heading": 185.4,
+  "speedKmh": 28.5,
+  "batteryLevel": 88
+}
+```
+*Broadcasts `rider_location_updated` to assigned order channels, `admin:feed`, and active dispatch monitors.*
+
+#### Direct Order Chat Message
+```json
+{
+  "action": "chat_message",
+  "orderId": 501,
+  "recipientRole": "RIDER",
+  "messageText": "Please leave at the security gate."
+}
+```
+
+---
+
+### 9.2 Server Event Payloads
+
+#### 1. `order_status_updated`
+Broadcasted to `order:{orderId}` and `user:{userId}` when status progresses (`PLACED` -> `ACCEPTED` -> `PREPARING` -> `READY` -> `PICKED_UP` -> `DELIVERED`).
+```json
+{
+  "event": "order_status_updated",
+  "orderId": 501,
+  "status": "PICKED_UP",
+  "updatedAt": 1729881020000
+}
+```
+
+#### 2. `rider_assigned`
+Broadcasted to `order:{orderId}` and customer feed when delivery captain accepts dispatch.
+```json
+{
+  "event": "rider_assigned",
+  "orderId": 501,
+  "riderId": 12,
+  "riderName": "Kiran Kumar",
+  "riderPhone": "+91 80 4748 3333 (Proxy Ext #501)",
+  "vehicleType": "Ather 450X EV"
+}
+```
+
+#### 3. `rider_location_updated`
+Broadcasted to `order:{orderId}` and `admin:feed`.
+```json
+{
+  "event": "rider_location_updated",
+  "orderId": 501,
+  "latitude": 12.9783692,
+  "longitude": 77.6408356,
+  "heading": 185.4,
+  "speedKmh": 28.5,
+  "timestamp": 1729881030000
+}
+```
+
+#### 4. `new_order_placed`
+Broadcasted to `restaurant:{restaurantId}`.
+```json
+{
+  "event": "new_order_placed",
+  "orderId": 501,
+  "orderNumber": "CP-20261027-A8B9C0",
+  "itemCount": 3,
+  "totalAmount": 780.00,
+  "timestamp": 1729881010000
+}
+```
+
+#### 5. `rider_job_offer`
+Broadcasted to `rider:{riderId}` during automated dispatch search sweeps.
+```json
+{
+  "event": "rider_job_offer",
+  "orderId": 501,
+  "dispatchId": 108,
+  "restaurantName": "Spice Symphony",
+  "pickupAddress": "Indiranagar 100ft Rd",
+  "deliveryAddress": "Koramangala 4th Block",
+  "distanceKm": 4.2,
+  "estimatedEarnings": 72.50,
+  "expiresAt": 1729881045000
+}
+```
+
+#### 6. `notification`
+Broadcasted to `user:{userId}` for announcements, refunds, and milestones.
+```json
+{
+  "event": "notification",
+  "title": "Refund Processed",
+  "message": "₹250 has been credited to your CravePulse Wallet for order #501.",
+  "timestamp": 1729881050000
+}
+```
+
+#### 7. `restaurant_status_updated`
+Broadcasted to active catalog consumers when a merchant opens or pauses kitchen intake.
+```json
+{
+  "event": "restaurant_status_updated",
+  "restaurantId": 14,
+  "isOpen": true
+}
+```
+
+#### 8. `new_chat_message`
+Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-order communication.
+```json
+{
+  "event": "new_chat_message",
+  "orderId": 501,
+  "id": 42,
+  "senderUserId": 10,
+  "senderRole": "CUSTOMER",
+  "recipientRole": "RIDER",
+  "messageText": "I am waiting in the lobby",
+  "createdAt": "2026-10-27T17:40:00"
+}
+```
+
+---
+
+## 10. Non-Blocking SSE & Order Chat REST Endpoints
+
+### 10.1 Server-Sent Events (SSE) Stream
+- **Endpoint:** `GET /api/realtime/sse?token=<jwt>`
+- **Auth Required:** Yes (via query token or `Authorization: Bearer <jwt>`)
+- **Transport:** HTTP text/event-stream using non-blocking Servlet 3.0 `AsyncContext`.
+- **Keepalive:** Heartbeat comment `: ping` dispatched every 15 seconds.
+
+### 10.2 Fetch Order Chat Messages
+- **Endpoint:** `GET /api/orders/{id}/messages`
+- **Auth Required:** Yes (`CUSTOMER` who owns order, assigned `RIDER`, merchant `RESTAURANT`, or `ADMIN`)
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "orderId": 501,
+      "senderUserId": 10,
+      "senderRole": "CUSTOMER",
+      "recipientRole": "RIDER",
+      "messageText": "Where are you now?",
+      "createdAt": "2026-10-27T17:35:10"
+    }
+  ]
+}
+```
+
+### 10.3 Post Order Chat Message
+- **Endpoint:** `POST /api/orders/{id}/messages`
+- **Auth Required:** Yes (Order participants only)
+- **Request Body:**
+```json
+{
+  "recipientRole": "RIDER",
+  "messageText": "Please leave at security desk."
+}
+```
+- **Response (201 Created):** Created `OrderMessage` object, automatically broadcasted via WebSocket `new_chat_message`.

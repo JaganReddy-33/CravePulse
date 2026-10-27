@@ -11,10 +11,14 @@ import com.foodplatform.daoImpl.OrderDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.daoImpl.UserDaoImpl;
 import com.foodplatform.daoImpl.WalletDaoImpl;
+import com.foodplatform.dao.OrderMessageDao;
+import com.foodplatform.daoImpl.OrderMessageDaoImpl;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.OrderItem;
+import com.foodplatform.model.OrderMessage;
 import com.foodplatform.model.Restaurant;
+import com.foodplatform.model.User;
 import com.foodplatform.service.DispatchService;
 import com.foodplatform.service.NotificationService;
 import com.foodplatform.service.OrderStateMachineService;
@@ -60,6 +64,7 @@ public class OrderServlet extends BaseServlet {
     private final PaymentService paymentService = new PaymentService();
     private final NotificationService notificationService = new NotificationService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
+    private final OrderMessageDao orderMessageDao = new OrderMessageDaoImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -377,6 +382,50 @@ public class OrderServlet extends BaseServlet {
             return;
         }
 
+        if (path.matches("^/\\d+/messages$")) {
+            if (!requireAuthenticated(req, res)) return;
+            Long orderId = parseIdFromPath(req);
+            Long userId = getAuthenticatedUserId(req);
+            String role = getAuthenticatedRole(req);
+
+            if (!orderMessageDao.isUserAllowedInOrderChat(orderId, userId, role)) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access denied to order communication channel");
+                return;
+            }
+
+            JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (body == null || !body.has("messageText") || body.get("messageText").getAsString().trim().isEmpty()) {
+                JsonUtil.sendError(res, 400, "Message text is required");
+                return;
+            }
+
+            String text = body.get("messageText").getAsString().trim();
+            if (text.length() > 1000) {
+                JsonUtil.sendError(res, 400, "Message exceeds 1000 character maximum limit");
+                return;
+            }
+
+            String recipientRole = body.has("recipientRole") ? body.get("recipientRole").getAsString().trim().toUpperCase() : "ALL";
+
+            User sender = userDao.findById(userId);
+            OrderMessage msg = new OrderMessage();
+            msg.setOrderId(orderId);
+            msg.setSenderUserId(userId);
+            msg.setSenderRole(role);
+            msg.setRecipientRole(recipientRole);
+            msg.setMessageText(text);
+            msg.setSenderName(sender != null ? sender.getFullName() : role);
+            msg.setCreatedAt(Timestamp.from(Instant.now()));
+
+            Long msgId = orderMessageDao.saveMessage(msg);
+            msg.setId(msgId);
+
+            registry.broadcastToOrder(orderId, "new_chat_message", msg);
+
+            JsonUtil.sendSuccess(res, 201, "Message sent successfully", msg);
+            return;
+        }
+
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
     }
 
@@ -434,6 +483,22 @@ public class OrderServlet extends BaseServlet {
                 .filter(o -> !"DELIVERED".equalsIgnoreCase(o.getStatus()) && !"CANCELLED".equalsIgnoreCase(o.getStatus()))
                 .findFirst().orElse(null);
             JsonUtil.sendSuccess(res, 200, "Active customer order", active);
+            return;
+        }
+
+        if (path.matches("^/\\d+/messages$")) {
+            if (!requireAuthenticated(req, res)) return;
+            Long orderId = parseIdFromPath(req);
+            Long userId = getAuthenticatedUserId(req);
+            String role = getAuthenticatedRole(req);
+
+            if (!orderMessageDao.isUserAllowedInOrderChat(orderId, userId, role)) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access denied to order communication channel");
+                return;
+            }
+
+            List<OrderMessage> messages = orderMessageDao.getOrderMessages(orderId);
+            JsonUtil.sendSuccess(res, 200, "Order messages", messages);
             return;
         }
 

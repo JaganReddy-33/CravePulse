@@ -64,3 +64,21 @@
   - **4-Digit Delivery PIN Verification**: Requires customer 4-digit handover PIN verification before transitioning order status to `DELIVERED`, crediting trip earnings, and releasing rider availability.
   - **Cash on Delivery (COD) Settlement Ledger**: Added `rider_profiles.cash_in_hand` tracking and `rider_cod_settlements` double-entry ledger. Cash collected on delivery increments `cash_in_hand` and writes `COLLECTED` entries; hub cash turn-in decrements `cash_in_hand` and writes `DEPOSITED` entries with transaction references.
   - **Authenticated & Throttled Rider Telemetry**: Restricted rider GPS telemetry updates (`POST /api/rider/telemetry`) to authenticated fleet captains assigned to the order, updating coordinates and broadcasting live location strictly to the customer active order room.
+
+---
+
+## ADR-006: Authenticated WebSocket Protocol, Channel Authorization Matrix, Non-Blocking SSE & Order Chat (Phase 5)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: The real-time messaging layer previously accepted unauthenticated WebSocket connections or allowed clients to subscribe to arbitrary channels without role/ownership verification (e.g. any client could listen to `admin:feed` or another customer's `order:{id}`). SSE was implemented using thread-blocking `Thread.sleep` loops, exhausting container thread pools under concurrent traffic. In-order customer-rider-kitchen communication lacked backend persistence, rate limiting, and frame-size guards, while telephone numbers were exposed in plaintext rather than masked through a virtual proxy number.
+- **Decision**:
+  - **Authenticated WebSocket Handshake**: Enforced JWT token validation on `onOpen` via `?token=<jwt>` query parameter. Missing or invalid tokens result in immediate connection closure with code `1008 (VIOLATED_POLICY)`.
+  - **Channel Subscription Authorization Matrix**:
+    - `admin:feed`: Enforced `ADMIN` role from JWT claims.
+    - `user:{userId}`: Enforced matching authenticated user ID or `ADMIN`.
+    - `rider:{riderId}`: Enforced rider profile ownership matching authenticated user ID or `ADMIN`.
+    - `restaurant:{restaurantId}`: Enforced restaurant ownership matching authenticated user ID or `ADMIN`.
+    - `order:{orderId}`: Enforced order participant authorization via `OrderMessageDao.isUserAllowedInOrderChat` (customer buyer, assigned delivery captain, restaurant owner, or admin). Unauthorized subscription attempts are rejected with an explicit `subscribe_error` frame without breaking the session.
+  - **DDoS & Flood Protection**: Enforced a strict 64 KB maximum payload frame check (`TOO_BIG` close code) and a sliding-window rate limiter (maximum 40 messages per 10 seconds per session).
+  - **Non-Blocking Async SSE Servlet**: Replaced blocking sleep loops with Servlet 3.0 `AsyncContext` and a centralized single-thread scheduled heartbeat daemon (`CravePulse-SSE-Heartbeat`) broadcasting keepalive pings every 15s to registered clients.
+  - **Order Chat Persistence & Masked Calling**: Added `V8` migration creating the `order_messages` table with audit metadata. Exposed `GET /api/orders/{id}/messages` and `POST /api/orders/{id}/messages` with 1,000 character maximum validation and WebSocket broadcast `new_chat_message`. Replaced raw customer and partner mobile numbers with virtual proxy forwarding (+91 80 4748 3333) across customer tracking and rider active job portals.

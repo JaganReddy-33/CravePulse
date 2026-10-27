@@ -29,10 +29,7 @@ const OrderTracking = () => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatTarget, setChatTarget] = useState('RIDER'); // 'RIDER' | 'KITCHEN'
   const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: 'RIDER', name: 'Prasad Rao', text: 'Hello! I have picked up your order from Spice Symphony. On my way to your address 🛵', time: '2 mins ago' },
-    { id: 2, sender: 'KITCHEN', name: 'Chef Lohith', text: 'Namaste! Your biryani was freshly cooked in sealed handi with 100% price parity. Enjoy!', time: '10 mins ago' }
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
 
   // Review Form state
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -137,6 +134,13 @@ const OrderTracking = () => {
 
     realtime.subscribe(`order:${order.id}`);
 
+    // Load persisted chat message history
+    api.get(`/orders/${order.id}/messages`).then((res) => {
+      if (res.success && Array.isArray(res.data)) {
+        setChatMessages(res.data);
+      }
+    }).catch(() => {});
+
     const offStatus = realtime.on('order_status_updated', (payload) => {
       if (payload.orderId === order.id) {
         setOrder(prev => ({ ...prev, status: payload.status }));
@@ -149,10 +153,20 @@ const OrderTracking = () => {
       }
     });
 
+    const offChat = realtime.on('new_chat_message', (payload) => {
+      if (payload.orderId === order.id) {
+        setChatMessages(prev => {
+          if (prev.some(m => m.id === payload.id)) return prev;
+          return [...prev, payload];
+        });
+      }
+    });
+
     return () => {
       realtime.unsubscribe(`order:${order.id}`);
       offStatus();
       offTelemetry();
+      offChat();
     };
   }, [order?.id]);
 
@@ -194,54 +208,25 @@ const OrderTracking = () => {
 
   const currentStageIndex = STAGES.findIndex(s => s.key === order.status);
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const msg = (textToSend || chatInput).trim();
-    if (!msg) return;
+    if (!msg || !order?.id) return;
 
-    const userMsg = {
-      id: Date.now(),
-      sender: 'CUSTOMER',
-      name: 'You',
-      text: msg,
-      time: 'Just now'
-    };
-
-    setChatMessages(prev => [...prev, userMsg]);
     setChatInput('');
-
-    // Simulate instant realistic partner reply after 1.2s
-    setTimeout(() => {
-      let replyText = '';
-      if (chatTarget === 'RIDER') {
-        if (msg.toLowerCase().includes('where')) {
-          replyText = 'Just crossed the 100ft road signal! Approaching your apartment entrance in about 3 minutes 🛵';
-        } else if (msg.toLowerCase().includes('gate') || msg.toLowerCase().includes('security')) {
-          replyText = 'Understood! I will safely hand over the package to security and verify with you 👍';
-        } else if (msg.toLowerCase().includes('bell')) {
-          replyText = 'Noted! I will call you upon arrival and will not ring the doorbell.';
-        } else {
-          replyText = 'Got your message! Keeping your food container safe and upright. Arriving shortly!';
-        }
-      } else {
-        if (msg.toLowerCase().includes('spicy')) {
-          replyText = 'Understood! Chef Lohith has added extra freshly crushed spices and roasted chilies 🌶️';
-        } else if (msg.toLowerCase().includes('spoon') || msg.toLowerCase().includes('cutlery') || msg.toLowerCase().includes('tissue')) {
-          replyText = 'Packaged! Eco-friendly cutlery and napkins are securely placed inside the tamper pouch.';
-        } else {
-          replyText = 'Hello! Your meal was prepared following strict 100% dine-in recipe standards. Bon appétit!';
-        }
+    try {
+      const res = await api.post(`/orders/${order.id}/messages`, {
+        messageText: msg,
+        recipientRole: chatTarget === 'RIDER' ? 'RIDER' : 'RESTAURANT'
+      });
+      if (res.success && res.data) {
+        setChatMessages(prev => {
+          if (prev.some(m => m.id === res.data.id)) return prev;
+          return [...prev, res.data];
+        });
       }
-
-      const partnerReply = {
-        id: Date.now() + 1,
-        sender: chatTarget,
-        name: chatTarget === 'RIDER' ? (order.riderName || 'Prasad Rao') : 'Chef Lohith (Head Chef)',
-        text: replyText,
-        time: 'Just now'
-      };
-
-      setChatMessages(prev => [...prev, partnerReply]);
-    }, 1200);
+    } catch (e) {
+      console.error('Error sending order chat message', e);
+    }
   };
 
   return (
@@ -430,10 +415,11 @@ const OrderTracking = () => {
 
               <div className="d-flex gap-2">
                 <a
-                  href={`tel:${order.riderPhone || '+919849056789'}`}
+                  href="tel:+918047483333"
+                  title="Masked Calling Proxy (+91 80 4748 3333)"
                   className="btn btn-outline-success flex-grow-1 rounded-pill btn-sm fw-bold d-flex align-items-center justify-content-center gap-1"
                 >
-                  <i className="bi bi-telephone-fill"></i> Call Rider
+                  <i className="bi bi-shield-shaded"></i> Call Rider (Masked)
                 </a>
                 <button
                   type="button"
@@ -461,18 +447,19 @@ const OrderTracking = () => {
                 👨‍🍳
               </div>
               <div className="flex-grow-1">
-                <h6 className="fw-bold mb-0 text-dark">{order.restaurantName || 'Spice Symphony & Grill'}</h6>
-                <small className="text-muted d-block">Chef Lohith • Head Chef & Partner</small>
+                <h6 className="fw-bold mb-0 text-dark">{order.restaurantName || 'Restaurant'}</h6>
+                <small className="text-muted d-block">Kitchen Partner • Order Desk</small>
                 <small className="text-primary fw-semibold">100% Dine-In Menu Parity</small>
               </div>
             </div>
 
             <div className="d-flex gap-2">
               <a
-                href={`tel:${order.restaurantPhone || '+919849011223'}`}
+                href="tel:+918047483333"
+                title="Masked Calling Proxy (+91 80 4748 3333)"
                 className="btn btn-outline-secondary flex-grow-1 rounded-pill btn-sm fw-bold d-flex align-items-center justify-content-center gap-1"
               >
-                <i className="bi bi-telephone-fill"></i> Call Kitchen
+                <i className="bi bi-shield-shaded"></i> Call Kitchen (Masked)
               </a>
               <button
                 type="button"
@@ -482,7 +469,7 @@ const OrderTracking = () => {
                   setShowChatModal(true);
                 }}
               >
-                <i className="bi bi-chat-text-fill"></i> Note to Chef
+                <i className="bi bi-chat-text-fill"></i> Note to Kitchen
               </button>
             </div>
           </div>
@@ -745,7 +732,7 @@ const OrderTracking = () => {
                       style={chatTarget === 'RIDER' ? { background: '#ff5c35', borderColor: '#ff5c35' } : {}}
                       onClick={() => setChatTarget('RIDER')}
                     >
-                      🛵 Rider Prasad Rao
+                      🛵 {order.riderName || 'Delivery Partner'}
                     </button>
                     <button
                       type="button"
@@ -753,7 +740,7 @@ const OrderTracking = () => {
                       style={chatTarget === 'KITCHEN' ? { background: '#ff5c35', borderColor: '#ff5c35' } : {}}
                       onClick={() => setChatTarget('KITCHEN')}
                     >
-                      🍳 Chef Lohith (Kitchen)
+                      🍳 {order.restaurantName || 'Kitchen Partner'}
                     </button>
                   </div>
                 </div>
@@ -768,16 +755,32 @@ const OrderTracking = () => {
 
                   <div className="d-flex flex-column gap-2 mt-3">
                     {chatMessages
-                      .filter(m => m.sender === 'CUSTOMER' || m.sender === chatTarget)
+                      .filter(m => {
+                        const sRole = m.senderRole || m.sender;
+                        const rRole = m.recipientRole;
+                        if (chatTarget === 'RIDER') {
+                          return sRole === 'RIDER' || rRole === 'RIDER' || (!sRole && !rRole);
+                        } else {
+                          return sRole === 'RESTAURANT' || rRole === 'RESTAURANT' || sRole === 'KITCHEN' || rRole === 'KITCHEN';
+                        }
+                      })
                       .map((msg) => {
-                        const isMe = msg.sender === 'CUSTOMER';
+                        const sRole = msg.senderRole || msg.sender;
+                        const isMe = sRole === 'CUSTOMER';
+                        const senderDisplayName = isMe
+                          ? 'You'
+                          : (sRole === 'RIDER' ? (order.riderName || 'Delivery Partner') : (order.restaurantName || 'Kitchen Staff'));
+                        const formattedTime = msg.createdAt
+                          ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : (msg.time || 'Just now');
+
                         return (
                           <div
-                            key={msg.id}
+                            key={msg.id || Math.random()}
                             className={`d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}`}
                           >
                             <small className="text-muted mb-1" style={{ fontSize: 10 }}>
-                              {msg.name} • {msg.time}
+                              {senderDisplayName} • {formattedTime}
                             </small>
                             <div
                               className={`p-3 rounded-4 shadow-sm small ${
@@ -790,7 +793,7 @@ const OrderTracking = () => {
                                 background: isMe ? 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' : '#fff'
                               }}
                             >
-                              {msg.text}
+                              {msg.messageText || msg.text}
                             </div>
                           </div>
                         );
@@ -835,7 +838,7 @@ const OrderTracking = () => {
                     <input
                       type="text"
                       className="form-control rounded-pill border"
-                      placeholder={`Message ${chatTarget === 'RIDER' ? 'Prasad Rao' : 'Chef Lohith'}...`}
+                      placeholder={`Message ${chatTarget === 'RIDER' ? (order.riderName || 'Rider') : (order.restaurantName || 'Kitchen')}...`}
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                     />
