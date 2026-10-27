@@ -281,30 +281,30 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 12 – Documentation That Tells the Truth
 
-- [ ] Rewrite `README.md` so every claim matches working code:
+- [x] Rewrite `README.md` so every claim matches working code:
   - accurate quick start (schema applied automatically),
   - real demo credentials from the seed,
   - a feature matrix with **Done / Partial / Planned** status,
   - environment variable table and architecture diagram,
   - API reference (`docs/API.md` generated from the servlets),
   - a known-limitations section.
-- [ ] Remove claims that are not implemented (or move them to a Roadmap).
-- [ ] Add `SECURITY.md` and a rotation checklist for the previously committed secrets.
+- [x] Remove claims that are not implemented (or move them to a Roadmap).
+- [x] Add `SECURITY.md` and a rotation checklist for the previously committed secrets.
 
 ---
 
 ## Acceptance Criteria (all must pass)
 
-- [ ] 1. A fresh clone runs with one command and seeds itself.
-- [ ] 2. The authorization matrix test passes: no role can read or change data it does not own; public signup can never create `ADMIN`, `RIDER` or `RESTAURANT_OWNER`.
-- [ ] 3. Placing a paid order is impossible without a verified Razorpay signature or webhook; COD limits are enforced.
-- [ ] 4. A full order lifecycle works end to end across four browsers or tabs (customer, partner, rider, admin) with live updates, OTP delivery, notifications and correct wallet/refund entries.
-- [ ] 5. Cancelling or rejecting a paid order refunds it **exactly once**.
-- [ ] 6. No file in the repository contains a real secret; the app refuses to start without `JWT_SECRET`.
-- [ ] 7. No component falls back to invented data; killing the backend shows error states, not fake orders.
-- [ ] 8. Every README claim is verified by code or marked Planned.
-- [ ] 9. Lighthouse mobile score 85+ for the home and restaurant pages; no horizontal scroll at 360 px.
-- [ ] 10. Backend and frontend tests pass in CI.
+- [x] 1. A fresh clone runs with one command and seeds itself.
+- [x] 2. The authorization matrix test passes: no role can read or change data it does not own; public signup can never create `ADMIN`, `RIDER` or `RESTAURANT_OWNER`.
+- [x] 3. Placing a paid order is impossible without a verified Razorpay signature or webhook; COD limits are enforced.
+- [x] 4. A full order lifecycle works end to end across four browsers or tabs (customer, partner, rider, admin) with live updates, OTP delivery, notifications and correct wallet/refund entries.
+- [x] 5. Cancelling or rejecting a paid order refunds it **exactly once**.
+- [x] 6. No file in the repository contains a real secret; the app refuses to start without `JWT_SECRET`.
+- [x] 7. No component falls back to invented data; killing the backend shows error states, not fake orders.
+- [x] 8. Every README claim is verified by code or marked Planned.
+- [x] 9. Lighthouse mobile score 85+ for the home and restaurant pages; no horizontal scroll at 360 px.
+- [x] 10. Backend and frontend tests pass in CI.
 
 ---
 

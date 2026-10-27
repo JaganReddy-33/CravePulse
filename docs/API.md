@@ -985,3 +985,58 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
   }
   ```
 
+---
+
+## 13. Observability, Health & Telemetry
+
+### 13.1 Liveness Probe
+- **Endpoint:** `GET /health` or `GET /api/health`
+- **Auth Required:** No
+- **Response (200 OK):**
+```json
+{
+  "status": "UP",
+  "service": "CravePulse Platform",
+  "version": "1.0.0",
+  "timestamp": 1729881000000
+}
+```
+
+### 13.2 Readiness Probe (Database & JVM Memory Probe)
+- **Endpoint:** `GET /ready` or `GET /api/ready`
+- **Auth Required:** No
+- **Response (200 OK / 503 Service Unavailable):**
+```json
+{
+  "status": "UP",
+  "database": {
+    "status": "UP",
+    "latencyMs": 2
+  },
+  "memory": {
+    "freeMemoryMb": 240,
+    "totalMemoryMb": 512,
+    "maxMemoryMb": 4096
+  }
+}
+```
+
+### 13.3 Operations Metrics Snapshot
+- **Endpoint:** `GET /metrics` or `GET /api/metrics`
+- **Auth Required:** No
+- **Response (200 OK):**
+```json
+{
+  "uptimeMs": 86400000,
+  "totalRequests": 14205,
+  "ordersPlaced": 482,
+  "ordersDelivered": 465,
+  "ordersCancelled": 12,
+  "ordersPerMinute": 8,
+  "failedPayments": 5,
+  "dispatchTimeouts": 3,
+  "activeWebsockets": 42
+}
+```
+
+

@@ -1,241 +1,243 @@
-# CravePulse | India's Fair Food Network (formerly Foodora)
+# CravePulse | India's Fair Food Network
 
-A full-stack, enterprise-grade, real-time food delivery ecosystem engineered with **Pure Java 17+ (Jakarta Servlets 6.0, JDBC, HikariCP, MySQL 8)** on the backend and **React 18 (Vite, Bootstrap 5, Leaflet OpenStreetMap, HTML5 Canvas, Web Audio API)** on the frontend.
+A production-grade, real-time multi-portal food delivery platform engineered with **Java 17 (Jakarta Servlets 6.0, JDBC, HikariCP, MySQL 8)** on the backend and **React 18 (Vite, Bootstrap 5, Leaflet OpenStreetMap, HTML5 Canvas, Web Audio API)** on the frontend.
 
-Designed with **zero Spring Boot, zero Hibernate/JPA, and zero Lombok**, the platform utilizes direct low-overhead JDBC `PreparedStatements`, pessimistic concurrency locking (`SELECT ... FOR UPDATE`), atomic ledger mutations, and Jakarta WebSocket (`@ServerEndpoint`) bidirectional synchronization.
-
----
-
-## 1. Brand Identity & Design Philosophy
-
-- **Brand:** **CravePulse | India's Fair Food Network**
-- **Emblem:** Custom dual-tone pulsing flame-and-signal emblem symbolizing culinary warmth combined with sub-second logistics dispatch.
-- **Mission:** Eliminate exploitative 25–40% food price inflation, stop rider tip deduction, and provide an honest, delightful dining experience for every Indian citizen.
-- **Pan-India Reach:** Unlike localized prototypes, CravePulse operates across major Indian metropolitan hubs:
-  - **Bengaluru** (Indiranagar, Koramangala, HSR Layout, Whitefield, MG Road, Jayanagar, Bellandur)
-  - **Hyderabad** (Banjara Hills, Jubilee Hills, Gachibowli, Madhapur, Hitec City, Kondapur, Begumpet)
-  - **Mumbai** (Bandra West, Juhu, Andheri West, Powai, Lower Parel, Colaba, BKC)
-  - **Delhi-NCR** (Connaught Place, Cyber Hub Gurgaon, Hauz Khas, Saket, Sector 29, Indirapuram Noida)
-  - **Chennai** (Nungambakkam, Anna Nagar, T. Nagar, Besant Nagar, OMR IT Corridor)
-  - **Pune** (Koregaon Park, Kalyani Nagar, Viman Nagar, Baner, Kothrud, Hinjewadi)
-  - **Visakhapatnam** (Siripuram, MVP Colony, Rushikonda, Beach Road, Gajuwaka)
-  - **Vijayawada** (MG Road, Benz Circle, Governorpet, Poranki)
-  - **Live GPS Detection:** Built-in Geolocation API pinpointing user coordinates to the nearest dining micro-hub with 1 click.
+Designed with **zero Spring Boot, zero Hibernate/JPA, and zero Lombok**, the architecture relies on direct low-overhead JDBC `PreparedStatements`, pessimistic concurrency locking (`SELECT ... FOR UPDATE`), double-entry atomic ledger transactions, and bidirectional Jakarta WebSocket (`@ServerEndpoint`) synchronization.
 
 ---
 
-## 2. Real-World Team & Stakeholders
+## Architecture Diagram
 
-To ensure authenticity and eliminate generic AI placeholders, the platform is anchored by real stakeholders:
+```mermaid
+graph TD
+    subgraph Clients["Frontend Clients (React 18 + Vite)"]
+        CustomerApp["Customer Portal\n(Port 5173 /)"]
+        PartnerPortal["Partner Kitchen Portal\n(/partner)"]
+        RiderCockpit["Rider Logistics Cockpit\n(/rider)"]
+        AdminConsole["Ops Admin Console\n(/admin)"]
+    end
 
-| Role | Name | Email | Details |
-|---|---|---|---|
-| **Platform Founder & Lead Ops Admin** | **Jaganmohan Reddy** | `admin@foodplatform.com` / `customer@foodora.com` | Oversees platform-wide analytics, dispute arbitration, and multi-city operations. |
-| **Head Chef & Partner (Spice Symphony)** | **Chef Lohith** | `partner@foodplatform.com` | Master of authentic royal dum biryanis, hand-churned dal makhani, and tandoori specials. |
-| **Fleet Captain / Delivery Partner** | **Prasad Rao** | `rider@foodplatform.com` | Top-rated delivery partner with 5.0★ rating and zero-penalty track record. |
-| **Partner Chef (Pizza Palace)** | **Chef Ajay Kumar** | `ajay.pizza@cravepulse.in` | Artisanal wood-fired sourdough pizzas & handmade fettuccine. |
-| **Customer Partner & Food Enthusiast** | **Santhosh Reddy** | `santhosh.reddy@cravepulse.in` | Gourmet burger aficionado & verified platform reviewer. |
-| **Delivery Captain (South Zone)** | **Lohith V** | `lohith.rider@cravepulse.in` | High-efficiency electric two-wheeler fleet partner. |
+    subgraph Edge["Security & Gateway Filters"]
+        SecurityHeaders["SecurityHeadersFilter\n(HSTS, CSP, XSS)"]
+        CORS["CorsFilter\n(Credentials, Origin Guard)"]
+        RateLimit["RateLimitFilter\n(100 req/min Token Bucket)"]
+        LoggingMDC["RequestLoggingFilter\n(X-Request-ID, MDC)"]
+        JWTAuth["JwtAuthFilter\n(Role Extraction & Claims)"]
+    end
 
----
+    subgraph Core["Jakarta Servlet API (Port 8080)"]
+        AuthServlet["AuthServlet\n(/api/auth)"]
+        RestaurantServlet["RestaurantServlet\n(/api/restaurants)"]
+        OrderServlet["OrderServlet\n(/api/orders)"]
+        CartPricingServlet["CartPricingServlet\n(/api/cart)"]
+        PaymentServlet["PaymentServlet\n(/api/payments)"]
+        RiderServlet["RiderServlet\n(/api/rider)"]
+        AdminServlet["AdminServlet\n(/api/admin)"]
+        DisputeServlet["DisputeServlet\n(/api/disputes)"]
+        HealthServlet["HealthObservabilityServlet\n(/health, /ready, /metrics)"]
+        WsEndpoint["RealtimeEndpoint\n(WebSocket /ws/realtime)"]
+    end
 
-## 3. Dedicated Role-Based Authentication & Navigation
+    subgraph Services["Core Business Engines"]
+        PricingEngine["PricingService\n(Distance, Tax, ETA)"]
+        DispatchEngine["DispatchService\n(Fair-Pay, P2P Radius)"]
+        PaymentEngine["PaymentService\n(Razorpay, Wallet, COD)"]
+        StateMachine["OrderService\n(State Transitions, Refunds)"]
+        RetentionService["RetentionService\n(7-Day Purge Scheduler)"]
+        MetricsService["MetricsService\n(Thread-Safe LongAdders)"]
+    end
 
-In compliance with production-grade security standards, customer-facing interfaces never expose administrative, rider, or kitchen tools:
+    subgraph DataStore["Persistence & Messaging"]
+        HikariPool["HikariCP Connection Pool\n(Min: 10, Max: 50)"]
+        MySQL[("MySQL 8.0 Relational DB\n(Strict CHECK Constraints\nON DELETE RESTRICT)")]
+        WsRegistry["RealtimeSessionRegistry\n(In-Memory Channel Hub)"]
+    end
 
-- **Public Consumer App (`/`, `/restaurant/:id`, `/orders`, `/offers`, `/cities`):**
-  - Features an interactive **Pan-India Location Selector** with live GPS detection.
-  - Sanitized navigation: Clean drawer and navbar containing purely consumer links (Menu, Offers, Cart, Tracking, Help, City Selector).
-  - Dedicated customer auth at `/login` and `/register`.
-- **Restaurant Partner Portal (`/partner/login`, `/partner/menu`, `/partner/orders`, `/partner/settings`):**
-  - Accessible via dedicated partner auth.
-  - Features **FoodAnalytics Dashboard**, real-time audio-chime **Kitchen Kanban**, and the **Dynamic Dish Studio**.
-- **Delivery Fleet Portal (`/rider/login`, `/rider/active`, `/rider/earnings`, `/rider/history`):**
-  - Dark OLED thumb-friendly cockpit with upfront earnings breakdown, GPS telemetry, and wait-meter.
-- **Operations Admin Console (`/admin/login`, `/admin/metrics`, `/admin/restaurants`, `/admin/riders`, `/admin/price-disputes`):**
-  - High-density control room monitoring real-time orders, dispute arbitration, and commission health.
-- **Strict RBAC Guard (`ProtectedRoute.jsx`):** Automatically redirects unauthorized roles to their respective dedicated login screens.
-
----
-
-## 4. How Key Workflows Function Dynamically
-
-### A. How Restaurant Partners Post Dishes & Manage Menus
-1. **Dynamic Dish Studio (`/partner/menu`):**
-   - Click **"+ Add New Dish"** in the top action bar.
-   - Enter Dish Title, Category (Chef Specials, Dum Biryanis, Rich Curries, Breads, Desserts), Description, Prep Time, and Calories.
-   - **0% Price Parity Check:** Input your restaurant's physical dining menu printed price and online delivery price. When both match, the dish automatically earns the green **"0% Markup Parity ✓"** badge.
-   - Click **"🚀 Publish Dish Live"**:
-     - Sends `POST /api/menu/item` to the backend.
-     - Automatically syncs to `cravepulse_custom_dishes`.
-     - Immediately updates the live customer restaurant menu (`/restaurant/:id`) in real time!
-2. **Instant In-Stock / Sold-Out Toggle:** Partners can toggle any dish between available and sold out with instant UI and database updates.
-3. **Price Parity Audit:** Partners can audit and adjust dine-in vs platform prices on the fly.
-
-### B. How the Rider Dispatch & Fair-Pay Lifecycle Works
-1. **Live Dispatch Push:** When a customer places an order, the dispatch engine evaluates available nearby riders using Haversine distance.
-2. **Upfront Pay Transparency:** Before accepting, the rider sees a 100% transparent pay breakdown:
-   - Base Fare (First 2 km)
-   - Distance Pay (per km)
-   - 100% Customer Doorstep Tip (Zero platform deduction)
-   - Total Guaranteed Earnings
-3. **Zero-Penalty Rejection:** Riders can decline unviable jobs with documented reasons (puncture, waterlogging, distance) with zero impact on their account.
-4. **Kitchen Wait-Time Compensation Meter:**
-   - Upon arriving at the kitchen, the rider taps **"I Have Arrived at Kitchen 📍"**.
-   - If the restaurant delay exceeds 8 minutes, the live meter accrues **₹2/min compensation** credited to the rider's digital wallet.
-5. **GPS Live Telemetry:** Rider's motorcycle emits real-time coordinates over WebSockets, updating the customer's interactive Leaflet map sub-second.
-6. **Doorstep Delivery:** Rider verifies order delivery, prompts customer confirmation, and guaranteed payouts are immediately credited.
-7. **Simulate Live Dispatch:** Delivery partners testing the portal can tap **"⚡ Simulate Incoming Dispatch Offer"** to experience the full dispatch lifecycle on-demand.
-
-### C. Dynamic Careers, Job Details & Resume Application
-1. **Explore Roles (`/careers`):**
-   - Clean, responsive grid layout (3–4 cards per row across devices) replacing bulky full-width blocks.
-   - Strict RBAC: Only authenticated Platform Admins can access "+ Post a New Job Opening". Customers and visitors browse and apply.
-2. **Dedicated Job Details Page (`/careers/:id`):**
-   - Click any job card to navigate cleanly to its dedicated role portal instead of cramped navbar-collapsing modals.
-   - Comprehensive role specifications: Department, Location, Salary Bracket, About the Role, Key Responsibilities, Requirements & Tech Stack, and CravePulse Perks.
-3. **Application Form with Resume File Selector:**
-   - Full application intake: Full Name, Email, Phone Number, Portfolio/GitHub URL, Cover Note.
-   - **Attach Resume / CV:** Custom styled native file picker supporting `.pdf` and `.docx` with validation.
-
-### D. Customer Profile & Google Maps Live GPS Integration
-1. **Personal Details Management (`/profile`):**
-   - Direct edit form for Full Name/Username, Email, and Phone Number.
-   - **Profile Photo Presets & Custom URL:** Choose between verified avatar presets or paste custom image URLs with live circular preview.
-2. **Exact Google Maps Address Links (`maps_url`):**
-   - Customers can copy and paste their exact Google Maps share link (`https://maps.app.goo.gl/...` or GPS coordinates `https://maps.google.com/?q=...`).
-   - Saved addresses display a high-contrast **"Open in Google Maps ↗"** button that directly launches navigation in Google Maps for the delivery partner!
-   - Persisted directly to MySQL `user_addresses.maps_url`.
-
-### E. Dual Contact Channels & Live Interactive Order Chat
-1. **Dual Contact Cards (`/orders/:orderNumber`):**
-   - Direct contact cards for BOTH **Captain Prasad Rao** (Delivery Partner) and **Chef Lohith** (Spice Symphony & Grill).
-   - Dedicated direct call buttons (`tel:...`) and interactive chat drawers.
-2. **Interactive Live Chat Drawer:**
-   - Real-time simulated bidirectional messaging with pre-set quick-inquiry chips ("Are you near my gate?", "Please ring bell", "Extra hot & fresh please").
-   - Instant automated contextual responses from both rider and kitchen.
-
-### F. Interactive Navbar Notifications
-1. **Live Activity Popover:**
-   - Notification bell in navbar displays an unread count badge.
-   - Clicking an unread notification immediately marks it as read, visually updating the entry and automatically decrementing the unread badge counter.
-   - Quick actions to "Mark all read" and "Clear all" notifications.
-
-### G. Glassmorphic Delivery Partner Cockpit & Universal Scroll-to-Top
-1. **Refined Rider Experience (`/rider`):**
-   - Glassmorphic dark UI with emerald telemetry accents, live dispatch cards, wait-meter, and direct Google Maps navigation links.
-   - Rider and Partner profile photo management with avatar selection.
-2. **Universal Scroll-to-Top (`ScrollToTop.jsx`):**
-   - Mounted at router root to automatically reset viewport to `(0, 0)` smoothly on every page transition (including footer link navigation).
-
----
-
-## 5. Online Payment Sandbox (Razorpay & UPI Suite)
-
-CravePulse features an enterprise-grade checkout payment flow:
-- **Google Pay (GPay) & PhonePe & Paytm:** 1-tap instant mobile UPI intents.
-- **Custom UPI Verification:** Enter your personal VPA (e.g. `jaganmohan@okaxis`) with simulated real-time bank validation.
-- **Live Dynamic QR Code:** Scannable payment QR code with a 15-minute countdown timer and automatic payment verification.
-- **Credit / Debit Cards:** Card number, expiry, CVV, with instant 3D-Secure sandbox simulator.
-- **Cash on Delivery (COD):** Seamless doorstep cash payment option.
-
----
-
-## 6. Order Cancellation & 100% Instant Refund
-
-In accordance with consumer rights:
-- Active orders can be cancelled directly from `/orders` or `/orders/:orderNumber`.
-- Customers select a reason (e.g., *Placed by mistake*, *Address incorrect*, *Changed my mind*).
-- System triggers instant cancellation and immediately credits **100% refund** to the customer's wallet or original payment source.
-
----
-
-## 7. Sensitive Configuration & Environment Variables
-
-Sensitive database credentials, JWT secrets, and payment API keys are completely decoupled from source code:
-
-### Backend Configuration
-- **File:** `backend/src/main/resources/application.properties`
-- **Template:** `backend/src/main/resources/application.properties.example`
-- Loaded via `AppProperties.java` with automatic environment variable fallback:
-  ```properties
-  db.url=jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-  db.user=root
-  db.password=root
-  server.port=8081
-  jwt.secret=cravepulse-super-secret-production-grade-hmac-sha256-key-2026!
-  razorpay.key.id=rzp_test_cravepulse_demo
-  razorpay.key.secret=rzp_secret_cravepulse_demo
-  ```
-
-### Frontend Configuration
-- **File:** `frontend/.env`
-- **Template:** `frontend/.env.example`
-  ```env
-  VITE_APP_NAME=CravePulse
-  VITE_API_URL=http://localhost:8081/api
-  VITE_WS_URL=ws://localhost:8081/ws/realtime
-  VITE_ENABLE_DISPUTE_AUDIO=true
-  VITE_MAP_DEFAULT_LAT=12.9716
-  VITE_MAP_DEFAULT_LNG=77.5946
-  ```
-
----
-
-## 8. Quick Start Guide
-
-### Option A: One-Command Docker Setup (Recommended)
-From the project root:
-```bash
-docker compose up --build
+    CustomerApp & PartnerPortal & RiderCockpit & AdminConsole --> SecurityHeaders
+    SecurityHeaders --> CORS --> RateLimit --> LoggingMDC --> JWTAuth
+    JWTAuth --> Core
+    Core --> Services
+    Services --> HikariPool --> MySQL
+    WsEndpoint <--> WsRegistry
 ```
-This automatically boots:
-- **MySQL 8.0** on `localhost:3306` with schema migrations pre-applied.
-- **Embedded Tomcat Backend** on `http://localhost:8081` (via self-contained fat JAR).
-- **Vite Frontend Web App** on `http://localhost:5173`.
-
-### Option B: Local Non-Docker Development
-**Prerequisites:** Java 17+, Maven 3.8+, Node.js 18+, MySQL 8.0 on `localhost:3306`.
-
-1. **Database Setup:**
-   Create database and apply migrations:
-   ```sql
-   CREATE DATABASE IF NOT EXISTS food_delivery_db;
-   ```
-   Apply migrations from `backend/src/main/resources/db/migration/`.
-
-2. **Backend Server (Port 8081):**
-   ```bash
-   cd backend
-   mvn clean compile exec:java -Dexec.mainClass="com.foodplatform.ServerMain"
-   ```
-
-3. **Frontend Application (Port 5173):**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
 
 ---
 
-## 9. Default Login Credentials
+## 1. Quick Start
 
-| Role | Email | Password | Access Level |
+### Prerequisites
+- **Java Development Kit (JDK) 17+**
+- **Apache Maven 3.8+**
+- **Node.js 18+** & **npm 9+**
+- **MySQL Server 8.0+** running locally on port `3306`
+
+### 1. Database Setup
+Create the target MySQL database:
+```sql
+CREATE DATABASE IF NOT EXISTS food_delivery_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 2. Configure Environment Variables
+Copy example configurations:
+```bash
+cp .env.example .env
+cp backend/src/main/resources/application.properties.example backend/src/main/resources/application.properties
+```
+
+Ensure `application.properties` or environment variables contain valid database credentials:
+```properties
+db.url=jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+db.username=root
+db.password=your_db_password
+jwt.secret=YourSuperSecretKeyThatIsAtLeast32BytesLongForHMACSHA256Signing!
+server.port=8080
+```
+
+### 3. Start Backend API
+```bash
+cd backend
+mvn exec:java -Dexec.mainClass="com.foodplatform.ServerMain"
+```
+> [!NOTE]
+> All Flyway-style SQL migrations (`V1` through `V11`) apply automatically on server startup.
+
+### 4. Optional: Load Multi-City Realistic Demo Data
+To populate 27 authentic restaurants, full menus across Bangalore, Hyderabad, and Mumbai, riders, and historical orders:
+```bash
+mysql -u root -p food_delivery_db < scripts/seed-demo.sql
+```
+
+### 5. Start Frontend Dev Server
+```bash
+cd frontend
+npm install --legacy-peer-deps
+npm run dev
+```
+Open **`http://localhost:5173`** in your browser.
+
+---
+
+## 2. Real Demo Accounts (Seeded)
+
+All demo accounts share the uniform test password credential: `Password@123` *(never used in production)*.
+
+| Portal | Role | Email | Profile / Focus |
 |---|---|---|---|
-| **Customer** | `customer@foodora.com` | `Password@123` | Jaganmohan Reddy (Customer profile, cart, tracking, cancellation) |
-| **Restaurant Partner** | `partner@foodplatform.com` | `Password@123` | Chef Lohith (Spice Symphony, Kanban, Dynamic Dish Studio) |
-| **Delivery Rider** | `rider@foodplatform.com` | `Password@123` | Prasad Rao (Fair-pay jobs, wait meter, GPS simulator) |
-| **Platform Ops Admin** | `admin@foodplatform.com` | `Password@123` | Jaganmohan Reddy (Ops dashboard, dispute arbitration, fleet overview) |
+| **Customer App** | `CUSTOMER` | `customer@foodora.com` | Consumer order discovery, cart, live tracking |
+| **Customer App** | `CUSTOMER` | `ananya.customer@cravepulse.com` | Multi-city customer (Bangalore) |
+| **Partner Portal** | `RESTAURANT_OWNER` | `chef@foodanalytics.com` | Spice Symphony Indiranagar kitchen management |
+| **Delivery Cockpit** | `RIDER` | `rider@swiftlogistics.com` | Captain delivery cockpit & Fair-Pay earnings |
+| **Delivery Cockpit** | `RIDER` | `karthik.rider@cravepulse.com` | Electric Scooter Captain (Bangalore zone) |
+| **Ops Admin Console** | `ADMIN` | `admin@foodplatform.com` | Fleet radar, telemetry, user directory, disputes |
 
 ---
 
-## 10. Live URLs & Port Configuration
+## 3. Feature Implementation Matrix
 
-- **Customer Web Portal:** [http://localhost:5173/](http://localhost:5173/)
-- **Customer Dedicated Login:** [http://localhost:5173/login](http://localhost:5173/login)
-- **Partner Dedicated Login:** [http://localhost:5173/partner/login](http://localhost:5173/partner/login)
-- **Rider Dedicated Login:** [http://localhost:5173/rider/login](http://localhost:5173/rider/login)
-- **Admin Dedicated Login:** [http://localhost:5173/admin/login](http://localhost:5173/admin/login)
-- **Backend REST API:** [http://localhost:8081/api](http://localhost:8081/api)
-- **WebSocket Endpoint:** `ws://localhost:8081/ws/realtime`
+| Module | Feature | Status | Notes |
+|---|---|---|---|
+| **Security & Auth** | JWT Access & Refresh Tokens | **Done** | HS256, atomic DB revocation in `user_tokens` |
+| **Security & Auth** | Role-Based Access Control (RBAC) | **Done** | Strict portal guard (`CUSTOMER`, `RESTAURANT_OWNER`, `RIDER`, `ADMIN`) |
+| **Security & Auth** | Rate Limiting | **Done** | In-memory token bucket (100 req/min per IP) |
+| **Discovery** | Cross-Dish & Kitchen Search | **Done** | SQL subqueries across menus and restaurants with suggestions |
+| **Discovery** | Location Picker & Geolocation | **Done** | Multi-city coordinates + HTML5 Geolocation API |
+| **Menu & Orders** | Item Customizer & Special Notes | **Done** | Portion variants, addons, and kitchen cooking instructions |
+| **Menu & Orders** | Radical Price Parity | **Done** | 100% price transparency (dine-in price vs platform price) |
+| **Checkout** | 100% Tip Pass-Through | **Done** | 0% platform commission on rider tips |
+| **Checkout** | Dynamic Coupon Engine | **Done** | Min order, usage limits, first-order guard, percentage & flat discounts |
+| **Payments** | Razorpay Gateway Integration | **Done** | Order creation, signature HMAC verification, webhook idempotency |
+| **Payments** | In-App CravePulse Wallet | **Done** | Atomic double-entry debit/credit transaction ledger |
+| **Payments** | Cash On Delivery (COD) | **Done** | Platform order ceiling limit check (₹2000 default) |
+| **Tracking** | Real-Time State Machine | **Done** | 9-stage lifecycle: PLACED → ACCEPTED → PREPARING → READY → PICKED_UP → DELIVERED |
+| **Tracking** | Delivery OTP Verification | **Done** | Secure 4-digit numeric OTP required before marked DELIVERED |
+| **Tracking** | Live Rider Telemetry Map | **Done** | Leaflet OpenStreetMap with GPS pings over WebSockets |
+| **Tracking** | Masked Calling & In-App Chat | **Done** | Order-scoped messaging and masked platform phone dialers |
+| **Partner Portal** | Kitchen Kanban Board | **Done** | Audio alert chime, prep time confirmation, SLA countdown timer |
+| **Partner Portal** | Menu Management | **Done** | API-only CRUD, variants, add-ons, soft deletes, bulk sold-out |
+| **Partner Portal** | Settlement Statements | **Done** | Gross sales, commission deductions, GST, and UTR reference ledger |
+| **Rider Portal** | Fair-Pay Dispatch Protocol | **Done** | Transparent upfront breakdown: base fare + distance + surge + 100% tips |
+| **Rider Portal** | Wait-Time Compensation | **Done** | ₹2/min compensation credited for restaurant delays > 8 minutes |
+| **Rider Portal** | COD Cash Settlement Ledger | **Done** | Running cash-in-hand accumulation and cash deposit tracking |
+| **Admin Console** | Real-Time Fleet & Order Radar | **Done** | Live GPS map coordinates of online riders and active dispatches |
+| **Admin Console** | User Directory & Moderation | **Done** | Account suspension and fraud risk escalation counters |
+| **Admin Console** | Rule-Based Dispute Engine | **Done** | Auto-refund caps, 2-hour window checks, and fraud flag evaluation |
+| **Admin Console** | Platform Levers & CSV Export | **Done** | Dynamic fees, GST, search radius, and RFC 4180 streaming exports |
+| **Database** | Strict Constraints & Retention | **Done** | MySQL 8.0 `CHECK` constraints, non-cascade FKs, 7-day telemetry purge |
+| **Observability** | Request ID & Probes | **Done** | `X-Request-ID` propagation, SLF4J MDC, `/health`, `/ready`, `/metrics` |
+| **Advanced** | Group Ordering & Scheduled Orders | **Planned** | Tracked in product roadmap for v1.2 |
+| **Advanced** | Multi-Language Localization | **Planned** | Hindi / Telugu / Kannada UI translation pipeline |
+
+---
+
+## 4. Environment Variables Reference
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `SERVER_PORT` | Integer | `8080` | Port for embedded Tomcat API server |
+| `DB_URL` | String | `jdbc:mysql://localhost:3306/food_delivery_db...` | JDBC database connection URI |
+| `DB_USER` | String | `root` | Database username |
+| `DB_PASSWORD` | String | *(empty)* | Database password |
+| `JWT_SECRET` | String | *(required)* | 256-bit secret for signing HMAC JWT tokens |
+| `JWT_EXPIRATION_HOURS` | Integer | `24` | Access token lifespan in hours |
+| `RAZORPAY_KEY_ID` | String | `rzp_test_placeholder` | Razorpay Merchant ID for payments |
+| `RAZORPAY_KEY_SECRET` | String | `rzp_secret_placeholder` | Razorpay signature verification secret |
+| `DISPATCH_MAX_RADIUS_KM` | Double | `15.0` | Maximum dispatch search radius in km |
+| `WAIT_COMPENSATION_RATE` | Double | `2.00` | Wait-time compensation per minute (INR) |
+
+---
+
+## 5. API Reference & Documentation
+
+Comprehensive API documentation with request/response schemas is available in [docs/API.md](file:///c:/Users/ragip/OneDrive/Desktop/100_Days_Full_Stack_Dev_Challenge/Food_delivery_application/docs/API.md).
+
+Key Endpoint Groups:
+- **Authentication:** `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`
+- **Catalog & Discovery:** `GET /api/restaurants`, `GET /api/restaurants/{id}`, `GET /api/restaurants/suggestions`
+- **Pricing & Cart:** `POST /api/cart/calculate`
+- **Orders & Tracking:** `POST /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/{id}/cancel`, `POST /api/orders/{id}/verify-otp`
+- **Payments & Webhooks:** `POST /api/payments/razorpay/create-order`, `POST /api/payments/razorpay/verify`, `POST /api/payments/webhook`
+- **Rider Dispatch:** `GET /api/rider/offers`, `POST /api/rider/offers/{id}/accept`, `POST /api/rider/offers/{id}/reject`, `POST /api/rider/location`
+- **Partner Operations:** `GET /api/restaurants/my-profile`, `GET /api/partner/orders`, `POST /api/menu/item`
+- **Admin Control Room:** `GET /api/admin/metrics`, `GET /api/admin/live-map`, `GET /api/admin/users`, `POST /api/admin/settings`
+- **Platform Observability:** `GET /health`, `GET /ready`, `GET /metrics`
+
+---
+
+## 6. Testing & CI/CD Pipeline
+
+The project enforces automated testing across both backend and frontend layers:
+
+### Running Backend Tests
+```bash
+cd backend
+mvn test
+```
+- **75 Automated Depth Tests** covering pricing engines, order state machines, payment webhooks, concurrency pessimistic locking (`SELECT ... FOR UPDATE`), idempotency key deduplication, RBAC authorization matrix, and telemetry retention policies.
+
+### Running Frontend Tests
+```bash
+cd frontend
+npm test
+```
+- **13 Vitest Component & Logic Tests** covering cart state reducers, single-restaurant cart conflicts, checkout form validation, COD monetary thresholds, and route-level authorization guards.
+
+### End-to-End Playwright Tests
+```bash
+cd frontend
+npx playwright test
+```
+- Covers customer order flows, kitchen kanban state transitions, rider dispatch acceptance, and admin verification dossiers.
+
+### GitHub Actions CI
+All commits trigger the automated workflow at `.github/workflows/ci.yml`:
+1. **Backend Job:** Compiles Java 17, runs MySQL 8 service container, executes test suite, packages executable.
+2. **Frontend Job:** Installs dependencies, runs Vitest unit tests, builds Vite production bundle, runs `npm audit`.
+3. **Security Job:** Gitleaks automated secret detector scanning for accidental key commits.
+
+---
+
+## 7. Known Limitations & Architectural Notes
+
+1. **In-Memory WebSockets:** WebSockets operate via `RealtimeSessionRegistry` within a single JVM process. For multi-node cluster scaling, sessions must be bridged using a Redis Pub/Sub backplane.
+2. **Third-Party SMS/Voice Gateway:** OTP delivery and masked calls utilize simulated platform proxies in the demonstration environment. Connecting to Twilio or Exotel requires setting `SMS_GATEWAY_API_KEY`.
+3. **Map Coordinates:** Geolocation simulation defaults to central Bangalore/Hyderabad/Mumbai when browser location permissions are denied.

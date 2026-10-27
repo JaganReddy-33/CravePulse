@@ -178,8 +178,16 @@
   - **Full Platform Observability**:
     - Request correlation: Implemented `RequestIdFilter` generating/propagating `X-Request-ID` and injecting it into SLF4J MDC (`%X{requestId}`) for end-to-end log traceability.
     - Liveness & Readiness: Created `HealthObservabilityServlet` serving `/health` (liveness), `/ready` (DB ping & JVM memory probe), and `/metrics`.
-    - Metric counters: Built `MetricsService` with thread-safe `LongAdder` counters and rolling 60-second window tracking orders placed, delivered, cancelled, failed payments, dispatch timeouts, active WebSocket channels, and orders per minute.
 
+---
 
-
-
+## ADR-013: Documentation Realignment, Truthful Quick Start & Security Protocols (Phase 12)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: Project documentation previously contained discrepancies regarding startup commands, architecture diagrams, demo accounts, and feature completeness. In addition, secrets rotation procedures, vulnerability disclosure policies, and observability API contracts were undocumented.
+- **Decision**:
+  - **Truthful README Architecture & Quick Start**: Fully rewrote `README.md` to reflect the single-command startup workflow, embedded Tomcat runner, React + Vite frontend, and automatic forward database schema migrations (`V1` through `V11`).
+  - **Accurate Feature Status Matrix**: Documented an honest, granular matrix of Done / Partial / Planned features across all platform domains (Customer Discovery, Cart/Pricing, Order Lifecycle, Partner Kitchen, Dispatch & Riders, Admin & Finance, Telemetry, and Testing).
+  - **Security Policy & Secret Rotation Protocols (`SECURITY.md`)**: Formulated security reporting procedures and standard operating procedures (SOPs) for zero-downtime secret rotation covering `JWT_SECRET`, MySQL credentials, Stripe webhook signing keys, Razorpay secret keys, and Resend transactional email API keys.
+  - **API Reference Synchronization (`docs/API.md`)**: Documented Section 13 covering platform observability endpoints (`/health`, `/ready`, `/metrics`), request correlation (`X-Request-ID`), and transactional idempotency (`Idempotency-Key`).
+  - **Master Prompt Alignment**: Reconciled and validated all Phase 10–12 deliverables and 10 acceptance criteria in `docs/MASTER_PROMPT.md`.
