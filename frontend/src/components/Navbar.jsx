@@ -30,30 +30,63 @@ const Navbar = ({ onOpenCart }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
 
-  // Search auto-suggest state
+  // Search auto-suggest state with Dish and Restaurant parity
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [suggestionData, setSuggestionData] = useState({ restaurants: [], dishes: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cravepulse_recent_searches');
+      return saved ? JSON.parse(saved) : ['Biryani', 'Pizza', 'Paneer Butter Masala', 'Burger'];
+    } catch {
+      return ['Biryani', 'Pizza', 'Paneer Butter Masala', 'Burger'];
+    }
+  });
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  // Fetch search suggestions
+  const saveRecentSearch = (term) => {
+    if (!term || !term.trim()) return;
+    const clean = term.trim();
+    setRecentSearches(prev => {
+      const filtered = prev.filter(t => t.toLowerCase() !== clean.toLowerCase());
+      const updated = [clean, ...filtered].slice(0, 5);
+      localStorage.setItem('cravepulse_recent_searches', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Fetch search suggestions (dishes + restaurants)
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowSuggestions(false);
+      setSuggestionData({ restaurants: [], dishes: [] });
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
-        const res = await api.get('/restaurants', { params: { search: searchQuery } });
-        if (res.success && Array.isArray(res.data)) {
-          setSearchResults(res.data.slice(0, 5));
+        const res = await api.get('/restaurants/suggestions', { params: { query: searchQuery } });
+        if (res.success && res.data) {
+          setSuggestionData({
+            restaurants: res.data.restaurants || [],
+            dishes: res.data.dishes || []
+          });
           setShowSuggestions(true);
         }
       } catch (e) {
-        setSearchResults([]);
+        // Fallback to basic restaurant search
+        try {
+          const res = await api.get('/restaurants', { params: { search: searchQuery } });
+          if (res.success && Array.isArray(res.data)) {
+            setSuggestionData({
+              restaurants: res.data.slice(0, 5),
+              dishes: []
+            });
+            setShowSuggestions(true);
+          }
+        } catch {
+          setSuggestionData({ restaurants: [], dishes: [] });
+        }
       }
     }, 200);
 
@@ -129,14 +162,25 @@ const Navbar = ({ onOpenCart }) => {
   };
 
   const handleSelectRestaurant = (rest) => {
-    setShowSuggestions(false);
-    setSearchQuery('');
     const id = typeof rest === 'object' ? rest.id : rest;
     const name = typeof rest === 'object' ? rest.name : `restaurant-${id}`;
+    saveRecentSearch(name);
+    setShowSuggestions(false);
+    setSearchQuery('');
     const citySlug = (selectedHub?.cityName || 'bangalore').toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const restSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const localitySlug = (selectedHub?.name || 'indiranagar').toLowerCase().replace(/[^a-z0-9]+/g, '-');
     navigate(`/city/${citySlug}/${restSlug}-${localitySlug}-rest${id}?restaurant_id=${id}&source=search`);
+  };
+
+  const handleSelectDish = (dish) => {
+    saveRecentSearch(dish.name);
+    setShowSuggestions(false);
+    setSearchQuery('');
+    const citySlug = (selectedHub?.cityName || 'bangalore').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const restSlug = (dish.restaurantSlug || `restaurant-${dish.restaurantId}`).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const localitySlug = (selectedHub?.name || 'indiranagar').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    navigate(`/city/${citySlug}/${restSlug}-${localitySlug}-rest${dish.restaurantId}?restaurant_id=${dish.restaurantId}&dishId=${dish.id}`);
   };
 
   // Filter hubs based on search term
@@ -203,9 +247,10 @@ const Navbar = ({ onOpenCart }) => {
                 placeholder="Search biryani, pizza, North Indian, salads..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => { if (searchResults.length > 0) setShowSuggestions(true); }}
+                onFocus={() => setShowSuggestions(true)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && searchQuery.trim()) {
+                    saveRecentSearch(searchQuery.trim());
                     setShowSuggestions(false);
                     navigate(`/?query=${encodeURIComponent(searchQuery.trim())}`);
                   }
@@ -218,23 +263,97 @@ const Navbar = ({ onOpenCart }) => {
               )}
             </div>
 
-            {/* Suggestions Dropdown */}
-            {showSuggestions && searchResults.length > 0 && (
-              <div className="card position-absolute start-0 end-0 mt-2 shadow-lg border-0 rounded-4 p-2 bg-white" style={{ zIndex: 1050 }}>
-                <div className="p-2 border-bottom text-muted small fw-bold">RESTAURANTS & SPECIALTIES</div>
-                {searchResults.map(r => (
-                  <div
-                    key={r.id}
-                    className="p-2 rounded-3 hover-bg-light cursor-pointer d-flex align-items-center justify-content-between"
-                    onClick={() => handleSelectRestaurant(r)}
-                  >
-                    <div>
-                      <div className="fw-bold small text-dark">{r.name}</div>
-                      <small className="text-muted">{r.cuisineTypes} • ★ {r.rating}</small>
+            {/* Suggestions & Recent Searches Dropdown */}
+            {showSuggestions && (
+              <div className="card position-absolute start-0 end-0 mt-2 shadow-xl border-0 rounded-4 p-2 bg-white" style={{ zIndex: 1050, maxHeight: 420, overflowY: 'auto' }}>
+                {!searchQuery.trim() ? (
+                  /* Recent Searches */
+                  <div className="p-2">
+                    <div className="text-muted small fw-bold mb-2 d-flex align-items-center gap-1">
+                      <i className="bi bi-clock-history"></i> RECENT SEARCHES
                     </div>
-                    <span className="badge bg-success-subtle text-success small">0% Markup</span>
+                    <div className="d-flex flex-wrap gap-1.5">
+                      {recentSearches.map((term, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="btn btn-sm btn-light rounded-pill px-3 py-1 text-dark border small hover-lift"
+                          onClick={() => {
+                            setSearchQuery(term);
+                            saveRecentSearch(term);
+                            setShowSuggestions(false);
+                            navigate(`/?query=${encodeURIComponent(term)}`);
+                          }}
+                        >
+                          <i className="bi bi-search me-1 text-muted" style={{ fontSize: 10 }}></i>
+                          {term}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div>
+                    {/* Dishes Section */}
+                    {suggestionData.dishes?.length > 0 && (
+                      <div className="mb-2">
+                        <div className="p-2 border-bottom text-muted small fw-bold d-flex align-items-center gap-1">
+                          <span>🍲</span> DISHES
+                        </div>
+                        {suggestionData.dishes.map(d => (
+                          <div
+                            key={`dish-${d.id}`}
+                            className="p-2 rounded-3 hover-bg-light cursor-pointer d-flex align-items-center justify-content-between"
+                            onClick={() => handleSelectDish(d)}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              {d.imageUrl && (
+                                <img
+                                  src={d.imageUrl}
+                                  alt={d.name}
+                                  className="rounded-2 object-fit-cover"
+                                  style={{ width: 36, height: 36 }}
+                                />
+                              )}
+                              <div>
+                                <div className="fw-bold small text-dark">{d.name}</div>
+                                <small className="text-muted">at {d.restaurantName || 'Gourmet Kitchen'}</small>
+                              </div>
+                            </div>
+                            <span className="badge bg-light text-dark border small fw-bold">₹{d.platformPrice}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Restaurants Section */}
+                    {suggestionData.restaurants?.length > 0 && (
+                      <div>
+                        <div className="p-2 border-bottom text-muted small fw-bold d-flex align-items-center gap-1">
+                          <span>🍽️</span> RESTAURANTS
+                        </div>
+                        {suggestionData.restaurants.map(r => (
+                          <div
+                            key={`rest-${r.id}`}
+                            className="p-2 rounded-3 hover-bg-light cursor-pointer d-flex align-items-center justify-content-between"
+                            onClick={() => handleSelectRestaurant(r)}
+                          >
+                            <div>
+                              <div className="fw-bold small text-dark">{r.name}</div>
+                              <small className="text-muted">{r.cuisineTypes} • ★ {r.rating}</small>
+                            </div>
+                            <span className="badge bg-success-subtle text-success small">0% Markup</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {suggestionData.dishes?.length === 0 && suggestionData.restaurants?.length === 0 && (
+                      <div className="p-4 text-center text-muted small">
+                        No dishes or restaurants found for "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

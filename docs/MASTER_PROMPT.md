@@ -167,7 +167,7 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ### Must-have
 
-- [ ] **Home and discovery**
+- [x] **Home and discovery**
   - Deliver-to location bar (GPS + saved addresses + search).
   - Restaurants ranked by distance and open status.
   - Search across restaurants **and dishes** with suggestions and recent searches.
@@ -177,24 +177,24 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
   - Restaurant cards with image, rating, ETA, distance, cost for two, discount tag.
   - Skeleton loaders; infinite scroll or pagination.
   - "Restaurant closed" and "Not delivering to your location" states.
-- [ ] **Restaurant page**
+- [x] **Restaurant page**
   - Sticky header; sticky category navigation with scroll-spy.
   - Veg/non-veg markers; bestseller and rating tags; in-menu search.
   - Item customization sheet (variant, add-ons, required choices, special instructions).
   - Offers strip; reviews with photos and sort; availability and timing.
-- [ ] **Cart and checkout**
+- [x] **Cart and checkout**
   - Single-restaurant cart with confirmation on switch; quantity steppers.
   - Bill details (item total, delivery, packaging, platform fee, GST, discount, tip) with an explainer sheet.
   - Coupon list with eligibility reasons.
   - Address picker with add/edit on a map and Google Maps link; delivery instructions.
   - Payment method picker (UPI apps, cards, netbanking, wallet, COD) and a clear failure and retry flow.
   - The page must work on a **360 px** wide screen.
-- [ ] **Tracking**
+- [x] **Tracking**
   - Live status timeline: placed → accepted → preparing → ready → picked up → out for delivery → delivered.
   - Live map with rider marker and route; ETA that updates.
   - Rider card with rating; in-app chat and masked call; delivery OTP card.
   - Cancel button with the refund policy shown before confirming; clear cancelled or refunded state.
-- [ ] **Account**
+- [x] **Account**
   - Profile edit (name, email, phone verification via OTP).
   - Saved addresses (CRUD, default).
   - Order history with filters and reorder; tax invoices.

@@ -39,8 +39,11 @@ public class RestaurantDaoImpl implements RestaurantDao {
             params.add("%" + cuisine.trim() + "%");
         }
         if (search != null && !search.isBlank()) {
-            sb.append("AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ?) ");
+            sb.append("AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ? ")
+              .append("OR EXISTS (SELECT 1 FROM menu_items m WHERE m.restaurant_id = r.id AND m.is_deleted = FALSE AND (m.name LIKE ? OR m.description LIKE ?))) ");
             String term = "%" + search.trim() + "%";
+            params.add(term);
+            params.add(term);
             params.add(term);
             params.add(term);
             params.add(term);
@@ -440,5 +443,73 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         }
         return payouts;
+    }
+
+    @Override
+    public Map<String, Object> searchSuggestions(String query) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> restaurants = new ArrayList<>();
+        List<Map<String, Object>> dishes = new ArrayList<>();
+
+        if (query == null || query.trim().length() < 2) {
+            result.put("restaurants", restaurants);
+            result.put("dishes", dishes);
+            return result;
+        }
+
+        String term = "%" + query.trim() + "%";
+
+        // Query matching restaurants
+        String restSql = "SELECT id, name, slug, cuisine_types, logo_image, rating FROM restaurant_profiles " +
+                "WHERE is_kyc_approved = TRUE AND (name LIKE ? OR cuisine_types LIKE ?) LIMIT 5";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(restSql)) {
+            ps.setString(1, term);
+            ps.setString(2, term);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("id", rs.getLong("id"));
+                    r.put("name", rs.getString("name"));
+                    r.put("slug", rs.getString("slug"));
+                    r.put("cuisineTypes", rs.getString("cuisine_types"));
+                    r.put("logoImage", rs.getString("logo_image"));
+                    r.put("rating", rs.getBigDecimal("rating"));
+                    restaurants.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error searching restaurant suggestions for {}", query, e);
+        }
+
+        // Query matching dishes
+        String dishSql = "SELECT m.id, m.restaurant_id, m.name, m.platform_price, m.image_url, m.is_veg, " +
+                "r.name AS restaurant_name, r.slug AS restaurant_slug " +
+                "FROM menu_items m JOIN restaurant_profiles r ON m.restaurant_id = r.id " +
+                "WHERE m.is_deleted = FALSE AND r.is_kyc_approved = TRUE AND m.name LIKE ? LIMIT 6";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(dishSql)) {
+            ps.setString(1, term);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> d = new HashMap<>();
+                    d.put("id", rs.getLong("id"));
+                    d.put("restaurantId", rs.getLong("restaurant_id"));
+                    d.put("name", rs.getString("name"));
+                    d.put("platformPrice", rs.getBigDecimal("platform_price"));
+                    d.put("imageUrl", rs.getString("image_url"));
+                    d.put("isVeg", rs.getBoolean("is_veg"));
+                    d.put("restaurantName", rs.getString("restaurant_name"));
+                    d.put("restaurantSlug", rs.getString("restaurant_slug"));
+                    dishes.add(d);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error searching dish suggestions for {}", query, e);
+        }
+
+        result.put("restaurants", restaurants);
+        result.put("dishes", dishes);
+        return result;
     }
 }

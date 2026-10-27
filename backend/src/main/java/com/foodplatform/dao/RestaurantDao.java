@@ -37,4 +37,6 @@ public interface RestaurantDao {
     void updateOperatingHours(long restaurantId, java.util.List<java.util.Map<String, Object>> hours);
 
     java.util.List<java.util.Map<String, Object>> getPayouts(long restaurantId);
+
+    java.util.Map<String, Object> searchSuggestions(String query);
 }

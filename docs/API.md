@@ -139,11 +139,59 @@ Common HTTP status codes returned:
 - **Auth Required:** Yes
 - **Response (200 OK):** Returns authenticated user profile including wallet balance and KYC status.
 
+### 2.5 Update User Profile
+- **Endpoint:** `POST /api/auth/profile`
+- **Auth Required:** Yes
+- **Request Body:**
+```json
+{
+  "fullName": "Aarav Patel",
+  "phone": "+919876543210",
+  "avatarUrl": "https://images.unsplash.com/photo-..."
+}
+```
+- **Response (200 OK):** Updated user profile.
+
+### 2.6 Verify Phone Number OTP
+- **Endpoint:** `POST /api/auth/verify-phone-otp`
+- **Auth Required:** Yes
+- **Request Body:** `{ "otp": "1234" }`
+- **Response (200 OK):** `{ "success": true, "data": { "verified": true } }`
+
+### 2.7 Saved Address CRUD
+- **Endpoints:**
+  - `GET /api/auth/addresses`: List saved addresses for authenticated user.
+  - `POST /api/auth/addresses`: Add new address (title, addressLine, landmark, city, state, postalCode, latitude, longitude, mapsUrl).
+  - `POST /api/auth/addresses/{id}/default`: Set address as primary default.
+  - `DELETE /api/auth/addresses/{id}`: Delete saved address.
+- **Auth Required:** Yes
+
 ---
 
 ## 3. Restaurant & Catalog APIs
 
-### 3.1 Discover Restaurants
+### 3.1 Discover Restaurants (with Cross-Dish Search)
+- **Endpoint:** `GET /api/restaurants`
+- **Auth Required:** No
+- **Search Scope:** Matches restaurant name, cuisine types, description, AND dishes contained in active menus via SQL subquery.
+
+### 3.1.1 Search Suggestions (Dishes & Restaurants)
+- **Endpoint:** `GET /api/restaurants/suggestions?query={term}`
+- **Auth Required:** No
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "restaurants": [
+      { "id": 1, "name": "Spice Symphony & Grill", "cuisineTypes": "North Indian, Biryani", "rating": 4.8 }
+    ],
+    "dishes": [
+      { "id": 1002, "name": "Hyderabadi Chicken Dum Biryani", "platformPrice": 320.00, "restaurantId": 1, "restaurantName": "Spice Symphony & Grill", "imageUrl": "..." }
+    ]
+  }
+}
+```
 - **Endpoint:** `GET /api/restaurants`
 - **Auth Required:** No
 - **Query Parameters:**

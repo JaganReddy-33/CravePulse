@@ -41,6 +41,13 @@ public class RestaurantServlet extends BaseServlet {
             return;
         }
 
+        if ("/suggestions".equals(path)) {
+            String q = req.getParameter("query") != null ? req.getParameter("query") : req.getParameter("q");
+            Map<String, Object> suggestions = restaurantDao.searchSuggestions(q);
+            JsonUtil.sendSuccess(res, 200, "Search suggestions", suggestions);
+            return;
+        }
+
         if ("/my-profile".equals(path)) {
             if (!requireRole(req, res, "RESTAURANT_OWNER", "ADMIN")) return;
             Long userId = getAuthenticatedUserId(req);

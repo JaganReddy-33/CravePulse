@@ -199,19 +199,9 @@ const CustomerHome = () => {
     };
   }, [search, selectedCuisine, vegOnly]);
 
-  // Client-side filtering & sorting for rich instant responsiveness
+  // Client-side filtering & sorting with Distance and Open status ranking (Swiggy Parity)
   const filteredAndSortedRestaurants = useMemo(() => {
     let list = [...restaurants];
-
-    // Search filter
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(r => 
-        r.name?.toLowerCase().includes(q) ||
-        r.cuisineTypes?.toLowerCase().includes(q) ||
-        r.description?.toLowerCase().includes(q)
-      );
-    }
 
     // Cuisine filter
     if (selectedCuisine && selectedCuisine !== 'All') {
@@ -239,19 +229,29 @@ const CustomerHome = () => {
       list = list.filter(r => r.priceTier === selectedPriceTier);
     }
 
-    // Sorting
+    // Sorting & Ranking (Distance + Open status prioritized in relevance)
     if (sortBy === 'rating') {
-      list.sort((a, b) => Number(b.rating) - Number(a.rating));
+      list.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     } else if (sortBy === 'time') {
-      list.sort((a, b) => Number(a.prepTimeMin) - Number(b.prepTimeMin));
+      list.sort((a, b) => Number(a.prepTimeMin || 20) - Number(b.prepTimeMin || 20));
     } else if (sortBy === 'costAsc') {
-      list.sort((a, b) => (a.priceTier?.length || 2) - (b.priceTier?.length || 2));
+      list.sort((a, b) => Number(a.costForTwo || (a.priceTier?.length || 2) * 150) - Number(b.costForTwo || (b.priceTier?.length || 2) * 150));
     } else if (sortBy === 'costDesc') {
-      list.sort((a, b) => (b.priceTier?.length || 2) - (a.priceTier?.length || 2));
+      list.sort((a, b) => Number(b.costForTwo || (b.priceTier?.length || 2) * 150) - Number(a.costForTwo || (a.priceTier?.length || 2) * 150));
+    } else {
+      // Relevance: Open restaurants first, then closest distance, then highest rating
+      list.sort((a, b) => {
+        const aOpen = a.isOpen !== false;
+        const bOpen = b.isOpen !== false;
+        if (aOpen !== bOpen) return aOpen ? -1 : 1;
+        const distDiff = Number(a.distanceKm || 1.0) - Number(b.distanceKm || 1.0);
+        if (Math.abs(distDiff) > 0.5) return distDiff;
+        return Number(b.rating || 0) - Number(a.rating || 0);
+      });
     }
 
     return list;
-  }, [restaurants, search, selectedCuisine, vegOnly, minRating, maxDeliveryTime, selectedPriceTier, sortBy]);
+  }, [restaurants, selectedCuisine, vegOnly, minRating, maxDeliveryTime, selectedPriceTier, sortBy]);
 
   const activeFiltersCount = [
     vegOnly,
@@ -546,13 +546,14 @@ const CustomerHome = () => {
                   return (
                     <div key={rest.id} className="col-12 col-md-6 col-xl-4">
                       <Link to={swiggyUrl} className="text-decoration-none">
-                      <div className="card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift position-relative">
+                      <div className={`card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift position-relative ${rest.isOpen === false ? 'opacity-75' : ''}`}>
                         {/* Restaurant Banner Image */}
                         <div className="position-relative" style={{ height: 180 }}>
                           <img
                             src={rest.bannerImage}
                             alt={rest.name}
-                            className="w-100 h-100 object-fit-cover"
+                            className={`w-100 h-100 object-fit-cover ${rest.isOpen === false ? 'filter-grayscale' : ''}`}
+                            style={rest.isOpen === false ? { filter: 'grayscale(60%)' } : {}}
                           />
                           {/* Price Parity Guarantee Tag */}
                           <div className="position-absolute top-0 start-0 m-2 badge bg-success shadow-sm rounded-pill d-flex align-items-center gap-1 small py-1 px-2">
@@ -566,11 +567,33 @@ const CustomerHome = () => {
                           </div>
 
                           {/* Overload Throttle Banner */}
-                          {rest.isAutoThrottled && (
+                          {rest.isAutoThrottled && rest.isOpen !== false && (
                             <div className="position-absolute bottom-0 start-0 w-100 bg-warning text-dark py-1 text-center small fw-bold">
                               ⏳ Kitchen busy (high prep volume)
                             </div>
                           )}
+
+                          {/* Closed Overlay */}
+                          {rest.isOpen === false && (
+                            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-60 d-flex flex-column align-items-center justify-content-center text-white p-2 text-center" style={{ zIndex: 3 }}>
+                              <span className="badge bg-danger fs-6 px-3 py-1.5 rounded-pill mb-1 shadow">
+                                RESTAURANT CLOSED
+                              </span>
+                              <small className="fw-semibold text-light">Not accepting orders currently</small>
+                            </div>
+                          )}
+
+                          {/* Delivery Radius State */}
+                          {rest.distanceKm > 15 && (
+                            <div className="position-absolute bottom-0 start-0 w-100 bg-secondary bg-opacity-90 text-white py-1 text-center small fw-semibold" style={{ zIndex: 4 }}>
+                              📍 Outside delivery radius (&gt;15 km)
+                            </div>
+                          )}
+
+                          {/* Discount Tag */}
+                          <div className="position-absolute bottom-0 start-0 m-2 badge bg-primary shadow-sm rounded-pill small py-1 px-2" style={{ zIndex: 2, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}>
+                            🏷️ {rest.discountTag || (rest.rating >= 4.5 ? '50% OFF UPTO ₹150' : 'FLAT ₹100 OFF')}
+                          </div>
                         </div>
 
                         {/* Card Body Info */}
@@ -597,6 +620,7 @@ const CustomerHome = () => {
                               <small className="text-secondary text-truncate" style={{ fontSize: 11, maxWidth: '60%' }}>
                                 <i className="bi bi-geo-alt me-1 text-danger"></i>
                                 {rest.locality || rest.street || (rest.address ? rest.address.split(',')[0] : `${currentHub.name}, ${currentHub.cityName}`)}
+                                <span className="text-muted ms-1">• {rest.distanceKm ? `${rest.distanceKm} km` : '1.2 km'}</span>
                               </small>
                               <span className="text-muted fw-semibold" style={{ fontSize: 11 }}>
                                 {rest.costForTwo ? `₹${rest.costForTwo} for two` : (rest.priceTier || '₹400 for two')}

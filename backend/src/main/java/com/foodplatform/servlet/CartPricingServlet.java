@@ -66,6 +66,16 @@ public class CartPricingServlet extends BaseServlet {
                 }
 
                 PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, items, userLat, userLng, couponCode);
+                BigDecimal tipAmount = BigDecimal.ZERO;
+                if (body.has("tipAmount") && !body.get("tipAmount").isJsonNull()) {
+                    try {
+                        tipAmount = body.get("tipAmount").getAsBigDecimal();
+                    } catch (Exception ignored) {}
+                }
+                if (tipAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    calc.tipAmount = tipAmount;
+                    calc.totalAmount = calc.totalAmount.add(tipAmount);
+                }
                 JsonUtil.sendSuccess(res, 200, "Bill calculated", calc);
             } catch (Exception e) {
                 JsonUtil.sendError(res, 400, e.getMessage());

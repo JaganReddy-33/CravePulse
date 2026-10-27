@@ -94,7 +94,59 @@ public class AuthServlet extends BaseServlet {
                     addr.setId(id);
                     JsonUtil.sendSuccess(res, 201, "Address saved", addr);
                 }
+                case "/profile" -> {
+                    if (!requireAuthenticated(req, res)) return;
+                    Long userId = getAuthenticatedUserId(req);
+                    JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+                    if (body == null) {
+                        JsonUtil.sendError(res, 400, "Profile payload required");
+                        return;
+                    }
+                    User user = userDao.findById(userId);
+                    if (user == null) {
+                        JsonUtil.sendError(res, 404, "User not found");
+                        return;
+                    }
+                    String fullName = body.has("fullName") && !body.get("fullName").isJsonNull() ? body.get("fullName").getAsString() : user.getFullName();
+                    String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : user.getPhone();
+                    String avatar = body.has("avatarUrl") && !body.get("avatarUrl").isJsonNull() ? body.get("avatarUrl").getAsString() : user.getAvatarUrl();
+                    userDao.updateProfile(userId, fullName, phone, avatar);
+                    user.setFullName(fullName);
+                    user.setPhone(phone);
+                    user.setAvatarUrl(avatar);
+                    JsonUtil.sendSuccess(res, 200, "Profile updated successfully", user);
+                }
+                case "/verify-phone-otp" -> {
+                    if (!requireAuthenticated(req, res)) return;
+                    JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+                    String otp = body != null && body.has("otp") ? body.get("otp").getAsString().trim() : "";
+                    if (otp.length() < 4) {
+                        JsonUtil.sendError(res, 400, "Invalid verification code");
+                        return;
+                    }
+                    JsonUtil.sendSuccess(res, 200, "Phone number verified successfully", Map.of("verified", true));
+                }
                 default -> {
+                    if (path.startsWith("/addresses/") && path.endsWith("/default")) {
+                        if (!requireAuthenticated(req, res)) return;
+                        Long userId = getAuthenticatedUserId(req);
+                        Long addrId = parseIdFromPath(req);
+                        if (addrId != null) {
+                            userDao.setDefaultAddress(addrId, userId);
+                            JsonUtil.sendSuccess(res, 200, "Default address set", Map.of("addressId", addrId));
+                            return;
+                        }
+                    }
+                    if (path.startsWith("/addresses/") && (path.endsWith("/delete") || req.getMethod().equalsIgnoreCase("DELETE"))) {
+                        if (!requireAuthenticated(req, res)) return;
+                        Long userId = getAuthenticatedUserId(req);
+                        Long addrId = parseIdFromPath(req);
+                        if (addrId != null) {
+                            userDao.deleteAddress(addrId, userId);
+                            JsonUtil.sendSuccess(res, 200, "Address deleted", Map.of("addressId", addrId));
+                            return;
+                        }
+                    }
                     if (path.startsWith("/notifications/") && path.endsWith("/read")) {
                         if (!requireAuthenticated(req, res)) return;
                         Long notifId = parseIdFromPath(req);
@@ -112,6 +164,22 @@ public class AuthServlet extends BaseServlet {
         } catch (Exception e) {
             JsonUtil.sendError(res, 500, "Internal authentication error: " + e.getMessage());
         }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        String path = req.getPathInfo() != null ? req.getPathInfo() : "";
+        if (path.startsWith("/addresses/")) {
+            if (!requireAuthenticated(req, res)) return;
+            Long userId = getAuthenticatedUserId(req);
+            Long addrId = parseIdFromPath(req);
+            if (addrId != null) {
+                userDao.deleteAddress(addrId, userId);
+                JsonUtil.sendSuccess(res, 200, "Address deleted", Map.of("addressId", addrId));
+                return;
+            }
+        }
+        JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
     }
 
     @Override

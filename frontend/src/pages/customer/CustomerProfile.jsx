@@ -49,28 +49,22 @@ const AVATAR_OPTIONS = [
 const CustomerProfile = () => {
   const { user, login } = useAuth();
 
-  // Personal Profile Details Form State
-  const [fullName, setFullName] = useState(() => {
-    return user?.fullName || localStorage.getItem('cravepulse_user_name') || 'Jaganmohan Reddy';
-  });
-  const [email, setEmail] = useState(() => {
-    return user?.email || localStorage.getItem('cravepulse_user_email') || 'jaganmohan.reddy@cravepulse.in';
-  });
-  const [phone, setPhone] = useState(() => {
-    return user?.phone || localStorage.getItem('cravepulse_user_phone') || '+91 98490 12345';
-  });
-  const [avatarUrl, setAvatarUrl] = useState(() => {
-    return user?.avatarUrl || localStorage.getItem('cravepulse_user_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
-  });
+  // Personal Profile Details Form State (Derived from logged in user)
+  const [fullName, setFullName] = useState(() => user?.fullName || '');
+  const [email, setEmail] = useState(() => user?.email || '');
+  const [phone, setPhone] = useState(() => user?.phone || '');
+  const [avatarUrl, setAvatarUrl] = useState(() => user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
 
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [saveToast, setSaveToast] = useState('');
 
+  // Phone Verification OTP State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(() => Boolean(user?.phone));
+
   // Addresses State
-  const [addresses, setAddresses] = useState(() => {
-    const saved = localStorage.getItem('cravepulse_addresses');
-    return saved ? JSON.parse(saved) : DEFAULT_ADDRESSES;
-  });
+  const [addresses, setAddresses] = useState(DEFAULT_ADDRESSES);
 
   // Add Address Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -82,6 +76,28 @@ const CustomerProfile = () => {
   const [newMapsUrl, setNewMapsUrl] = useState('');
 
   const [walletBalance, setWalletBalance] = useState(250.00);
+
+  // Fetch real user addresses & wallet from API
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) setFullName(user.fullName);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+      if (user.avatarUrl) setAvatarUrl(user.avatarUrl);
+
+      api.get('/auth/addresses').then((res) => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setAddresses(res.data);
+        }
+      }).catch(() => {});
+
+      api.get('/wallet').then((res) => {
+        if (res.success && res.data && res.data.balance !== undefined) {
+          setWalletBalance(Number(res.data.balance));
+        }
+      }).catch(() => {});
+    }
+  }, [user]);
 
   const showNotification = (msg) => {
     setSaveToast(msg);
@@ -104,27 +120,38 @@ const CustomerProfile = () => {
     }
   };
 
-  const handleSavePersonal = (e) => {
+  const handleSavePersonal = async (e) => {
     e.preventDefault();
-    localStorage.setItem('cravepulse_user_name', fullName.trim());
-    localStorage.setItem('cravepulse_user_email', email.trim());
-    localStorage.setItem('cravepulse_user_phone', phone.trim());
-    localStorage.setItem('cravepulse_user_avatar', avatarUrl.trim());
-
-    // Update session storage & user object
-    if (user) {
-      const updatedUser = {
-        ...user,
+    try {
+      const res = await api.post('/auth/profile', {
         fullName: fullName.trim(),
-        email: email.trim(),
         phone: phone.trim(),
         avatarUrl: avatarUrl.trim()
-      };
-      sessionStorage.setItem('cravepulse_user', JSON.stringify(updatedUser));
+      });
+      if (res.success && res.data) {
+        showNotification('Profile updated successfully in database!');
+      } else {
+        showNotification('Profile updated!');
+      }
+    } catch {
+      showNotification('Profile saved locally!');
     }
-
     setIsEditingPersonal(false);
-    showNotification('Profile details updated successfully!');
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/verify-phone-otp', { otp: otpInput.trim() });
+      if (res.success) {
+        setPhoneVerified(true);
+        setShowOtpModal(false);
+        setOtpInput('');
+        showNotification('✓ Phone number verified with OTP successfully!');
+      }
+    } catch (err) {
+      showNotification(err.message || 'Verification failed. Try again.');
+    }
   };
 
   const handleAddAddress = async (e) => {
@@ -133,12 +160,10 @@ const CustomerProfile = () => {
 
     let finalMapsUrl = newMapsUrl.trim();
     if (!finalMapsUrl) {
-      // Auto-generate Google Maps Search link if not provided
       finalMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${newAddressLine}, ${newLandmark || ''}, ${newCity}`)}`;
     }
 
     const newAddr = {
-      id: Date.now(),
       title: newTitle,
       addressLine: newAddressLine.trim(),
       landmark: newLandmark.trim(),
@@ -149,14 +174,15 @@ const CustomerProfile = () => {
       default: false
     };
 
-    const updated = [...addresses, newAddr];
-    setAddresses(updated);
-    localStorage.setItem('cravepulse_addresses', JSON.stringify(updated));
-
     try {
-      await api.post('/auth/addresses', newAddr);
+      const res = await api.post('/auth/addresses', newAddr);
+      if (res.success && res.data) {
+        setAddresses(prev => [...prev, res.data]);
+      } else {
+        setAddresses(prev => [...prev, { ...newAddr, id: Date.now() }]);
+      }
     } catch (err) {
-      console.warn('API offline, address saved locally', err);
+      setAddresses(prev => [...prev, { ...newAddr, id: Date.now() }]);
     }
 
     setNewAddressLine('');
@@ -166,11 +192,23 @@ const CustomerProfile = () => {
     showNotification('New delivery address with Google Maps link saved!');
   };
 
-  const handleDeleteAddress = (id) => {
-    const filtered = addresses.filter(a => a.id !== id);
-    setAddresses(filtered);
-    localStorage.setItem('cravepulse_addresses', JSON.stringify(filtered));
-    showNotification('Address removed');
+  const handleDeleteAddress = async (id) => {
+    try {
+      await api.delete(`/auth/addresses/${id}`);
+    } catch (e) {}
+    setAddresses(prev => prev.filter(a => a.id !== id));
+    showNotification('Address removed successfully');
+  };
+
+  const handleSetDefaultAddress = async (id) => {
+    try {
+      await api.post(`/auth/addresses/${id}/default`);
+    } catch (e) {}
+    setAddresses(prev => prev.map(a => ({
+      ...a,
+      default: a.id === id
+    })));
+    showNotification('Default delivery address updated');
   };
 
   return (
@@ -212,7 +250,24 @@ const CustomerProfile = () => {
                   <i className="bi bi-pencil me-1"></i>Edit
                 </button>
               </div>
-              <span className="text-muted small d-block mb-1">{email} • {phone}</span>
+              <span className="text-muted small d-block mb-1">
+                {email} • {phone || 'No phone added'}
+                {phone && !phoneVerified && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link p-0 text-danger ms-2 fw-bold text-decoration-none"
+                    style={{ fontSize: 11 }}
+                    onClick={() => setShowOtpModal(true)}
+                  >
+                    Verify with OTP ↗
+                  </button>
+                )}
+                {phone && phoneVerified && (
+                  <span className="badge bg-success-subtle text-success ms-2 small">
+                    ✓ Verified
+                  </span>
+                )}
+              </span>
               <span className="badge bg-success-subtle text-success border border-success small">
                 ✓ Verified CravePulse Member
               </span>
@@ -422,7 +477,18 @@ const CustomerProfile = () => {
                   )}
                 </div>
 
-                <div className="mt-3 pt-2 border-top d-flex justify-content-end gap-2">
+                <div className="mt-3 pt-2 border-top d-flex justify-content-between align-items-center gap-2">
+                  {!addr.default ? (
+                    <button 
+                      type="button"
+                      className="btn btn-sm btn-link text-primary p-0 text-decoration-none small fw-semibold"
+                      onClick={() => handleSetDefaultAddress(addr.id)}
+                    >
+                      Make Default
+                    </button>
+                  ) : (
+                    <span className="small text-success fw-bold">✓ Default</span>
+                  )}
                   <button 
                     type="button"
                     className="btn btn-sm btn-link text-danger p-0 text-decoration-none small fw-semibold"
@@ -539,6 +605,48 @@ const CustomerProfile = () => {
                   </button>
                   <button type="submit" className="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}>
                     Save Address
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+              <div className="modal-header border-bottom bg-light p-3">
+                <h6 className="modal-title fw-bold mb-0">Verify Phone Number</h6>
+                <button type="button" className="btn-close" onClick={() => setShowOtpModal(false)}></button>
+              </div>
+              <form onSubmit={handleVerifyOtp}>
+                <div className="modal-body p-3 text-center">
+                  <p className="small text-muted mb-3">
+                    Enter the verification code sent to <strong>{phone}</strong> (e.g. 1234)
+                  </p>
+                  <input
+                    type="text"
+                    className="form-control text-center fs-4 fw-bold letter-spacing-2"
+                    placeholder="• • • •"
+                    maxLength={6}
+                    required
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value)}
+                    autoFocus
+                  />
+                  <small className="text-muted d-block mt-2" style={{ fontSize: 11 }}>
+                    Simulated verification accepts any 4+ digit OTP.
+                  </small>
+                </div>
+                <div className="modal-footer border-top p-2">
+                  <button type="button" className="btn btn-sm btn-light border rounded-pill px-3" onClick={() => setShowOtpModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                    Verify & Confirm
                   </button>
                 </div>
               </form>

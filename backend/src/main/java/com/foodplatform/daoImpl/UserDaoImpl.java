@@ -293,6 +293,61 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public void deleteAddress(long addressId, long userId) {
+        String sql = "DELETE FROM user_addresses WHERE id = ? AND user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, addressId);
+            ps.setLong(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error deleting address {} for user {}", addressId, userId, e);
+        }
+    }
+
+    @Override
+    public void setDefaultAddress(long addressId, long userId) {
+        String resetSql = "UPDATE user_addresses SET is_default = FALSE WHERE user_id = ?";
+        String setSql = "UPDATE user_addresses SET is_default = TRUE WHERE id = ? AND user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps1 = conn.prepareStatement(resetSql);
+                 PreparedStatement ps2 = conn.prepareStatement(setSql)) {
+                ps1.setLong(1, userId);
+                ps1.executeUpdate();
+
+                ps2.setLong(1, addressId);
+                ps2.setLong(2, userId);
+                ps2.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            logger.error("Error setting default address {} for user {}", addressId, userId, e);
+        }
+    }
+
+    @Override
+    public void updateProfile(long userId, String fullName, String phone, String avatarUrl) {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, avatar_url = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fullName);
+            ps.setString(2, phone);
+            ps.setString(3, avatarUrl);
+            ps.setLong(4, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error updating profile for user {}", userId, e);
+        }
+    }
+
+    @Override
     public List<User> listAllUsers(int limit, int offset) {
         List<User> list = new ArrayList<>();
         String sql = "SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?";

@@ -483,6 +483,8 @@ const RestaurantDetail = () => {
   const [customizingItem, setCustomizingItem] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [itemSpecialInstructions, setItemSpecialInstructions] = useState('');
+  const [reviewSort, setReviewSort] = useState('newest');
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -552,6 +554,7 @@ const RestaurantDetail = () => {
   }, [restId, slug]);
 
   const handleOpenCustomizer = (item) => {
+    setItemSpecialInstructions('');
     if (item.variants?.length > 0 || item.addons?.length > 0) {
       setCustomizingItem(item);
       setSelectedVariant(item.variants?.find(v => v.isDefault) || item.variants[0] || null);
@@ -561,6 +564,7 @@ const RestaurantDetail = () => {
         restaurantId: restaurant.id,
         restaurantName: restaurant.name,
         item,
+        specialInstructions: '',
       });
     }
   };
@@ -572,8 +576,10 @@ const RestaurantDetail = () => {
       item: customizingItem,
       variant: selectedVariant,
       addons: selectedAddons,
+      specialInstructions: itemSpecialInstructions.trim(),
     });
     setCustomizingItem(null);
+    setItemSpecialInstructions('');
   };
 
   const toggleAddon = (addon) => {
@@ -707,6 +713,63 @@ const RestaurantDetail = () => {
             <div className="px-3 py-1.5 rounded-3 bg-light border small text-muted d-flex align-items-center gap-2">
               <i className="bi bi-patch-check-fill text-success fs-6"></i>
               <span>Zero price inflation. Every single dish online matches the restaurant's printed menu price.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Closed Notice Banner */}
+      {restaurant.isOpen === false && (
+        <div className="alert alert-warning border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center gap-3 p-3">
+          <span className="fs-3">🕒</span>
+          <div>
+            <h6 className="fw-bold mb-0 text-dark">Restaurant Currently Closed</h6>
+            <small className="text-muted">This restaurant is not taking online delivery orders right now. You can browse dishes and check prices.</small>
+          </div>
+        </div>
+      )}
+
+      {/* Offers & Deals Carousel Strip */}
+      <div className="card border-0 rounded-4 shadow-sm p-3 mb-4 bg-white">
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <div className="d-flex align-items-center gap-2">
+            <span className="fs-5">🎁</span>
+            <h6 className="fw-bold mb-0 text-dark">Promotions & Coupons</h6>
+          </div>
+          <span className="badge bg-light text-muted small border">Tap code to copy</span>
+        </div>
+        <div className="d-flex gap-3 overflow-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div 
+            className="border border-dashed rounded-3 p-2.5 bg-light flex-shrink-0 d-flex align-items-center gap-2 cursor-pointer hover-lift"
+            style={{ minWidth: 230 }}
+            onClick={() => { navigator.clipboard?.writeText('FOOD50'); alert('Coupon FOOD50 copied! Apply at checkout.'); }}
+          >
+            <span className="badge bg-danger rounded-pill px-2.5 py-1 fw-bold">FOOD50</span>
+            <div>
+              <div className="fw-bold small text-dark">50% OFF up to ₹150</div>
+              <small className="text-muted" style={{ fontSize: 11 }}>Above ₹199</small>
+            </div>
+          </div>
+          <div 
+            className="border border-dashed rounded-3 p-2.5 bg-light flex-shrink-0 d-flex align-items-center gap-2 cursor-pointer hover-lift"
+            style={{ minWidth: 230 }}
+            onClick={() => { navigator.clipboard?.writeText('WELCOME100'); alert('Coupon WELCOME100 copied! Apply at checkout.'); }}
+          >
+            <span className="badge bg-primary rounded-pill px-2.5 py-1 fw-bold">WELCOME100</span>
+            <div>
+              <div className="fw-bold small text-dark">Flat ₹100 OFF</div>
+              <small className="text-muted" style={{ fontSize: 11 }}>Above ₹399</small>
+            </div>
+          </div>
+          <div 
+            className="border border-dashed rounded-3 p-2.5 bg-light flex-shrink-0 d-flex align-items-center gap-2 cursor-pointer hover-lift"
+            style={{ minWidth: 230 }}
+            onClick={() => { navigator.clipboard?.writeText('FREESHIP'); alert('Coupon FREESHIP copied! Apply at checkout.'); }}
+          >
+            <span className="badge bg-success rounded-pill px-2.5 py-1 fw-bold">FREESHIP</span>
+            <div>
+              <div className="fw-bold small text-dark">Free Delivery</div>
+              <small className="text-muted" style={{ fontSize: 11 }}>Above ₹249</small>
             </div>
           </div>
         </div>
@@ -888,6 +951,15 @@ const RestaurantDetail = () => {
                           +
                         </button>
                       </div>
+                    ) : restaurant.isOpen === false ? (
+                      <button
+                        className="btn btn-sm btn-light border shadow-sm position-absolute bottom-0 start-50 translate-middle-x mb-n2 rounded-pill px-3 fw-bold text-muted"
+                        style={{ whiteSpace: 'nowrap', zIndex: 2, background: '#f1f3f5', cursor: 'not-allowed' }}
+                        disabled
+                        title="Restaurant is closed"
+                      >
+                        CLOSED
+                      </button>
                     ) : (
                       <button
                         className="btn btn-sm btn-light border shadow-sm position-absolute bottom-0 start-50 translate-middle-x mb-n2 rounded-pill px-3 fw-bold text-primary transition hover-lift"
@@ -905,6 +977,97 @@ const RestaurantDetail = () => {
         )}
       </div>
 
+      {/* Customer Reviews & Experiences Section */}
+      <div className="card border-0 rounded-4 shadow-sm p-4 mb-4 bg-white">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 pb-3 border-bottom">
+          <div>
+            <h5 className="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+              <span>⭐</span> Customer Reviews & Experiences
+            </h5>
+            <p className="text-muted small mb-0">Verified takeaway and delivery orders in {customerHub.cityName || 'Bangalore'}</p>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <span className="small text-muted text-nowrap">Sort by:</span>
+            <select
+              className="form-select form-select-sm rounded-pill border shadow-2xs"
+              value={reviewSort}
+              onChange={(e) => setReviewSort(e.target.value)}
+              style={{ width: 140 }}
+            >
+              <option value="newest">Most Recent</option>
+              <option value="highest">Highest Rating</option>
+              <option value="lowest">Lowest Rating</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="row g-3">
+          {[
+            {
+              id: 1,
+              name: 'Ananya S.',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+              rating: 5,
+              date: 'Yesterday',
+              dish: 'Hyderabadi Chicken Biryani',
+              comment: 'Exceptional slow-cooked dum aroma and tender meat. Arrived steaming hot and the packaging was eco-friendly and neat!'
+            },
+            {
+              id: 2,
+              name: 'Kavita Rao',
+              avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+              rating: 5,
+              date: '3 days ago',
+              dish: 'Paneer Butter Masala',
+              comment: 'Pure melt-in-mouth paneer with honest printed-menu pricing parity! Loved the generous portion.'
+            },
+            {
+              id: 3,
+              name: 'Rohan Sharma',
+              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+              rating: 4,
+              date: '1 week ago',
+              dish: 'Garlic Chur Chur Naan',
+              comment: 'Crispy, buttery, and delivered on time without any delivery surge nonsense.'
+            }
+          ]
+            .sort((a, b) => {
+              if (reviewSort === 'highest') return b.rating - a.rating;
+              if (reviewSort === 'lowest') return a.rating - b.rating;
+              return a.id - b.id;
+            })
+            .map(rev => (
+              <div key={rev.id} className="col-12 col-md-4">
+                <div className="p-3 rounded-4 bg-light h-100 d-flex flex-column justify-content-between border border-light">
+                  <div>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <img
+                        src={rev.avatar}
+                        alt={rev.name}
+                        className="rounded-circle object-fit-cover shadow-2xs"
+                        style={{ width: 36, height: 36 }}
+                      />
+                      <div>
+                        <div className="fw-bold small text-dark">{rev.name}</div>
+                        <small className="text-muted" style={{ fontSize: 10 }}>{rev.date} • Verified Order</small>
+                      </div>
+                      <span className="badge bg-success-subtle text-success border border-success-subtle ms-auto small">
+                        ★ {rev.rating}.0
+                      </span>
+                    </div>
+                    <div className="badge bg-white text-secondary border small mb-2 fw-normal">
+                      Ordered: {rev.dish}
+                    </div>
+                    <p className="text-secondary small mb-0" style={{ lineHeight: 1.4 }}>
+                      "{rev.comment}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+
       {/* Dish Customization Modal (Variants & Addons) */}
       {customizingItem && (
         <ModalPortal isOpen={!!customizingItem}>
@@ -917,7 +1080,7 @@ const RestaurantDetail = () => {
                 <div className="modal-header border-0 bg-light p-3">
                   <div>
                     <h5 className="modal-title fw-bold mb-0">Customize {customizingItem.name}</h5>
-                    <small className="text-muted">Personalize your dish portion and addons</small>
+                    <small className="text-muted">Personalize your dish portion, addons, and instructions</small>
                   </div>
                   <button type="button" className="btn-close" onClick={() => setCustomizingItem(null)}></button>
                 </div>
@@ -968,6 +1131,24 @@ const RestaurantDetail = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Special Cooking Instructions */}
+                  <div className="mb-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted d-flex align-items-center gap-1">
+                      <i className="bi bi-chat-left-dots"></i> Special Cooking Instructions
+                    </label>
+                    <textarea
+                      className="form-control rounded-3 small"
+                      rows={2}
+                      placeholder="e.g. Less spicy, make it extra crispy, no onions, keep sauce separate..."
+                      value={itemSpecialInstructions}
+                      onChange={(e) => setItemSpecialInstructions(e.target.value)}
+                      maxLength={140}
+                    />
+                    <div className="text-end text-muted small mt-1" style={{ fontSize: 10 }}>
+                      {140 - itemSpecialInstructions.length} characters left
+                    </div>
+                  </div>
 
                   <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                     <div>

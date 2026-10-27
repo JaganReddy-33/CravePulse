@@ -15,7 +15,7 @@ const DEFAULT_ADDRESSES = [
 ];
 
 const CheckoutPage = () => {
-  const { cart, billDetails, couponCode, setCouponCode, clearCart } = useCart();
+  const { cart, billDetails, couponCode, setCouponCode, riderTip, setRiderTip, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -27,6 +27,10 @@ const CheckoutPage = () => {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showUpiDrawer, setShowUpiDrawer] = useState(false);
   const [showSettlementLedger, setShowSettlementLedger] = useState(false);
+  const [showCouponsModal, setShowCouponsModal] = useState(false);
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState({ title: 'Home', addressLine: '', landmark: '', city: 'Bangalore', postalCode: '560038' });
+  const [customTipInput, setCustomTipInput] = useState('');
   const [error, setError] = useState('');
   const [inputCoupon, setInputCoupon] = useState('');
 
@@ -144,6 +148,7 @@ const CheckoutPage = () => {
         paymentStatus: payStatus,
         couponCode: couponCode || null,
         specialInstructions: specialInstructions || null,
+        tipAmount: riderTip || 0,
         items: cart.items.map(it => ({
           menuItemId: it.id,
           quantity: it.quantity,
@@ -287,9 +292,13 @@ const CheckoutPage = () => {
               <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
                 <i className="bi bi-geo-alt-fill text-danger"></i> Select Delivery Address
               </h5>
-              <span className="badge bg-success-subtle text-success border border-success-subtle small">
-                Verified Address
-              </span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold"
+                onClick={() => setShowAddAddressModal(true)}
+              >
+                + Add Address
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -309,6 +318,15 @@ const CheckoutPage = () => {
                     </div>
                     <div className="small text-dark mb-1">{addr.addressLine}</div>
                     <small className="text-muted d-block">{addr.landmark || addr.city}, {addr.postalCode}</small>
+                    <a
+                      href={addr.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${addr.addressLine}, ${addr.city}`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="badge bg-white text-primary border text-decoration-none mt-2 d-inline-flex align-items-center gap-1 small"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <i className="bi bi-map"></i> View on Google Maps ↗
+                    </a>
                   </div>
                 </div>
               ))}
@@ -323,6 +341,56 @@ const CheckoutPage = () => {
                 value={specialInstructions}
                 onChange={(e) => setSpecialInstructions(e.target.value)}
               />
+            </div>
+          </div>
+
+          {/* Driver Tip Selection (100% Pass-Through) */}
+          <div className="card border-0 rounded-4 shadow-sm p-4 bg-white">
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                <span>🚴</span> Delivery Partner Tip
+              </h6>
+              <span className="badge bg-success-subtle text-success border border-success-subtle small d-flex align-items-center gap-1">
+                <i className="bi bi-shield-check"></i> 100% Tip Pass-Through
+              </span>
+            </div>
+            <p className="text-muted small mb-3">
+              100% of your tip goes directly to your delivery partner. Show your appreciation for fast and safe delivery.
+            </p>
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              {[0, 20, 30, 50].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  className={`btn btn-sm rounded-pill px-3 py-1.5 fw-bold transition ${
+                    riderTip === amt
+                      ? 'btn-success text-white shadow-sm'
+                      : 'btn-light border text-dark'
+                  }`}
+                  onClick={() => {
+                    setRiderTip(amt);
+                    setCustomTipInput('');
+                  }}
+                >
+                  {amt === 0 ? 'No Tip' : `₹${amt}`}
+                </button>
+              ))}
+              <div className="input-group input-group-sm rounded-pill overflow-hidden border" style={{ width: 110 }}>
+                <span className="input-group-text bg-white border-0 text-muted ps-2 pe-1">₹</span>
+                <input
+                  type="number"
+                  className="form-control border-0 ps-0"
+                  placeholder="Custom"
+                  min="0"
+                  max="1000"
+                  value={customTipInput}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    setCustomTipInput(e.target.value);
+                    setRiderTip(val);
+                  }}
+                />
+              </div>
             </div>
           </div>
 
@@ -537,7 +605,7 @@ const CheckoutPage = () => {
               </form>
 
               {/* Quick coupons pill */}
-              <div className="d-flex flex-wrap gap-1">
+              <div className="d-flex flex-wrap gap-1 mb-2">
                 <button 
                   type="button" 
                   className={`btn btn-sm py-0 px-2 rounded-pill small ${couponCode === 'FOOD50' ? 'btn-success text-white' : 'btn-light text-secondary border'}`} 
@@ -561,6 +629,18 @@ const CheckoutPage = () => {
                   style={{ fontSize: 10 }}
                 >
                   FREESHIP (Free Delivery)
+                </button>
+              </div>
+
+              <div className="d-flex justify-content-between align-items-center">
+                <small className="text-muted">Have another promo code?</small>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-link p-0 text-primary text-decoration-none fw-bold"
+                  style={{ fontSize: 11 }}
+                  onClick={() => setShowCouponsModal(true)}
+                >
+                  View All Offers &amp; Eligibility ↗
                 </button>
               </div>
             </div>
@@ -598,6 +678,12 @@ const CheckoutPage = () => {
                   <span>GST (5% Restaurant Service Tax):</span>
                   <span>₹{billDetails.gstTax}</span>
                 </div>
+                {billDetails.tipAmount > 0 && (
+                  <div className="d-flex justify-content-between py-1 text-primary fw-semibold">
+                    <span>Delivery Partner Tip (100% to rider):</span>
+                    <span>₹{billDetails.tipAmount}</span>
+                  </div>
+                )}
                 <div className="d-flex justify-content-between py-2 mt-2 border-top fs-5 fw-extrabold text-dark">
                   <span>Grand Total:</span>
                   <span style={{ color: '#ff5722' }}>₹{billDetails.totalAmount}</span>
@@ -858,6 +944,188 @@ const CheckoutPage = () => {
 
       {/* Radical Price Transparency Explainer Modal */}
       <PriceBreakdownModal show={showPriceModal} onClose={() => setShowPriceModal(false)} billDetails={billDetails} />
+
+      {/* Available Coupons Drawer / Modal with Eligibility Check */}
+      {showCouponsModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+              <div className="modal-header border-bottom bg-light p-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="fs-5">🏷️</span>
+                  <div>
+                    <h6 className="modal-title fw-bold mb-0">Coupons & Special Offers</h6>
+                    <small className="text-muted">Direct discounts with zero hidden conditions</small>
+                  </div>
+                </div>
+                <button type="button" className="btn-close" onClick={() => setShowCouponsModal(false)}></button>
+              </div>
+              <div className="modal-body p-3">
+                {[
+                  { code: 'FOOD50', desc: '50% OFF up to ₹150', minOrder: 199, details: 'Valid on all items from gourmet kitchens.' },
+                  { code: 'WELCOME100', desc: 'Flat ₹100 OFF', minOrder: 399, details: 'Exclusive welcome voucher for delicious dining.' },
+                  { code: 'FREESHIP', desc: 'Free Delivery (Save ₹35)', minOrder: 249, details: '100% rider delivery fare waived on qualifying carts.' },
+                ].map(c => {
+                  const sub = billDetails?.subtotal || 0;
+                  const isEligible = sub >= c.minOrder;
+                  const shortfall = Math.max(0, c.minOrder - sub);
+                  const isApplied = couponCode === c.code;
+
+                  return (
+                    <div key={c.code} className={`p-3 rounded-3 border mb-3 transition ${isApplied ? 'border-success bg-success-subtle' : isEligible ? 'border-primary-subtle bg-white' : 'border-light bg-light opacity-75'}`}>
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <span className="badge bg-danger rounded-pill px-2.5 py-1 font-monospace fw-bold">{c.code}</span>
+                        {isApplied ? (
+                          <span className="badge bg-success small">✓ Applied</span>
+                        ) : isEligible ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold"
+                            onClick={() => {
+                              setCouponCode(c.code);
+                              setShowCouponsModal(false);
+                            }}
+                          >
+                            Apply
+                          </button>
+                        ) : (
+                          <span className="badge bg-secondary small">Locked</span>
+                        )}
+                      </div>
+                      <div className="fw-bold text-dark small mt-1">{c.desc}</div>
+                      <small className="text-muted d-block">{c.details}</small>
+                      {!isEligible && (
+                        <div className="alert alert-warning py-1 px-2 mt-2 mb-0 small" style={{ fontSize: 11 }}>
+                          Add items worth <strong>₹{shortfall.toFixed(2)}</strong> more to unlock
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Address Modal with Google Maps Link */}
+      {showAddAddressModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+              <div className="modal-header border-bottom bg-light p-3">
+                <h6 className="modal-title fw-bold mb-0">Add Delivery Address</h6>
+                <button type="button" className="btn-close" onClick={() => setShowAddAddressModal(false)}></button>
+              </div>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newAddress.addressLine.trim()) return;
+
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${newAddress.addressLine}, ${newAddress.landmark || ''}, ${newAddress.city}`)}`;
+                const addrObj = {
+                  title: newAddress.title,
+                  addressLine: newAddress.addressLine.trim(),
+                  landmark: newAddress.landmark.trim(),
+                  city: newAddress.city,
+                  state: 'Karnataka',
+                  postalCode: newAddress.postalCode.trim(),
+                  mapsUrl: mapsUrl,
+                  default: false,
+                };
+
+                try {
+                  const res = await api.post('/auth/addresses', addrObj);
+                  if (res.success && res.data) {
+                    setAddresses(prev => [...prev, res.data]);
+                    setSelectedAddressId(res.data.id);
+                  } else {
+                    const localAddr = { ...addrObj, id: Date.now() };
+                    setAddresses(prev => [...prev, localAddr]);
+                    setSelectedAddressId(localAddr.id);
+                  }
+                } catch {
+                  const localAddr = { ...addrObj, id: Date.now() };
+                  setAddresses(prev => [...prev, localAddr]);
+                  setSelectedAddressId(localAddr.id);
+                }
+                setShowAddAddressModal(false);
+                setNewAddress({ title: 'Home', addressLine: '', landmark: '', city: 'Bangalore', postalCode: '560038' });
+              }}>
+                <div className="modal-body p-3">
+                  <div className="mb-2">
+                    <label className="form-label small fw-bold mb-1">Address Label</label>
+                    <div className="d-flex gap-2">
+                      {['Home', 'Work', 'Other'].map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          className={`btn btn-sm rounded-pill px-3 ${newAddress.title === t ? 'btn-primary text-white' : 'btn-light border'}`}
+                          onClick={() => setNewAddress(prev => ({ ...prev, title: t }))}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small fw-bold mb-1">House / Flat / Building / Street *</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      required
+                      placeholder="e.g. Flat 301, Lakeview Apts, 100ft Rd"
+                      value={newAddress.addressLine}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, addressLine: e.target.value }))}
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small fw-bold mb-1">Landmark (Optional)</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="e.g. Near Metro Station / Opposite Park"
+                      value={newAddress.landmark}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, landmark: e.target.value }))}
+                    />
+                  </div>
+                  <div className="row g-2 mb-2">
+                    <div className="col-7">
+                      <label className="form-label small fw-bold mb-1">City</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={newAddress.city}
+                        onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-5">
+                      <label className="form-label small fw-bold mb-1">PIN Code</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        required
+                        value={newAddress.postalCode}
+                        onChange={(e) => setNewAddress(prev => ({ ...prev, postalCode: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <small className="text-muted d-block" style={{ fontSize: 11 }}>
+                    📍 A Google Maps coordinates pinpoint will be automatically generated.
+                  </small>
+                </div>
+                <div className="modal-footer border-top p-2">
+                  <button type="button" className="btn btn-sm btn-light border rounded-pill px-3" onClick={() => setShowAddAddressModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-sm btn-primary rounded-pill px-4 fw-bold">
+                    Save Address
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

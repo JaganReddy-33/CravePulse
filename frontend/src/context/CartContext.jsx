@@ -6,14 +6,14 @@ const CartContext = createContext(null);
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const { restaurantId, restaurantName, item, variant, addons = [] } = action.payload;
+      const { restaurantId, restaurantName, item, variant, addons = [], specialInstructions = '' } = action.payload;
 
       // Single-restaurant cart validation
       if (state.restaurantId && state.restaurantId !== restaurantId && state.items.length > 0) {
         if (!window.confirm(`Your cart already contains dishes from "${state.restaurantName}". Would you like to clear your cart and start a new order from "${restaurantName}"?`)) {
           return state;
         }
-        const cartKey = `${item.id}-${variant?.id || 'base'}-${addons.map(a => a.id).sort().join(',')}`;
+        const cartKey = `${item.id}-${variant?.id || 'base'}-${addons.map(a => a.id).sort().join(',')}-${specialInstructions || ''}`;
         return {
           restaurantId,
           restaurantName,
@@ -21,13 +21,14 @@ const cartReducer = (state, action) => {
             ...item, 
             selectedVariant: variant, 
             selectedAddons: addons, 
+            specialInstructions,
             quantity: 1, 
             cartKey 
           }],
         };
       }
 
-      const cartKey = `${item.id}-${variant?.id || 'base'}-${addons.map(a => a.id).sort().join(',')}`;
+      const cartKey = `${item.id}-${variant?.id || 'base'}-${addons.map(a => a.id).sort().join(',')}-${specialInstructions || ''}`;
       const existingIdx = state.items.findIndex(i => i.cartKey === cartKey);
 
       let newItems = [];
@@ -36,7 +37,7 @@ const cartReducer = (state, action) => {
           idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it
         );
       } else {
-        newItems = [...state.items, { ...item, selectedVariant: variant, selectedAddons: addons, quantity: 1, cartKey }];
+        newItems = [...state.items, { ...item, selectedVariant: variant, selectedAddons: addons, specialInstructions, quantity: 1, cartKey }];
       }
 
       return {
@@ -92,12 +93,13 @@ export const CartProvider = ({ children }) => {
   });
 
   const [couponCode, setCouponCode] = useState('');
+  const [riderTip, setRiderTip] = useState(20);
   const [billDetails, setBillDetails] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [couponError, setCouponError] = useState('');
 
   // Local fallback calculation engine
-  const calculateLocalBill = (items, coupon) => {
+  const calculateLocalBill = (items, coupon, tip = 0) => {
     let subtotal = 0;
     let dineInSubtotal = 0;
 
@@ -142,9 +144,10 @@ export const CartProvider = ({ children }) => {
     const packagingFee = 15.00;
     const deliveryFee = 35.00;
     const platformFee = 5.00;
+    const tipAmount = Math.max(0, Number(tip) || 0);
     const taxable = Math.max(0, subtotal - discount + packagingFee);
     const gstTax = Math.round(taxable * 0.05 * 100) / 100;
-    const totalAmount = Math.round((taxable + deliveryFee + platformFee + gstTax) * 100) / 100;
+    const totalAmount = Math.round((taxable + deliveryFee + platformFee + gstTax + tipAmount) * 100) / 100;
 
     return {
       subtotal,
@@ -157,6 +160,7 @@ export const CartProvider = ({ children }) => {
       deliveryFee,
       platformFee,
       gstTax,
+      tipAmount,
       totalAmount,
       distanceKm: 2.4,
       etaMinMinutes: 25,
@@ -181,7 +185,7 @@ export const CartProvider = ({ children }) => {
       }
 
       // Compute immediate local bill
-      const localBill = calculateLocalBill(state.items, couponCode);
+      const localBill = calculateLocalBill(state.items, couponCode, riderTip);
       setBillDetails(localBill);
 
       setCalculating(true);
@@ -195,6 +199,7 @@ export const CartProvider = ({ children }) => {
             addonIds: it.selectedAddons?.map(a => a.id) || [],
           })),
           couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
+          tipAmount: riderTip || 0,
         };
 
         const res = await api.post('/cart/calculate', payload);
@@ -213,7 +218,7 @@ export const CartProvider = ({ children }) => {
     };
 
     recalculateBill();
-  }, [state, couponCode]);
+  }, [state, couponCode, riderTip]);
 
   const applyCoupon = (code) => {
     setCouponError('');
@@ -235,6 +240,8 @@ export const CartProvider = ({ children }) => {
       couponCode,
       couponError,
       setCouponCode: applyCoupon,
+      riderTip,
+      setRiderTip,
       addItem,
       removeItem,
       clearCart,

@@ -41,5 +41,11 @@ public interface UserDao {
 
     Long addAddress(Address addr);
 
+    void deleteAddress(long addressId, long userId);
+
+    void setDefaultAddress(long addressId, long userId);
+
+    void updateProfile(long userId, String fullName, String phone, String avatarUrl);
+
     List<User> listAllUsers(int limit, int offset);
 }

@@ -69,6 +69,7 @@ public class PricingService {
         public BigDecimal deliveryFee = BigDecimal.valueOf(35.00);
         public BigDecimal platformFee = BigDecimal.valueOf(5.00);
         public BigDecimal gstTax = BigDecimal.ZERO;
+        public BigDecimal tipAmount = BigDecimal.ZERO;
         public BigDecimal totalAmount = BigDecimal.ZERO;
         public double distanceKm = 2.5;
         public int etaMinMinutes = 25;
