@@ -1,0 +1,214 @@
+{
+  "info": {
+    "name": "FoodPlatform Real-Time API Collection",
+    "description": "Comprehensive Postman Collection for Food Delivery Multi-Portal Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@foodora.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (Partner Chef Rohan)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chef@foodanalytics.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (Rider Vikram)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rider@swiftlogistics.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@foodplatform.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants & Discovery",
+      "item": [
+        {
+          "name": "Discover Restaurants (Geo + Filter)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?lat=12.9783&lng=77.6408&cuisine=&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants"],
+              "query": [
+                { "key": "lat", "value": "12.9783" },
+                { "key": "lng", "value": "77.6408" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restaurant Detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/restaurants/1", "host": ["{{baseUrl}}"], "path": ["restaurants", "1"] }
+          }
+        },
+        {
+          "name": "Restaurant Analytics (Image 2 Stats)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/restaurants/1/analytics", "host": ["{{baseUrl}}"], "path": ["restaurants", "1", "analytics"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu & Price Parity",
+      "item": [
+        {
+          "name": "Get Restaurant Menu",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/menu/restaurant/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurant", "1"] }
+          }
+        },
+        {
+          "name": "Audit Price Parity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platformPrice\": 280.00,\n  \"dineInPrice\": 280.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/menu/item/1/price-parity", "host": ["{{baseUrl}}"], "path": ["menu", "item", "1", "price-parity"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart & Pricing",
+      "item": [
+        {
+          "name": "Authoritative Bill & Honest ETA Calculation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 1,\n  \"items\": [\n    {\n      \"menuItemId\": 1,\n      \"quantity\": 2,\n      \"addonIds\": [1]\n    }\n  ],\n  \"couponCode\": \"FOOD50\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/cart/calculate", "host": ["{{baseUrl}}"], "path": ["cart", "calculate"] }
+          }
+        },
+        {
+          "name": "List Active Coupons",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/cart/coupons", "host": ["{{baseUrl}}"], "path": ["cart", "coupons"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders & State Machine",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 1,\n  \"deliveryAddressId\": 1,\n  \"paymentMode\": \"COD\",\n  \"couponCode\": \"FOOD50\",\n  \"specialInstructions\": \"Ring the bell\",\n  \"items\": [\n    {\n      \"menuItemId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "Transition Order Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\",\n  \"reason\": \"Kitchen confirmed\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders/1/status", "host": ["{{baseUrl}}"], "path": ["orders", "1", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Disputes & Refunds",
+      "item": [
+        {
+          "name": "Raise Instant Dispute",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1,\n  \"issueType\": \"MISSING_ITEM\",\n  \"description\": \"Item was missing from sealed package\",\n  \"requestedRefundAmount\": 50.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/disputes", "host": ["{{baseUrl}}"], "path": ["disputes"] }
+          }
+        }
+      ]
+    }
+  ]
+}

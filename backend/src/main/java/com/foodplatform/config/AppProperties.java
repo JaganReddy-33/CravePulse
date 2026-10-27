@@ -1,0 +1,103 @@
+package com.foodplatform.config;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.util.Properties;
+
+public final class AppProperties {
+
+    private static final Logger logger = LoggerFactory.getLogger(AppProperties.class);
+    private static final Properties props = new Properties();
+
+    static {
+        try (InputStream is = AppProperties.class.getClassLoader().getResourceAsStream("application.properties")) {
+            if (is != null) {
+                props.load(is);
+                logger.info("Loaded configuration from application.properties");
+            } else {
+                logger.warn("application.properties not found on classpath, relying on environment variables");
+            }
+        } catch (Exception e) {
+            logger.warn("Could not load application.properties: {}", e.getMessage());
+        }
+    }
+
+    private AppProperties() {
+    }
+
+    private static String getProperty(String key, String envVar, String defaultValue) {
+        String val = System.getenv(envVar);
+        if (val != null && !val.isBlank()) {
+            return val;
+        }
+        val = props.getProperty(key);
+        if (val != null && !val.isBlank()) {
+            return val;
+        }
+        return defaultValue;
+    }
+
+    public static String getDbUrl() {
+        return getProperty("db.url", "DB_URL",
+                "jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8");
+    }
+
+    public static String getDbUser() {
+        return getProperty("db.user", "DB_USER", "root");
+    }
+
+    public static String getDbPassword() {
+        String pass = System.getenv("DB_PASSWORD");
+        if (pass == null) {
+            pass = props.getProperty("db.password");
+        }
+        return (pass != null) ? pass : "Jagan@1432";
+    }
+
+    public static String getJwtSecret() {
+        return getProperty("jwt.secret", "JWT_SECRET",
+                "CravePulseSuperSecureProductionSecretKeyForSigning2026JaganmohanReddy!");
+    }
+
+    public static long getJwtExpirationMillis() {
+        String val = getProperty("jwt.expirationMillis", "JWT_EXPIRATION_MILLIS", "86400000");
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 86400000L;
+        }
+    }
+
+    public static long getRefreshTokenExpirationMillis() {
+        String val = getProperty("jwt.refreshTokenExpirationMillis", "JWT_REFRESH_EXPIRATION_MILLIS", "604800000");
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            return 604800000L;
+        }
+    }
+
+    public static int getServerPort() {
+        String portStr = getProperty("server.port", "PORT", "8081");
+        try {
+            return Integer.parseInt(portStr);
+        } catch (NumberFormatException e) {
+            return 8081;
+        }
+    }
+
+    public static String getCorsAllowedOrigins() {
+        return getProperty("cors.allowedOrigins", "CORS_ORIGINS",
+                "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174");
+    }
+
+    public static String getRazorpayKeyId() {
+        return getProperty("razorpay.keyId", "RAZORPAY_KEY_ID", "rzp_test_cravepulse_demo2026");
+    }
+
+    public static String getRazorpayKeySecret() {
+        return getProperty("razorpay.keySecret", "RAZORPAY_KEY_SECRET", "rzp_secret_cravepulse_demo_secure987654");
+    }
+}
