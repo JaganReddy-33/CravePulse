@@ -103,4 +103,17 @@ public final class AppProperties {
     public static String getRazorpayKeySecret() {
         return getProperty("razorpay.keySecret", "RAZORPAY_KEY_SECRET", "rzp_secret_cravepulse_demo_secure987654");
     }
+
+    public static String getRazorpayWebhookSecret() {
+        return getProperty("razorpay.webhookSecret", "RAZORPAY_WEBHOOK_SECRET", "rzp_webhook_secret_cravepulse2026_demo");
+    }
+
+    public static java.math.BigDecimal getCodMaxLimit() {
+        String val = getProperty("payment.cod.maxLimit", "PAYMENT_COD_MAX_LIMIT", "2000.00");
+        try {
+            return new java.math.BigDecimal(val.trim());
+        } catch (Exception e) {
+            return new java.math.BigDecimal("2000.00");
+        }
+    }
 }

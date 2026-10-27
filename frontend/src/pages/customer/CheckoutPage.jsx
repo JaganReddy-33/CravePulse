@@ -21,7 +21,7 @@ const CheckoutPage = () => {
 
   const [addresses, setAddresses] = useState(DEFAULT_ADDRESSES);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
-  const [paymentMode, setPaymentMode] = useState('UPI');
+  const [paymentMode, setPaymentMode] = useState('RAZORPAY'); // 'RAZORPAY', 'WALLET', 'COD'
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
@@ -30,12 +30,25 @@ const CheckoutPage = () => {
   const [error, setError] = useState('');
   const [inputCoupon, setInputCoupon] = useState('');
 
-  // Razorpay payment simulation modal
+  // Real Payment configs & Wallet balance
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [codMaxLimit, setCodMaxLimit] = useState(2000);
+  const [razorpayKeyId, setRazorpayKeyId] = useState('rzp_test_cravepulse_demo2026');
+  const [createdOrderSession, setCreatedOrderSession] = useState(null);
+
+  // Razorpay payment simulation modal fallback
   const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [paymentMethodTab, setPaymentMethodTab] = useState('upi'); // 'upi', 'card', 'netbanking'
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
+    api.get('/payments/config').then((res) => {
+      if (res.success && res.data) {
+        if (res.data.codMaxLimit) setCodMaxLimit(Number(res.data.codMaxLimit));
+        if (res.data.razorpayKeyId) setRazorpayKeyId(res.data.razorpayKeyId);
+      }
+    }).catch(() => {});
+
     if (user) {
       api.get('/auth/addresses').then((res) => {
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
@@ -43,11 +56,22 @@ const CheckoutPage = () => {
           const def = res.data.find(a => a.default) || res.data[0];
           setSelectedAddressId(def.id);
         }
-      }).catch(() => {
-        // Keep default addresses
-      });
+      }).catch(() => {});
+
+      api.get('/wallet').then((res) => {
+        if (res.success && res.data && res.data.balance !== undefined) {
+          setWalletBalance(Number(res.data.balance));
+        }
+      }).catch(() => {});
     }
   }, [user]);
+
+  const isCodDisabled = (billDetails?.totalAmount || 0) > codMaxLimit;
+  useEffect(() => {
+    if (isCodDisabled && paymentMode === 'COD') {
+      setPaymentMode('RAZORPAY');
+    }
+  }, [isCodDisabled, paymentMode]);
 
   if (!cart.restaurantId || cart.items.length === 0) {
     return (
@@ -75,26 +99,37 @@ const CheckoutPage = () => {
     }
     setError('');
 
-    // If Direct UPI Intent selected
-    if (paymentMode === 'UPI') {
-      setShowUpiDrawer(true);
+    if (!user) {
+      setError('Please sign in to place your order.');
+      navigate('/customer/auth');
       return;
     }
 
-    // If Razorpay online payment selected, open sandbox payment modal first
-    if (paymentMode === 'RAZORPAY') {
-      setShowRazorpayModal(true);
+    if (paymentMode === 'WALLET') {
+      if (walletBalance < (billDetails?.totalAmount || 0)) {
+        setError(`Insufficient wallet balance. You need ₹${((billDetails?.totalAmount || 0) - walletBalance).toFixed(2)} more. Please top up your wallet or choose Razorpay.`);
+        return;
+      }
+      executeOrderCreation('WALLET', 'PAID');
       return;
     }
 
-    // Direct COD submission
-    executeOrderCreation('COD', 'PENDING');
+    if (paymentMode === 'COD') {
+      if (isCodDisabled) {
+        setError(`Cash on delivery is disabled for orders over ₹${codMaxLimit}.`);
+        return;
+      }
+      executeOrderCreation('COD', 'PENDING');
+      return;
+    }
+
+    // RAZORPAY mode
+    executeOrderCreation('RAZORPAY', 'PENDING');
   };
 
   const executeOrderCreation = async (mode, payStatus) => {
     setSubmitting(true);
     try {
-      // Ensure user session exists
       if (!user) {
         setError('Please sign in to place your order.');
         setSubmitting(false);
@@ -119,39 +154,101 @@ const CheckoutPage = () => {
 
       const res = await api.post('/orders', payload);
       if (res.success && res.data) {
+        const orderNumber = res.data.orderNumber;
+
+        // If Razorpay mode and active session returned
+        if (mode === 'RAZORPAY' && res.data.paymentSession) {
+          const session = res.data.paymentSession;
+          if (typeof window !== 'undefined' && window.Razorpay) {
+            const options = {
+              key: session.keyId || razorpayKeyId,
+              amount: session.amount,
+              currency: session.currency || 'INR',
+              name: 'CravePulse',
+              description: `Order #${orderNumber}`,
+              order_id: session.razorpayOrderId,
+              prefill: {
+                name: session.customerName || user.fullName || 'Customer',
+                email: session.customerEmail || user.email || '',
+                contact: session.customerPhone || user.phone || '',
+              },
+              theme: { color: '#ff5722' },
+              handler: async function (resp) {
+                setSubmitting(true);
+                try {
+                  await api.post('/payments/verify', {
+                    razorpayOrderId: resp.razorpay_order_id,
+                    razorpayPaymentId: resp.razorpay_payment_id,
+                    razorpaySignature: resp.razorpay_signature,
+                  });
+                  confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+                  clearCart();
+                  navigate(`/orders/${orderNumber}`);
+                } catch (vErr) {
+                  setError(vErr.message || 'Payment signature verification failed');
+                  navigate(`/orders/${orderNumber}`);
+                } finally {
+                  setSubmitting(false);
+                }
+              },
+              modal: {
+                ondismiss: function () {
+                  clearCart();
+                  navigate(`/orders/${orderNumber}`);
+                }
+              }
+            };
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+            setSubmitting(false);
+            return;
+          } else {
+            // Fallback modal if script blocked
+            setCreatedOrderSession({ orderNumber, session });
+            setShowRazorpayModal(true);
+            setSubmitting(false);
+            return;
+          }
+        }
+
         confetti({
           particleCount: 120,
           spread: 75,
           origin: { y: 0.6 },
         });
         clearCart();
-        navigate(`/orders/${res.data.orderNumber}`);
+        navigate(`/orders/${orderNumber}`);
       } else {
         throw new Error(res.error || 'Failed to place order');
       }
     } catch (err) {
-      // If server error occurs in offline test mode, create realistic demo order
-      console.warn('Backend order placement caught error, generating demo order', err);
-      const demoOrderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-      confetti({
-        particleCount: 120,
-        spread: 75,
-        origin: { y: 0.6 },
-      });
-      clearCart();
-      navigate(`/orders/${demoOrderNumber}`);
+      console.error('Order placement failed:', err);
+      setError(err.message || 'Failed to place order. Please check the details and retry.');
     } finally {
       setSubmitting(false);
-      setShowRazorpayModal(false);
     }
   };
 
-  const handleCompleteRazorpay = () => {
+  const handleCompleteRazorpay = async () => {
+    if (!createdOrderSession) return;
     setProcessingPayment(true);
-    setTimeout(() => {
+    try {
+      const { orderNumber, session } = createdOrderSession;
+      const simPaymentId = 'pay_' + Math.random().toString(36).substring(2, 14);
+      await api.post('/payments/verify', {
+        razorpayOrderId: session.razorpayOrderId,
+        razorpayPaymentId: simPaymentId,
+        razorpaySignature: 'simulated_valid_sig',
+      });
+      confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+      clearCart();
+      setShowRazorpayModal(false);
+      navigate(`/orders/${orderNumber}`);
+    } catch (err) {
+      setError(err.message || 'Payment verification failed');
+    } finally {
       setProcessingPayment(false);
-      executeOrderCreation('RAZORPAY', 'PAID');
-    }, 1200);
+    }
   };
 
   return (
@@ -260,63 +357,9 @@ const CheckoutPage = () => {
             </h5>
 
             <div className="list-group">
-              {/* Option A: Direct Real-Time UPI */}
+              {/* Option 1: Razorpay Online Payment */}
               <label 
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 border ${paymentMode === 'UPI' ? 'border-primary bg-primary-subtle' : ''}`} 
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="d-flex align-items-start gap-3">
-                  <input
-                    type="radio"
-                    name="payMode"
-                    className="form-check-input mt-1"
-                    checked={paymentMode === 'UPI'}
-                    onChange={() => setPaymentMode('UPI')}
-                  />
-                  <div>
-                    <div className="fw-bold text-dark d-flex flex-wrap align-items-center gap-2">
-                      <span>⚡ Instant UPI Fast-Pay (Google Pay, PhonePe, Paytm, CRED & VPA)</span>
-                      <span className="badge bg-success-subtle text-success border border-success-subtle small" style={{ fontSize: 10 }}>RECOMMENDED</span>
-                    </div>
-                    <small className="text-muted d-block mt-0.5">
-                      1-Tap mobile app intent launch or dynamic QR code. 100% direct instant bank settlement.
-                    </small>
-                    <div className="d-flex flex-wrap gap-1.5 mt-2">
-                      <span className="badge bg-white text-dark border px-2 py-1 shadow-sm font-semibold" style={{ fontSize: 11 }}>GPay</span>
-                      <span className="badge text-white px-2 py-1 shadow-sm font-semibold" style={{ background: '#5f259f', fontSize: 11 }}>PhonePe</span>
-                      <span className="badge text-dark px-2 py-1 shadow-sm font-semibold" style={{ background: '#00b9f5', fontSize: 11 }}>Paytm</span>
-                      <span className="badge bg-dark text-white px-2 py-1 shadow-sm font-semibold" style={{ fontSize: 11 }}>CRED</span>
-                      <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: 11 }}>Any BHIM VPA</span>
-                    </div>
-                  </div>
-                </div>
-                <span className="fs-3 flex-shrink-0">⚡</span>
-              </label>
-
-              {/* Option B: Cash on Delivery */}
-              <label 
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 border ${paymentMode === 'COD' ? 'border-primary bg-primary-subtle' : ''}`} 
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="d-flex align-items-center gap-3">
-                  <input
-                    type="radio"
-                    name="payMode"
-                    className="form-check-input mt-0"
-                    checked={paymentMode === 'COD'}
-                    onChange={() => setPaymentMode('COD')}
-                  />
-                  <div>
-                    <div className="fw-bold text-dark">Cash on Delivery (COD)</div>
-                    <small className="text-muted">Pay in cash or scan delivery rider's dynamic UPI QR at doorstep</small>
-                  </div>
-                </div>
-                <span className="fs-3 flex-shrink-0">💵</span>
-              </label>
-
-              {/* Option C: Razorpay Sandbox */}
-              <label 
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 border ${paymentMode === 'RAZORPAY' ? 'border-primary bg-primary-subtle' : ''}`} 
+                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 border ${paymentMode === 'RAZORPAY' ? 'border-primary bg-primary-subtle' : ''}`} 
                 style={{ cursor: 'pointer' }}
               >
                 <div className="d-flex align-items-center gap-3">
@@ -328,11 +371,79 @@ const CheckoutPage = () => {
                     onChange={() => setPaymentMode('RAZORPAY')}
                   />
                   <div>
-                    <div className="fw-bold text-dark">Instant Online Payment (Razorpay Sandbox)</div>
-                    <small className="text-muted">Debit/Credit Cards (Visa, Mastercard, RuPay), NetBanking, and Wallets</small>
+                    <div className="fw-bold text-dark d-flex flex-wrap align-items-center gap-2">
+                      <span>Online Payment (Razorpay)</span>
+                      <span className="badge bg-success-subtle text-success border border-success-subtle small">100% SECURE</span>
+                    </div>
+                    <small className="text-muted d-block mt-0.5">
+                      UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards (Visa, Mastercard, RuPay), NetBanking
+                    </small>
                   </div>
                 </div>
                 <span className="fs-3 flex-shrink-0">💳</span>
+              </label>
+
+              {/* Option 2: CravePulse Wallet */}
+              <label 
+                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 border ${paymentMode === 'WALLET' ? 'border-primary bg-primary-subtle' : ''}`} 
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payMode"
+                    className="form-check-input mt-0"
+                    checked={paymentMode === 'WALLET'}
+                    onChange={() => setPaymentMode('WALLET')}
+                  />
+                  <div>
+                    <div className="fw-bold text-dark d-flex align-items-center gap-2">
+                      <span>CravePulse Wallet</span>
+                      <span className="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">
+                        Available: ₹{walletBalance.toFixed(2)}
+                      </span>
+                    </div>
+                    <small className="text-muted d-block mt-0.5">
+                      {walletBalance >= (billDetails?.totalAmount || 0)
+                        ? '1-Click instant payment debit with 0% gateway charges'
+                        : `Insufficient balance (₹${((billDetails?.totalAmount || 0) - walletBalance).toFixed(2)} needed). Please top up or pay via Razorpay.`}
+                    </small>
+                  </div>
+                </div>
+                <span className="fs-3 flex-shrink-0">👛</span>
+              </label>
+
+              {/* Option 3: Cash on Delivery (COD) */}
+              <label 
+                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 rounded-3 border ${paymentMode === 'COD' ? 'border-primary bg-primary-subtle' : ''} ${isCodDisabled ? 'opacity-50' : ''}`} 
+                style={{ cursor: isCodDisabled ? 'not-allowed' : 'pointer' }}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payMode"
+                    className="form-check-input mt-0"
+                    disabled={isCodDisabled}
+                    checked={paymentMode === 'COD'}
+                    onChange={() => !isCodDisabled && setPaymentMode('COD')}
+                  />
+                  <div>
+                    <div className="fw-bold text-dark d-flex align-items-center gap-2">
+                      <span>Cash on Delivery (COD)</span>
+                      {isCodDisabled && (
+                        <span className="badge bg-danger-subtle text-danger border border-danger-subtle small">
+                          Disabled (Cart &gt; ₹{codMaxLimit})
+                        </span>
+                      )}
+                    </div>
+                    <small className="text-muted d-block mt-0.5">
+                      {isCodDisabled
+                        ? `COD is restricted to orders up to ₹${codMaxLimit}. Please select Online Payment or Wallet.`
+                        : "Pay in cash or scan delivery captain's dynamic UPI QR code at doorstep"}
+                    </small>
+                  </div>
+                </div>
+                <span className="fs-3 flex-shrink-0">💵</span>
               </label>
             </div>
           </div>

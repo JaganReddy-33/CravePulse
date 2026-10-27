@@ -105,6 +105,14 @@ public class ServerMain {
         Tomcat.addServlet(ctx, "InvoiceServlet", new InvoiceServlet()).setAsyncSupported(true);
         ctx.addServletMappingDecoded("/api/invoices/*", "InvoiceServlet");
 
+        Tomcat.addServlet(ctx, "PaymentServlet", new PaymentServlet()).setAsyncSupported(true);
+        ctx.addServletMappingDecoded("/api/payments/*", "PaymentServlet");
+        ctx.addServletMappingDecoded("/api/payments", "PaymentServlet");
+
+        Tomcat.addServlet(ctx, "WalletServlet", new WalletServlet()).setAsyncSupported(true);
+        ctx.addServletMappingDecoded("/api/wallet/*", "WalletServlet");
+        ctx.addServletMappingDecoded("/api/wallet", "WalletServlet");
+
         try {
             logger.info("Starting FoodPlatform Embedded Tomcat on http://localhost:{}", port);
             tomcat.start();

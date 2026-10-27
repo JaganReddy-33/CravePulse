@@ -68,6 +68,20 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public User findByIdWithLock(Connection conn, long id) throws SQLException {
+        String sql = "SELECT * FROM users WHERE id = ? FOR UPDATE";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUser(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Long createUser(User user) {
         String sql = "INSERT INTO users (full_name, email, phone, password_hash, role, status, avatar_url, wallet_balance) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";

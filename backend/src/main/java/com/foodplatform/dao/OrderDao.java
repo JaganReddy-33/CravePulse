@@ -19,6 +19,8 @@ public interface OrderDao {
 
     void updateOrderStatus(Connection conn, long orderId, String newStatus, Timestamp actualDeliveryAt) throws SQLException;
 
+    void updateOrderPaymentStatus(Connection conn, long orderId, String paymentStatus) throws SQLException;
+
     void assignRiderToOrder(Connection conn, long orderId, long riderId) throws SQLException;
 
     void recordOrderEvent(Connection conn, OrderEvent event) throws SQLException;

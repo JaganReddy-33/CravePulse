@@ -12,6 +12,7 @@ import com.foodplatform.model.OrderItem;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.DispatchService;
 import com.foodplatform.service.OrderStateMachineService;
+import com.foodplatform.service.PaymentService;
 import com.foodplatform.service.PricingService;
 import com.foodplatform.util.JsonUtil;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
@@ -32,6 +33,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,6 +49,7 @@ public class OrderServlet extends BaseServlet {
     private final PricingService pricingService = new PricingService();
     private final OrderStateMachineService stateMachine = new OrderStateMachineService();
     private final DispatchService dispatchService = new DispatchService();
+    private final PaymentService paymentService = new PaymentService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
 
     @Override
@@ -109,6 +112,11 @@ public class OrderServlet extends BaseServlet {
                 String couponCode = body.has("couponCode") && !body.get("couponCode").isJsonNull() ? body.get("couponCode").getAsString() : null;
                 PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, inputItems, null, null, couponCode);
 
+                // Enforce COD rules
+                if ("COD".equalsIgnoreCase(paymentMode)) {
+                    paymentService.validateCodOrder(calc.totalAmount);
+                }
+
                 String orderNumber = "ORD-" + DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now()) + "-" + (int) (1000 + Math.random() * 9000);
                 String deliveryOtp = String.format("%04d", (int) (1000 + Math.random() * 9000));
 
@@ -128,7 +136,7 @@ public class OrderServlet extends BaseServlet {
                 order.setGstTax(calc.gstTax);
                 order.setTotalAmount(calc.totalAmount);
                 order.setPaymentMode(paymentMode);
-                order.setPaymentStatus("COD".equalsIgnoreCase(paymentMode) ? "PENDING" : "PAID");
+                order.setPaymentStatus("PENDING");
                 order.setIdempotencyKey(idempotencyKey);
                 order.setEtaMinMinutes(calc.etaMinMinutes);
                 order.setEtaMaxMinutes(calc.etaMaxMinutes);
@@ -177,6 +185,14 @@ public class OrderServlet extends BaseServlet {
                     }
                 }
 
+                // Process payment mode if immediate
+                Map<String, Object> paymentSession = null;
+                if ("WALLET".equalsIgnoreCase(paymentMode)) {
+                    paymentService.processWalletPayment(orderId, customerId);
+                } else if ("RAZORPAY".equalsIgnoreCase(paymentMode)) {
+                    paymentSession = paymentService.createRazorpayOrder(orderId, customerId, idempotencyKey);
+                }
+
                 Order created = orderDao.findById(orderId);
 
                 // Real-time broadcasts
@@ -193,7 +209,21 @@ public class OrderServlet extends BaseServlet {
                     }
                 }).start();
 
-                JsonUtil.sendSuccess(res, 201, "Order placed successfully", created);
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("id", created.getId());
+                responseData.put("orderId", created.getId());
+                responseData.put("orderNumber", created.getOrderNumber());
+                responseData.put("status", created.getStatus());
+                responseData.put("paymentMode", created.getPaymentMode());
+                responseData.put("paymentStatus", created.getPaymentStatus());
+                responseData.put("totalAmount", created.getTotalAmount());
+                responseData.put("deliveryOtp", created.getDeliveryOtp());
+                responseData.put("order", created);
+                if (paymentSession != null) {
+                    responseData.put("paymentSession", paymentSession);
+                }
+
+                JsonUtil.sendSuccess(res, 201, "Order placed successfully", responseData);
             } catch (Exception e) {
                 logger.error("Error creating order", e);
                 JsonUtil.sendError(res, 400, e.getMessage());
@@ -218,7 +248,7 @@ public class OrderServlet extends BaseServlet {
                 return;
             }
 
-            String targetStatus = body.get("status").getAsString();
+            String targetStatus = body.get("status").getAsString().toUpperCase().trim();
             String reason = body.has("reason") && !body.get("reason").isJsonNull() ? body.get("reason").getAsString() : null;
             String deliveryOtp = body.has("deliveryOtp") && !body.get("deliveryOtp").isJsonNull() ? body.get("deliveryOtp").getAsString() : null;
             Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : null;
@@ -226,6 +256,16 @@ public class OrderServlet extends BaseServlet {
 
             try {
                 Order updated = stateMachine.transition(orderId, targetStatus, userId, role, deliveryOtp, reason, lat, lng);
+
+                // Auto-refund trigger on cancellation or rejection
+                if ("CANCELLED".equals(targetStatus) || "REJECTED".equals(targetStatus)) {
+                    try {
+                        paymentService.processRefund(orderId, reason != null ? reason : "Order " + targetStatus);
+                    } catch (Exception re) {
+                        logger.warn("Automatic refund trigger notice for order {}: {}", orderId, re.getMessage());
+                    }
+                }
+
                 JsonUtil.sendSuccess(res, 200, "Order transitioned to " + targetStatus, updated);
             } catch (IllegalArgumentException | IllegalStateException e) {
                 JsonUtil.sendError(res, 400, e.getMessage());

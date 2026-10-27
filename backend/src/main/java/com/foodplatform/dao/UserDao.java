@@ -17,6 +17,8 @@ public interface UserDao {
 
     User findById(long id);
 
+    User findByIdWithLock(Connection conn, long id) throws SQLException;
+
     Long createUser(User user);
 
     void updateFailedAttempts(long userId, int attempts, Timestamp lockedUntil);

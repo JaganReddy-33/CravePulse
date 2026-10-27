@@ -70,41 +70,44 @@ const OrderTracking = () => {
         return;
       }
     } catch (e) {
-      console.warn('API error fetching order, using live simulated tracking order', e);
+      console.warn('API error fetching order:', e);
     } finally {
       setLoading(false);
     }
 
-    // Resilient simulated live tracking order
-    setOrder(prev => prev || {
-      id: 99,
-      orderNumber: orderNumber,
-      restaurantName: 'Spice Symphony & Grill (Chef Lohith)',
-      restaurantPhone: '+91 98490 11223',
-      restaurantLat: 12.9715987,
-      restaurantLng: 77.6350000,
-      deliveryAddress: 'Apartment 402, Sunshine Heights, 12th Main Road, Indiranagar',
-      deliveryLat: 12.9783692,
-      deliveryLng: 77.6408356,
-      status: 'PICKED_UP',
-      subtotal: 560.00,
-      couponDiscount: 50.00,
-      packagingFee: 15.00,
-      deliveryFee: 35.00,
-      platformFee: 5.00,
-      gstTax: 26.25,
-      totalAmount: 591.25,
-      paymentMode: 'COD',
-      paymentStatus: 'PENDING',
-      etaMinMinutes: 18,
-      etaMaxMinutes: 28,
-      riderName: 'Prasad Rao',
-      riderPhone: '+91 98490 56789',
-      items: [
-        { id: 1, itemName: 'Hyderabadi Chicken Biryani', quantity: 1, totalPrice: 320.00, variantName: 'Half (1 Person)' },
-        { id: 2, itemName: 'Paneer Butter Masala', quantity: 1, totalPrice: 240.00 }
-      ]
-    });
+    // Only fallback to simulated preview if demo mode is explicitly enabled
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      setOrder(prev => prev || {
+        id: 99,
+        orderNumber: orderNumber,
+        restaurantName: 'Spice Symphony & Grill',
+        restaurantPhone: '+91 98490 11223',
+        restaurantLat: 12.9715987,
+        restaurantLng: 77.6350000,
+        deliveryAddress: 'Apartment 402, Sunshine Heights, 12th Main Road, Indiranagar',
+        deliveryLat: 12.9783692,
+        deliveryLng: 77.6408356,
+        status: 'PICKED_UP',
+        subtotal: 560.00,
+        couponDiscount: 50.00,
+        packagingFee: 15.00,
+        deliveryFee: 35.00,
+        platformFee: 5.00,
+        gstTax: 26.25,
+        totalAmount: 591.25,
+        paymentMode: 'COD',
+        paymentStatus: 'PENDING',
+        deliveryOtp: '4829',
+        etaMinMinutes: 18,
+        etaMaxMinutes: 28,
+        riderName: 'Delivery Captain',
+        riderPhone: '+91 98490 56789',
+        items: [
+          { id: 1, itemName: 'Hyderabadi Chicken Biryani', quantity: 1, totalPrice: 320.00, variantName: 'Half (1 Person)' },
+          { id: 2, itemName: 'Paneer Butter Masala', quantity: 1, totalPrice: 240.00 }
+        ]
+      });
+    }
   };
 
   useEffect(() => {
@@ -262,7 +265,7 @@ const OrderTracking = () => {
           >
             <i className="bi bi-printer me-1"></i> Tax Invoice
           </Link>
-          {['PLACED', 'ACCEPTED', 'PREPARING'].includes(order.status) && (
+          {['PLACED', 'ACCEPTED'].includes(order.status) && (
             <button
               className="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold"
               onClick={() => setShowCancelModal(true)}
@@ -278,6 +281,24 @@ const OrderTracking = () => {
           </button>
         </div>
       </div>
+
+      {/* 4-Digit Delivery OTP Card */}
+      {order.deliveryOtp && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+        <div className="card border-0 rounded-4 shadow-sm p-3 mb-4 bg-primary-subtle text-primary border border-primary-subtle d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+          <div className="d-flex align-items-center gap-3">
+            <div className="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm" style={{ width: 44, height: 44 }}>
+              <i className="bi bi-key-fill fs-5"></i>
+            </div>
+            <div>
+              <div className="small fw-semibold text-muted text-uppercase">Delivery Verification OTP</div>
+              <small className="text-muted">Share this code with your delivery captain upon package handover</small>
+            </div>
+          </div>
+          <div className="badge bg-white text-primary border border-primary-subtle fs-4 font-monospace px-3 py-1 shadow-sm">
+            {order.deliveryOtp}
+          </div>
+        </div>
+      )}
 
       {order.status === 'CANCELLED' && (
         <div className="alert alert-danger border-danger rounded-4 p-4 mb-4 shadow-sm">

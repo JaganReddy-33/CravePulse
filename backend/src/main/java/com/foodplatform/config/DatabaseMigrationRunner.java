@@ -20,7 +20,8 @@ public class DatabaseMigrationRunner {
     private static final String[] MIGRATION_FILES = {
             "V1__init.sql",
             "V2__seed.sql",
-            "V3__phase1_security_and_otp.sql"
+            "V3__phase1_security_and_otp.sql",
+            "V4__phase2_payments_wallet.sql"
     };
 
     public static void runMigrations() {

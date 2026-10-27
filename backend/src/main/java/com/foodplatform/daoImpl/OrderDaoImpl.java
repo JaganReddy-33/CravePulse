@@ -108,6 +108,16 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
+    public void updateOrderPaymentStatus(Connection conn, long orderId, String paymentStatus) throws SQLException {
+        String sql = "UPDATE orders SET payment_status = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, paymentStatus);
+            ps.setLong(2, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
     public void assignRiderToOrder(Connection conn, long orderId, long riderId) throws SQLException {
         String sql = "UPDATE orders SET rider_id = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
