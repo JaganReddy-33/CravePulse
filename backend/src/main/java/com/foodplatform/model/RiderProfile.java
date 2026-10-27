@@ -77,10 +77,20 @@ public class RiderProfile {
     public void setActiveOrderId(Long activeOrderId) { this.activeOrderId = activeOrderId; }
 
     public BigDecimal getWalletBalance() { return walletBalance; }
-    public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
+    public void setWalletBalance(BigDecimal walletBalance) {
+        if (walletBalance != null && walletBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Rider walletBalance cannot be negative: " + walletBalance);
+        }
+        this.walletBalance = walletBalance;
+    }
 
     public BigDecimal getCashInHand() { return cashInHand != null ? cashInHand : BigDecimal.ZERO; }
-    public void setCashInHand(BigDecimal cashInHand) { this.cashInHand = cashInHand; }
+    public void setCashInHand(BigDecimal cashInHand) {
+        if (cashInHand != null && cashInHand.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Rider cashInHand cannot be negative: " + cashInHand);
+        }
+        this.cashInHand = cashInHand;
+    }
 
     public BigDecimal getMaxCashLimit() { return maxCashLimit != null ? maxCashLimit : BigDecimal.valueOf(5000.00); }
     public void setMaxCashLimit(BigDecimal maxCashLimit) { this.maxCashLimit = maxCashLimit; }

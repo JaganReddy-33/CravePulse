@@ -61,4 +61,6 @@ public interface RiderDao {
     void updateKyc(long riderId, boolean approved);
 
     List<RiderProfile> listAllRiders(int limit, int offset);
+
+    int purgeOldLocationLogs(int retentionDays);
 }

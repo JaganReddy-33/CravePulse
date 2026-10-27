@@ -58,10 +58,20 @@ public class MenuItem {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public BigDecimal getDineInPrice() { return dineInPrice; }
-    public void setDineInPrice(BigDecimal dineInPrice) { this.dineInPrice = dineInPrice; }
+    public void setDineInPrice(BigDecimal dineInPrice) {
+        if (dineInPrice != null && dineInPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("dineInPrice cannot be negative: " + dineInPrice);
+        }
+        this.dineInPrice = dineInPrice;
+    }
 
     public BigDecimal getPlatformPrice() { return platformPrice; }
-    public void setPlatformPrice(BigDecimal platformPrice) { this.platformPrice = platformPrice; }
+    public void setPlatformPrice(BigDecimal platformPrice) {
+        if (platformPrice != null && platformPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("platformPrice cannot be negative: " + platformPrice);
+        }
+        this.platformPrice = platformPrice;
+    }
 
     public boolean isVeg() { return isVeg; }
     public void setVeg(boolean veg) { isVeg = veg; }

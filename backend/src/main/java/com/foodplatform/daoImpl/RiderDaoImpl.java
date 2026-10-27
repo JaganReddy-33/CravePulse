@@ -731,4 +731,19 @@ public class RiderDaoImpl implements RiderDao {
         r.setAvatarUrl(rs.getString("avatar_url"));
         return r;
     }
+
+    @Override
+    public int purgeOldLocationLogs(int retentionDays) {
+        String sql = "DELETE FROM rider_location_logs WHERE logged_at < NOW() - INTERVAL ? DAY";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, Math.max(1, retentionDays));
+            int deleted = ps.executeUpdate();
+            logger.info("Purged {} expired rider location logs older than {} days", deleted, retentionDays);
+            return deleted;
+        } catch (SQLException e) {
+            logger.error("Error purging old rider location logs with retention days {}", retentionDays, e);
+            return 0;
+        }
+    }
 }

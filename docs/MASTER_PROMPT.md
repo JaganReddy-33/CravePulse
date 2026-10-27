@@ -248,7 +248,7 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
 
 ## Phase 10 – Database
 
-- [ ] **Migrations for:**
+- [x] **Migrations for:**
   - order OTP
   - `order_messages`
   - `favorites`
@@ -261,8 +261,8 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
   - `idempotency_keys`
   - `delivery_zones`
   - proper indexes: orders by customer/`created_at`, dispatch by status/`created_at`, notifications by user/`is_read`
-- [ ] Add CHECK-style validation in code for money columns (non-negative); foreign keys with intentional `ON DELETE` behaviour (**do not cascade-delete** orders, payments or ledger rows); a retention rule for `rider_location_logs`.
-- [ ] **Seed data:** separate `seed-demo.sql` (not applied in production) with 3 cities, 25+ restaurants with real menus, riders, coupons, and a few historical orders so analytics are meaningful. Keep passwords out of README tables.
+- [x] Add CHECK-style validation in code for money columns (non-negative); foreign keys with intentional `ON DELETE` behaviour (**do not cascade-delete** orders, payments or ledger rows); a retention rule for `rider_location_logs`.
+- [x] **Seed data:** separate `seed-demo.sql` (not applied in production) with 3 cities, 25+ restaurants with real menus, riders, coupons, and a few historical orders so analytics are meaningful. Keep passwords out of README tables.
 
 ---
 

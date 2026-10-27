@@ -23,7 +23,12 @@ public class WalletTransaction {
     public void setUserId(Long userId) { this.userId = userId; }
 
     public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public void setAmount(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Transaction amount cannot be negative: " + amount);
+        }
+        this.amount = amount;
+    }
 
     public String getTransactionType() { return transactionType; }
     public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
@@ -35,7 +40,12 @@ public class WalletTransaction {
     public void setReferenceOrderId(Long referenceOrderId) { this.referenceOrderId = referenceOrderId; }
 
     public BigDecimal getBalanceAfter() { return balanceAfter; }
-    public void setBalanceAfter(BigDecimal balanceAfter) { this.balanceAfter = balanceAfter; }
+    public void setBalanceAfter(BigDecimal balanceAfter) {
+        if (balanceAfter != null && balanceAfter.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("balanceAfter cannot be negative: " + balanceAfter);
+        }
+        this.balanceAfter = balanceAfter;
+    }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

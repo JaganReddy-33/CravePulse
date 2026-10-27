@@ -75,32 +75,62 @@ public class Order {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    private static void checkNonNegative(BigDecimal amount, String fieldName) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(fieldName + " cannot be negative: " + amount);
+        }
+    }
+
     public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public void setSubtotal(BigDecimal subtotal) {
+        checkNonNegative(subtotal, "subtotal");
+        this.subtotal = subtotal;
+    }
 
     public BigDecimal getRestaurantDiscount() { return restaurantDiscount; }
-    public void setRestaurantDiscount(BigDecimal restaurantDiscount) { this.restaurantDiscount = restaurantDiscount; }
+    public void setRestaurantDiscount(BigDecimal restaurantDiscount) {
+        checkNonNegative(restaurantDiscount, "restaurantDiscount");
+        this.restaurantDiscount = restaurantDiscount;
+    }
 
     public Long getCouponId() { return couponId; }
     public void setCouponId(Long couponId) { this.couponId = couponId; }
 
     public BigDecimal getCouponDiscount() { return couponDiscount; }
-    public void setCouponDiscount(BigDecimal couponDiscount) { this.couponDiscount = couponDiscount; }
+    public void setCouponDiscount(BigDecimal couponDiscount) {
+        checkNonNegative(couponDiscount, "couponDiscount");
+        this.couponDiscount = couponDiscount;
+    }
 
     public BigDecimal getPackagingFee() { return packagingFee; }
-    public void setPackagingFee(BigDecimal packagingFee) { this.packagingFee = packagingFee; }
+    public void setPackagingFee(BigDecimal packagingFee) {
+        checkNonNegative(packagingFee, "packagingFee");
+        this.packagingFee = packagingFee;
+    }
 
     public BigDecimal getDeliveryFee() { return deliveryFee; }
-    public void setDeliveryFee(BigDecimal deliveryFee) { this.deliveryFee = deliveryFee; }
+    public void setDeliveryFee(BigDecimal deliveryFee) {
+        checkNonNegative(deliveryFee, "deliveryFee");
+        this.deliveryFee = deliveryFee;
+    }
 
     public BigDecimal getPlatformFee() { return platformFee; }
-    public void setPlatformFee(BigDecimal platformFee) { this.platformFee = platformFee; }
+    public void setPlatformFee(BigDecimal platformFee) {
+        checkNonNegative(platformFee, "platformFee");
+        this.platformFee = platformFee;
+    }
 
     public BigDecimal getGstTax() { return gstTax; }
-    public void setGstTax(BigDecimal gstTax) { this.gstTax = gstTax; }
+    public void setGstTax(BigDecimal gstTax) {
+        checkNonNegative(gstTax, "gstTax");
+        this.gstTax = gstTax;
+    }
 
     public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) {
+        checkNonNegative(totalAmount, "totalAmount");
+        this.totalAmount = totalAmount;
+    }
 
     public String getPaymentMode() { return paymentMode; }
     public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
@@ -109,7 +139,10 @@ public class Order {
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 
     public BigDecimal getTipAmount() { return tipAmount != null ? tipAmount : BigDecimal.ZERO; }
-    public void setTipAmount(BigDecimal tipAmount) { this.tipAmount = tipAmount; }
+    public void setTipAmount(BigDecimal tipAmount) {
+        checkNonNegative(tipAmount, "tipAmount");
+        this.tipAmount = tipAmount;
+    }
 
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }

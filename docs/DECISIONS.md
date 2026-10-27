@@ -146,4 +146,21 @@
   - **Route-Level Code Splitting & Resilience**: Refactored `App.jsx` to load all portal pages via `React.lazy` wrapped in `<Suspense fallback={<LoadingState />}>` and `<ErrorBoundary>`. Registered custom `NotFound.jsx` (404) page with search quick-jumps. Reduced production bundle size by 64% (from 1,067 kB down to 385 kB for the main chunk).
   - **Accessibility & Complete Elimination of Hardcoded Personas**: Replaced all hardcoded persona names and demo defaults across all client pages with live authenticated user session attributes, dynamic captain assignments, and realistic platform contact defaults. Standardized loading (`LoadingState`), empty (`EmptyState`), and error states (`ErrorState`) with `aria-live` polite announcements and WCAG AA contrast compliance.
 
+---
+
+## ADR-011: Database Architecture, Hardening, Strict Schema Constraints, Retention & Demo Seed (Phase 10)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: The database layer previously lacked dedicated schemas for support tickets, favorites, coupon usage audit ledgers, dedicated payment refunds, rider KYC documents, distributed idempotency keys, and geofenced delivery zones. Foreign key definitions in initial migrations allowed unintentional cascade deletions on crucial financial ledgers, payments, and dispatches. Monetary columns lacked database-level and model-level non-negative CHECK constraints. Rider telemetry logs (`rider_location_logs`) grew unboundedly without a retention or purge rule. Demo data was previously mixed into production migration scripts.
+- **Decision**:
+  - **Schema Hardening Migration (`V11__phase10_database_hardening.sql`)**:
+    - Created tables: `favorites` (customer bookmarks), `support_tickets` (customer/kitchen ticketing), `coupon_usages` (per-user claim prevention ledger), `audit_logs` (platform entity mutations), `payment_refunds` (formal refund tracking ledger), `rider_documents` (KYC compliance), `idempotency_keys` (distributed request deduplication with TTLs), and `delivery_zones` (city geofences and zone surges).
+    - Added composite query performance indexes: `idx_orders_cust_created` (`orders(customer_id, created_at)`), `idx_dispatch_status_offered` (`delivery_dispatches(dispatch_status, offered_at)`), and `idx_notif_user_read_created` (`notifications(user_id, is_read, created_at)`).
+    - MySQL 8.0 `CHECK` constraints on all monetary columns across `orders`, `payments`, `users`, `wallet_transactions`, `menu_items`, and `rider_profiles`.
+    - Eliminated cascade deletions on `payments`, `wallet_transactions`, `delivery_dispatches`, and `order_events` by dropping and re-adding foreign keys with strict `ON DELETE RESTRICT` semantics.
+  - **In-Code Monetary Validation**: Enforced non-negative monetary checks in Java models (`Order`, `User`, `Payment`, `WalletTransaction`, `RiderProfile`, `MenuItem`) throwing `IllegalArgumentException` on negative values.
+  - **Telemetry Retention Policy**: Created `RetentionService` with automated single-threaded scheduler executing 7-day location log purge (`riderDao.purgeOldLocationLogs(7)`).
+  - **Multi-City Demo Seed (`seed-demo.sql`)**: Generated separate demo script spanning 3 cities (Bangalore, Hyderabad, Mumbai), 27 authentic kitchens, complete menus with transparent dine-in/platform pricing, delivery riders, coupons, and historical multi-status orders. Passwords safely hashed (`Password@123`) and omitted from public tables.
+
+
 

@@ -54,7 +54,12 @@ public class User {
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public BigDecimal getWalletBalance() { return walletBalance; }
-    public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
+    public void setWalletBalance(BigDecimal walletBalance) {
+        if (walletBalance != null && walletBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("walletBalance cannot be negative: " + walletBalance);
+        }
+        this.walletBalance = walletBalance;
+    }
 
     public int getFraudFlagCount() { return fraudFlagCount; }
     public void setFraudFlagCount(int fraudFlagCount) { this.fraudFlagCount = fraudFlagCount; }

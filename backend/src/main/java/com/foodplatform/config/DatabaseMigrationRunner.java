@@ -27,7 +27,8 @@ public class DatabaseMigrationRunner {
             "V7__phase4_rider_dispatch_and_cod.sql",
             "V8__phase5_order_chat_and_realtime.sql",
             "V9__phase6_partner_portal.sql",
-            "V10__phase8_admin_console.sql"
+            "V10__phase8_admin_console.sql",
+            "V11__phase10_database_hardening.sql"
     };
 
     public static void runMigrations() {
@@ -112,8 +113,8 @@ public class DatabaseMigrationRunner {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
-            // Error code 1060 = Duplicate column name; 1050 = Table already exists
-            if (e.getErrorCode() == 1060 || e.getErrorCode() == 1050) {
+            // Error code 1060 = Duplicate column name; 1050 = Table already exists; 1061 = Duplicate key name; 3822 = Duplicate check constraint
+            if (e.getErrorCode() == 1060 || e.getErrorCode() == 1050 || e.getErrorCode() == 1061 || e.getErrorCode() == 3822) {
                 logger.debug("Idempotent migration notice: {}", e.getMessage());
             } else {
                 logger.warn("Notice executing migration statement: {} -> {}", sql, e.getMessage());

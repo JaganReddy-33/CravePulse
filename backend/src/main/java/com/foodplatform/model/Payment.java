@@ -48,7 +48,12 @@ public class Payment {
     public void setRazorpaySignature(String razorpaySignature) { this.razorpaySignature = razorpaySignature; }
 
     public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public void setAmount(BigDecimal amount) {
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Payment amount cannot be negative: " + amount);
+        }
+        this.amount = amount;
+    }
 
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
