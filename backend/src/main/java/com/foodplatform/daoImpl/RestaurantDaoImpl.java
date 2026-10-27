@@ -89,6 +89,23 @@ public class RestaurantDaoImpl implements RestaurantDao {
     }
 
     @Override
+    public Restaurant findBySlug(String slug) {
+        String sql = "SELECT * FROM restaurant_profiles WHERE slug = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, slug);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRestaurant(rs);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding restaurant by slug: {}", slug, e);
+        }
+        return null;
+    }
+
+    @Override
     public Restaurant findByUserId(long userId) {
         String sql = "SELECT * FROM restaurant_profiles WHERE user_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -255,6 +272,14 @@ public class RestaurantDaoImpl implements RestaurantDao {
         r.setKycApproved(rs.getBoolean("is_kyc_approved"));
         r.setCreatedAt(rs.getTimestamp("created_at"));
         r.setUpdatedAt(rs.getTimestamp("updated_at"));
+        try {
+            r.setGstNumber(rs.getString("gst_number"));
+            r.setCostForTwo(rs.getInt("cost_for_two"));
+            r.setHygieneRating(rs.getBigDecimal("hygiene_rating"));
+            r.setLocality(rs.getString("locality"));
+            r.setLandmark(rs.getString("landmark"));
+            r.setPincode(rs.getString("pincode"));
+        } catch (SQLException ignored) {}
         return r;
     }
 }

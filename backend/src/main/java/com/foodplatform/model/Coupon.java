@@ -16,6 +16,9 @@ public class Coupon {
     private int usageLimit;
     private int timesUsed;
     private boolean isActive;
+    private boolean firstOrderOnly;
+    private Long restaurantId;
+    private int perUserLimit = 1;
     private Timestamp createdAt;
 
     public Coupon() {
@@ -56,6 +59,15 @@ public class Coupon {
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+
+    public boolean isFirstOrderOnly() { return firstOrderOnly; }
+    public void setFirstOrderOnly(boolean firstOrderOnly) { this.firstOrderOnly = firstOrderOnly; }
+
+    public Long getRestaurantId() { return restaurantId; }
+    public void setRestaurantId(Long restaurantId) { this.restaurantId = restaurantId; }
+
+    public int getPerUserLimit() { return perUserLimit; }
+    public void setPerUserLimit(int perUserLimit) { this.perUserLimit = perUserLimit; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

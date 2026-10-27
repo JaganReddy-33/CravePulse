@@ -593,10 +593,22 @@ const CustomerHome = () => {
                                 </span>
                               )}
                             </div>
-                            <small className="text-secondary text-truncate d-block mb-3" style={{ fontSize: 11 }}>
-                              <i className="bi bi-geo-alt me-1 text-danger"></i>
-                              {rest.street ? `${rest.street}, ${currentHub.name}, ${currentHub.cityName}` : rest.address}
-                            </small>
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                              <small className="text-secondary text-truncate" style={{ fontSize: 11, maxWidth: '60%' }}>
+                                <i className="bi bi-geo-alt me-1 text-danger"></i>
+                                {rest.locality || rest.street || (rest.address ? rest.address.split(',')[0] : `${currentHub.name}, ${currentHub.cityName}`)}
+                              </small>
+                              <span className="text-muted fw-semibold" style={{ fontSize: 11 }}>
+                                {rest.costForTwo ? `₹${rest.costForTwo} for two` : (rest.priceTier || '₹400 for two')}
+                              </span>
+                            </div>
+                            {rest.hygieneRating && (
+                              <div className="mb-2">
+                                <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small" style={{ fontSize: 10 }}>
+                                  🛡️ {rest.hygieneRating}/5 Hygiene Certified
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="d-flex justify-content-between align-items-center text-muted small pt-2 border-top">

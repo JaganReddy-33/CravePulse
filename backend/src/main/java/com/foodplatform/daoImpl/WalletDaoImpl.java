@@ -119,6 +119,30 @@ public class WalletDaoImpl implements WalletDao {
     }
 
     @Override
+    public void markAllNotificationsRead(long userId) {
+        String sql = "UPDATE notifications SET is_read = TRUE WHERE user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error marking all notifications read for user: {}", userId, e);
+        }
+    }
+
+    @Override
+    public void clearAllNotifications(long userId) {
+        String sql = "DELETE FROM notifications WHERE user_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Error clearing notifications for user: {}", userId, e);
+        }
+    }
+
+    @Override
     public Coupon getCouponByCode(String code) {
         String sql = "SELECT * FROM coupons WHERE code = ? AND is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -139,6 +163,12 @@ public class WalletDaoImpl implements WalletDao {
                     c.setUsageLimit(rs.getInt("usage_limit"));
                     c.setTimesUsed(rs.getInt("times_used"));
                     c.setActive(rs.getBoolean("is_active"));
+                    try {
+                        c.setFirstOrderOnly(rs.getBoolean("first_order_only"));
+                        long rId = rs.getLong("restaurant_id");
+                        if (!rs.wasNull()) c.setRestaurantId(rId);
+                        c.setPerUserLimit(rs.getInt("per_user_limit"));
+                    } catch (SQLException ignored) {}
                     c.setCreatedAt(rs.getTimestamp("created_at"));
                     return c;
                 }
@@ -147,6 +177,44 @@ public class WalletDaoImpl implements WalletDao {
             logger.error("Error getting coupon: {}", code, e);
         }
         return null;
+    }
+
+    @Override
+    public int getCouponUsageCountByUser(long userId, long couponId) {
+        String sql = "SELECT COUNT(*) FROM coupon_usages WHERE user_id = ? AND coupon_id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, couponId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error checking coupon usage count: user {} coupon {}", userId, couponId, e);
+        }
+        return 0;
+    }
+
+    @Override
+    public void recordCouponUsage(Connection conn, long userId, long couponId, long orderId) throws SQLException {
+        String sql = "INSERT INTO coupon_usages (user_id, coupon_id, order_id) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, couponId);
+            ps.setLong(3, orderId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
+    public void incrementCouponUsage(Connection conn, long couponId) throws SQLException {
+        String sql = "UPDATE coupons SET times_used = times_used + 1 WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, couponId);
+            ps.executeUpdate();
+        }
     }
 
     @Override

@@ -20,7 +20,17 @@ public interface WalletDao {
 
     void markNotificationRead(long notificationId);
 
+    void markAllNotificationsRead(long userId);
+
+    void clearAllNotifications(long userId);
+
     Coupon getCouponByCode(String code);
+
+    int getCouponUsageCountByUser(long userId, long couponId);
+
+    void recordCouponUsage(Connection conn, long userId, long couponId, long orderId) throws SQLException;
+
+    void incrementCouponUsage(Connection conn, long couponId) throws SQLException;
 
     String getPlatformSetting(String key, String defaultValue);
 }

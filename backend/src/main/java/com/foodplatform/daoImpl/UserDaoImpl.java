@@ -235,6 +235,36 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public Address getAddressById(long addressId) {
+        String sql = "SELECT * FROM user_addresses WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, addressId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Address addr = new Address();
+                    addr.setId(rs.getLong("id"));
+                    addr.setUserId(rs.getLong("user_id"));
+                    addr.setTitle(rs.getString("title"));
+                    addr.setAddressLine(rs.getString("address_line"));
+                    addr.setLandmark(rs.getString("landmark"));
+                    addr.setCity(rs.getString("city"));
+                    addr.setState(rs.getString("state"));
+                    addr.setPostalCode(rs.getString("postal_code"));
+                    addr.setLatitude(rs.getBigDecimal("latitude"));
+                    addr.setLongitude(rs.getBigDecimal("longitude"));
+                    addr.setDefault(rs.getBoolean("is_default"));
+                    addr.setCreatedAt(rs.getTimestamp("created_at"));
+                    return addr;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting address by id: {}", addressId, e);
+        }
+        return null;
+    }
+
+    @Override
     public Long addAddress(Address addr) {
         String sql = "INSERT INTO user_addresses (user_id, title, address_line, landmark, city, state, postal_code, latitude, longitude, is_default) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

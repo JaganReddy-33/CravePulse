@@ -21,7 +21,9 @@ public class DatabaseMigrationRunner {
             "V1__init.sql",
             "V2__seed.sql",
             "V3__phase1_security_and_otp.sql",
-            "V4__phase2_payments_wallet.sql"
+            "V4__phase2_payments_wallet.sql",
+            "V5__phase3_catalog_schema.sql",
+            "V6__phase3_bangalore_catalog.sql"
     };
 
     public static void runMigrations() {

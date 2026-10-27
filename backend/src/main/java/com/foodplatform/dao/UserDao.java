@@ -37,6 +37,8 @@ public interface UserDao {
 
     List<Address> getUserAddresses(long userId);
 
+    Address getAddressById(long addressId);
+
     Long addAddress(Address addr);
 
     List<User> listAllUsers(int limit, int offset);

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useCart } from '../../context/CartContext';
 import DisputeModal from './DisputeModal';
 
 const CustomerOrders = () => {
+  const navigate = useNavigate();
+  const { setCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reorderingId, setReorderingId] = useState(null);
 
   // Cancellation modal state
   const [cancellingOrder, setCancellingOrder] = useState(null);
@@ -73,6 +77,44 @@ const CustomerOrders = () => {
 
   const isCancellable = (status) => {
     return ['PLACED', 'ACCEPTED', 'PREPARING'].includes(status);
+  };
+
+  const handleReorder = async (ord) => {
+    try {
+      setReorderingId(ord.id);
+      const res = await api.post(`/orders/${ord.id}/reorder`);
+      if (res.success && res.data) {
+        const { restaurantId, restaurantName, items, warnings } = res.data;
+        const formattedItems = (items || []).map(it => ({
+          id: it.menuItemId,
+          name: it.name,
+          platformPrice: it.unitPrice,
+          dineInPrice: it.unitPrice,
+          quantity: it.quantity,
+          selectedVariant: it.variantId ? { id: it.variantId, variantName: it.variantName } : null,
+          selectedAddons: (it.addonIds || []).map((aid, idx) => ({ id: aid, addonName: it.addonNames?.[idx] || 'Addon' })),
+          cartKey: `${it.menuItemId}-${it.variantId || 'base'}-${(it.addonIds || []).sort().join(',')}`
+        }));
+
+        setCart({
+          restaurantId,
+          restaurantName,
+          items: formattedItems
+        });
+
+        if (warnings && warnings.length > 0) {
+          alert(`Reorder notice: ${warnings.join(', ')}`);
+        }
+
+        navigate('/checkout');
+      } else {
+        alert(res.message || 'Unable to reorder at this time.');
+      }
+    } catch (err) {
+      alert(err.message || 'Restaurant is currently closed or selected items are unavailable.');
+    } finally {
+      setReorderingId(null);
+    }
   };
 
   return (
@@ -166,6 +208,20 @@ const CustomerOrders = () => {
                       Cancel Order ✕
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+                    onClick={() => handleReorder(ord)}
+                    disabled={reorderingId === ord.id}
+                    title="Repeat this exact order with fresh pricing and live availability"
+                  >
+                    {reorderingId === ord.id ? (
+                      <span className="spinner-border spinner-border-sm" role="status"></span>
+                    ) : (
+                      <span>🔁 Reorder</span>
+                    )}
+                  </button>
 
                   <Link
                     to={`/orders/${ord.orderNumber || ord.id}/invoice`}

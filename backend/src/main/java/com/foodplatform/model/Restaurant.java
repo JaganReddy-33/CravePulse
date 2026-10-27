@@ -33,6 +33,12 @@ public class Restaurant {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Double distanceKm;
+    private String gstNumber;
+    private Integer costForTwo;
+    private BigDecimal hygieneRating;
+    private String locality;
+    private String landmark;
+    private String pincode;
 
     public Restaurant() {
     }
@@ -123,4 +129,22 @@ public class Restaurant {
 
     public Double getDistanceKm() { return distanceKm; }
     public void setDistanceKm(Double distanceKm) { this.distanceKm = distanceKm; }
+
+    public String getGstNumber() { return gstNumber; }
+    public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
+
+    public Integer getCostForTwo() { return costForTwo; }
+    public void setCostForTwo(Integer costForTwo) { this.costForTwo = costForTwo; }
+
+    public BigDecimal getHygieneRating() { return hygieneRating; }
+    public void setHygieneRating(BigDecimal hygieneRating) { this.hygieneRating = hygieneRating; }
+
+    public String getLocality() { return locality; }
+    public void setLocality(String locality) { this.locality = locality; }
+
+    public String getLandmark() { return landmark; }
+    public void setLandmark(String landmark) { this.landmark = landmark; }
+
+    public String getPincode() { return pincode; }
+    public void setPincode(String pincode) { this.pincode = pincode; }
 }

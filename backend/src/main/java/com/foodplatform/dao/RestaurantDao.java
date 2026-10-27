@@ -12,6 +12,8 @@ public interface RestaurantDao {
 
     Restaurant findById(long id);
 
+    Restaurant findBySlug(String slug);
+
     Restaurant findByUserId(long userId);
 
     void updateOpenStatus(long id, boolean isOpen);

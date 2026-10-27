@@ -499,31 +499,46 @@ const RestaurantDetail = () => {
       const catalogInfo = RESTAURANT_CATALOG[restId] || RESTAURANT_CATALOG[1];
 
       try {
-        const [restRes, menuRes] = await Promise.all([
-          api.get(`/restaurants/${restId}`),
-          api.get(`/menu/restaurant/${restId}`),
-        ]);
+        let activeRest = null;
+        let activeRestId = restId;
 
-        if (restRes.success && restRes.data) {
-          setRestaurant(restRes.data);
-        } else {
-          setRestaurant(catalogInfo);
+        // Try slug-based lookup if slug param exists
+        if (slug && isNaN(Number(slug))) {
+          const cleanSlug = slug.replace(/-rest\d+$/i, '');
+          const slugRes = await api.get(`/restaurants/slug/${cleanSlug}`).catch(() => null);
+          if (slugRes && slugRes.success && slugRes.data) {
+            activeRest = slugRes.data;
+            activeRestId = slugRes.data.id;
+          }
         }
+
+        // If no slug match or numeric id, fetch by id
+        if (!activeRest) {
+          const restRes = await api.get(`/restaurants/${activeRestId}`).catch(() => null);
+          if (restRes && restRes.success && restRes.data) {
+            activeRest = restRes.data;
+          }
+        }
+
+        const catalogFallback = RESTAURANT_CATALOG[activeRestId] || RESTAURANT_CATALOG[1];
+        setRestaurant(activeRest || catalogFallback);
+
+        const menuRes = await api.get(`/menu/restaurant/${activeRestId}`).catch(() => null);
 
         let loadedCats = [];
         let loadedItems = [];
 
-        if (menuRes.success && menuRes.data && menuRes.data.items?.length > 0) {
-          loadedCats = menuRes.data.categories || catalogInfo.categories;
+        if (menuRes && menuRes.success && menuRes.data && menuRes.data.items?.length > 0) {
+          loadedCats = menuRes.data.categories || catalogFallback.categories;
           loadedItems = menuRes.data.items || [];
         } else {
-          loadedCats = catalogInfo.categories;
-          loadedItems = catalogInfo.items;
+          loadedCats = catalogFallback.categories;
+          loadedItems = catalogFallback.items;
         }
 
         // Merge any newly added custom dishes saved by restaurant owner from localStorage
         const customDishes = JSON.parse(localStorage.getItem('cravepulse_custom_dishes') || '[]');
-        const restaurantCustoms = customDishes.filter(d => Number(d.restaurantId) === restId);
+        const restaurantCustoms = customDishes.filter(d => Number(d.restaurantId) === activeRestId);
         if (restaurantCustoms.length > 0) {
           loadedItems = [...restaurantCustoms, ...loadedItems];
         }
@@ -541,7 +556,7 @@ const RestaurantDetail = () => {
     };
 
     fetchData();
-  }, [restId]);
+  }, [restId, slug]);
 
   const handleOpenCustomizer = (item) => {
     if (item.variants?.length > 0 || item.addons?.length > 0) {

@@ -30,6 +30,7 @@ public class OrderStateMachineService {
     private final UserDao userDao;
     private final WalletDao walletDao;
     private final RealtimeSessionRegistry registry;
+    private final NotificationService notificationService;
 
     private static final Map<String, Set<String>> ALLOWED_TRANSITIONS = Map.of(
             "PLACED", Set.of("ACCEPTED", "CANCELLED", "REJECTED"),
@@ -43,16 +44,21 @@ public class OrderStateMachineService {
     );
 
     public OrderStateMachineService() {
-        this(new OrderDaoImpl(), new RestaurantDaoImpl(), new RiderDaoImpl(), new UserDaoImpl(), new WalletDaoImpl(), RealtimeSessionRegistry.getInstance());
+        this(new OrderDaoImpl(), new RestaurantDaoImpl(), new RiderDaoImpl(), new UserDaoImpl(), new WalletDaoImpl(), RealtimeSessionRegistry.getInstance(), new NotificationService());
     }
 
     public OrderStateMachineService(OrderDao orderDao, RestaurantDao restaurantDao, RiderDao riderDao, UserDao userDao, WalletDao walletDao, RealtimeSessionRegistry registry) {
+        this(orderDao, restaurantDao, riderDao, userDao, walletDao, registry, new NotificationService(walletDao, registry));
+    }
+
+    public OrderStateMachineService(OrderDao orderDao, RestaurantDao restaurantDao, RiderDao riderDao, UserDao userDao, WalletDao walletDao, RealtimeSessionRegistry registry, NotificationService notificationService) {
         this.orderDao = orderDao;
         this.restaurantDao = restaurantDao;
         this.riderDao = riderDao;
         this.userDao = userDao;
         this.walletDao = walletDao;
         this.registry = registry;
+        this.notificationService = notificationService;
     }
 
     public Order transition(long orderId, String targetStatus, Long triggeredByUserId, String reason, Double currentLat, Double currentLng) {
@@ -220,6 +226,21 @@ public class OrderStateMachineService {
                 registry.broadcastToRider(updated.getRiderId(), "order_status_updated", payload);
             }
             registry.broadcastToAdmin("order_status_updated", payload);
+
+            if (notificationService != null && updated.getCustomerId() != null) {
+                String notifTitle = "Order " + newStatus;
+                String notifMsg = switch (newStatus) {
+                    case "ACCEPTED" -> "Restaurant accepted order #" + updated.getOrderNumber() + " and started kitchen prep.";
+                    case "PREPARING" -> "Your food is being freshly prepared in the kitchen.";
+                    case "READY" -> "Order #" + updated.getOrderNumber() + " is ready and packed.";
+                    case "PICKED_UP" -> "Rider has picked up your order! Share your 4-digit Delivery OTP (" + updated.getDeliveryOtp() + ") upon arrival.";
+                    case "DELIVERED" -> "Order #" + updated.getOrderNumber() + " delivered! Enjoy your meal.";
+                    case "CANCELLED" -> "Order #" + updated.getOrderNumber() + " has been cancelled.";
+                    case "REJECTED" -> "Order #" + updated.getOrderNumber() + " was declined by the restaurant.";
+                    default -> "Order status updated to " + newStatus;
+                };
+                notificationService.sendNotification(updated.getCustomerId(), notifTitle, notifMsg, "ORDER", String.valueOf(orderId));
+            }
         }
 
         return updated != null ? updated : order;

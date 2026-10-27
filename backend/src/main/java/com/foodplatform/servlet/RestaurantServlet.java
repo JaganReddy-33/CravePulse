@@ -65,6 +65,17 @@ public class RestaurantServlet extends BaseServlet {
             return;
         }
 
+        if (path.startsWith("/slug/")) {
+            String slug = path.substring("/slug/".length()).trim();
+            Restaurant r = restaurantDao.findBySlug(slug);
+            if (r == null) {
+                JsonUtil.sendError(res, 404, "Restaurant not found with slug: " + slug);
+                return;
+            }
+            JsonUtil.sendSuccess(res, 200, "Restaurant details", r);
+            return;
+        }
+
         // Fetch single restaurant by ID (Public discovery)
         Long restId = parseIdFromPath(req);
         if (restId != null) {

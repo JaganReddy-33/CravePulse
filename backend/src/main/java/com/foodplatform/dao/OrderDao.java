@@ -39,5 +39,9 @@ public interface OrderDao {
 
     List<Order> listAllOrders(int limit, int offset);
 
+    Order findByIdempotencyKey(String idempotencyKey);
+
+    int getCustomerOrderCount(long customerId);
+
     void setGoodwillCreditAwarded(Connection conn, long orderId, boolean awarded) throws SQLException;
 }

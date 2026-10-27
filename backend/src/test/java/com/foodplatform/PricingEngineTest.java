@@ -117,6 +117,7 @@ public class PricingEngineTest {
         coupon.setDiscountValue(BigDecimal.valueOf(50.00)); // 50%
         coupon.setMinOrderAmount(BigDecimal.valueOf(199.00));
         coupon.setMaxDiscountAmount(BigDecimal.valueOf(150.00)); // Cap at 150
+        coupon.setActive(true);
         when(walletDao.getCouponByCode("FOOD50")).thenReturn(coupon);
 
         PricingService.CartInputItem in = new PricingService.CartInputItem();

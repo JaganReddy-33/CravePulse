@@ -1,16 +1,22 @@
 package com.foodplatform.servlet;
 
 import com.foodplatform.config.DatabaseConfig;
+import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.UserDao;
+import com.foodplatform.dao.WalletDao;
+import com.foodplatform.daoImpl.MenuDaoImpl;
 import com.foodplatform.daoImpl.OrderDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.daoImpl.UserDaoImpl;
+import com.foodplatform.daoImpl.WalletDaoImpl;
+import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.OrderItem;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.DispatchService;
+import com.foodplatform.service.NotificationService;
 import com.foodplatform.service.OrderStateMachineService;
 import com.foodplatform.service.PaymentService;
 import com.foodplatform.service.PricingService;
@@ -46,15 +52,62 @@ public class OrderServlet extends BaseServlet {
     private final OrderDao orderDao = new OrderDaoImpl();
     private final RestaurantDao restaurantDao = new RestaurantDaoImpl();
     private final UserDao userDao = new UserDaoImpl();
+    private final MenuDao menuDao = new MenuDaoImpl();
+    private final WalletDao walletDao = new WalletDaoImpl();
     private final PricingService pricingService = new PricingService();
     private final OrderStateMachineService stateMachine = new OrderStateMachineService();
     private final DispatchService dispatchService = new DispatchService();
     private final PaymentService paymentService = new PaymentService();
+    private final NotificationService notificationService = new NotificationService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
+
+        if (path.endsWith("/reorder")) {
+            if (!requireAuthenticated(req, res)) return;
+            Long orderId = parseIdFromPath(req);
+            if (orderId == null) {
+                JsonUtil.sendError(res, 400, "Order ID required");
+                return;
+            }
+            if (!requireOwnerOfOrder(req, res, orderId)) return;
+
+            Order prevOrder = orderDao.findById(orderId);
+            if (prevOrder == null) {
+                JsonUtil.sendError(res, 404, "Order not found");
+                return;
+            }
+
+            Restaurant rest = restaurantDao.findById(prevOrder.getRestaurantId());
+            if (rest == null || !rest.isOpen()) {
+                JsonUtil.sendError(res, 400, "Restaurant is currently closed for reorders.");
+                return;
+            }
+
+            List<OrderItem> prevItems = orderDao.getOrderItems(orderId);
+            List<Map<String, Object>> reorderItems = new ArrayList<>();
+            for (OrderItem oi : prevItems) {
+                MenuItem currentItem = menuDao.getItemById(oi.getMenuItemId());
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("menuItemId", oi.getMenuItemId());
+                itemMap.put("name", oi.getItemName());
+                itemMap.put("quantity", oi.getQuantity());
+                itemMap.put("unitPrice", currentItem != null ? currentItem.getPlatformPrice() : oi.getUnitPrice());
+                itemMap.put("isAvailable", currentItem != null && currentItem.isAvailable());
+                itemMap.put("variantName", oi.getVariantName());
+                itemMap.put("addonNames", oi.getAddonNames());
+                reorderItems.add(itemMap);
+            }
+
+            Map<String, Object> reorderData = new HashMap<>();
+            reorderData.put("restaurantId", prevOrder.getRestaurantId());
+            reorderData.put("restaurantName", prevOrder.getRestaurantName());
+            reorderData.put("items", reorderItems);
+            JsonUtil.sendSuccess(res, 200, "Reorder payload prepared", reorderData);
+            return;
+        }
 
         if (path.isEmpty() || "/".equals(path)) {
             // Place new order
@@ -73,10 +126,37 @@ public class OrderServlet extends BaseServlet {
                 String paymentMode = body.has("paymentMode") ? body.get("paymentMode").getAsString() : "COD";
                 String instructions = body.has("specialInstructions") && !body.get("specialInstructions").isJsonNull() ?
                         body.get("specialInstructions").getAsString() : null;
+
+                // Idempotency check: return existing order on duplicate requests
                 String idempotencyKey = req.getHeader("X-Idempotency-Key");
-                if (idempotencyKey == null || idempotencyKey.isBlank()) {
+                if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+                    Order existing = orderDao.findByIdempotencyKey(idempotencyKey.trim());
+                    if (existing != null) {
+                        Map<String, Object> resp = new HashMap<>();
+                        resp.put("id", existing.getId());
+                        resp.put("orderId", existing.getId());
+                        resp.put("orderNumber", existing.getOrderNumber());
+                        resp.put("status", existing.getStatus());
+                        resp.put("paymentMode", existing.getPaymentMode());
+                        resp.put("paymentStatus", existing.getPaymentStatus());
+                        resp.put("totalAmount", existing.getTotalAmount());
+                        resp.put("deliveryOtp", existing.getDeliveryOtp());
+                        resp.put("order", existing);
+                        JsonUtil.sendSuccess(res, 200, "Order retrieved from idempotency key", resp);
+                        return;
+                    }
+                } else {
                     idempotencyKey = "IDEMP-" + UUID.randomUUID().toString();
                 }
+
+                // Verify address ownership and retrieve coordinates
+                com.foodplatform.model.Address addr = userDao.getAddressById(addressId);
+                if (addr == null || !addr.getUserId().equals(customerId)) {
+                    JsonUtil.sendError(res, 400, "Invalid delivery address: Address does not belong to the authenticated user");
+                    return;
+                }
+                Double userLat = addr.getLatitude() != null ? addr.getLatitude().doubleValue() : null;
+                Double userLng = addr.getLongitude() != null ? addr.getLongitude().doubleValue() : null;
 
                 // Check restaurant status and Overload Protection
                 Restaurant restaurant = restaurantDao.findById(restaurantId);
@@ -108,16 +188,18 @@ public class OrderServlet extends BaseServlet {
                     inputItems.add(it);
                 }
 
-                // Calculate server-side authoritative bill
+                // Calculate server-side authoritative bill with customerId for coupon checks
                 String couponCode = body.has("couponCode") && !body.get("couponCode").isJsonNull() ? body.get("couponCode").getAsString() : null;
-                PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, inputItems, null, null, couponCode);
+                PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, inputItems, userLat, userLng, couponCode, customerId);
 
                 // Enforce COD rules
                 if ("COD".equalsIgnoreCase(paymentMode)) {
                     paymentService.validateCodOrder(calc.totalAmount);
                 }
 
-                String orderNumber = "ORD-" + DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now()) + "-" + (int) (1000 + Math.random() * 9000);
+                // Collision-safe order number: date + 6-char UUID fragment
+                String dateStr = DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
+                String orderNumber = "CP-" + dateStr + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
                 String deliveryOtp = String.format("%04d", (int) (1000 + Math.random() * 9000));
 
                 Order order = new Order();
@@ -158,7 +240,7 @@ public class OrderServlet extends BaseServlet {
                     orderItems.add(oi);
                 }
 
-                // Insert order and items transactionally
+                // Insert order, items, coupon usage, and load counter in one atomic transaction
                 Long orderId;
                 try (Connection conn = DatabaseConfig.getConnection()) {
                     conn.setAutoCommit(false);
@@ -166,6 +248,12 @@ public class OrderServlet extends BaseServlet {
                         orderId = orderDao.createOrder(conn, order);
                         orderDao.createOrderItems(conn, orderId, orderItems);
                         restaurantDao.incrementCurrentLoad(conn, restaurantId);
+
+                        // Increment coupon usage and record usage log if coupon applied
+                        if (calc.couponId != null) {
+                            walletDao.incrementCouponUsage(conn, calc.couponId);
+                            walletDao.recordCouponUsage(conn, customerId, calc.couponId, orderId);
+                        }
 
                         // Audit event
                         com.foodplatform.model.OrderEvent ev = new com.foodplatform.model.OrderEvent();
@@ -195,7 +283,9 @@ public class OrderServlet extends BaseServlet {
 
                 Order created = orderDao.findById(orderId);
 
-                // Real-time broadcasts
+                // Server-side persistent notification & real-time broadcasts
+                notificationService.sendNotification(customerId, "Order Placed",
+                        "Your order #" + created.getOrderNumber() + " has been placed successfully.", "ORDER", String.valueOf(created.getId()));
                 registry.broadcastToRestaurant(restaurantId, "new_order_placed", created);
                 registry.broadcastToAdmin("new_order_placed", created);
 

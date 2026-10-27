@@ -37,3 +37,16 @@
   - **COD Threshold**: Restrained Cash on Delivery strictly to orders $\le$ ₹2,000 on backend (`AppProperties.getCodMaxLimit()`) and disabled on frontend with explanatory warning.
   - **Automated Refund Engine**: Integrated refund execution upon order cancellation/rejection, issuing instant wallet credits for wallet payments and invoking Razorpay Refund API for card/UPI payments.
 
+---
+
+## ADR-004: Orders, Pricing Engine, Real-World Bangalore Catalog & Parity (Phase 3)
+- **Date**: 2026-10-27
+- **Status**: Accepted
+- **Context**: Prior pricing allowed arbitrary quantities, lacked add-on quantity scaling, did not validate restaurant delivery radius, lacked component-wise GST calculations, and had basic coupon evaluation prone to race conditions. The restaurant catalog had only 5 mock venues without real Bangalore addresses, dine-in price parity proof, or canonical Swiggy/Zomato URL structures.
+- **Decision**:
+  - **Deterministic Pricing Engine**: Enforced item quantity validation ($1 \le quantity \le 20$), strict restaurant ownership of items/variants/addons, addon price scaling by item quantity, delivery fee calculation by distance slab with configurable free delivery threshold (default ₹499) and surge multipliers, and component-wise GST calculation (5% food & packaging, 18% services).
+  - **Atomic Coupon Enforcement**: Evaluated coupon active window, min order amount, first-order-only customer check, restaurant restriction, and per-user usage limits. Incremented `times_used` and inserted into `coupon_usages` within the order transaction.
+  - **Order Integrity & Idempotency**: Handled `X-Idempotency-Key` headers to prevent duplicate order generation. Generated collision-safe order numbers (`CP-yyyyMMdd-XXXXXX`). Validated customer address ownership. Implemented `/api/orders/{id}/reorder` returning validated, current-priced cart items.
+  - **Real-Time Notification Pipeline**: Created `notifications` table and `NotificationService` pushing state transition events over authenticated WebSockets with mark-read/clear REST endpoints.
+  - **Bangalore Real-World Catalog**: Seeded 72 authentic Bangalore culinary institutions across 10 iconic food zones with 1,047 dishes, complete with spice levels, allergens, hygiene certifications, and exact 0% markup dine-in price parity proofs. Supported `/city/bangalore/:restaurantSlug` routing with slug-based DAO lookup.
+

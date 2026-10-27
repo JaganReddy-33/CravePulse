@@ -196,6 +196,41 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
+    public Order findByIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) return null;
+        String sql = "SELECT id FROM orders WHERE idempotency_key = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, idempotencyKey);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return findById(rs.getLong("id"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding order by idempotency key: {}", idempotencyKey, e);
+        }
+        return null;
+    }
+
+    @Override
+    public int getCustomerOrderCount(long customerId) {
+        String sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status != 'CANCELLED'";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting customer order count: {}", customerId, e);
+        }
+        return 0;
+    }
+
+    @Override
     public List<OrderItem> getOrderItems(long orderId) {
         List<OrderItem> list = new ArrayList<>();
         String sql = "SELECT * FROM order_items WHERE order_id = ?";

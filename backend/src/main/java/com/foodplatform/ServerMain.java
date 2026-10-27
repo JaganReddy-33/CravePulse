@@ -113,6 +113,10 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/api/wallet/*", "WalletServlet");
         ctx.addServletMappingDecoded("/api/wallet", "WalletServlet");
 
+        Tomcat.addServlet(ctx, "NotificationServlet", new NotificationServlet()).setAsyncSupported(true);
+        ctx.addServletMappingDecoded("/api/notifications/*", "NotificationServlet");
+        ctx.addServletMappingDecoded("/api/notifications", "NotificationServlet");
+
         try {
             logger.info("Starting FoodPlatform Embedded Tomcat on http://localhost:{}", port);
             tomcat.start();

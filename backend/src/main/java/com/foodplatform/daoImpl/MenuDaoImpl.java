@@ -203,6 +203,15 @@ public class MenuDaoImpl implements MenuDao {
         item.setTotalOrders(rs.getInt("total_orders"));
         item.setCreatedAt(rs.getTimestamp("created_at"));
         item.setUpdatedAt(rs.getTimestamp("updated_at"));
+        try {
+            item.setSlug(rs.getString("slug"));
+            item.setFoodType(rs.getString("food_type"));
+            item.setSpiceLevel(rs.getString("spice_level"));
+            item.setPackagingCharge(rs.getBigDecimal("packaging_charge"));
+            item.setBestseller(rs.getBoolean("is_bestseller"));
+            item.setChefSpecial(rs.getBoolean("is_chef_special"));
+            item.setAllergenInfo(rs.getString("allergen_info"));
+        } catch (SQLException ignored) {}
         return item;
     }
 }

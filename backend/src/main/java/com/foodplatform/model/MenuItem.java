@@ -22,6 +22,13 @@ public class MenuItem {
     private int totalOrders;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private String slug;
+    private String foodType = "VEG";
+    private String spiceLevel = "MEDIUM";
+    private BigDecimal packagingCharge = BigDecimal.ZERO;
+    private boolean isBestseller;
+    private boolean isChefSpecial;
+    private String allergenInfo;
     private List<MenuItemVariant> variants = new ArrayList<>();
     private List<MenuItemAddon> addons = new ArrayList<>();
 
@@ -81,4 +88,25 @@ public class MenuItem {
 
     public List<MenuItemAddon> getAddons() { return addons; }
     public void setAddons(List<MenuItemAddon> addons) { this.addons = addons; }
+
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
+
+    public String getFoodType() { return foodType; }
+    public void setFoodType(String foodType) { this.foodType = foodType; }
+
+    public String getSpiceLevel() { return spiceLevel; }
+    public void setSpiceLevel(String spiceLevel) { this.spiceLevel = spiceLevel; }
+
+    public BigDecimal getPackagingCharge() { return packagingCharge; }
+    public void setPackagingCharge(BigDecimal packagingCharge) { this.packagingCharge = packagingCharge; }
+
+    public boolean isBestseller() { return isBestseller; }
+    public void setBestseller(boolean bestseller) { isBestseller = bestseller; }
+
+    public boolean isChefSpecial() { return isChefSpecial; }
+    public void setChefSpecial(boolean chefSpecial) { isChefSpecial = chefSpecial; }
+
+    public String getAllergenInfo() { return allergenInfo; }
+    public void setAllergenInfo(String allergenInfo) { this.allergenInfo = allergenInfo; }
 }

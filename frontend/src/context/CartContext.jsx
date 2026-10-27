@@ -69,6 +69,13 @@ const cartReducer = (state, action) => {
     case 'CLEAR_CART':
       return { restaurantId: null, restaurantName: null, items: [] };
 
+    case 'SET_CART':
+      return {
+        restaurantId: action.payload.restaurantId || null,
+        restaurantName: action.payload.restaurantName || null,
+        items: action.payload.items || [],
+      };
+
     default:
       return state;
   }
@@ -216,6 +223,7 @@ export const CartProvider = ({ children }) => {
   const addItem = (payload) => dispatch({ type: 'ADD_ITEM', payload });
   const removeItem = (cartKey) => dispatch({ type: 'REMOVE_ITEM', payload: { cartKey } });
   const clearCart = () => dispatch({ type: 'CLEAR_CART' });
+  const setCart = (payload) => dispatch({ type: 'SET_CART', payload });
 
   const totalItemCount = state.items.reduce((sum, it) => sum + it.quantity, 0);
 
@@ -230,6 +238,7 @@ export const CartProvider = ({ children }) => {
       addItem,
       removeItem,
       clearCart,
+      setCart,
       totalItemCount
     }}>
       {children}
