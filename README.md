@@ -15,6 +15,16 @@ built from scratch with **zero frameworks** — no Spring Boot, no Hibernate, no
 
 </div>
 
+<div align="center">
+
+# 🍽️ CravePulse
+### India's Fair Food Delivery Network
+
+[![Live App]](https://crave-pulse-xi.vercel.app/)
+[![Backend API]](https://cravepulse-741y.onrender.com)
+
+</div>
+
 ---
 
 ## 🚀 What is CravePulse?
