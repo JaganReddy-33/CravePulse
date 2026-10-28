@@ -1,11 +1,61 @@
-# Environment & Secrets
+# ==============================================================================
+# ENVIRONMENT, SECRETS & CREDENTIALS (CRITICAL - NEVER PUSH TO GITHUB)
+# ==============================================================================
+# Environment variable files
 .env
-.env.local
-.env.*.local
+.env.*
 *.env
+**/.env
+**/.env.*
+**/*.env
 !*.env.example
+!**/*.env.example
+!**/.env.example
 
-# IDE & Editor files
+# Sensitive Java & Spring/Tomcat properties
+application.properties
+**/application.properties
+application-*.properties
+**/application-*.properties
+db.properties
+**/db.properties
+*.properties.local
+**/*.properties.local
+!application.properties.example
+!**/application.properties.example
+
+# Private Keys, Certificates & Tokens
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+*credentials*.json
+*secret*.json
+!*credentials*.example.json
+!*secret*.example.json
+
+# ==============================================================================
+# ARCHIVES & BACKUP ARTIFACTS
+# ==============================================================================
+*.zip
+*.tar
+*.gz
+*.tgz
+*.rar
+*.7z
+*.bak
+*.old
+*.tmp
+
+# ==============================================================================
+# IDE & EDITOR FILES
+# ==============================================================================
 .metadata/
 Servers/
 .settings/
@@ -19,11 +69,17 @@ Servers/
 *.njsproj
 *.sln
 *.sw?
+*.sublime-workspace
+*.sublime-project
 
-# Java / Maven build artifacts
+# ==============================================================================
+# JAVA / MAVEN BUILD ARTIFACTS
+# ==============================================================================
 target/
+**/target/
 *.class
 bin/
+**/bin/
 *.war
 *.ear
 *.nar
@@ -31,16 +87,33 @@ bin/
 !**/lib/*.jar
 tomcat.*
 *.log
+logs/
+**/logs/
 
-# Node / Frontend build artifacts
+# ==============================================================================
+# NODE / FRONTEND BUILD ARTIFACTS
+# ==============================================================================
 node_modules/
+**/node_modules/
 dist/
+**/dist/
 dist-ssr/
+**/dist-ssr/
+.pnpm-store/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.vite/
+**/.vite/
 
-# OS artifacts
+# ==============================================================================
+# OS & SYSTEM ARTIFACTS
+# ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
