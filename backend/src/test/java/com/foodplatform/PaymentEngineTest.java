@@ -1,6 +1,5 @@
 package com.foodplatform;
 
-import com.foodplatform.config.AppProperties;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.PaymentDao;
 import com.foodplatform.dao.UserDao;
@@ -20,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;

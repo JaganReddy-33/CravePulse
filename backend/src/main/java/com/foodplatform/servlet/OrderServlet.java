@@ -51,6 +51,8 @@ import java.util.UUID;
 @WebServlet("/api/orders/*")
 public class OrderServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger logger = LoggerFactory.getLogger(OrderServlet.class);
 
     private final OrderDao orderDao = new OrderDaoImpl();

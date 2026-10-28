@@ -20,6 +20,8 @@ import java.util.Map;
 @WebServlet("/api/auth/*")
 public class AuthServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final AuthService authService = new AuthService();
     private final UserDao userDao = new UserDaoImpl();
     private final WalletDao walletDao = new WalletDaoImpl();

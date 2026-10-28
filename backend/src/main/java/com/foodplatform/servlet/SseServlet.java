@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 @WebServlet(value = "/api/events/sse", asyncSupported = true)
 public class SseServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger logger = LoggerFactory.getLogger(SseServlet.class);
     private static final CopyOnWriteArrayList<AsyncContext> asyncContexts = new CopyOnWriteArrayList<>();
 

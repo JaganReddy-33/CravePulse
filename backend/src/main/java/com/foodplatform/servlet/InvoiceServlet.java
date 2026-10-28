@@ -16,6 +16,8 @@ import java.math.RoundingMode;
 @WebServlet("/api/invoices/*")
 public class InvoiceServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final OrderDao orderDao = new OrderDaoImpl();
 
     @Override

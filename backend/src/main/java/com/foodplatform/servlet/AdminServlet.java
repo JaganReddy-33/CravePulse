@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 @WebServlet("/api/admin/*")
 public class AdminServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final AnalyticsService analyticsService = new AnalyticsService();
     private final UserDao userDao = new UserDaoImpl();
     private final RestaurantDao restaurantDao = new RestaurantDaoImpl();

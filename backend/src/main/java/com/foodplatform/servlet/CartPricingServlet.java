@@ -1,7 +1,6 @@
 package com.foodplatform.servlet;
 
 import com.foodplatform.config.DatabaseConfig;
-import com.foodplatform.dao.WalletDao;
 import com.foodplatform.model.Coupon;
 import com.foodplatform.service.PricingService;
 import com.foodplatform.util.JsonUtil;
@@ -23,6 +22,8 @@ import java.util.List;
 
 @WebServlet("/api/cart/*")
 public class CartPricingServlet extends BaseServlet {
+
+    private static final long serialVersionUID = 1L;
 
     private final PricingService pricingService = new PricingService();
 

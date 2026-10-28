@@ -19,6 +19,8 @@ import java.util.Map;
 @WebServlet("/api/restaurants/*")
 public class RestaurantServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final RestaurantDao restaurantDao = new RestaurantDaoImpl();
     private final AnalyticsService analyticsService = new AnalyticsService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
@@ -241,6 +243,7 @@ public class RestaurantServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, restId)) return;
 
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> hoursList = JsonUtil.readRequestBody(req, List.class);
             if (hoursList != null) {
                 restaurantDao.updateOperatingHours(restId, hoursList);

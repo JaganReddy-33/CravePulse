@@ -11,6 +11,8 @@ import java.io.IOException;
 @WebServlet("/api/notifications/*")
 public class NotificationServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final NotificationService notificationService = new NotificationService();
 
     @Override

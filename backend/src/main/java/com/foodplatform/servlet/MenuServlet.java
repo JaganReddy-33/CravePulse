@@ -19,6 +19,8 @@ import java.util.Map;
 @WebServlet("/api/menu/*")
 public class MenuServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final MenuDao menuDao = new MenuDaoImpl();
 
     @Override

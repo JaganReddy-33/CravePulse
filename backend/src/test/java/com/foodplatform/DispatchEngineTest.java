@@ -7,7 +7,6 @@ import com.foodplatform.dao.UserDao;
 import com.foodplatform.dao.WalletDao;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.Restaurant;
-import com.foodplatform.model.RiderProfile;
 import com.foodplatform.service.DispatchService;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

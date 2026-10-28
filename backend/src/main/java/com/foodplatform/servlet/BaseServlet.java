@@ -18,6 +18,8 @@ import java.io.IOException;
 
 public abstract class BaseServlet extends HttpServlet {
 
+    private static final long serialVersionUID = 1L;
+
     protected final OrderDao baseOrderDao = new OrderDaoImpl();
     protected final RestaurantDao baseRestaurantDao = new RestaurantDaoImpl();
     protected final RiderDao baseRiderDao = new RiderDaoImpl();

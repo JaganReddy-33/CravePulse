@@ -13,6 +13,8 @@ import java.util.Map;
 @WebServlet({"/api/partner/apply", "/api/rider/apply"})
 public class OnboardingServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final AuthService authService = new AuthService();
 
     @Override

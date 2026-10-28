@@ -21,6 +21,8 @@ import java.util.Map;
 @WebServlet("/api/disputes/*")
 public class DisputeServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final DisputeService disputeService = new DisputeService();
     private final AdminAuditDao adminAuditDao = new AdminAuditDaoImpl();
     private final UserDao userDao = new UserDaoImpl();

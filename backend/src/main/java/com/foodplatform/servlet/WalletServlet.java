@@ -26,6 +26,8 @@ import java.util.Map;
 @WebServlet("/api/wallet/*")
 public class WalletServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger logger = LoggerFactory.getLogger(WalletServlet.class);
 
     private final UserDao userDao;

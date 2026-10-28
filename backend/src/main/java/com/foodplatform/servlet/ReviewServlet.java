@@ -19,6 +19,8 @@ import java.util.Map;
 @WebServlet("/api/reviews/*")
 public class ReviewServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final ReviewDao reviewDao = new ReviewDaoImpl();
     private final OrderDao orderDao = new OrderDaoImpl();
 

@@ -1,6 +1,5 @@
 package com.foodplatform;
 
-import com.foodplatform.config.AppProperties;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.RiderDao;
@@ -8,12 +7,7 @@ import com.foodplatform.dao.UserDao;
 import com.foodplatform.dao.WalletDao;
 import com.foodplatform.filter.CorsFilter;
 import com.foodplatform.filter.SecurityHeadersFilter;
-import com.foodplatform.model.Order;
-import com.foodplatform.model.Restaurant;
-import com.foodplatform.model.RiderProfile;
-import com.foodplatform.model.User;
 import com.foodplatform.service.AuthService;
-import com.foodplatform.service.OrderStateMachineService;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,13 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

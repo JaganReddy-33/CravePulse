@@ -1,7 +1,6 @@
 package com.foodplatform.service;
 
 import com.foodplatform.config.AppProperties;
-import com.foodplatform.util.JsonUtil;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;

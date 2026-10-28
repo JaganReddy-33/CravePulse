@@ -8,7 +8,6 @@ import com.foodplatform.dao.WalletDao;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.model.RiderProfile;
-import com.foodplatform.model.User;
 import com.foodplatform.service.OrderStateMachineService;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
 import org.junit.jupiter.api.BeforeEach;

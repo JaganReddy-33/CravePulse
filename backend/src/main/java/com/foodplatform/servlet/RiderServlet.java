@@ -25,6 +25,8 @@ import java.util.Map;
 @WebServlet("/api/rider/*")
 public class RiderServlet extends BaseServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private final RiderDao riderDao = new RiderDaoImpl();
     private final OrderDao orderDao = new OrderDaoImpl();
     private final DispatchService dispatchService = new DispatchService();
