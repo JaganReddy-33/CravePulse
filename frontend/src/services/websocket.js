@@ -15,7 +15,13 @@ class RealtimeClient {
 
     const token = localStorage.getItem('accessToken');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
+
+    // In development (Vite on :5173), connect directly to the backend on :8081
+    // so we don't go through the Vite WS proxy which doesn't reliably upgrade
+    // the connection. In production the origin IS the backend host.
+    const hostname = window.location.hostname || 'localhost';
+    const host = import.meta.env.DEV ? `${hostname}:8081` : window.location.host;
+
     const url = `${protocol}//${host}/ws/realtime${token ? `?token=${encodeURIComponent(token)}` : ''}`;
 
     try {
@@ -38,7 +44,7 @@ class RealtimeClient {
             this.emit(message.event, message.data || message);
           }
         } catch (e) {
-          console.error('Error parsing WebSocket message', e);
+          // Ignore invalid parse
         }
       };
 
@@ -48,8 +54,8 @@ class RealtimeClient {
         this.scheduleReconnect();
       };
 
-      this.ws.onerror = (err) => {
-        console.warn('WebSocket encountered error', err);
+      this.ws.onerror = () => {
+        // Silently handle error event so React DevTools doesn't dump verbose installHook warnings
       };
     } catch (e) {
       this.scheduleReconnect();
@@ -57,7 +63,13 @@ class RealtimeClient {
   }
 
   scheduleReconnect() {
+    // Don't reconnect if there is no auth token - user is logged out
+    if (!localStorage.getItem('accessToken')) return;
+
     this.reconnectAttempts++;
+    // Cap at 3 attempts to prevent infinite console noise if backend is offline
+    if (this.reconnectAttempts > 3) return;
+
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), this.maxReconnectDelay);
     setTimeout(() => this.connect(), delay);
   }

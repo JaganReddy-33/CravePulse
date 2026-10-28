@@ -94,22 +94,23 @@ const Navbar = ({ onOpenCart }) => {
           backdropFilter: 'blur(16px)', 
           WebkitBackdropFilter: 'blur(16px)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-          zIndex: 1030 
+          zIndex: 1030,
+          flexWrap: 'wrap'
         }}
         aria-label="Main Navigation Bar"
       >
         <div className="container-fluid px-3 px-md-4">
           {/* Brand Logo & Location Trigger */}
-          <div className="d-flex align-items-center gap-2 gap-md-3">
-            <BrandLogo />
+          <div className="d-flex align-items-center gap-1 gap-sm-2 gap-md-3">
+            <BrandLogo size="sm" />
 
-            {/* Location selector button */}
+            {/* Location selector button (Desktop / Tablet) */}
             <div className="d-none d-sm-block">
               <button 
                 type="button" 
                 className="btn btn-sm btn-light rounded-pill px-3 py-2 border d-flex align-items-center gap-2 text-start shadow-sm hover-lift transition touch-target"
                 onClick={() => setShowLocationModal(true)}
-                style={{ maxWidth: 240 }}
+                style={{ maxWidth: 220 }}
                 aria-label={`Current delivery location: ${selectedHub.name}. Click to change.`}
               >
                 <i className={`bi bi-geo-alt-fill fs-6 ${gpsLocked ? 'text-success' : 'text-danger'}`}></i>
@@ -118,15 +119,32 @@ const Navbar = ({ onOpenCart }) => {
                     {selectedHub.name}
                   </div>
                   <small className="text-muted" style={{ fontSize: 10 }}>
-                    {selectedHub.cityName || selectedCity.name} {gpsLocked ? '• GPS Locked' : ''}
+                    {selectedHub.cityName || selectedCity.name} {gpsLocked ? '• GPS' : ''}
                   </small>
                 </div>
                 <i className="bi bi-chevron-down small text-muted ms-1"></i>
               </button>
             </div>
+
+            {/* Location selector pill (Mobile < 576px) */}
+            <div className="d-block d-sm-none">
+              <button 
+                type="button" 
+                className="btn btn-sm btn-light rounded-pill px-2 py-1 border d-flex align-items-center gap-1 text-start shadow-sm touch-target"
+                onClick={() => setShowLocationModal(true)}
+                style={{ maxWidth: 115 }}
+                aria-label={`Delivery location: ${selectedHub.name}`}
+              >
+                <i className={`bi bi-geo-alt-fill ${gpsLocked ? 'text-success' : 'text-danger'}`} style={{ fontSize: 11 }}></i>
+                <span className="fw-bold text-dark text-truncate" style={{ fontSize: 11, lineHeight: 1.1 }}>
+                  {selectedHub.name}
+                </span>
+                <i className="bi bi-chevron-down text-muted" style={{ fontSize: 9 }}></i>
+              </button>
+            </div>
           </div>
 
-          {/* Cross-dish & Restaurant Autocomplete Search (Desktop/Tablet) */}
+          {/* Cross-dish & Restaurant Autocomplete Search (Desktop/Tablet >= 768px) */}
           <NavSearchAutocomplete 
             selectedHub={selectedHub}
             className="d-none d-md-block flex-grow-1 mx-3 mx-lg-4" 
@@ -155,15 +173,15 @@ const Navbar = ({ onOpenCart }) => {
               clearAllNotifications={clearAllNotifications}
             />
 
-            {/* Food Bag / Cart Button */}
+            {/* Food Bag / Cart Button (Desktop/Tablet >= 768px, mobile uses bottom nav) */}
             <button 
               type="button" 
-              className="btn btn-light rounded-pill px-3 py-2 border position-relative d-flex align-items-center gap-2 shadow-sm hover-lift touch-target"
+              className="btn btn-light rounded-pill px-3 py-2 border position-relative d-none d-md-flex align-items-center gap-2 shadow-sm hover-lift touch-target"
               onClick={onOpenCart}
               aria-label={`Open food bag with ${totalItemCount} items`}
             >
               <i className="bi bi-bag-fill text-danger fs-6"></i>
-              <span className="fw-bold text-dark d-none d-sm-inline">Bag</span>
+              <span className="fw-bold text-dark">Bag</span>
               {totalItemCount > 0 && (
                 <span 
                   className="badge rounded-pill bg-danger text-white border border-white"
@@ -174,13 +192,15 @@ const Navbar = ({ onOpenCart }) => {
               )}
             </button>
 
-            {/* User Profile Menu */}
-            <NavUserDropdown
-              user={user}
-              logout={logout}
-              showUserMenu={showUserMenu}
-              setShowUserMenu={setShowUserMenu}
-            />
+            {/* User Profile Menu (Desktop/Tablet >= 768px, mobile uses drawer & bottom nav) */}
+            <div className="d-none d-md-block">
+              <NavUserDropdown
+                user={user}
+                logout={logout}
+                showUserMenu={showUserMenu}
+                setShowUserMenu={setShowUserMenu}
+              />
+            </div>
 
             {/* Mobile Navigation Drawer Hamburger Button */}
             <button
@@ -192,6 +212,15 @@ const Navbar = ({ onOpenCart }) => {
               <i className="bi bi-list fs-5"></i>
             </button>
           </div>
+        </div>
+
+        {/* Search bar row: visible on mobile & small tablet (< 768px) where top search is hidden */}
+        <div className="navbar-inline-search-sm w-100 px-3 pb-2 d-flex d-md-none bg-white">
+          <NavSearchAutocomplete 
+            selectedHub={selectedHub}
+            className="flex-grow-1"
+            style={{ maxWidth: '100%' }}
+          />
         </div>
       </nav>
 

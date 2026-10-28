@@ -33,7 +33,7 @@ const Footer = () => {
           </div>
 
           {/* Col 2: Company */}
-          <div className="col-6 col-md-6 col-lg-2">
+          <div className="col-6 col-md-3 col-lg-2">
             <h6 className="fw-bold text-white text-uppercase tracking-wider small mb-3">Company</h6>
             <ul className="list-unstyled small d-flex flex-column gap-2 mb-0">
               <li><Link to="/about" className="text-secondary text-decoration-none hover-white">About Us</Link></li>
@@ -46,7 +46,7 @@ const Footer = () => {
           </div>
 
           {/* Col 3: Support & Legal */}
-          <div className="col-6 col-md-6 col-lg-2">
+          <div className="col-6 col-md-3 col-lg-2">
             <h6 className="fw-bold text-white text-uppercase tracking-wider small mb-3">Support & Legal</h6>
             <ul className="list-unstyled small d-flex flex-column gap-2 mb-0">
               <li><Link to="/help" className="text-secondary text-decoration-none hover-white">Help & FAQs</Link></li>

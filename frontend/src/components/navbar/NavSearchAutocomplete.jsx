@@ -108,7 +108,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = '' }) => {
         <input
           type="text"
           className="form-control bg-transparent border-0 ps-1 py-2"
-          placeholder="Search biryani, pizza, North Indian, salads..."
+          placeholder="Search dishes or restaurants..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setShowSuggestions(true)}

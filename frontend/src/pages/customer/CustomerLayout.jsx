@@ -27,7 +27,7 @@ const CustomerLayout = () => {
   };
 
   return (
-    <div className="customer-portal position-relative d-flex flex-column min-vh-100" style={{ paddingTop: '74px' }}>
+    <div className="customer-portal position-relative d-flex flex-column min-vh-100 cp-layout-root">
       <ParticleBackground />
       <Navbar onOpenCart={() => setShowCartDrawer(true)} />
 

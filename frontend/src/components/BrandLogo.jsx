@@ -63,7 +63,7 @@ const BrandLogo = ({ size = 'md', to = '/', showTagline = true, lightMode = fals
         </span>
         {showTagline && (
           <span 
-            className="small fw-bold" 
+            className="small fw-bold d-none d-sm-inline" 
             style={{ 
               fontSize: 9, 
               color: lightMode ? '#cbd5e1' : '#64748b',

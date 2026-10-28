@@ -270,6 +270,18 @@ html, body {
    ============================================================================== */
 :root {
   --cravepulse-nav-height: 72px;
+  --cravepulse-nav-height-sm: 118px; /* includes search bar row on mobile and tablet */
+}
+
+/* Customer layout root: responsive padding under the fixed navbar */
+.cp-layout-root {
+  padding-top: var(--cravepulse-nav-height);
+}
+
+@media (max-width: 767.98px) {
+  .cp-layout-root {
+    padding-top: var(--cravepulse-nav-height-sm);
+  }
 }
 
 .cravepulse-fixed-top {
@@ -384,4 +396,279 @@ html, body {
   transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   TOUCH TARGETS & MOBILE UTILITIES
+   ========================================================================== */
 
+/* 44px minimum touch target for all interactive elements */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Disable tap highlight flash on mobile */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   MOBILE BOTTOM NAV CLEARANCE
+   Content must not be hidden behind the fixed bottom nav on mobile
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  /* Add bottom padding equal to bottom nav height + safe area */
+  .customer-portal main,
+  .customer-portal > .flex-grow-1 {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Footer doesn't need the full bottom nav clearance - just inset */
+  .customer-portal footer {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 8px)) !important;
+  }
+
+  /* Category carousel: smaller cards on very small screens */
+  .category-carousel-card {
+    width: 95px !important;
+  }
+
+  /* Filter bar: wrap gracefully with proper gap on mobile */
+  .filter-bar-pills {
+    gap: 0.35rem !important;
+  }
+
+  /* Hero section: reduce padding on mobile */
+  .hero-banner-card {
+    padding: 1.25rem !important;
+  }
+
+  /* Restaurant grid: single column full-width on small phones */
+  .restaurant-grid-col {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Sort + filter bar: stack Sort label on its own line for narrow screens */
+  .filter-sort-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .filter-sort-row .sort-group {
+    width: 100%;
+  }
+
+  .filter-sort-row .sort-group select {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   TABLET FIXES (576px - 991px) — Search bar and layout
+   ========================================================================== */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  /* Show search in the navbar area on 576-767 (below the top nav) */
+  .mobile-search-bar-below-nav {
+    display: block !important;
+  }
+
+  /* Category carousel card sizing */
+  .category-carousel-card {
+    width: 105px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  /* Tablet: 2-col restaurant grid, no sidebar */
+  .restaurant-grid-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  /* Ensure filter pills wrap without overflow */
+  .filter-pills-wrapper {
+    flex-wrap: wrap;
+  }
+}
+
+/* ==========================================================================
+   LARGE TABLET / iPad Pro (992px - 1199px) — Sidebar + content
+   ========================================================================== */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  /* Keep sidebar compact, give more room to content */
+  .cravepulse-sidebar, .foodora-sidebar {
+    width: 200px;
+  }
+
+  /* Category carousel cards slightly smaller */
+  .category-carousel-card {
+    width: 110px !important;
+  }
+
+  /* Partner/Rider/Admin portal sidebars: collapsible on iPad Pro */
+  .portal-sidebar-xl {
+    width: 200px;
+  }
+}
+
+/* ==========================================================================
+   FOOTER RESPONSIVE FIXES
+   ========================================================================== */
+@media (max-width: 575.98px) {
+  /* Footer: 2-col grid on very small screens */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Footer brand column: full width */
+  .footer-brand-col {
+    grid-column: 1 / -1;
+  }
+
+  /* Footer social + security section: center aligned on mobile */
+  .footer-social-col {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  /* Payment logos: smaller and wrapped */
+  .footer-payment-logos {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    justify-content: center;
+  }
+
+  .footer-payment-logos .badge {
+    font-size: 10px !important;
+    padding: 0.35rem 0.5rem !important;
+  }
+}
+
+/* ==========================================================================
+   NAVBAR RESPONSIVE: Inline search for mobile & tablet (< 768px)
+   ========================================================================== */
+.navbar-inline-search-sm {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-inline-search-sm {
+    display: flex !important;
+    width: 100%;
+    order: 10;
+    padding: 0.35rem 0.75rem 0.5rem;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+/* ==========================================================================
+   PARTNER / RIDER / ADMIN PORTAL SIDEBAR RESPONSIVE
+   ========================================================================== */
+@media (max-width: 991.98px) {
+  /* Sidebar: hidden by default, shown via overlay drawer on tablet */
+  .portal-left-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100vh;
+    z-index: 1050;
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+  }
+
+  .portal-left-sidebar.is-open {
+    left: 0;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
+
+  /* Main content: full width when sidebar is hidden */
+  .portal-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .portal-left-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+/* ==========================================================================
+   SCROLLABLE CATEGORY ROW: hide scrollbar but keep scrollable
+   ========================================================================== */
+.categories-scroll-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE 10+ */
+  -webkit-overflow-scrolling: touch;
+}
+
+.categories-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   CARD CONSISTENCY ACROSS VIEWPORTS
+   ========================================================================== */
+@media (max-width: 575.98px) {
+  /* Restaurant cards: ensure consistent appearance on narrow screens */
+  .restaurant-card-img {
+    height: 160px !important;
+  }
+
+  /* Reduce card body font sizes slightly */
+  .restaurant-card-body h6 {
+    font-size: 0.875rem;
+  }
+
+  /* Checkout page: reduce padding on mobile */
+  .checkout-section-card {
+    padding: 1rem !important;
+  }
+}
+
+/* ==========================================================================
+   SEARCH BAR MOBILE VISIBILITY (below nav on sm screens)
+   ========================================================================== */
+.mobile-search-below-nav {
+  display: none;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 72px;
+  z-index: 100;
+}
+
+@media (max-width: 767.98px) {
+  .mobile-search-below-nav {
+    display: block;
+  }
+}
+
+/* ==========================================================================
+   RIDER COCKPIT RESPONSIVE PADDING
+   ========================================================================== */
+.rider-cockpit-main {
+  padding-top: 142px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 96px;
+}
+
+@media (min-width: 992px) {
+  .rider-cockpit-main {
+    padding-top: 96px;
+  }
+}

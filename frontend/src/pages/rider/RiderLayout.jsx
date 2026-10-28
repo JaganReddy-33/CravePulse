@@ -317,16 +317,7 @@ const RiderLayout = () => {
       </header>
 
       {/* Main Content Layout with safe responsive padding-top */}
-      <main 
-        className="flex-grow-1 px-3 px-md-4 rider-cockpit-main" 
-        style={{ 
-          paddingTop: '135px',
-          maxWidth: 1440, 
-          margin: '0 auto', 
-          width: '100%',
-          paddingBottom: '96px' // Space for floating SOS dock
-        }}
-      >
+      <main className="flex-grow-1 px-3 px-md-4 rider-cockpit-main">
         <Outlet />
       </main>
     </div>

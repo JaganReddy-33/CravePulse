@@ -276,8 +276,8 @@ const CustomerHome = () => {
   return (
     <div className="container-fluid px-3 px-md-4 py-3">
       <div className="row g-4">
-        {/* Left Sidebar Navigation (Desktop) */}
-        <div className="col-lg-2 d-none d-lg-block">
+        {/* Left Sidebar Navigation (Desktop & Large Tablet) */}
+        <div className="col-xl-2 col-lg-3 d-none d-lg-block">
           <div className="card border-0 rounded-4 shadow-sm p-3 bg-white sticky-top" style={{ top: 90 }}>
             <div className="list-group list-group-flush border-0">
               <Link to="/" className="list-group-item list-group-item-action border-0 rounded-3 py-2 fw-bold text-primary bg-primary-subtle d-flex align-items-center gap-2 mb-1">
@@ -325,10 +325,10 @@ const CustomerHome = () => {
         </div>
 
         {/* Main Center Content */}
-        <div className="col-12 col-lg-10">
+        <div className="col-12 col-xl-10 col-lg-9">
           {/* Hero Banner with Radical Price Parity Assurance */}
           <div 
-            className="card border-0 rounded-4 shadow-sm overflow-hidden mb-4 p-4 p-md-5 position-relative" 
+            className="hero-banner-card card border-0 rounded-4 shadow-sm overflow-hidden mb-4 p-3 p-md-5 position-relative" 
             style={{ 
               background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', 
               border: '1px solid #fed7aa' 
@@ -389,13 +389,13 @@ const CustomerHome = () => {
                 Clear Selection
               </button>
             </div>
-            <div className="d-flex gap-3 overflow-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            <div className="categories-scroll-row">
               {CATEGORIES.map((cat, idx) => {
                 const isActive = (selectedCuisine === cat.name) || (!selectedCuisine && cat.name === 'All');
                 return (
                   <div
                     key={idx}
-                    className={`card border-0 rounded-4 text-center p-3 shadow-sm flex-shrink-0 cursor-pointer transition hover-lift ${isActive ? 'border border-2 border-primary bg-primary-subtle' : 'bg-white'}`}
+                    className={`category-carousel-card card border-0 rounded-4 text-center p-2 p-sm-3 shadow-sm flex-shrink-0 cursor-pointer transition hover-lift ${isActive ? 'border border-2 border-primary bg-primary-subtle' : 'bg-white'}`}
                     style={{ width: 125, cursor: 'pointer' }}
                     onClick={() => setSelectedCuisine(cat.name === 'All' ? '' : cat.name)}
                   >
@@ -424,9 +424,9 @@ const CustomerHome = () => {
 
           {/* Dynamic Filter Controls Bar */}
           <div className="card border-0 rounded-4 shadow-sm p-3 mb-4 bg-white">
-            <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="filter-sort-row d-flex flex-wrap align-items-center justify-content-between gap-2">
               {/* Left Filters Group */}
-              <div className="d-flex flex-wrap align-items-center gap-2">
+              <div className="filter-bar-pills d-flex flex-wrap align-items-center gap-2">
                 {/* Pure Veg Switch */}
                 <button
                   type="button"
@@ -484,13 +484,14 @@ const CustomerHome = () => {
               </div>
 
               {/* Right Sort By Dropdown */}
-              <div className="d-flex align-items-center gap-2">
-                <span className="small text-muted d-none d-sm-inline">Sort by:</span>
+              <div className="sort-group d-flex align-items-center gap-2">
+                <span className="small text-muted fw-semibold d-none d-sm-inline">Sort by:</span>
                 <select 
                   className="form-select form-select-sm rounded-pill border shadow-none" 
-                  style={{ width: 'auto' }}
+                  style={{ minWidth: 160 }}
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
+                  aria-label="Sort restaurants by"
                 >
                   <option value="relevance">Relevance & Distance</option>
                   <option value="rating">Rating: High to Low</option>
@@ -546,9 +547,9 @@ const CustomerHome = () => {
                   return (
                     <div key={rest.id} className="col-12 col-md-6 col-xl-4">
                       <Link to={swiggyUrl} className="text-decoration-none">
-                      <div className={`card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift position-relative ${rest.isOpen === false ? 'opacity-75' : ''}`}>
+                      <div className={`restaurant-card-body card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift position-relative ${rest.isOpen === false ? 'opacity-75' : ''}`}>
                         {/* Restaurant Banner Image */}
-                        <div className="position-relative" style={{ height: 180 }}>
+                        <div className="restaurant-card-img position-relative" style={{ height: 180 }}>
                           <img
                             src={rest.bannerImage}
                             alt={rest.name}
