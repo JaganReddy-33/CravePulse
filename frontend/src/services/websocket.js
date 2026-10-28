@@ -16,13 +16,16 @@ class RealtimeClient {
     const token = localStorage.getItem('accessToken');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
-    // In development (Vite on :5173), connect directly to the backend on :8081
-    // so we don't go through the Vite WS proxy which doesn't reliably upgrade
-    // the connection. In production the origin IS the backend host.
-    const hostname = window.location.hostname || 'localhost';
-    const host = import.meta.env.DEV ? `${hostname}:8081` : window.location.host;
+    // In production or custom environments, respect VITE_WS_URL; otherwise default to host / dev port
+    let baseWsUrl = import.meta.env.VITE_WS_URL;
+    if (!baseWsUrl) {
+      const hostname = window.location.hostname || 'localhost';
+      const host = import.meta.env.DEV ? `${hostname}:8081` : window.location.host;
+      baseWsUrl = `${protocol}//${host}/ws/realtime`;
+    }
 
-    const url = `${protocol}//${host}/ws/realtime${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    const separator = baseWsUrl.includes('?') ? '&' : '?';
+    const url = token ? `${baseWsUrl}${separator}token=${encodeURIComponent(token)}` : baseWsUrl;
 
     try {
       this.ws = new WebSocket(url);
