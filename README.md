@@ -1,113 +1,302 @@
-# CravePulse | India's Fair Food Network
+<div align="center">
 
-A production-grade, real-time multi-portal food delivery platform engineered with **Java 17 (Jakarta Servlets 6.0, JDBC, HikariCP, MySQL 8)** on the backend and **React 18 (Vite, Bootstrap 5, Leaflet OpenStreetMap, HTML5 Canvas, Web Audio API)** on the frontend.
+# 🍽️ CravePulse
+### India's Fair Food Delivery Network
 
-Designed with **zero Spring Boot, zero Hibernate/JPA, and zero Lombok**, the architecture relies on direct low-overhead JDBC `PreparedStatements`, pessimistic concurrency locking (`SELECT ... FOR UPDATE`), double-entry atomic ledger transactions, and bidirectional Jakarta WebSocket (`@ServerEndpoint`) synchronization.
+**A production-grade, real-time multi-portal food delivery platform**
+built from scratch with **zero frameworks** — no Spring Boot, no Hibernate, no Lombok.
+
+[![Java 17](https://img.shields.io/badge/Java-17-007396?logo=java&logoColor=white)](https://openjdk.org/projects/jdk/17/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![MySQL 8](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Jakarta EE 6](https://img.shields.io/badge/Jakarta%20EE-6.0-E87722?logo=jakartaee&logoColor=white)](https://jakarta.ee/)
+[![WebSocket](https://img.shields.io/badge/WebSocket-Bidirectional-brightgreen)](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
 
 ---
 
-## Architecture Diagram
+## 🚀 What is CravePulse?
+
+CravePulse is a **full-stack, real-time food delivery platform** that rethinks the gig-economy model with radical transparency. Unlike traditional food platforms that mark up restaurant menu prices, CravePulse enforces **100% dine-in price parity** — what you see on the restaurant's physical menu is exactly what you pay online.
+
+Built with raw **Jakarta Servlets 6.0**, direct **JDBC PreparedStatements**, **HikariCP connection pooling**, and a **bidirectional Jakarta WebSocket** server — with no Spring Boot, no Hibernate, and no magic annotations — every byte of this platform is handcrafted and intentional.
+
+---
+
+## 🏗️ Architecture Overview
 
 ```mermaid
 graph TD
-    subgraph Clients["Frontend Clients (React 18 + Vite)"]
-        CustomerApp["Customer Portal\n(Port 5173 /)"]
-        PartnerPortal["Partner Kitchen Portal\n(/partner)"]
-        RiderCockpit["Rider Logistics Cockpit\n(/rider)"]
-        AdminConsole["Ops Admin Console\n(/admin)"]
+    subgraph Clients["🖥️ Frontend Portals (React 18 + Vite)"]
+        CustomerApp["🧑‍💼 Customer Portal\n/ (discovery, ordering, tracking)"]
+        PartnerPortal["👨‍🍳 Partner Kitchen Portal\n/partner (kitchen kanban, analytics)"]
+        RiderCockpit["🛵 Rider Logistics Cockpit\n/rider (dispatch, earnings, GPS)"]
+        AdminConsole["🔧 Ops Admin Console\n/admin (fleet radar, disputes, settings)"]
     end
 
-    subgraph Edge["Security & Gateway Filters"]
-        SecurityHeaders["SecurityHeadersFilter\n(HSTS, CSP, XSS)"]
-        CORS["CorsFilter\n(Credentials, Origin Guard)"]
-        RateLimit["RateLimitFilter\n(100 req/min Token Bucket)"]
-        LoggingMDC["RequestLoggingFilter\n(X-Request-ID, MDC)"]
-        JWTAuth["JwtAuthFilter\n(Role Extraction & Claims)"]
+    subgraph Edge["🛡️ Security & Gateway Filters"]
+        SecurityHeaders["SecurityHeadersFilter\n(HSTS, CSP, X-Frame, XSS)"]
+        CORS["CorsFilter\n(Credentials + Origin Guard)"]
+        RateLimit["RateLimitFilter\n(100 req/min Token Bucket per IP)"]
+        LoggingMDC["RequestLoggingFilter\n(X-Request-ID + SLF4J MDC)"]
+        JWTAuth["JwtAuthFilter\n(HS256 Role Extraction & Claims)"]
     end
 
-    subgraph Core["Jakarta Servlet API (Port 8080)"]
-        AuthServlet["AuthServlet\n(/api/auth)"]
-        RestaurantServlet["RestaurantServlet\n(/api/restaurants)"]
-        OrderServlet["OrderServlet\n(/api/orders)"]
-        CartPricingServlet["CartPricingServlet\n(/api/cart)"]
-        PaymentServlet["PaymentServlet\n(/api/payments)"]
-        RiderServlet["RiderServlet\n(/api/rider)"]
-        AdminServlet["AdminServlet\n(/api/admin)"]
-        DisputeServlet["DisputeServlet\n(/api/disputes)"]
-        HealthServlet["HealthObservabilityServlet\n(/health, /ready, /metrics)"]
-        WsEndpoint["RealtimeEndpoint\n(WebSocket /ws/realtime)"]
+    subgraph Core["⚙️ Jakarta Servlet API Layer"]
+        AuthServlet["AuthServlet /api/auth"]
+        RestaurantServlet["RestaurantServlet /api/restaurants"]
+        OrderServlet["OrderServlet /api/orders"]
+        CartPricingServlet["CartPricingServlet /api/cart"]
+        PaymentServlet["PaymentServlet /api/payments"]
+        RiderServlet["RiderServlet /api/rider"]
+        AdminServlet["AdminServlet /api/admin"]
+        DisputeServlet["DisputeServlet /api/disputes"]
+        WsEndpoint["RealtimeEndpoint /ws/realtime"]
+        HealthServlet["HealthObservabilityServlet /health /ready /metrics"]
     end
 
-    subgraph Services["Core Business Engines"]
-        PricingEngine["PricingService\n(Distance, Tax, ETA)"]
-        DispatchEngine["DispatchService\n(Fair-Pay, P2P Radius)"]
-        PaymentEngine["PaymentService\n(Razorpay, Wallet, COD)"]
-        StateMachine["OrderService\n(State Transitions, Refunds)"]
-        RetentionService["RetentionService\n(7-Day Purge Scheduler)"]
-        MetricsService["MetricsService\n(Thread-Safe LongAdders)"]
+    subgraph Engines["🧠 Core Business Engines"]
+        PricingEngine["PricingService\n(Distance, GST, ETA, Wallet)"]
+        DispatchEngine["DispatchService\n(Fair-Pay, Progressive Radius)"]
+        PaymentEngine["PaymentService\n(Razorpay + Wallet + COD)"]
+        StateMachine["OrderStateMachineService\n(9-Stage Lifecycle + Refunds)"]
+        DisputeEngine["DisputeService\n(Rule-Based Auto-Refund)"]
+        NotifEngine["NotificationService\n(In-App + WebSocket Push)"]
+        RetentionSvc["RetentionService\n(7-Day Telemetry Purge)"]
+        MetricsSvc["MetricsService\n(Thread-Safe LongAdders)"]
     end
 
-    subgraph DataStore["Persistence & Messaging"]
+    subgraph DataStore["💾 Persistence & Messaging"]
         HikariPool["HikariCP Connection Pool\n(Min: 10, Max: 50)"]
-        MySQL[("MySQL 8.0 Relational DB\n(Strict CHECK Constraints\nON DELETE RESTRICT)")]
+        MySQL[("MySQL 8.0\nStrict CHECK Constraints\nON DELETE RESTRICT FK chains")]
         WsRegistry["RealtimeSessionRegistry\n(In-Memory Channel Hub)"]
     end
 
     CustomerApp & PartnerPortal & RiderCockpit & AdminConsole --> SecurityHeaders
     SecurityHeaders --> CORS --> RateLimit --> LoggingMDC --> JWTAuth
     JWTAuth --> Core
-    Core --> Services
-    Services --> HikariPool --> MySQL
+    Core --> Engines
+    Engines --> HikariPool --> MySQL
     WsEndpoint <--> WsRegistry
+    Engines <--> WsRegistry
 ```
 
 ---
 
-## 1. Quick Start
+## ⚡ Core Technology Stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| **Backend Runtime** | Java 17 (Jakarta Servlets 6.0) | Zero-framework, full control over request lifecycle |
+| **HTTP Server** | Embedded Apache Tomcat 10.1 | Packaged as fat-JAR, no external server needed |
+| **Database** | MySQL 8.0 + HikariCP | Strict constraints, `SELECT ... FOR UPDATE` concurrency |
+| **Data Access** | Raw JDBC PreparedStatements | No ORM overhead, full SQL control |
+| **Real-Time** | Jakarta WebSocket (`@ServerEndpoint`) | Bidirectional push: orders, GPS, kitchen alerts, chat |
+| **Security** | HMAC HS256 JWT + BCrypt | Token revocation table, role-scoped request guards |
+| **Payments** | Razorpay HTTP API | Order creation, HMAC signature verification, webhook idempotency |
+| **Frontend** | React 18 + Vite + Bootstrap 5 | SPA with code-split routes, lazy loading |
+| **Maps** | Leaflet + OpenStreetMap | Open-source live rider telemetry GPS map |
+| **Audio/Canvas** | Web Audio API + HTML5 Canvas | Kitchen order chime alerts, particle background effects |
+| **Build** | Apache Maven 3.8 | Shade plugin → single executable fat-JAR |
+| **Deployment** | Render (backend) + Vercel (frontend) + TiDB Cloud (DB) | Production cloud deployment |
+
+---
+
+## 📁 Project Structure
+
+```
+CravePulse/
+├── backend/                          # Java 17 Maven backend
+│   ├── src/main/java/com/foodplatform/
+│   │   ├── config/                   # AppProperties, DatabaseConfig, MigrationRunner
+│   │   ├── dao/                      # DAO interfaces (16 contracts)
+│   │   ├── daoImpl/                  # JDBC implementations (16 files)
+│   │   ├── filter/                   # Security, CORS, Rate Limit, JWT, Logging filters
+│   │   ├── model/                    # 22 domain model POJOs
+│   │   ├── service/                  # 11 business engines (Pricing, Dispatch, Payment...)
+│   │   ├── servlet/                  # 17 Jakarta HTTP servlet endpoints
+│   │   ├── util/                     # JWT, Password (BCrypt), JSON utilities
+│   │   └── websocket/                # RealtimeEndpoint + SessionRegistry
+│   └── src/main/resources/
+│       └── db/migration/             # V1–V11 Flyway-style SQL migrations
+├── frontend/                         # React 18 + Vite frontend
+│   └── src/
+│       ├── components/               # 25+ reusable UI components
+│       ├── context/                  # Auth, Cart, Realtime React contexts
+│       ├── hooks/                    # useApi, useCheckout, useOrderTracking...
+│       ├── pages/
+│       │   ├── admin/                # 11 admin panel pages
+│       │   ├── customer/             # 16 customer-facing pages
+│       │   ├── partner/              # 6 kitchen partner pages
+│       │   └── rider/                # 6 rider delivery pages
+│       ├── services/                 # Axios API client + WebSocket client
+│       └── theme/                    # Design tokens, portal CSS, variables
+├── docs/                             # API.md, ARCHITECTURE.md, DECISIONS.md
+├── scripts/
+│   └── seed-demo.sql                 # 27 restaurants, menus, users, orders
+├── docker-compose.yml
+└── .env.example
+```
+
+---
+
+## 🌟 Feature Implementation Matrix
+
+### ✅ Implemented & Live
+
+| Module | Feature | Details |
+|---|---|---|
+| **Auth & Security** | JWT HS256 Access + Refresh Tokens | Atomic DB revocation in `user_tokens` table |
+| **Auth & Security** | Role-Based Access Control (RBAC) | `CUSTOMER`, `RESTAURANT_OWNER`, `RIDER`, `ADMIN` portal guards |
+| **Auth & Security** | Token Bucket Rate Limiting | 100 req/min per IP in-memory |
+| **Auth & Security** | Security Headers | HSTS, CSP, X-Frame-Options, XSS protection |
+| **Auth & Security** | OTP Delivery Verification | 4-digit delivery OTP required before `DELIVERED` state |
+| **Discovery** | Cross-Dish & Kitchen Search | SQL subqueries across menus + restaurant suggestions autocomplete |
+| **Discovery** | Multi-City Location Picker | Pan-India coordinates + HTML5 Geolocation API |
+| **Discovery** | **Price Parity Guarantee** | 100% dine-in price transparency badge on every dish |
+| **Ordering** | Item Customizer Modal | Portion variants, add-ons, special cooking instructions |
+| **Ordering** | Single-Restaurant Cart Guard | Prevents mixed-kitchen cart with conflict modal |
+| **Ordering** | Dynamic Coupon Engine | Min-order, first-order guard, usage caps, % and flat discounts |
+| **Checkout** | 100% Tip Pass-Through | Zero platform commission on rider tips |
+| **Checkout** | Itemised Bill Breakdown | GST, packaging, delivery, platform fee, wallet credit |
+| **Payments** | Razorpay Online Payments | Order creation, HMAC signature verification, webhook idempotency |
+| **Payments** | In-App CravePulse Wallet | Atomic double-entry debit/credit ledger |
+| **Payments** | Cash On Delivery (COD) | Platform ceiling limit check (₹2000 default) |
+| **Real-Time** | 9-Stage Order State Machine | PLACED → ACCEPTED → PREPARING → READY → PICKED_UP → DELIVERED → REFUNDED |
+| **Real-Time** | Live Rider GPS Telemetry Map | Leaflet OpenStreetMap with WebSocket GPS pings |
+| **Real-Time** | In-App Order Chat | Order-scoped bidirectional messaging between customer & rider |
+| **Real-Time** | Masked Calling Proxy | Platform phone dialers to protect user identity |
+| **Partner Portal** | Kitchen Kanban Board | Web Audio API chime alerts, prep-time confirmation, SLA countdown |
+| **Partner Portal** | Full Menu Management | CRUD for items, variants, add-ons, bulk sold-out toggle, soft delete |
+| **Partner Portal** | Settlement Ledger | Gross sales, commission deductions, GST breakdowns, UTR references |
+| **Partner Portal** | Food Analytics Dashboard | Sales trends, top dishes, revenue charts |
+| **Rider Portal** | Fair-Pay Dispatch Protocol | Upfront transparent earning breakdown before accepting a job |
+| **Rider Portal** | Wait-Time Compensation | ₹2/min credited for restaurant delays > 8 minutes |
+| **Rider Portal** | COD Cash Settlement Ledger | Running cash-in-hand tracking and platform deposit records |
+| **Rider Portal** | Progressive Radius Dispatch | 3.5 km → 6.5 km → 10 km → 15 km retry expansion |
+| **Admin Console** | Live Fleet & Order Radar | Real-time GPS map of all online riders and active dispatches |
+| **Admin Console** | User Directory & Suspension | Account moderation + fraud risk escalation counters |
+| **Admin Console** | Rule-Based Dispute Engine | Auto-refund caps, 2-hour window rule, fraud flag evaluation |
+| **Admin Console** | Platform Levers & CSV Export | Live-tunable fees, GST, search radius, RFC-4180 streaming exports |
+| **Admin Console** | Audit Log Trail | Every admin action logged with actor, target, IP, and timestamp |
+| **Database** | V1–V11 Auto Migrations | Idempotent Flyway-style SQL applied on server startup |
+| **Database** | Strict Constraints | MySQL 8 `CHECK` constraints, non-cascade FKs, pessimistic locking |
+| **Database** | 7-Day Telemetry Retention | Scheduled purge of GPS logs and stale dispatch records |
+| **Observability** | Structured Request IDs | `X-Request-ID` propagation through all SLF4J MDC logs |
+| **Observability** | Health & Readiness Probes | `/health`, `/ready`, `/metrics` endpoints for Render deployment |
+
+---
+
+## 🔮 Planned Future Features (Roadmap)
+
+These features are researched, designed, and queued for implementation in upcoming versions:
+
+### 🚀 Version 1.1 — Smart Ordering Experience
+
+| Feature | Description |
+|---|---|
+| **AI-Powered Dish Recommendations** | Personalized dish suggestions based on order history, time of day, weather, and cuisine preference using collaborative filtering |
+| **Scheduled / Pre-Orders** | Book an order up to 7 days in advance with a scheduled delivery time slot |
+| **Group Ordering with Split Bill** | Multiple users contribute items to a shared cart; split by equal or custom percentage |
+| **Voice Search for Dishes** | Browser Web Speech API integration for hands-free dish and restaurant discovery |
+| **Smart Reorder** | One-tap reorder of last or most-frequently ordered meals |
+
+### 💰 Version 1.2 — Advanced Payments & Finance
+
+| Feature | Description |
+|---|---|
+| **UPI AutoPay Subscriptions** | Monthly meal plan subscriptions with auto-debit via UPI mandate |
+| **BNPL (Buy Now Pay Later)** | Integration with LazyPay or Simpl for deferred payment on high-value orders |
+| **Multi-Currency Support** | Support for international customers using USD, GBP, AED with live forex conversion |
+| **Cashback & Loyalty Points** | Earn CraveCoins on every order, redeem on wallet top-ups or future orders |
+| **Partner Revenue Advance** | Restaurant partners request revenue advances against upcoming settlements |
+
+### 📍 Version 1.3 — Hyperlocal & Logistics
+
+| Feature | Description |
+|---|---|
+| **Real-Time Route Optimization** | Dynamic OSRM/Mapbox routing to calculate optimal delivery path |
+| **Surge Pricing Engine** | Dynamic delivery fee adjustment based on demand density and weather |
+| **Multi-Stop Delivery (Batch Orders)** | One rider delivers up to 3 orders per trip with optimized stop sequencing |
+| **Dark Store Integration** | Instant grocery delivery from micro-warehouses alongside restaurant orders |
+| **Hyperlocal Zone Management** | Admin-configurable delivery zones with polygon-based geofencing |
+
+### 🌍 Version 1.4 — Scale & Localization
+
+| Feature | Description |
+|---|---|
+| **Multi-Language UI** | Full localization for Hindi, Telugu, Kannada, and Tamil using i18n |
+| **Accessibility (WCAG 2.1 AA)** | Screen reader support, keyboard navigation, high-contrast mode |
+| **PWA / Installable App** | Progressive Web App manifest, offline support, push notifications via Service Worker |
+| **Regional Cuisine Expansion** | Curated south Indian, street food, and regional thali category pages |
+| **SMS Order Alerts** | Twilio/Exotel SMS fallback for users without internet connectivity |
+
+### 🛡️ Version 1.5 — Enterprise & Compliance
+
+| Feature | Description |
+|---|---|
+| **Redis WebSocket Backplane** | Replace in-memory `RealtimeSessionRegistry` with Redis Pub/Sub for multi-node horizontal scaling |
+| **FSSAI License Verification API** | Auto-validate restaurant FSSAI license numbers via government API |
+| **GDPR / DPDP Compliance Module** | User data export, right-to-erasure, consent management dashboard |
+| **AI Fraud Detection** | ML model to detect fraudulent dispute patterns, fake reviews, and account abuse |
+| **Franchising / Cloud Kitchen Network** | Single brand operating from multiple kitchen nodes across cities |
+
+### 📊 Version 1.6 — Analytics & Intelligence
+
+| Feature | Description |
+|---|---|
+| **Demand Forecasting Dashboard** | Restaurant partners see predicted order volume per hour/day using historical data |
+| **Customer Lifetime Value (CLV) Engine** | Segment customers by LTV for targeted retention campaigns |
+| **Real-Time Sales Heatmap** | Admin sees an interactive city-wide heatmap of order density and kitchen load |
+| **Rider Performance Scorecard** | Weighted score of acceptance rate, delivery time, and customer rating |
+| **A/B Testing Framework** | Platform-level experiment framework for UI, pricing, and promotion variants |
+
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
-- **Java Development Kit (JDK) 17+**
+- **JDK 17+** (JDK 21 works perfectly — backward compatible)
 - **Apache Maven 3.8+**
 - **Node.js 18+** & **npm 9+**
-- **MySQL Server 8.0+** running locally on port `3306`
+- **MySQL 8.0** running locally on port `3306`
 
 ### 1. Database Setup
-Create the target MySQL database:
 ```sql
 CREATE DATABASE IF NOT EXISTS food_delivery_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 2. Configure Environment Variables
-Copy example configurations:
+### 2. Configure Environment
 ```bash
-cp .env.example .env
-cp backend/src/main/resources/application.properties.example backend/src/main/resources/application.properties
+cp backend/src/main/resources/application.properties.example \
+   backend/src/main/resources/application.properties
 ```
 
-Ensure `application.properties` or environment variables contain valid database credentials:
+Edit `application.properties`:
 ```properties
-db.url=jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+db.url=jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&serverTimezone=UTC
 db.username=root
 db.password=your_db_password
 jwt.secret=YourSuperSecretKeyThatIsAtLeast32BytesLongForHMACSHA256Signing!
 server.port=8080
 ```
 
-### 3. Start Backend API
+### 3. Start Backend
 ```bash
 cd backend
-mvn exec:java -Dexec.mainClass="com.foodplatform.ServerMain"
+mvn clean package -DskipTests
+java -jar target/food-delivery-backend.jar
 ```
-> [!NOTE]
-> All Flyway-style SQL migrations (`V1` through `V11`) apply automatically on server startup.
+> Migrations V1–V11 apply automatically on first boot.
 
-### 4. Optional: Load Multi-City Realistic Demo Data
-To populate 27 authentic restaurants, full menus across Bangalore, Hyderabad, and Mumbai, riders, and historical orders:
+### 4. Load Demo Data (Optional)
 ```bash
 mysql -u root -p food_delivery_db < scripts/seed-demo.sql
 ```
 
-### 5. Start Frontend Dev Server
+### 5. Start Frontend
 ```bash
 cd frontend
 npm install --legacy-peer-deps
@@ -117,127 +306,87 @@ Open **`http://localhost:5173`** in your browser.
 
 ---
 
-## 2. Real Demo Accounts (Seeded)
+## 🔑 Demo Accounts
 
-All demo accounts share the uniform test password credential: `Password@123` *(never used in production)*.
+All demo accounts use the password: `Password@123`
 
-| Portal | Role | Email | Profile / Focus |
-|---|---|---|---|
-| **Customer App** | `CUSTOMER` | `customer@foodora.com` | Consumer order discovery, cart, live tracking |
-| **Customer App** | `CUSTOMER` | `ananya.customer@cravepulse.com` | Multi-city customer (Bangalore) |
-| **Partner Portal** | `RESTAURANT_OWNER` | `chef@foodanalytics.com` | Spice Symphony Indiranagar kitchen management |
-| **Delivery Cockpit** | `RIDER` | `rider@swiftlogistics.com` | Captain delivery cockpit & Fair-Pay earnings |
-| **Delivery Cockpit** | `RIDER` | `karthik.rider@cravepulse.com` | Electric Scooter Captain (Bangalore zone) |
-| **Ops Admin Console** | `ADMIN` | `admin@foodplatform.com` | Fleet radar, telemetry, user directory, disputes |
-
----
-
-## 3. Feature Implementation Matrix
-
-| Module | Feature | Status | Notes |
-|---|---|---|---|
-| **Security & Auth** | JWT Access & Refresh Tokens | **Done** | HS256, atomic DB revocation in `user_tokens` |
-| **Security & Auth** | Role-Based Access Control (RBAC) | **Done** | Strict portal guard (`CUSTOMER`, `RESTAURANT_OWNER`, `RIDER`, `ADMIN`) |
-| **Security & Auth** | Rate Limiting | **Done** | In-memory token bucket (100 req/min per IP) |
-| **Discovery** | Cross-Dish & Kitchen Search | **Done** | SQL subqueries across menus and restaurants with suggestions |
-| **Discovery** | Location Picker & Geolocation | **Done** | Multi-city coordinates + HTML5 Geolocation API |
-| **Menu & Orders** | Item Customizer & Special Notes | **Done** | Portion variants, addons, and kitchen cooking instructions |
-| **Menu & Orders** | Radical Price Parity | **Done** | 100% price transparency (dine-in price vs platform price) |
-| **Checkout** | 100% Tip Pass-Through | **Done** | 0% platform commission on rider tips |
-| **Checkout** | Dynamic Coupon Engine | **Done** | Min order, usage limits, first-order guard, percentage & flat discounts |
-| **Payments** | Razorpay Gateway Integration | **Done** | Order creation, signature HMAC verification, webhook idempotency |
-| **Payments** | In-App CravePulse Wallet | **Done** | Atomic double-entry debit/credit transaction ledger |
-| **Payments** | Cash On Delivery (COD) | **Done** | Platform order ceiling limit check (₹2000 default) |
-| **Tracking** | Real-Time State Machine | **Done** | 9-stage lifecycle: PLACED → ACCEPTED → PREPARING → READY → PICKED_UP → DELIVERED |
-| **Tracking** | Delivery OTP Verification | **Done** | Secure 4-digit numeric OTP required before marked DELIVERED |
-| **Tracking** | Live Rider Telemetry Map | **Done** | Leaflet OpenStreetMap with GPS pings over WebSockets |
-| **Tracking** | Masked Calling & In-App Chat | **Done** | Order-scoped messaging and masked platform phone dialers |
-| **Partner Portal** | Kitchen Kanban Board | **Done** | Audio alert chime, prep time confirmation, SLA countdown timer |
-| **Partner Portal** | Menu Management | **Done** | API-only CRUD, variants, add-ons, soft deletes, bulk sold-out |
-| **Partner Portal** | Settlement Statements | **Done** | Gross sales, commission deductions, GST, and UTR reference ledger |
-| **Rider Portal** | Fair-Pay Dispatch Protocol | **Done** | Transparent upfront breakdown: base fare + distance + surge + 100% tips |
-| **Rider Portal** | Wait-Time Compensation | **Done** | ₹2/min compensation credited for restaurant delays > 8 minutes |
-| **Rider Portal** | COD Cash Settlement Ledger | **Done** | Running cash-in-hand accumulation and cash deposit tracking |
-| **Admin Console** | Real-Time Fleet & Order Radar | **Done** | Live GPS map coordinates of online riders and active dispatches |
-| **Admin Console** | User Directory & Moderation | **Done** | Account suspension and fraud risk escalation counters |
-| **Admin Console** | Rule-Based Dispute Engine | **Done** | Auto-refund caps, 2-hour window checks, and fraud flag evaluation |
-| **Admin Console** | Platform Levers & CSV Export | **Done** | Dynamic fees, GST, search radius, and RFC 4180 streaming exports |
-| **Database** | Strict Constraints & Retention | **Done** | MySQL 8.0 `CHECK` constraints, non-cascade FKs, 7-day telemetry purge |
-| **Observability** | Request ID & Probes | **Done** | `X-Request-ID` propagation, SLF4J MDC, `/health`, `/ready`, `/metrics` |
-| **Advanced** | Group Ordering & Scheduled Orders | **Planned** | Tracked in product roadmap for v1.2 |
-| **Advanced** | Multi-Language Localization | **Planned** | Hindi / Telugu / Kannada UI translation pipeline |
+| Portal | Role | Email |
+|---|---|---|
+| **Customer** | `CUSTOMER` | `customer@foodora.com` |
+| **Customer** | `CUSTOMER` | `ananya.customer@cravepulse.com` |
+| **Kitchen Partner** | `RESTAURANT_OWNER` | `chef@foodanalytics.com` |
+| **Rider** | `RIDER` | `rider@swiftlogistics.com` |
+| **Rider** | `RIDER` | `karthik.rider@cravepulse.com` |
+| **Admin** | `ADMIN` | `admin@foodplatform.com` |
 
 ---
 
-## 4. Environment Variables Reference
+## 🔧 Environment Variables Reference
 
-| Variable | Type | Default | Description |
-|---|---|---|---|
-| `SERVER_PORT` | Integer | `8080` | Port for embedded Tomcat API server |
-| `DB_URL` | String | `jdbc:mysql://localhost:3306/food_delivery_db...` | JDBC database connection URI |
-| `DB_USER` | String | `root` | Database username |
-| `DB_PASSWORD` | String | *(empty)* | Database password |
-| `JWT_SECRET` | String | *(required)* | 256-bit secret for signing HMAC JWT tokens |
-| `JWT_EXPIRATION_HOURS` | Integer | `24` | Access token lifespan in hours |
-| `RAZORPAY_KEY_ID` | String | `rzp_test_placeholder` | Razorpay Merchant ID for payments |
-| `RAZORPAY_KEY_SECRET` | String | `rzp_secret_placeholder` | Razorpay signature verification secret |
-| `DISPATCH_MAX_RADIUS_KM` | Double | `15.0` | Maximum dispatch search radius in km |
-| `WAIT_COMPENSATION_RATE` | Double | `2.00` | Wait-time compensation per minute (INR) |
-
----
-
-## 5. API Reference & Documentation
-
-Comprehensive API documentation with request/response schemas is available in [docs/API.md](file:///c:/Users/ragip/OneDrive/Desktop/100_Days_Full_Stack_Dev_Challenge/Food_delivery_application/docs/API.md).
-
-Key Endpoint Groups:
-- **Authentication:** `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`
-- **Catalog & Discovery:** `GET /api/restaurants`, `GET /api/restaurants/{id}`, `GET /api/restaurants/suggestions`
-- **Pricing & Cart:** `POST /api/cart/calculate`
-- **Orders & Tracking:** `POST /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/{id}/cancel`, `POST /api/orders/{id}/verify-otp`
-- **Payments & Webhooks:** `POST /api/payments/razorpay/create-order`, `POST /api/payments/razorpay/verify`, `POST /api/payments/webhook`
-- **Rider Dispatch:** `GET /api/rider/offers`, `POST /api/rider/offers/{id}/accept`, `POST /api/rider/offers/{id}/reject`, `POST /api/rider/location`
-- **Partner Operations:** `GET /api/restaurants/my-profile`, `GET /api/partner/orders`, `POST /api/menu/item`
-- **Admin Control Room:** `GET /api/admin/metrics`, `GET /api/admin/live-map`, `GET /api/admin/users`, `POST /api/admin/settings`
-- **Platform Observability:** `GET /health`, `GET /ready`, `GET /metrics`
+| Variable | Default | Description |
+|---|---|---|
+| `SERVER_PORT` | `8080` | Embedded Tomcat port |
+| `DB_URL` | `jdbc:mysql://...` | Full JDBC connection URI |
+| `DB_USER` | `root` | Database username |
+| `DB_PASSWORD` | — | Database password |
+| `JWT_SECRET` | *(required)* | 256-bit HMAC signing secret |
+| `JWT_EXPIRATION_HOURS` | `24` | Token lifespan in hours |
+| `RAZORPAY_KEY_ID` | `rzp_test_placeholder` | Razorpay merchant ID |
+| `RAZORPAY_KEY_SECRET` | `rzp_secret_placeholder` | Razorpay HMAC secret |
+| `DISPATCH_MAX_RADIUS_KM` | `15.0` | Max rider search radius |
+| `WAIT_COMPENSATION_RATE` | `2.00` | Wait-time comp (₹/min) |
 
 ---
 
-## 6. Testing & CI/CD Pipeline
+## 🧪 Testing
 
-The project enforces automated testing across both backend and frontend layers:
-
-### Running Backend Tests
+### Backend (75 depth tests)
 ```bash
-cd backend
-mvn test
+cd backend && mvn test
 ```
-- **75 Automated Depth Tests** covering pricing engines, order state machines, payment webhooks, concurrency pessimistic locking (`SELECT ... FOR UPDATE`), idempotency key deduplication, RBAC authorization matrix, and telemetry retention policies.
+Covers: pricing engine, order state machine, payment HMAC, concurrency pessimistic locking, idempotency keys, RBAC matrix, telemetry retention.
 
-### Running Frontend Tests
+### Frontend (13 Vitest tests)
 ```bash
-cd frontend
-npm test
+cd frontend && npm test
 ```
-- **13 Vitest Component & Logic Tests** covering cart state reducers, single-restaurant cart conflicts, checkout form validation, COD monetary thresholds, and route-level authorization guards.
+Covers: cart reducer, single-restaurant conflicts, checkout validation, COD thresholds, route guards.
 
-### End-to-End Playwright Tests
+### End-to-End Playwright
 ```bash
-cd frontend
-npx playwright test
+cd frontend && npx playwright test
 ```
-- Covers customer order flows, kitchen kanban state transitions, rider dispatch acceptance, and admin verification dossiers.
-
-### GitHub Actions CI
-All commits trigger the automated workflow at `.github/workflows/ci.yml`:
-1. **Backend Job:** Compiles Java 17, runs MySQL 8 service container, executes test suite, packages executable.
-2. **Frontend Job:** Installs dependencies, runs Vitest unit tests, builds Vite production bundle, runs `npm audit`.
-3. **Security Job:** Gitleaks automated secret detector scanning for accidental key commits.
+Covers: customer order flow, kitchen kanban, rider dispatch, admin verification.
 
 ---
 
-## 7. Known Limitations & Architectural Notes
+## 📚 Documentation
 
-1. **In-Memory WebSockets:** WebSockets operate via `RealtimeSessionRegistry` within a single JVM process. For multi-node cluster scaling, sessions must be bridged using a Redis Pub/Sub backplane.
-2. **Third-Party SMS/Voice Gateway:** OTP delivery and masked calls utilize simulated platform proxies in the demonstration environment. Connecting to Twilio or Exotel requires setting `SMS_GATEWAY_API_KEY`.
-3. **Map Coordinates:** Geolocation simulation defaults to central Bangalore/Hyderabad/Mumbai when browser location permissions are denied.
+| Doc | Contents |
+|---|---|
+| [docs/API.md](docs/API.md) | Full REST endpoint reference with request/response schemas |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Deep-dive into architectural decisions |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Engineering trade-offs and design rationale |
+| [docs/BASELINE.md](docs/BASELINE.md) | Feature baseline and scope definition |
+
+---
+
+## ⚠️ Known Limitations
+
+1. **In-Memory WebSocket**: Sessions live inside a single JVM. Horizontal scaling requires Redis Pub/Sub backplane *(planned in v1.5)*.
+2. **OTP & Masked Calls**: Simulated in demo environment. Production requires Twilio or Exotel (`SMS_GATEWAY_API_KEY`).
+3. **Map Coordinates**: Defaults to Bangalore/Hyderabad/Mumbai center when browser location is denied.
+
+---
+
+## 📜 License
+
+MIT © 2026 CravePulse — Built with ❤️ from Bangalore, India.
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if CravePulse inspired you to build something real.**
+
+</div>
