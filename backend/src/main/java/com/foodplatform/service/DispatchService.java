@@ -86,7 +86,7 @@ public class DispatchService {
 
     public void runDispatchCycle() {
         // 1. Scan and process timed-out offers
-        int timeoutSeconds = AppProperties.getInstance().getRiderAcceptTimeoutSeconds();
+        int timeoutSeconds = AppProperties.getRiderAcceptTimeoutSeconds();
         List<DeliveryDispatch> timedOut = riderDao.getTimedOutOffers(timeoutSeconds);
         for (DeliveryDispatch d : timedOut) {
             try (Connection conn = DatabaseConfig.getConnection()) {
@@ -135,7 +135,7 @@ public class DispatchService {
         int attempts = excludedRiders.size();
 
         // 2. Progressive radius expansion: 3.0km -> 6.0km -> 10.0km -> 15.0km
-        double maxRadius = AppProperties.getInstance().getDispatchMaxSearchRadiusKm();
+        double maxRadius = AppProperties.getDispatchMaxSearchRadiusKm();
         double searchRadius;
         if (attempts == 0) {
             searchRadius = 3.5;
@@ -219,7 +219,7 @@ public class DispatchService {
                 offerPayload.put("totalEarning", totalEarning);
                 offerPayload.put("paymentMode", order.getPaymentMode());
                 offerPayload.put("totalAmount", order.getTotalAmount());
-                offerPayload.put("expiresInSeconds", AppProperties.getInstance().getRiderAcceptTimeoutSeconds());
+                offerPayload.put("expiresInSeconds", AppProperties.getRiderAcceptTimeoutSeconds());
 
                 if (registry != null) {
                     registry.broadcastToRider(chosenRider.getId(), "rider_job_offer", offerPayload);

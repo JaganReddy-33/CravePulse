@@ -7,8 +7,6 @@ import jakarta.servlet.AsyncListener;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,7 +20,6 @@ public class SseServlet extends BaseServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = LoggerFactory.getLogger(SseServlet.class);
     private static final CopyOnWriteArrayList<AsyncContext> asyncContexts = new CopyOnWriteArrayList<>();
 
     private static final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(r -> {

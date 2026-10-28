@@ -11,8 +11,6 @@ import com.foodplatform.daoImpl.PlatformSettingDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.daoImpl.WalletDaoImpl;
 import com.foodplatform.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 public class PricingService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PricingService.class);
 
     private final MenuDao menuDao;
     private final RestaurantDao restaurantDao;

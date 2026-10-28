@@ -172,6 +172,7 @@ public class RestaurantServlet extends BaseServlet {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
 
@@ -241,9 +242,10 @@ public class RestaurantServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, "Restaurant ID is required");
                 return;
             }
-            if (!requireRestaurantOwner(req, res, restId)) return;
+            if (!requireRestaurantOwner(req, res, restId)) {
+                return;
+            }
 
-            @SuppressWarnings("unchecked")
             List<Map<String, Object>> hoursList = JsonUtil.readRequestBody(req, List.class);
             if (hoursList != null) {
                 restaurantDao.updateOperatingHours(restId, hoursList);

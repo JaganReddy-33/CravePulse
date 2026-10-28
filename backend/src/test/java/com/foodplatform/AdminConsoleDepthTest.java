@@ -36,7 +36,6 @@ public class AdminConsoleDepthTest {
 
     private final AnalyticsService analyticsService = new AnalyticsService();
     private final DisputeService disputeService = new DisputeService();
-    private final DisputeDao disputeDao = new DisputeDaoImpl();
     private final OrderDao orderDao = new OrderDaoImpl();
     private final UserDao userDao = new UserDaoImpl();
     private final CouponDao couponDao = new CouponDaoImpl();

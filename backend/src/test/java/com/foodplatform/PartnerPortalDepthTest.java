@@ -4,7 +4,6 @@ import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Restaurant;
-import com.foodplatform.service.AnalyticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,13 +17,11 @@ public class PartnerPortalDepthTest {
 
     private RestaurantDao restaurantDao;
     private MenuDao menuDao;
-    private AnalyticsService analyticsService;
 
     @BeforeEach
     void setUp() {
         restaurantDao = mock(RestaurantDao.class);
         menuDao = mock(MenuDao.class);
-        analyticsService = new AnalyticsService();
     }
 
     @Test

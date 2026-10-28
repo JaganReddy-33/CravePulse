@@ -20,8 +20,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class RiderDispatchDepthTest {
@@ -106,7 +104,7 @@ public class RiderDispatchDepthTest {
     @Test
     @DisplayName("Progressive radius expansion must calculate correct search radii based on retry attempts")
     void testProgressiveRadiusExpansion() {
-        double maxRadius = AppProperties.getInstance().getDispatchMaxSearchRadiusKm();
+        double maxRadius = AppProperties.getDispatchMaxSearchRadiusKm();
         assertEquals(15.0, maxRadius);
 
         // Attempt 0: 3.5km initial

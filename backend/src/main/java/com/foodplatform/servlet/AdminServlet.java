@@ -218,6 +218,7 @@ public class AdminServlet extends BaseServlet {
             }
 
             Long couponId = couponDao.createCoupon(c);
+            c.setId(couponId);
             adminAuditDao.logAction(adminId, adminName, "CREATE_COUPON", "COUPON",
                     c.getCode(), "Created coupon " + c.getCode() + " (" + c.getDiscountValue() + " " + c.getDiscountType() + ")", ip);
 
