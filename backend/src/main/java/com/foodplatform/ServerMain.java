@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.Set;
 
 public class ServerMain {
@@ -28,14 +27,23 @@ public class ServerMain {
         int port = AppProperties.getServerPort();
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
-        tomcat.getConnector(); // trigger connector initialization
+        tomcat.setHostname("0.0.0.0");
 
-        String docBase = new File("src/main/webapp").getAbsolutePath();
-        if (!new File(docBase).exists()) {
-            new File(docBase).mkdirs();
+        // Use system temp directory for Tomcat work/base dir for Docker & Cloud containers
+        String baseDir = System.getProperty("java.io.tmpdir");
+        tomcat.setBaseDir(baseDir);
+
+        var connector = tomcat.getConnector(); // trigger connector initialization
+        connector.setProperty("address", "0.0.0.0");
+
+        // Safe webapp docBase fallback
+        File docBaseFile = new File("src/main/webapp");
+        if (!docBaseFile.exists()) {
+            docBaseFile = new File(baseDir, "webapps/ROOT");
+            docBaseFile.mkdirs();
         }
 
-        Context ctx = tomcat.addContext("", docBase);
+        Context ctx = tomcat.addContext("", docBaseFile.getAbsolutePath());
 
         // Register WebSocket SCI
         ctx.addServletContainerInitializer(new WsSci(), Set.of(RealtimeEndpoint.class));
