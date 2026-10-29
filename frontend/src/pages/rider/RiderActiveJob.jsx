@@ -695,14 +695,16 @@ const RiderActiveJob = () => {
           <p className="text-secondary small mb-4">
             Scanning for high-tip customer runs in the <strong>Indiranagar Culinary District</strong>.
           </p>
-          <button
-            type="button"
-            className="btn btn-success rounded-pill px-5 py-3 fw-extrabold text-dark shadow-lg transition hover-lift"
-            style={{ minHeight: 52, background: '#00e676', border: 'none', boxShadow: '0 0 20px rgba(0,230,118,0.4)' }}
-            onClick={() => setActiveJob(MOCK_ACTIVE_DISPATCH)}
-          >
-            Simulate Incoming Delivery Dispatch ⚡
-          </button>
+          {import.meta.env.VITE_DEMO_MODE === 'true' && (
+            <button
+              type="button"
+              className="btn btn-success rounded-pill px-5 py-3 fw-extrabold text-dark shadow-lg transition hover-lift"
+              style={{ minHeight: 52, background: '#00e676', border: 'none', boxShadow: '0 0 20px rgba(0,230,118,0.4)' }}
+              onClick={() => setActiveJob(MOCK_ACTIVE_DISPATCH)}
+            >
+              Simulate Incoming Delivery Dispatch ⚡
+            </button>
+          )}
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ScrollCarousel from '../common/ScrollCarousel';
 
 /**
  * RestaurantOffersStrip: Interactive promotional coupon carousel strip with quick-copy.
@@ -15,25 +16,24 @@ const RestaurantOffersStrip = ({ offers = [] }) => {
   const activeOffers = offers.length > 0 ? offers : defaultOffers;
 
   const handleCopy = (code) => {
-    navigator.clipboard.writeText(code);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(code);
+    }
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
   return (
     <div className="mb-4">
-      <small className="text-muted fw-bold text-uppercase d-block mb-2" style={{ fontSize: 10 }}>
-        Active Deals & Promotional Offers
+      <small className="text-muted fw-bold text-uppercase d-block mb-2" style={{ fontSize: 11, letterSpacing: '0.05em' }}>
+        🏷️ Active Deals &amp; Promotional Offers
       </small>
-      <div 
-        className="d-flex gap-3 overflow-auto pb-2" 
-        style={{ scrollbarWidth: 'thin', scrollSnapType: 'x mandatory' }}
-      >
+      <ScrollCarousel ariaLabel="Promotional offers" gap="1rem">
         {activeOffers.map((offer, idx) => (
           <div
             key={idx}
             className="card border rounded-4 p-3 flex-shrink-0 shadow-sm bg-white"
-            style={{ width: 260, scrollSnapAlign: 'start' }}
+            style={{ width: 260 }}
           >
             <div className="d-flex justify-content-between align-items-center mb-1">
               <span className="badge bg-danger-subtle text-danger fw-bold">{offer.discount}</span>
@@ -49,7 +49,7 @@ const RestaurantOffersStrip = ({ offers = [] }) => {
             <small className="text-muted" style={{ fontSize: 11 }}>{offer.details}</small>
           </div>
         ))}
-      </div>
+      </ScrollCarousel>
     </div>
   );
 };

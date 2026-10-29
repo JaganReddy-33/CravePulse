@@ -106,7 +106,7 @@ public class PaymentServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, e.getMessage());
             } catch (Exception e) {
                 logger.error("Failed to initiate Razorpay order for #{}", orderId, e);
-                JsonUtil.sendError(res, 500, "Could not initiate payment session: " + e.getMessage());
+                JsonUtil.sendError(res, 500, "Could not initiate payment session. Please try again later.");
             }
             return;
         }
@@ -130,7 +130,7 @@ public class PaymentServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, e.getMessage());
             } catch (Exception e) {
                 logger.error("Error verifying payment", e);
-                JsonUtil.sendError(res, 500, "Internal error verifying payment: " + e.getMessage());
+                JsonUtil.sendError(res, 500, "Internal error verifying payment status. Please try again later.");
             }
             return;
         }
@@ -151,7 +151,7 @@ public class PaymentServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, e.getMessage());
             } catch (Exception e) {
                 logger.error("Error processing wallet payment", e);
-                JsonUtil.sendError(res, 500, "Wallet payment error: " + e.getMessage());
+                JsonUtil.sendError(res, 500, "Unable to complete wallet payment. Please try again later.");
             }
             return;
         }

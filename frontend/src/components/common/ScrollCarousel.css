@@ -1,0 +1,136 @@
+/* =============================================================================
+   ScrollCarousel – Reusable horizontal snap carousel
+   All magic numbers come from design-tokens.css via CSS custom properties.
+   ============================================================================= */
+
+.scroll-carousel-wrapper {
+  position: relative;
+}
+
+/* ── Track ─────────────────────────────────────────────────────────────────── */
+.scroll-carousel-track {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  gap: var(--space-4, 1rem);
+  padding-bottom: 4px; /* prevent shadow clip */
+  /* Hide scrollbar cross-browser */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scroll-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Snap children ─────────────────────────────────────────────────────────── */
+.scroll-carousel-track > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ── Arrow buttons ─────────────────────────────────────────────────────────── */
+.scroll-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--c-surface, #fff);
+  box-shadow: var(--shadow-md, 0 6px 16px rgba(15,23,42,.08));
+  color: var(--c-text-main, #0f172a);
+  font-size: 1.2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.15s;
+  /* Only show on hover-capable devices (desktop) */
+}
+
+.scroll-carousel-btn--prev {
+  left: -20px;
+}
+.scroll-carousel-btn--next {
+  right: -20px;
+}
+
+.scroll-carousel-btn[aria-disabled="true"] {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .scroll-carousel-btn:hover:not([aria-disabled="true"]) {
+    box-shadow: var(--shadow-lg, 0 12px 28px rgba(15,23,42,.12));
+    transform: translateY(-50%) scale(1.08);
+  }
+}
+
+/* On mobile (< 768 px): buttons go into the section header, not on track edges */
+@media (max-width: 767.98px) {
+  .scroll-carousel-btn {
+    position: static;
+    transform: none;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 1rem;
+  }
+  .scroll-carousel-btn--prev,
+  .scroll-carousel-btn--next {
+    left: auto;
+    right: auto;
+  }
+  @media (hover: hover) {
+    .scroll-carousel-btn:hover:not([aria-disabled="true"]) {
+      transform: scale(1.08);
+    }
+  }
+}
+
+/* ── Edge fade gradients ────────────────────────────────────────────────────── */
+.scroll-carousel-fade-left,
+.scroll-carousel-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.2s;
+}
+.scroll-carousel-fade-left {
+  left: 0;
+  background: linear-gradient(to right, var(--c-bg, #faf7f2), transparent);
+}
+.scroll-carousel-fade-right {
+  right: 0;
+  background: linear-gradient(to left, var(--c-bg, #faf7f2), transparent);
+}
+.scroll-carousel-fade-left.hidden,
+.scroll-carousel-fade-right.hidden {
+  opacity: 0;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-carousel-track {
+    scroll-behavior: auto;
+  }
+  .scroll-carousel-btn {
+    transition: none;
+  }
+}
+

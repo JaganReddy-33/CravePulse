@@ -2,6 +2,8 @@ package com.foodplatform.servlet;
 
 import com.foodplatform.service.AuthService;
 import com.foodplatform.util.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +16,8 @@ import java.util.Map;
 public class OnboardingServlet extends BaseServlet {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingServlet.class);
 
     private final AuthService authService = new AuthService();
 
@@ -79,7 +83,8 @@ public class OnboardingServlet extends BaseServlet {
         } catch (IllegalArgumentException | IllegalStateException e) {
             JsonUtil.sendError(res, 400, e.getMessage());
         } catch (Exception e) {
-            JsonUtil.sendError(res, 500, "Error submitting onboarding application: " + e.getMessage());
+            logger.error("Error submitting onboarding application", e);
+            JsonUtil.sendError(res, 500, "An error occurred while submitting your onboarding application. Please try again later.");
         }
     }
 }

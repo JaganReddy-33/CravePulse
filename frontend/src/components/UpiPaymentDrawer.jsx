@@ -12,7 +12,7 @@ const UpiPaymentDrawer = ({
   orderNumber = 'ORD-20261026-001',
   payeeVpa = 'cravepulse.settlements@icici',
   payeeName = 'CravePulse Fair Dining Network',
-  onSuccess
+  onSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState('apps'); // 'apps', 'vpa', 'qr'
   const [customVpa, setCustomVpa] = useState('');
@@ -26,7 +26,7 @@ const UpiPaymentDrawer = ({
   useEffect(() => {
     if (!isOpen) return;
     const interval = setInterval(() => {
-      setSecondsRemaining(prev => (prev > 0 ? prev - 1 : 0));
+      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
   }, [isOpen]);
@@ -54,7 +54,7 @@ const UpiPaymentDrawer = ({
       window.location.href = upiIntentUri;
     }
 
-    // Simulate gateway settlement verification
+    // In demo mode or after gateway callback
     setTimeout(() => {
       setProcessing(false);
       setSuccess(true);
@@ -205,7 +205,7 @@ const UpiPaymentDrawer = ({
                           Paytm
                         </div>
                         <div>
-                          <strong className="d-block text-white small">Paytm UPI & Wallet</strong>
+                          <strong className="d-block text-white small">Paytm UPI &amp; Wallet</strong>
                           <small className="text-secondary" style={{ fontSize: 11 }}>Linked savings or wallet balance</small>
                         </div>
                       </div>
@@ -244,7 +244,7 @@ const UpiPaymentDrawer = ({
 
                     <div className="d-flex flex-wrap gap-1 mt-2">
                       <small className="text-secondary w-100 mb-1" style={{ fontSize: 10 }}>Quick VPA handles:</small>
-                      {['@okhdfcbank', '@okaxis', '@oksbi', '@paytm', '@ybl'].map(suffix => (
+                      {['@okhdfcbank', '@okaxis', '@oksbi', '@paytm', '@ybl'].map((suffix) => (
                         <button
                           key={suffix}
                           type="button"
@@ -272,16 +272,18 @@ const UpiPaymentDrawer = ({
                     <small className="text-secondary d-block" style={{ fontSize: 11 }}>
                       Scan using Google Pay, PhonePe, Paytm, CRED or BHIM app on another screen.
                     </small>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        className="btn btn-outline-success btn-sm rounded-pill px-4 fw-bold"
-                        onClick={() => handleTriggerPayment('QR Scanner')}
-                        disabled={processing}
-                      >
-                        {processing ? 'Verifying payment...' : 'Simulate QR Code Scanned & Paid ✓'}
-                      </button>
-                    </div>
+                    {import.meta.env.VITE_DEMO_MODE === 'true' && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          className="btn btn-outline-success btn-sm rounded-pill px-4 fw-bold"
+                          onClick={() => handleTriggerPayment('QR Scanner')}
+                          disabled={processing}
+                        >
+                          {processing ? 'Verifying payment...' : 'Simulate QR Code Scanned & Paid ✓'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

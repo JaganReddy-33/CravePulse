@@ -56,16 +56,16 @@ public final class AppProperties {
 
     public static String getDbPassword() {
         String pass = System.getenv("DB_PASSWORD");
-        if (pass == null) {
+        if (pass == null || pass.isBlank()) {
             pass = props.getProperty("db.password");
         }
-        return (pass != null) ? pass : "Jagan@1432";
+        return (pass != null) ? pass : "";
     }
 
     public static String getJwtSecret() {
-        String secret = getProperty("jwt.secret", "JWT_SECRET", "CravePulseSuperSecureProductionSecretKeyForSigning2026JaganmohanReddy!");
+        String secret = getProperty("jwt.secret", "JWT_SECRET", "CravePulseSuperSecureProductionSecretKeyForSigning2026SigningKey!");
         if (secret == null || secret.trim().length() < 32) {
-            return "CravePulseSuperSecureProductionSecretKeyForSigning2026JaganmohanReddy!";
+            return "CravePulseSuperSecureProductionSecretKeyForSigning2026SigningKey!";
         }
         return secret.trim();
     }

@@ -8,6 +8,8 @@ import com.foodplatform.model.Address;
 import com.foodplatform.model.User;
 import com.foodplatform.service.AuthService;
 import com.foodplatform.util.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +23,8 @@ import java.util.Map;
 public class AuthServlet extends BaseServlet {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthServlet.class);
 
     private final AuthService authService = new AuthService();
     private final UserDao userDao = new UserDaoImpl();
@@ -164,7 +168,8 @@ public class AuthServlet extends BaseServlet {
         } catch (IllegalArgumentException | IllegalStateException e) {
             JsonUtil.sendError(res, 400, e.getMessage());
         } catch (Exception e) {
-            JsonUtil.sendError(res, 500, "Internal authentication error: " + e.getMessage());
+            logger.error("Internal authentication error", e);
+            JsonUtil.sendError(res, 500, "Internal authentication service error. Please try again later.");
         }
     }
 

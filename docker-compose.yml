@@ -6,7 +6,7 @@ services:
     container_name: foodplatform-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-Jagan@1432}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME:-food_delivery_db}
     ports:
       - "3306:3306"
@@ -29,11 +29,11 @@ services:
     restart: always
     environment:
       PORT: 8081
-      DB_URL: jdbc:mysql://mysql:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
-      DB_USER: root
-      DB_PASSWORD: ${DB_PASSWORD:-Jagan@1432}
-      JWT_SECRET: ${JWT_SECRET:-FoodPlatformSuperSecureProductionSecretKeyForSigning2026!}
-      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      DB_URL: ${DB_URL:-jdbc:mysql://mysql:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174}
     ports:
       - "8081:8081"
     depends_on:

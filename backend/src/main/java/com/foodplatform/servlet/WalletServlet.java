@@ -126,7 +126,7 @@ public class WalletServlet extends BaseServlet {
                 }
             } catch (SQLException e) {
                 logger.error("Error topping up wallet for user {}: {}", userId, e.getMessage());
-                JsonUtil.sendError(res, 500, "Could not process wallet top-up: " + e.getMessage());
+                JsonUtil.sendError(res, 500, "Could not process wallet top-up at this time. Please try again later.");
             }
             return;
         }

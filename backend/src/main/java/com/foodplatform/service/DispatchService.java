@@ -112,6 +112,16 @@ public class DispatchService {
         }
     }
 
+        public void scheduleDispatch(long orderId, long delayMillis) {
+        dispatchScheduler.schedule(() -> {
+            try {
+                dispatchOrder(orderId);
+            } catch (Exception e) {
+                logger.error("Auto dispatch background task failed for order {}", orderId, e);
+            }
+        }, delayMillis, TimeUnit.MILLISECONDS);
+    }
+
     public boolean dispatchOrder(long orderId) {
         Order order = orderDao.findById(orderId);
         if (order == null || order.getRiderId() != null) {

@@ -308,15 +308,8 @@ public class OrderServlet extends BaseServlet {
                 registry.broadcastToRestaurant(restaurantId, "new_order_placed", created);
                 registry.broadcastToAdmin("new_order_placed", created);
 
-                // Trigger dispatch engine in background thread
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(1500); // brief kitchen acknowledgment window
-                        dispatchService.dispatchOrder(orderId);
-                    } catch (Exception e) {
-                        logger.error("Auto dispatch background failed for order {}", orderId, e);
-                    }
-                }).start();
+                // Trigger dispatch engine via scheduled executor
+                dispatchService.scheduleDispatch(orderId, 1500);
 
                 Map<String, Object> responseData = new HashMap<>();
                 responseData.put("id", created.getId());
@@ -379,7 +372,8 @@ public class OrderServlet extends BaseServlet {
             } catch (IllegalArgumentException | IllegalStateException e) {
                 JsonUtil.sendError(res, 400, e.getMessage());
             } catch (Exception e) {
-                JsonUtil.sendError(res, 500, "Order transition error: " + e.getMessage());
+                logger.error("Order transition error", e);
+                JsonUtil.sendError(res, 500, "An internal server error occurred while updating order status.");
             }
             return;
         }

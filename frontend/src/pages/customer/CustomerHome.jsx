@@ -1,122 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { RestaurantCardSkeleton } from '../../components/Skeleton';
-
+import ScrollCarousel from '../../components/common/ScrollCarousel';
+import ErrorState from '../../components/states/ErrorState';
+import EmptyState from '../../components/states/EmptyState';
 import { DEFAULT_HUB } from '../../config/panIndiaLocations';
 
 const CATEGORIES = [
-  { name: 'All', icon: '🍽️', count: 15 },
-  { name: 'North Indian', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=150', count: 6 },
-  { name: 'Biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=150', count: 4 },
-  { name: 'Pizza', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150', count: 3 },
-  { name: 'Burgers', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150', count: 3 },
-  { name: 'Sushi', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=150', count: 1 },
-  { name: 'Salads', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=150', count: 2 },
-  { name: 'Desserts', image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=150', count: 2 },
-];
-
-const FALLBACK_RESTAURANTS = [
-  {
-    id: 1,
-    name: 'Spice Symphony & Grill',
-    headChef: 'Executive Chef',
-    slug: 'spice-symphony-grill',
-    description: 'Authentic gourmet North Indian curries, royal dum biryanis, and tandoori kebabs curated by master culinary chefs.',
-    bannerImage: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200',
-    cuisineTypes: 'North Indian, Biryani, Mughlai',
-    rating: 4.8,
-    totalReviews: 1420,
-    pureVeg: false,
-    priceTier: '$$',
-    prepTimeMin: 20,
-    prepTimeMax: 30,
-    street: 'Plot 88, 100 Feet Rd',
-    isOpen: true,
-    isAutoThrottled: false,
-    distanceKm: 0.9,
-    deliveryFee: 35.00
-  },
-  {
-    id: 2,
-    name: 'Pizza Palace',
-    headChef: 'Chef Ajay Kumar',
-    slug: 'pizza-palace',
-    description: 'Artisanal wood-fired Neapolitan sourdough pizzas and freshly tossed hand-rolled pasta curated by Chef Ajay Kumar.',
-    bannerImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200',
-    cuisineTypes: 'Pizza, Italian, Fast Food',
-    rating: 4.6,
-    totalReviews: 980,
-    pureVeg: false,
-    priceTier: '$$',
-    prepTimeMin: 22,
-    prepTimeMax: 32,
-    street: '34, Main Gourmet Avenue',
-    isOpen: true,
-    isAutoThrottled: false,
-    distanceKm: 0.4,
-    deliveryFee: 35.00
-  },
-  {
-    id: 3,
-    name: 'Burger House',
-    headChef: 'Chef Santhosh Reddy',
-    slug: 'burger-house',
-    description: 'Juicy smashed beef & smash veg burgers, double-fried crispy onion rings, loaded fries, and thick shakes curated by Chef Santhosh Reddy.',
-    bannerImage: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=1200',
-    cuisineTypes: 'Burgers, American, Fast Food',
-    rating: 4.6,
-    totalReviews: 2150,
-    pureVeg: false,
-    priceTier: '$',
-    prepTimeMin: 15,
-    prepTimeMax: 25,
-    street: '12, Central Food Street',
-    isOpen: true,
-    isAutoThrottled: false,
-    distanceKm: 0.7,
-    deliveryFee: 35.00
-  },
-  {
-    id: 4,
-    name: 'Sushi World',
-    headChef: 'Chef Kenji Sato',
-    slug: 'sushi-world',
-    description: 'Ultra-fresh Japanese sushi rolls, Norwegian salmon nigiri, and steaming bowls of slow-simmered miso ramen.',
-    bannerImage: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200',
-    cuisineTypes: 'Sushi, Japanese, Asian',
-    rating: 4.8,
-    totalReviews: 860,
-    pureVeg: false,
-    priceTier: '$$$',
-    prepTimeMin: 25,
-    prepTimeMax: 40,
-    street: '56, Defense Enclave',
-    isOpen: true,
-    isAutoThrottled: false,
-    distanceKm: 1.1,
-    deliveryFee: 35.00
-  },
-  {
-    id: 5,
-    name: 'Healthy Bites',
-    headChef: 'Nutritionist Priya Sen',
-    slug: 'healthy-bites',
-    description: 'Macro-balanced nutrient-packed salad bowls, organic cold-pressed juices, and protein energy smoothies.',
-    bannerImage: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200',
-    cuisineTypes: 'Salads, Healthy, Organic',
-    rating: 4.5,
-    totalReviews: 740,
-    pureVeg: true,
-    priceTier: '$$',
-    prepTimeMin: 15,
-    prepTimeMax: 25,
-    street: '77, Wellness Boulevard',
-    isOpen: true,
-    isAutoThrottled: false,
-    distanceKm: 1.2,
-    deliveryFee: 35.00
-  }
+  { name: 'All', icon: '🍽️' },
+  { name: 'North Indian', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=160' },
+  { name: 'Biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=160' },
+  { name: 'Pizza', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160' },
+  { name: 'Burgers', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160' },
+  { name: 'Sushi', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=160' },
+  { name: 'Salads', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=160' },
+  { name: 'Desserts', image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=160' },
 ];
 
 const CustomerHome = () => {
@@ -124,8 +23,33 @@ const CustomerHome = () => {
 
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Real-time URL query parameter bindings (Swiggy / Zomato parity)
+  const [fetchError, setFetchError] = useState(null);
+
+  // Favorites state persisted in localStorage
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cravepulse_favs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (e, restId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavorites((prev) => {
+      const next = prev.includes(restId) ? prev.filter((id) => id !== restId) : [...prev, restId];
+      try {
+        localStorage.setItem('cravepulse_favs', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed to save favorites', err);
+      }
+      return next;
+    });
+  };
+
+  // Real-time URL query parameter bindings
   const [search, setSearch] = useState(() => searchParams.get('query') || searchParams.get('search') || '');
   const [selectedCuisine, setSelectedCuisine] = useState(() => searchParams.get('cuisine') || '');
   const [vegOnly, setVegOnly] = useState(() => searchParams.get('veg_only') === 'true' || searchParams.get('veg') === 'true');
@@ -139,7 +63,7 @@ const CustomerHome = () => {
     return saved ? JSON.parse(saved) : DEFAULT_HUB;
   });
 
-  // Sync state to URL search parameters so links can be shared
+  // Sync state to URL search parameters
   useEffect(() => {
     const params = new URLSearchParams();
     if (search.trim()) params.set('query', search.trim());
@@ -162,84 +86,75 @@ const CustomerHome = () => {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadRestaurants = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const params = {};
+      if (search) params.search = search;
+      if (selectedCuisine && selectedCuisine !== 'All') params.cuisine = selectedCuisine;
+      if (vegOnly) params.vegOnly = true;
 
-    const fetchRestaurants = async () => {
-      setLoading(true);
-      try {
-        const params = {};
-        if (search) params.search = search;
-        if (selectedCuisine && selectedCuisine !== 'All') params.cuisine = selectedCuisine;
-        if (vegOnly) params.vegOnly = true;
-
-        const res = await api.get('/restaurants', { params });
-        if (isMounted) {
-          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-            setRestaurants(res.data);
-          } else {
-            // If backend returned empty array for no matches, keep as empty
-            setRestaurants(res.data || []);
-          }
-        }
-      } catch (e) {
-        console.warn('Backend offline or error fetching restaurants, using resilient seed cache', e);
-        if (isMounted) {
-          setRestaurants(FALLBACK_RESTAURANTS);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+      const res = await api.get('/restaurants', { params });
+      if (res.success && Array.isArray(res.data)) {
+        setRestaurants(res.data);
+      } else {
+        setRestaurants(res.data || []);
       }
-    };
-
-    const timer = setTimeout(fetchRestaurants, 200);
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
-    };
+    } catch (e) {
+      console.error('Error fetching restaurants from backend:', e);
+      setFetchError(e.message || 'Unable to connect to CravePulse servers.');
+    } finally {
+      setLoading(false);
+    }
   }, [search, selectedCuisine, vegOnly]);
 
-  // Client-side filtering & sorting with Distance and Open status ranking (Swiggy Parity)
+  useEffect(() => {
+    const timer = setTimeout(loadRestaurants, 200);
+    return () => clearTimeout(timer);
+  }, [loadRestaurants]);
+
+  // Client-side filtering & sorting (Swiggy / Zomato parity)
   const filteredAndSortedRestaurants = useMemo(() => {
     let list = [...restaurants];
 
     // Cuisine filter
     if (selectedCuisine && selectedCuisine !== 'All') {
       const c = selectedCuisine.toLowerCase();
-      list = list.filter(r => r.cuisineTypes?.toLowerCase().includes(c));
+      list = list.filter((r) => r.cuisineTypes?.toLowerCase().includes(c));
     }
 
     // Pure Veg filter
     if (vegOnly) {
-      list = list.filter(r => r.pureVeg === true);
+      list = list.filter((r) => r.pureVeg === true);
     }
 
     // Rating filter
     if (minRating) {
-      list = list.filter(r => Number(r.rating) >= minRating);
+      list = list.filter((r) => Number(r.rating) >= minRating);
     }
 
     // Delivery time filter
     if (maxDeliveryTime) {
-      list = list.filter(r => Number(r.prepTimeMax) <= maxDeliveryTime);
+      list = list.filter((r) => Number(r.prepTimeMax) <= maxDeliveryTime);
     }
 
     // Price tier filter
     if (selectedPriceTier) {
-      list = list.filter(r => r.priceTier === selectedPriceTier);
+      list = list.filter((r) => r.priceTier === selectedPriceTier);
     }
 
-    // Sorting & Ranking (Distance + Open status prioritized in relevance)
+    // Sorting & Ranking
     if (sortBy === 'rating') {
       list.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     } else if (sortBy === 'time') {
       list.sort((a, b) => Number(a.prepTimeMin || 20) - Number(b.prepTimeMin || 20));
     } else if (sortBy === 'costAsc') {
-      list.sort((a, b) => Number(a.costForTwo || (a.priceTier?.length || 2) * 150) - Number(b.costForTwo || (b.priceTier?.length || 2) * 150));
+      list.sort((a, b) => Number(a.costForTwo || 300) - Number(b.costForTwo || 300));
     } else if (sortBy === 'costDesc') {
-      list.sort((a, b) => Number(b.costForTwo || (b.priceTier?.length || 2) * 150) - Number(a.costForTwo || (a.priceTier?.length || 2) * 150));
+      list.sort((a, b) => Number(b.costForTwo || 300) - Number(a.costForTwo || 300));
     } else {
-      // Relevance: Open restaurants first, then closest distance, then highest rating
+      // Relevance: Open kitchens first, then closest distance, then rating
       list.sort((a, b) => {
         const aOpen = a.isOpen !== false;
         const bOpen = b.isOpen !== false;
@@ -259,7 +174,7 @@ const CustomerHome = () => {
     maxDeliveryTime !== null,
     selectedPriceTier !== '',
     selectedCuisine !== '' && selectedCuisine !== 'All',
-    search !== ''
+    search !== '',
   ].filter(Boolean).length;
 
   const handleResetFilters = () => {
@@ -274,9 +189,9 @@ const CustomerHome = () => {
   };
 
   return (
-    <div className="container-fluid px-3 px-md-4 py-3">
+    <div className="container-fluid px-3 px-md-4 py-3 customer-content-container">
       <div className="row g-4">
-        {/* Left Sidebar Navigation (Desktop & Large Tablet) */}
+        {/* Left Sidebar Navigation (Desktop >= 992px) */}
         <div className="col-xl-2 col-lg-3 d-none d-lg-block">
           <div className="card border-0 rounded-4 shadow-sm p-3 bg-white sticky-top" style={{ top: 90 }}>
             <div className="list-group list-group-flush border-0">
@@ -293,10 +208,10 @@ const CustomerHome = () => {
                 <i className="bi bi-receipt"></i> Orders
               </Link>
               <Link to="/offers" className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2 mb-1">
-                <i className="bi bi-tag-fill text-danger"></i> Offers & Deals
+                <i className="bi bi-tag-fill text-danger"></i> Offers &amp; Deals
               </Link>
               <Link to="/help" className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2 mb-1">
-                <i className="bi bi-question-circle-fill text-primary"></i> Help & Support
+                <i className="bi bi-question-circle-fill text-primary"></i> Help &amp; Support
               </Link>
               <Link to="/cities" className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2">
                 <i className="bi bi-geo-alt-fill text-warning"></i> Delivery Cities
@@ -313,9 +228,10 @@ const CustomerHome = () => {
               </div>
               <img
                 src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=120"
-                alt="Burger Promo"
-                className="img-fluid rounded-circle mb-2 shadow-sm"
-                style={{ width: 80, height: 80, objectFit: 'cover' }}
+                alt="Promo Burger"
+                className="img-fluid rounded-circle mb-2 shadow-sm object-fit-cover"
+                style={{ width: 80, height: 80 }}
+                loading="lazy"
               />
               <a href="#restaurants-grid" className="btn btn-sm btn-primary w-100 rounded-pill fw-bold" style={{ background: '#ff5722', borderColor: '#ff5722' }}>
                 Order Now →
@@ -336,17 +252,17 @@ const CustomerHome = () => {
           >
             <div className="row align-items-center">
               <div className="col-md-7 z-1">
-                <div className="d-flex align-items-center gap-2 mb-2">
+                <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                   <span className="badge bg-danger rounded-pill px-3 py-2 fw-bold">🔥 50% OFF WITH 'FOOD50'</span>
                   <span className="badge bg-success rounded-pill px-3 py-2 fw-bold d-none d-sm-inline">
                     <i className="bi bi-patch-check-fill me-1"></i> 100% Price Parity
                   </span>
                 </div>
-                <h1 className="display-6 fw-extrabold text-dark mb-2">
+                <h1 className="display-6 fw-extrabold text-dark mb-2" style={{ fontSize: 'clamp(1.5rem, 3.2vw, 2.25rem)' }}>
                   Delicious food, <span style={{ color: '#ff5722' }}>zero menu markups</span>
                 </h1>
                 <p className="text-secondary mb-4" style={{ maxWidth: 440 }}>
-                  Order from top Indiranagar & Bengaluru restaurants at exact dining room prices with guaranteed honest ETA tracking.
+                  Order from verified neighborhood kitchens at exact dining room prices with guaranteed honest ETA tracking.
                 </p>
                 <div className="d-flex flex-wrap gap-2">
                   <a 
@@ -370,56 +286,66 @@ const CustomerHome = () => {
                   alt="Plated Food Banner"
                   className="img-fluid rounded-4 shadow-lg object-fit-cover"
                   style={{ maxHeight: 220, width: '100%' }}
+                  loading="lazy"
                 />
               </div>
             </div>
           </div>
 
-          {/* Categories Slider Row */}
+          {/* Categories Carousel ("What's on your mind?" – Swiggy / Zomato Pattern) */}
           <div className="mb-4" id="categories-section">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h5 className="fw-bold mb-0">Browse by Category</h5>
-                <small className="text-muted">Explore popular hand-picked cuisines</small>
-              </div>
-              <button 
-                className="btn btn-sm btn-link text-decoration-none fw-semibold text-primary" 
-                onClick={() => setSelectedCuisine('')}
-              >
-                Clear Selection
-              </button>
-            </div>
-            <div className="categories-scroll-row">
+            <ScrollCarousel
+              ariaLabel="Cuisine categories"
+              sectionHeader={
+                <div>
+                  <h5 className="fw-bold mb-0" style={{ fontSize: 'clamp(1.1rem, 2vw, 1.3rem)' }}>
+                    What's on your mind?
+                  </h5>
+                  <small className="text-muted">Explore popular hand-picked cuisines</small>
+                </div>
+              }
+            >
               {CATEGORIES.map((cat, idx) => {
-                const isActive = (selectedCuisine === cat.name) || (!selectedCuisine && cat.name === 'All');
+                const isActive = selectedCuisine === cat.name || (!selectedCuisine && cat.name === 'All');
                 return (
                   <div
                     key={idx}
-                    className={`category-carousel-card card border-0 rounded-4 text-center p-2 p-sm-3 shadow-sm flex-shrink-0 cursor-pointer transition hover-lift ${isActive ? 'border border-2 border-primary bg-primary-subtle' : 'bg-white'}`}
-                    style={{ width: 125, cursor: 'pointer' }}
+                    className={`card border-0 rounded-4 text-center p-2 p-sm-3 shadow-sm flex-shrink-0 cursor-pointer transition hover-lift ${
+                      isActive ? 'border border-2 border-primary bg-primary-subtle' : 'bg-white'
+                    }`}
+                    style={{ width: 110, cursor: 'pointer' }}
                     onClick={() => setSelectedCuisine(cat.name === 'All' ? '' : cat.name)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Select ${cat.name} cuisine`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setSelectedCuisine(cat.name === 'All' ? '' : cat.name);
+                      }
+                    }}
                   >
                     {cat.image ? (
                       <img
                         src={cat.image}
                         alt={cat.name}
                         className="rounded-circle mx-auto mb-2 shadow-sm object-fit-cover"
-                        style={{ width: 56, height: 56 }}
+                        style={{ width: 64, height: 64 }}
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div 
-                        className="rounded-circle mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center bg-light fs-4"
-                        style={{ width: 56, height: 56 }}
+                        className="rounded-circle mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center bg-light fs-3"
+                        style={{ width: 64, height: 64 }}
                       >
                         {cat.icon}
                       </div>
                     )}
-                    <div className="fw-bold small text-dark">{cat.name}</div>
-                    <small className="text-muted" style={{ fontSize: 11 }}>{cat.count} kitchens</small>
+                    <div className="fw-bold small text-dark text-truncate">{cat.name}</div>
                   </div>
                 );
               })}
-            </div>
+            </ScrollCarousel>
           </div>
 
           {/* Dynamic Filter Controls Bar */}
@@ -471,7 +397,7 @@ const CustomerHome = () => {
                   </ul>
                 </div>
 
-                {/* Reset Filters Pill (if any active) */}
+                {/* Reset Filters Pill */}
                 {activeFiltersCount > 0 && (
                   <button 
                     type="button" 
@@ -493,7 +419,7 @@ const CustomerHome = () => {
                   onChange={(e) => setSortBy(e.target.value)}
                   aria-label="Sort restaurants by"
                 >
-                  <option value="relevance">Relevance & Distance</option>
+                  <option value="relevance">Relevance &amp; Distance</option>
                   <option value="rating">Rating: High to Low</option>
                   <option value="time">Delivery Time: Fast First</option>
                   <option value="costAsc">Price: Low to High</option>
@@ -503,11 +429,13 @@ const CustomerHome = () => {
             </div>
           </div>
 
-          {/* Popular Restaurants Section */}
+          {/* Kitchens & Restaurants Section */}
           <div id="restaurants-grid">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h5 className="fw-bold mb-1">Kitchens & Restaurants</h5>
+                <h5 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.15rem, 2vw, 1.4rem)' }}>
+                  Top Restaurant Chains in {currentHub?.cityName || currentHub?.name || 'Your City'}
+                </h5>
                 <p className="text-muted small mb-0">100% Dine-In Menu Price Parity • Zero Delivery Markups</p>
               </div>
               <span className="badge bg-light text-dark border px-3 py-2 rounded-pill small">
@@ -516,140 +444,147 @@ const CustomerHome = () => {
             </div>
 
             {loading ? (
-              <div className="row g-4">
-                {[1, 2, 3, 4].map((n) => (
-                  <div key={n} className="col-12 col-md-6 col-xl-4">
-                    <RestaurantCardSkeleton />
-                  </div>
+              <div className="restaurant-card-grid">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <RestaurantCardSkeleton key={n} />
                 ))}
               </div>
+            ) : fetchError ? (
+              <ErrorState
+                title="Could not connect to CravePulse"
+                message={fetchError}
+                onRetry={loadRestaurants}
+              />
             ) : filteredAndSortedRestaurants.length === 0 ? (
-              <div className="card border-0 rounded-4 p-5 text-center bg-white shadow-sm">
-                <div className="fs-1 mb-2">🔍</div>
-                <h6 className="fw-bold">No restaurants match your filters</h6>
-                <p className="text-muted small">Try loosening your dietary filters, price tiers, or search term.</p>
-                <button 
-                  className="btn btn-outline-primary rounded-pill btn-sm mx-auto fw-bold px-4" 
-                  onClick={handleResetFilters}
-                >
-                  Reset All Filters
-                </button>
-              </div>
+              <EmptyState
+                icon="🔍"
+                title="No restaurants match your filters"
+                description="Try loosening your dietary filters, price tiers, or search term."
+                actionText="Reset All Filters"
+                onAction={handleResetFilters}
+              />
             ) : (
-              <div className="row g-4">
+              <div className="restaurant-card-grid">
                 {filteredAndSortedRestaurants.map((rest) => {
                   const citySlug = (currentHub?.cityName || currentHub?.city?.name || currentHub?.city || 'bangalore').toLowerCase().replace(/[^a-z0-9]+/g, '-');
                   const restSlug = (rest.slug || rest.name || 'restaurant').toLowerCase().replace(/[^a-z0-9]+/g, '-');
                   const localitySlug = (currentHub?.area || currentHub?.name || 'indiranagar').toLowerCase().replace(/[^a-z0-9]+/g, '-');
                   const queryParam = search.trim() ? `&query=${encodeURIComponent(search.trim())}` : '';
-                  // Production Swiggy URL Format
                   const swiggyUrl = `/city/${citySlug}/${restSlug}-${localitySlug}-rest${rest.id}?restaurant_id=${rest.id}&source=collection${queryParam}`;
+
+                  const isFav = favorites.includes(rest.id);
+                  const isClosed = rest.isOpen === false;
+                  const discountOffer = rest.discountTag || (Number(rest.rating) >= 4.5 ? '50% OFF UPTO ₹100' : 'FLAT ₹100 OFF ABOVE ₹499');
+
                   return (
-                    <div key={rest.id} className="col-12 col-md-6 col-xl-4">
+                    <div key={rest.id} className="restaurant-card position-relative">
                       <Link to={swiggyUrl} className="text-decoration-none">
-                      <div className={`restaurant-card-body card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift position-relative ${rest.isOpen === false ? 'opacity-75' : ''}`}>
-                        {/* Restaurant Banner Image */}
-                        <div className="restaurant-card-img position-relative" style={{ height: 180 }}>
-                          <img
-                            src={rest.bannerImage}
-                            alt={rest.name}
-                            className={`w-100 h-100 object-fit-cover ${rest.isOpen === false ? 'filter-grayscale' : ''}`}
-                            style={rest.isOpen === false ? { filter: 'grayscale(60%)' } : {}}
-                          />
-                          {/* Price Parity Guarantee Tag */}
-                          <div className="position-absolute top-0 start-0 m-2 badge bg-success shadow-sm rounded-pill d-flex align-items-center gap-1 small py-1 px-2">
-                            <i className="bi bi-patch-check-fill"></i>
-                            <span>0% Markup Parity</span>
-                          </div>
+                        <div className={`card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift ${isClosed ? 'opacity-75' : ''}`}>
+                          {/* Image Container with 16:10 Aspect Ratio */}
+                          <div className="restaurant-card-img-wrap">
+                            <img
+                              src={rest.bannerImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600'}
+                              alt={rest.name}
+                              loading="lazy"
+                              decoding="async"
+                              style={isClosed ? { filter: 'grayscale(70%)' } : {}}
+                            />
 
-                          {/* Price tier badge */}
-                          <div className="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 shadow-sm rounded-pill small py-1 px-2">
-                            {rest.priceTier}
-                          </div>
+                            {/* Offer Banner Gradient Overlay (Swiggy / Zomato Signature) */}
+                            {!isClosed && (
+                              <div className="restaurant-card-offer-overlay">
+                                <span>🏷️</span>
+                                <span>{discountOffer}</span>
+                              </div>
+                            )}
 
-                          {/* Overload Throttle Banner */}
-                          {rest.isAutoThrottled && rest.isOpen !== false && (
-                            <div className="position-absolute bottom-0 start-0 w-100 bg-warning text-dark py-1 text-center small fw-bold">
-                              ⏳ Kitchen busy (high prep volume)
-                            </div>
-                          )}
-
-                          {/* Closed Overlay */}
-                          {rest.isOpen === false && (
-                            <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-60 d-flex flex-column align-items-center justify-content-center text-white p-2 text-center" style={{ zIndex: 3 }}>
-                              <span className="badge bg-danger fs-6 px-3 py-1.5 rounded-pill mb-1 shadow">
-                                RESTAURANT CLOSED
-                              </span>
-                              <small className="fw-semibold text-light">Not accepting orders currently</small>
-                            </div>
-                          )}
-
-                          {/* Delivery Radius State */}
-                          {rest.distanceKm > 15 && (
-                            <div className="position-absolute bottom-0 start-0 w-100 bg-secondary bg-opacity-90 text-white py-1 text-center small fw-semibold" style={{ zIndex: 4 }}>
-                              📍 Outside delivery radius (&gt;15 km)
-                            </div>
-                          )}
-
-                          {/* Discount Tag */}
-                          <div className="position-absolute bottom-0 start-0 m-2 badge bg-primary shadow-sm rounded-pill small py-1 px-2" style={{ zIndex: 2, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}>
-                            🏷️ {rest.discountTag || (rest.rating >= 4.5 ? '50% OFF UPTO ₹150' : 'FLAT ₹100 OFF')}
-                          </div>
-                        </div>
-
-                        {/* Card Body Info */}
-                        <div className="card-body p-3 d-flex flex-column justify-content-between">
-                          <div>
-                            <div className="d-flex justify-content-between align-items-start mb-1">
-                              <h6 className="fw-bold text-dark mb-0 text-truncate" style={{ maxWidth: '75%' }}>
-                                {rest.name}
-                              </h6>
-                              <span className="badge bg-warning-subtle text-dark border small d-flex align-items-center gap-1 px-2 py-1">
-                                <i className="bi bi-star-fill text-warning"></i> {rest.rating}
-                              </span>
-                            </div>
-
-                            <div className="d-flex align-items-center gap-2 mb-1">
-                              <p className="text-muted small text-truncate mb-0">{rest.cuisineTypes}</p>
-                              {rest.headChef && (
-                                <span className="badge bg-light text-dark border small" style={{ fontSize: 10 }}>
-                                  {rest.headChef}
+                            {/* Closed Overlay */}
+                            {isClosed && (
+                              <div 
+                                className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-60 d-flex flex-column align-items-center justify-content-center text-white p-2 text-center" 
+                                style={{ zIndex: 3 }}
+                              >
+                                <span className="badge bg-danger fs-6 px-3 py-1 rounded-pill mb-1 shadow">
+                                  CLOSED
                                 </span>
-                              )}
-                            </div>
-                            <div className="d-flex align-items-center justify-content-between mb-2">
-                              <small className="text-secondary text-truncate" style={{ fontSize: 11, maxWidth: '60%' }}>
-                                <i className="bi bi-geo-alt me-1 text-danger"></i>
-                                {rest.locality || rest.street || (rest.address ? rest.address.split(',')[0] : `${currentHub.name}, ${currentHub.cityName}`)}
-                                <span className="text-muted ms-1">• {rest.distanceKm ? `${rest.distanceKm} km` : '1.2 km'}</span>
-                              </small>
-                              <span className="text-muted fw-semibold" style={{ fontSize: 11 }}>
-                                {rest.costForTwo ? `₹${rest.costForTwo} for two` : (rest.priceTier || '₹400 for two')}
-                              </span>
-                            </div>
-                            {rest.hygieneRating && (
-                              <div className="mb-2">
-                                <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small" style={{ fontSize: 10 }}>
-                                  🛡️ {rest.hygieneRating}/5 Hygiene Certified
-                                </span>
+                                <small className="fw-semibold text-light">Opens tomorrow at 11 AM</small>
                               </div>
                             )}
                           </div>
 
-                          <div className="d-flex justify-content-between align-items-center text-muted small pt-2 border-top">
-                            <span className="d-flex align-items-center gap-1">
-                              <i className="bi bi-clock"></i> {rest.prepTimeMin}-{rest.prepTimeMax} mins
-                            </span>
-                            <span className="text-success fw-bold">
-                              ₹35 Delivery
-                            </span>
+                          {/* Card Content Body */}
+                          <div className="card-body p-3 d-flex flex-column justify-content-between">
+                            <div>
+                              {/* 1. Restaurant Name & Rating */}
+                              <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                <h6 className="fw-bold text-dark mb-0 text-truncate" title={rest.name}>
+                                  {rest.name}
+                                </h6>
+                                <span className="rating-pill-green flex-shrink-0">
+                                  ★ {rest.rating || '4.2'}
+                                </span>
+                              </div>
+
+                              {/* 2. ETA • Distance • Cost for Two (Zomato Pattern) */}
+                              <div className="d-flex align-items-center gap-1 text-muted small mb-1" style={{ fontSize: 12 }}>
+                                <span className="fw-semibold text-dark">
+                                  {rest.prepTimeMin ? `${rest.prepTimeMin}-${rest.prepTimeMax || rest.prepTimeMin + 10} mins` : '25-35 mins'}
+                                </span>
+                                <span>•</span>
+                                <span>{rest.distanceKm ? `${rest.distanceKm} km` : '1.2 km'}</span>
+                                <span>•</span>
+                                <span>{rest.costForTwo ? `₹${rest.costForTwo} for two` : (rest.priceTier ? `${rest.priceTier} · ₹350 for two` : '₹350 for two')}</span>
+                              </div>
+
+                              {/* 3. Cuisines */}
+                              <p className="text-secondary small text-truncate mb-2" style={{ fontSize: 12 }}>
+                                {rest.cuisineTypes || 'North Indian, Street Food'}
+                              </p>
+
+                              {/* 4. Chips Strip: 0% Markup Parity, Veg, Auto-throttled */}
+                              <div className="d-flex align-items-center gap-1 flex-wrap mb-2">
+                                <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-0 px-2" style={{ fontSize: 10 }}>
+                                  ✓ 0% Markup Parity
+                                </span>
+                                {rest.pureVeg && (
+                                  <span className="badge bg-success text-white rounded-pill py-0 px-2" style={{ fontSize: 10 }}>
+                                    🟢 Pure Veg
+                                  </span>
+                                )}
+                                {rest.isAutoThrottled && (
+                                  <span className="badge bg-warning text-dark rounded-pill py-0 px-2" style={{ fontSize: 10 }}>
+                                    ⏳ Busy Kitchen
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* 5. Locality & Free Delivery tag */}
+                            <div className="d-flex justify-content-between align-items-center text-muted small pt-2 border-top" style={{ fontSize: 11 }}>
+                              <span className="text-truncate" style={{ maxWidth: '65%' }}>
+                                <i className="bi bi-geo-alt me-1 text-danger"></i>
+                                {rest.locality || rest.street || (rest.address ? rest.address.split(',')[0] : `${currentHub.name}, ${currentHub.cityName}`)}
+                              </span>
+                              <span className="text-success fw-bold">
+                                {rest.deliveryFee === 0 || !rest.deliveryFee ? 'FREE DELIVERY' : `₹${rest.deliveryFee} Delivery`}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  </div>
-                );
-              })}
+                      </Link>
+
+                      {/* Favourite Heart Button */}
+                      <button
+                        type="button"
+                        className={`restaurant-fav-btn ${isFav ? 'active' : ''}`}
+                        onClick={(e) => toggleFavorite(e, rest.id)}
+                        aria-label={isFav ? `Remove ${rest.name} from favorites` : `Add ${rest.name} to favorites`}
+                      >
+                        <i className={`bi ${isFav ? 'bi-heart-fill text-danger' : 'bi-heart'}`}></i>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

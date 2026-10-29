@@ -61,8 +61,9 @@ const Navbar = ({ onOpenCart }) => {
           setGpsLocked(true);
           setShowLocationModal(false);
         },
-        () => {
-          setTimeout(() => {
+        (err) => {
+          setDetectingGps(false);
+          if (import.meta.env.VITE_DEMO_MODE === 'true') {
             const simulatedHub = {
               id: 'gps_sim',
               name: selectedCity.hubs[0].name,
@@ -72,10 +73,11 @@ const Navbar = ({ onOpenCart }) => {
             };
             setSelectedHub(simulatedHub);
             localStorage.setItem('cravepulse_hub', JSON.stringify(simulatedHub));
-            setDetectingGps(false);
             setGpsLocked(true);
             setShowLocationModal(false);
-          }, 600);
+          } else {
+            console.warn('GPS location access denied or unavailable', err);
+          }
         },
         { timeout: 5000 }
       );

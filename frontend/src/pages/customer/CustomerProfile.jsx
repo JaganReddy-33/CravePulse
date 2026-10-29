@@ -638,7 +638,7 @@ const CustomerProfile = () => {
                     autoFocus
                   />
                   <small className="text-muted d-block mt-2" style={{ fontSize: 11 }}>
-                    Simulated verification accepts any 4+ digit OTP.
+                    Enter the 6-digit OTP sent to your registered phone number.
                   </small>
                 </div>
                 <div className="modal-footer border-top p-2">
