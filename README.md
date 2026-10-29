@@ -163,6 +163,11 @@ CravePulse/
 | **Discovery** | Cross-Dish & Kitchen Search | SQL subqueries across menus + restaurant suggestions autocomplete |
 | **Discovery** | Multi-City Location Picker | Pan-India coordinates + HTML5 Geolocation API |
 | **Discovery** | **Price Parity Guarantee** | 100% dine-in price transparency badge on every dish |
+| **Discovery** | **Swiggy & Zomato Card UX** | 16:10 aspect ratio image, gradient deal overlay, green rating pill (`★ 4.8`), interactive favorites |
+| **Discovery** | **Horizontal Reviews Carousel** | Touch-swipe & keyboard snap carousel with live rating distribution and zero fake data |
+| **Layout & Mobile** | **Responsive Primitives** | Fluid `clamp()` typography, `ResponsiveTable` (table → cards on mobile), safe-area insets |
+| **Partner Portal** | **Mobile Single-Column Kanban** | Quick tab switcher on `< 768px` for one-thumb kitchen dispatch operations |
+| **Real-Time** | **Live WebSocket & Offline Radar** | Navbar live status indicator dot and browser offline detection alert banner |
 | **Ordering** | Item Customizer Modal | Portion variants, add-ons, special cooking instructions |
 | **Ordering** | Single-Restaurant Cart Guard | Prevents mixed-kitchen cart with conflict modal |
 | **Ordering** | Dynamic Coupon Engine | Min-order, first-order guard, usage caps, % and flat discounts |

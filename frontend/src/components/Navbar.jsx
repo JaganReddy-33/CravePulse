@@ -19,7 +19,7 @@ import NavMobileDrawer from './navbar/NavMobileDrawer';
 const Navbar = ({ onOpenCart }) => {
   const { user, logout } = useAuth();
   const { totalItemCount } = useCart();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAllNotifications } = useRealtime();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAllNotifications, isConnected } = useRealtime();
 
   // Multi-City state
   const [selectedCity, setSelectedCity] = useState(PAN_INDIA_CITIES[0]);
@@ -155,6 +155,26 @@ const Navbar = ({ onOpenCart }) => {
 
           {/* Action Links & Utility Controls */}
           <div className="d-flex align-items-center gap-2 gap-md-3">
+            {/* Live Realtime WebSocket Indicator */}
+            <span
+              className="d-none d-sm-inline-flex align-items-center gap-1.5 px-2.5 py-1.5 rounded-pill bg-light border text-muted"
+              style={{ fontSize: 11 }}
+              title={isConnected ? 'Live WebSocket Feed Active' : 'Syncing with Server...'}
+            >
+              <span
+                className="rounded-circle"
+                style={{
+                  width: 7,
+                  height: 7,
+                  backgroundColor: isConnected ? '#10b981' : '#f59e0b',
+                  boxShadow: isConnected ? '0 0 6px rgba(16, 185, 129, 0.6)' : 'none',
+                }}
+              />
+              <span className="fw-semibold d-none d-md-inline" style={{ fontSize: 11 }}>
+                {isConnected ? 'Live' : 'Syncing'}
+              </span>
+            </span>
+
             {/* Offers Link */}
             <Link 
               to="/offers" 

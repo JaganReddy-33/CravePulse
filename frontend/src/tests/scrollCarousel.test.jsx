@@ -23,3 +23,4 @@ describe('ScrollCarousel Logic Tests', () => {
     expect(page).toBe(688);
   });
 });
+

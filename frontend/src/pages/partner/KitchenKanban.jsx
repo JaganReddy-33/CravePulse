@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import api from '../../services/api';
 import realtime from '../../services/websocket';
@@ -30,6 +30,7 @@ const KitchenKanban = () => {
   const [isThrottled, setIsThrottled] = useState(restaurant?.isAutoThrottled || false);
   const [isOpen, setIsOpen] = useState(restaurant?.isOpen ?? true);
   const [now, setNow] = useState(Date.now());
+  const [mobileTab, setMobileTab] = useState('PLACED');
   const { playAlertSound } = useRealtime();
 
   // Modal States
@@ -155,53 +156,79 @@ const KitchenKanban = () => {
         if (refreshRestaurant) refreshRestaurant();
       }
     } catch (e) {
-      console.error('Store open toggle error', e);
-      alert(e.message || 'Failed to toggle store status');
+      console.error('Open status toggle error', e);
+      alert(e.message || 'Failed to toggle restaurant status');
     }
   };
 
-  const autoRejectLimitMin = restaurant?.autoRejectMinutes || 10;
-
-  const calculateSlaRemainingSeconds = (createdAt) => {
-    if (!createdAt) return autoRejectLimitMin * 60;
-    const orderTime = new Date(createdAt).getTime();
-    const elapsedSec = Math.floor((now - orderTime) / 1000);
-    return (autoRejectLimitMin * 60) - elapsedSec;
+  const calculateSlaRemainingSeconds = (createdAtStr) => {
+    if (!createdAtStr) return 0;
+    const createdTime = new Date(createdAtStr).getTime();
+    const elapsedSec = Math.floor((now - createdTime) / 1000);
+    const slaTotalSec = 180; // 3 minutes acceptance SLA
+    return Math.max(0, slaTotalSec - elapsedSec);
   };
 
   return (
-    <div>
-      {/* Top Controls Bar */}
-      <div className="d-flex flex-column flex-xl-row justify-content-between align-items-start align-items-xl-center mb-4 gap-3 bg-white p-3 rounded-4 shadow-sm border">
+    <div className="container-fluid px-2 px-md-4 py-3">
+      {/* Header with Kitchen Controls */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <div className="d-flex align-items-center gap-2">
-            <h4 className="fw-extrabold mb-0 text-dark">Kitchen Kanban Board</h4>
-            <span className="badge bg-light text-secondary border small">Auto-Reject SLA: {autoRejectLimitMin} min</span>
-          </div>
-          <p className="text-muted small mb-0 mt-1">Live order staging with prep time confirmation, overload throttle, and automatic customer refund on rejection.</p>
+          <h4 className="fw-bold mb-1">
+            <i className="bi bi-kanban me-2 text-danger"></i>
+            Live Kitchen Order Board
+          </h4>
+          <p className="text-muted small mb-0">
+            Real-time ticket dispatch, prep SLA tracking, and status transitions.
+          </p>
         </div>
 
-        <div className="d-flex flex-wrap align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           {/* Store Open/Close Toggle */}
           <button
-            className={`btn btn-sm rounded-pill px-3 fw-bold ${isOpen ? 'btn-success' : 'btn-outline-danger'}`}
+            className={`btn btn-sm rounded-pill px-3 fw-bold ${isOpen ? 'btn-success text-white' : 'btn-outline-danger'}`}
             onClick={handleToggleOpen}
           >
-            {isOpen ? '🟢 Store OPEN (Accepting)' : '🔴 Store CLOSED'}
+            <i className={`bi ${isOpen ? 'bi-door-open-fill' : 'bi-door-closed-fill'} me-1`}></i>
+            {isOpen ? 'Store Active (Open)' : 'Store Paused (Closed)'}
           </button>
 
-          {/* Overload Auto-Throttle Toggle */}
+          {/* Rush Throttling Toggle */}
           <button
-            className={`btn btn-sm rounded-pill px-3 fw-bold ${isThrottled ? 'btn-danger' : 'btn-outline-secondary'}`}
+            className={`btn btn-sm rounded-pill px-3 fw-bold ${isThrottled ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
             onClick={handleToggleThrottle}
           >
-            {isThrottled ? '⚡ Overload Throttle ACTIVE' : '🛡️ Overload Normal'}
+            <i className={`bi ${isThrottled ? 'bi-hourglass-split' : 'bi-speedometer2'} me-1`}></i>
+            {isThrottled ? 'Rush Throttling ON' : 'Normal Capacity'}
           </button>
 
           <button className="btn btn-outline-secondary rounded-pill btn-sm px-3" onClick={fetchOrders}>
             <i className="bi bi-arrow-clockwise"></i> Refresh
           </button>
         </div>
+      </div>
+
+      {/* Mobile Single-Column Tab View (< 768px) */}
+      <div className="d-flex d-md-none gap-2 overflow-auto pb-2 mb-3" style={{ scrollbarWidth: 'none' }}>
+        {COLUMNS.map((col) => {
+          const count = orders.filter((o) => o.status === col.status).length;
+          const isActive = mobileTab === col.status;
+          return (
+            <button
+              key={col.status}
+              type="button"
+              className={`btn btn-sm rounded-pill px-3 py-1.5 fw-bold text-nowrap d-flex align-items-center gap-2 ${
+                isActive ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border'
+              }`}
+              onClick={() => setMobileTab(col.status)}
+            >
+              <span>{col.title}</span>
+              <span className={`badge rounded-pill ${isActive ? 'bg-white text-primary' : col.badge}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
@@ -211,11 +238,15 @@ const KitchenKanban = () => {
         </div>
       ) : (
         <div className="row g-3">
-          {COLUMNS.map(col => {
-            const colOrders = orders.filter(o => o.status === col.status);
+          {COLUMNS.map((col) => {
+            const colOrders = orders.filter((o) => o.status === col.status);
+            const isHiddenOnMobile = mobileTab !== col.status;
 
             return (
-              <div key={col.status} className="col-12 col-md-6 col-xl-3">
+              <div
+                key={col.status}
+                className={`col-12 col-md-6 col-xl-3 ${isHiddenOnMobile ? 'd-none d-md-block' : 'd-block'}`}
+              >
                 <div className="card border-0 rounded-4 shadow-sm bg-light h-100 p-3">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h6 className="fw-bold mb-0">{col.title}</h6>
@@ -226,7 +257,7 @@ const KitchenKanban = () => {
                     {colOrders.length === 0 ? (
                       <div className="text-center py-5 text-muted small">No tickets in this stage</div>
                     ) : (
-                      colOrders.map(ord => {
+                      colOrders.map((ord) => {
                         const slaRemainingSec = calculateSlaRemainingSeconds(ord.createdAt);
                         const isSlaBreached = slaRemainingSec <= 0;
                         const minutesRemaining = Math.max(0, Math.floor(slaRemainingSec / 60));
@@ -282,7 +313,7 @@ const KitchenKanban = () => {
                                   <button
                                     className="btn btn-sm btn-outline-danger rounded-pill fw-bold"
                                     onClick={() => setRejectingOrder(ord)}
-                                    title="Reject with reason & trigger auto-refund"
+                                    title="Reject with reason &amp; trigger auto-refund"
                                   >
                                     Reject ✕
                                   </button>
@@ -338,7 +369,7 @@ const KitchenKanban = () => {
                 <div className="modal-body py-3">
                   <label className="form-label small fw-bold text-muted">Estimated Prep Time (Minutes):</label>
                   <div className="d-flex flex-wrap gap-2 mb-3">
-                    {PREP_TIME_OPTIONS.map(mins => (
+                    {PREP_TIME_OPTIONS.map((mins) => (
                       <button
                         key={mins}
                         type="button"

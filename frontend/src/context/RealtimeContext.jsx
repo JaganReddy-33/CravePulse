@@ -25,13 +25,32 @@ export const RealtimeProvider = ({ children }) => {
 
   const [activeJobOffer, setActiveJobOffer] = useState(null);
   const [incomingKitchenOrder, setIncomingKitchenOrder] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
-  // Sync to localStorage
+  // Browser online/offline tracking
   useEffect(() => {
-    localStorage.setItem('cravepulse_notifications', JSON.stringify(notifications));
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Sync notifications to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('cravepulse_notifications', JSON.stringify(notifications));
+    } catch (e) {
+      console.warn('Failed to save notifications', e);
+    }
   }, [notifications]);
 
-  // Play pleasant synth tones using Web Audio API
+  // Web Audio synth tones
   const playAlertSound = (type = 'ding') => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -43,14 +62,14 @@ export const RealtimeProvider = ({ children }) => {
       gain.connect(ctx.destination);
 
       if (type === 'bell') {
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
         osc.start();
         osc.stop(ctx.currentTime + 1.2);
       } else {
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime);
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
         osc.start();
@@ -62,11 +81,18 @@ export const RealtimeProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsConnected(false);
+      return;
+    }
 
     realtime.connect();
 
-    // Fetch initial notifications from API if available
+    const offConn = realtime.on('connection_status', (data) => {
+      setIsConnected(data?.status === 'connected');
+    });
+
+    // Fetch initial notifications
     api.get('/auth/notifications').then((res) => {
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         setNotifications(res.data);
@@ -100,6 +126,7 @@ export const RealtimeProvider = ({ children }) => {
     });
 
     return () => {
+      offConn();
       offJobOffer();
       offKitchenOrder();
       offOrderStatus();
@@ -139,8 +166,21 @@ export const RealtimeProvider = ({ children }) => {
         incomingKitchenOrder,
         setIncomingKitchenOrder,
         playAlertSound,
+        isConnected,
+        isOnline,
       }}
     >
+      {/* Offline banner */}
+      {!isOnline && (
+        <div
+          className="bg-danger text-white py-1 px-3 text-center small fw-bold sticky-top"
+          style={{ zIndex: 1090 }}
+          role="alert"
+          aria-live="assertive"
+        >
+          📡 You are currently offline. Check your internet connection.
+        </div>
+      )}
       {children}
     </RealtimeContext.Provider>
   );
