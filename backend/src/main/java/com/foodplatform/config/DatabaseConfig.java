@@ -24,9 +24,14 @@ public final class DatabaseConfig {
                     try {
                         HikariConfig config = new HikariConfig();
                         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-                        config.setJdbcUrl(AppProperties.getDbUrl());
-                        config.setUsername(AppProperties.getDbUser());
-                        config.setPassword(AppProperties.getDbPassword());
+                        boolean test = Boolean.getBoolean("cravepulse.testMode");
+                        String url = test ? System.getenv("TEST_DB_URL") : AppProperties.getDbUrl();
+                        if (test && (url == null || !url.matches("(?i).*[/]cravepulse_test(?:[?].*)?$"))) {
+                            throw new IllegalStateException("Tests require a disposable cravepulse_test database via TEST_DB_URL, TEST_DB_USER and TEST_DB_PASSWORD");
+                        }
+                        config.setJdbcUrl(url);
+                        config.setUsername(test ? System.getenv("TEST_DB_USER") : AppProperties.getDbUser());
+                        config.setPassword(test ? System.getenv("TEST_DB_PASSWORD") : AppProperties.getDbPassword());
 
                         // Connection pool performance tuning
                         config.setMaximumPoolSize(20);

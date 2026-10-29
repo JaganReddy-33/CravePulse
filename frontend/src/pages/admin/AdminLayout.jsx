@@ -18,6 +18,8 @@ const AdminLayout = () => {
 
   const navLinks = (
     <div className="nav flex-column gap-1 flex-grow-1">
+      <Link to="/admin/service-areas" onClick={() => setShowMobileSidebar(false)} className="nav-link py-2 px-3 rounded-3 fw-semibold touch-target text-secondary">Service areas</Link>
+      <Link to="/admin/support" onClick={() => setShowMobileSidebar(false)} className="nav-link py-2 px-3 rounded-3 fw-semibold touch-target text-secondary">Support inbox</Link>
       <Link
         to="/admin"
         onClick={() => setShowMobileSidebar(false)}
@@ -108,8 +110,8 @@ const AdminLayout = () => {
         {navLinks}
 
         <div className="p-3 rounded-3 border border-dark text-center mt-auto" style={{ background: '#0b0f19' }}>
-          <div className="badge bg-success-subtle text-success mb-1 small">SYSTEM STATUS</div>
-          <div className="fw-bold small text-light">Real-Time Core Online</div>
+          <div className="badge bg-secondary-subtle text-secondary mb-1 small">ADMINISTRATION</div>
+          <div className="fw-bold small text-light">Operations workspace</div>
           <small className="text-muted" style={{ fontSize: 11 }}>Tomcat 10 • MySQL 8 • WS</small>
         </div>
       </aside>
@@ -187,7 +189,7 @@ const AdminLayout = () => {
                 </div>
                 <div className="d-none d-sm-block text-end lh-1">
                   <span className="small text-white fw-semibold d-block">{adminName}</span>
-                  <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: 10 }}>PLATFORM FOUNDER</span>
+                  <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: 10 }}>ADMINISTRATOR</span>
                 </div>
                 <i className="bi bi-chevron-down text-muted small"></i>
               </button>

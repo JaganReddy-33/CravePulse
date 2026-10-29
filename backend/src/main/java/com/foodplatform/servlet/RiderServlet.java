@@ -63,6 +63,9 @@ public class RiderServlet extends BaseServlet {
 
             case "/earnings" -> {
                 Map<String, Object> summary = riderDao.getRiderEarningsSummary(profile.getId());
+                summary.put("walletBalance", new com.foodplatform.daoImpl.UserDaoImpl().findById(userId).getWalletBalance());
+                summary.put("cashInHand", profile.getCashInHand());
+                summary.put("maxCashLimit", profile.getMaxCashLimit());
                 JsonUtil.sendSuccess(res, 200, "Earnings summary", summary);
             }
 
@@ -214,6 +217,8 @@ public class RiderServlet extends BaseServlet {
             }
 
             try {
+                DeliveryDispatch owned = riderDao.findDispatchByOrderId(path.contains("/orders/") ? id : -1L);
+                if (owned == null || !profile.getId().equals(owned.getRiderId())) { JsonUtil.sendError(res,403,"Dispatch is not owned by this rider"); return; }
                 BigDecimal compensation = dispatchService.claimWaitTimeCompensation(dispatchId);
                 JsonUtil.sendSuccess(res, 200, "Wait-time compensation processed", Map.of(
                         "dispatchId", dispatchId,
@@ -251,6 +256,7 @@ public class RiderServlet extends BaseServlet {
             if (body != null && body.has("latitude") && body.has("longitude")) {
                 double lat = body.get("latitude").getAsDouble();
                 double lng = body.get("longitude").getAsDouble();
+                if (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) { JsonUtil.sendError(res,400,"Invalid GPS coordinates"); return; }
                 double speed = body.has("speed") ? body.get("speed").getAsDouble() : 0.0;
                 double heading = body.has("heading") ? body.get("heading").getAsDouble() : 0.0;
                 Long orderId = body.has("orderId") && !body.get("orderId").isJsonNull() ? body.get("orderId").getAsLong() : null;

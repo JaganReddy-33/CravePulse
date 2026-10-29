@@ -89,6 +89,7 @@ public class PaymentService {
             throw new IllegalStateException("Order #" + orderId + " is already paid.");
         }
 
+        if (!"RAZORPAY".equals(order.getPaymentMode())) throw new IllegalArgumentException("This order does not use online payment");
         // Check if an active Razorpay payment already exists for this order
         Payment existing = paymentDao.findByOrderId(orderId);
         if (existing != null && "SUCCESS".equalsIgnoreCase(existing.getStatus())) {
@@ -119,7 +120,7 @@ public class PaymentService {
                     payment.setIdempotencyKey(idempotencyKey != null ? idempotencyKey : UUID.randomUUID().toString());
                     paymentDao.createPayment(conn, payment);
                     conn.commit();
-                } catch (SQLException e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 } finally {
@@ -150,6 +151,11 @@ public class PaymentService {
      * Verifies payment signature and marks order PAID inside a DB transaction.
      */
     public Map<String, Object> verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, Long userId) {
+        Payment ownedPayment = paymentDao.findByRazorpayOrderId(razorpayOrderId);
+        Order ownedOrder = ownedPayment == null ? null : orderDao.findById(ownedPayment.getOrderId());
+        if (userId == null || ownedOrder == null || !userId.equals(ownedOrder.getCustomerId())) {
+            throw new IllegalArgumentException("Payment not found in your account");
+        }
         if (!razorpayClient.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
             Payment payment = paymentDao.findByRazorpayOrderId(razorpayOrderId);
             if (payment != null) {
@@ -182,7 +188,7 @@ public class PaymentService {
                 orderDao.updateOrderPaymentStatus(conn, payment.getOrderId(), "PAID");
 
                 conn.commit();
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 throw e;
             } finally {
@@ -236,6 +242,7 @@ public class PaymentService {
                     return Map.of("success", true, "message", "Order already paid", "orderId", orderId);
                 }
 
+                if (!"WALLET".equals(order.getPaymentMode())) throw new IllegalArgumentException("This order does not use wallet payment");
                 // 2. Lock user wallet row atomically
                 User customer = userDao.findByIdWithLock(conn, userId);
                 if (customer == null) {
@@ -297,7 +304,7 @@ public class PaymentService {
                         "paymentMode", "WALLET",
                         "balanceAfter", newBalance
                 );
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 throw e;
             } finally {
@@ -342,7 +349,7 @@ public class PaymentService {
                                 paymentDao.updateStatusAndDetails(conn, payment.getId(), "SUCCESS", rzpPaymentId, null, rawPayload);
                                 orderDao.updateOrderPaymentStatus(conn, payment.getOrderId(), "PAID");
                                 conn.commit();
-                            } catch (SQLException ex) {
+                            } catch (SQLException | RuntimeException ex) {
                                 conn.rollback();
                             } finally {
                                 conn.setAutoCommit(true);
@@ -380,6 +387,9 @@ public class PaymentService {
             return Map.of("refunded", false, "message", "No successful payment row found for refund.");
         }
 
+        if (payment.getRefundId() != null) {
+            return Map.of("refunded", "PROCESSED".equals(payment.getRefundStatus()), "status", payment.getRefundStatus(), "refundId", payment.getRefundId());
+        }
         Order order = orderDao.findById(orderId);
         if (order == null) {
             return Map.of("refunded", false, "message", "Order not found");
@@ -389,6 +399,13 @@ public class PaymentService {
             try (Connection conn = DatabaseConfig.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
+                    try (var lock = conn.prepareStatement("SELECT refund_id,refund_status FROM payments WHERE id=? FOR UPDATE")) {
+                        lock.setLong(1,payment.getId());
+                        try(var rows=lock.executeQuery()) {
+                            if(!rows.next()) throw new SQLException("Payment not found");
+                            if(rows.getString(1)!=null) { conn.rollback(); return Map.of("refunded", "PROCESSED".equals(rows.getString(2)), "refundId", rows.getString(1)); }
+                        }
+                    }
                     User customer = userDao.findByIdWithLock(conn, order.getCustomerId());
                     if (customer != null) {
                         BigDecimal updatedBalance = (customer.getWalletBalance() != null ? customer.getWalletBalance() : BigDecimal.ZERO).add(payment.getAmount());
@@ -407,7 +424,7 @@ public class PaymentService {
                     }
                     conn.commit();
                     return Map.of("refunded", true, "mode", "WALLET", "amount", payment.getAmount());
-                } catch (SQLException e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 } finally {
@@ -420,11 +437,13 @@ public class PaymentService {
         } else if ("RAZORPAY".equalsIgnoreCase(payment.getPaymentMode())) {
             if (payment.getRazorpayPaymentId() != null) {
                 JsonObject refundRes = razorpayClient.createRefund(payment.getRazorpayPaymentId(), payment.getAmount(), reason);
-                String refundId = refundRes.has("id") ? refundRes.get("id").getAsString() : "rfnd_" + UUID.randomUUID().toString();
+                if (!refundRes.has("id") || !refundRes.has("status")) throw new IllegalStateException("Gateway refund response incomplete; reconciliation required");
+                String refundId = refundRes.get("id").getAsString();
+                String refundStatus = "processed".equals(refundRes.get("status").getAsString()) ? "PROCESSED" : "PENDING";
                 try (Connection conn = DatabaseConfig.getConnection()) {
-                    paymentDao.recordRefund(conn, payment.getId(), refundId, payment.getAmount(), "PROCESSED");
-                } catch (SQLException ignored) {}
-                return Map.of("refunded", true, "mode", "RAZORPAY", "refundId", refundId, "amount", payment.getAmount());
+                    paymentDao.recordRefund(conn, payment.getId(), refundId, payment.getAmount(), refundStatus);
+                } catch (SQLException e) { throw new IllegalStateException("Gateway accepted refund but ledger update failed; reconciliation required",e); }
+                return Map.of("refunded", "PROCESSED".equals(refundStatus), "status", refundStatus, "mode", "RAZORPAY", "refundId", refundId, "amount", payment.getAmount());
             }
         }
 

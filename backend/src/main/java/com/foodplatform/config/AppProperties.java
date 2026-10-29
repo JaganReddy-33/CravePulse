@@ -63,9 +63,9 @@ public final class AppProperties {
     }
 
     public static String getJwtSecret() {
-        String secret = getProperty("jwt.secret", "JWT_SECRET", "CravePulseSuperSecureProductionSecretKeyForSigning2026SigningKey!");
-        if (secret == null || secret.trim().length() < 32) {
-            return "CravePulseSuperSecureProductionSecretKeyForSigning2026SigningKey!";
+        String secret = getProperty("jwt.secret", "JWT_SECRET", "");
+        if (secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32 || secret.contains("YourSuper") || secret.contains("ProductionSecretKey")) {
+            throw new IllegalStateException("Set JWT_SECRET to a unique random secret of at least 32 bytes");
         }
         return secret.trim();
     }
@@ -103,15 +103,16 @@ public final class AppProperties {
     }
 
     public static String getRazorpayKeyId() {
-        return getProperty("razorpay.keyId", "RAZORPAY_KEY_ID", "rzp_test_cravepulse_demo2026");
+        String value = getProperty("razorpay.keyId", "RAZORPAY_KEY_ID", "");
+        return value.contains("demo") || value.contains("placeholder") || value.contains("your_key") ? "" : value;
     }
 
     public static String getRazorpayKeySecret() {
-        return getProperty("razorpay.keySecret", "RAZORPAY_KEY_SECRET", "rzp_secret_cravepulse_demo_secure987654");
+        return getProperty("razorpay.keySecret", "RAZORPAY_KEY_SECRET", "");
     }
 
     public static String getRazorpayWebhookSecret() {
-        return getProperty("razorpay.webhookSecret", "RAZORPAY_WEBHOOK_SECRET", "rzp_webhook_secret_cravepulse2026_demo");
+        return getProperty("razorpay.webhookSecret", "RAZORPAY_WEBHOOK_SECRET", "");
     }
 
     public static java.math.BigDecimal getCodMaxLimit() {

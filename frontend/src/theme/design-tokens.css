@@ -8,53 +8,53 @@
      1. Brand & Multi-Portal Color Tokens (AA Contrast Compliant)
      -------------------------------------------------------------------------- */
   /* Customer Theme (Warm Appetising Food - Swiggy/Zomato Palette) */
-  --c-primary: #ff5722;
-  --c-primary-hover: #e64a19;
-  --c-primary-light: #fff2ed;
-  --c-secondary: #ff7043;
-  --c-accent: #f57c00;
-  --c-bg: #faf7f2;
+  --c-primary: #b94016;
+  --c-primary-hover: #94300f;
+  --c-primary-light: #fff0e7;
+  --c-secondary: #dc6837;
+  --c-accent: #a84d0c;
+  --c-bg: #faf8f3;
   --c-surface: #ffffff;
   --c-surface-card: rgba(255, 255, 255, 0.95);
-  --c-text-main: #0f172a;       /* 12.8:1 contrast on white */
-  --c-text-muted: #475569;      /* 4.9:1 contrast on white (AA compliant) */
+  --c-text-main: #252821;       /* 12.8:1 contrast on white */
+  --c-text-muted: #60665a;      /* 4.9:1 contrast on white (AA compliant) */
   --c-text-light: #64748b;
-  --c-border: #e2e8f0;
+  --c-border: #e6e5dc;
   --c-border-subtle: #f1f5f9;
 
   /* Zomato/Swiggy Rating & Offer Accents */
   --c-rating-green: #248232;
   --c-rating-green-bg: #e5f7ee;
-  --c-offer-orange: #ff5200;
+  --c-offer-orange: #b94016;
 
   /* Partner Theme (Restaurant Operations) */
   --p-primary: #ff5c35;
-  --p-primary-hover: #e04822;
-  --p-bg: #f8fafc;
+  --p-primary-hover: #e04b25;
+  --p-bg: #f5f6fa;
   --p-surface: #ffffff;
-  --p-text-main: #0f172a;
-  --p-text-muted: #475569;
-  --p-border: #e2e8f0;
-  --p-success: #059669;
+  --p-text-main: #191d23;
+  --p-text-muted: #596375;
+  --p-border: #eaedf2;
+  --p-success: #00b894;
 
   /* Rider Theme (OLED High Contrast Dark Mode) */
-  --r-bg: #090d16;
+  --r-bg: #0b0f19;
   --r-surface: #111827;
   --r-surface-card: #1f2937;
-  --r-accent: #10b981;
-  --r-accent-hover: #059669;
+  --r-accent: #62dfad;
+  --r-accent-hover: #86eac2;
   --r-text-main: #f8fafc;
   --r-text-muted: #94a3b8;
-  --r-border: #374151;
+  --r-border: #1e293b;
 
   /* Admin Theme (Dense Ops Control Tower) */
   --a-bg: #090d16;
   --a-surface: #111827;
   --a-surface-card: #1a2234;
-  --a-primary: #38bdf8;
-  --a-text-main: #f8fafc;
+  --a-primary: #82c9ee;
+  --a-text-main: #f1f5f9;
   --a-text-muted: #94a3b8;
-  --a-border: #1e293b;
+  --a-border: #1f293d;
 
   /* --------------------------------------------------------------------------
      2. Spacing Scale Tokens
@@ -94,8 +94,8 @@
      5. Accessibility & Mobile Touch Target Tokens
      -------------------------------------------------------------------------- */
   --touch-target-min: 44px;
-  --focus-ring-color: #ff5722;
-  --focus-ring: 0 0 0 3px rgba(255, 87, 34, 0.35);
+  --focus-ring-color: #b94016;
+  --focus-ring: 0 0 0 3px rgba(185, 64, 22, 0.2);
 
   /* Safe Area Insets for Modern Mobile Notches & Navigation Bars */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -112,8 +112,7 @@
 
 /* Base Body & Layout Safeguards */
 html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
+  width: 100%;
   min-height: 100%;
   padding-bottom: 0;
   box-sizing: border-box;
@@ -227,8 +226,8 @@ html, body {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(4px);

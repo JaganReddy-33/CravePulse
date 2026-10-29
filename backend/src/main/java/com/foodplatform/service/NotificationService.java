@@ -53,8 +53,8 @@ public class NotificationService {
         return walletDao.getUserNotifications(userId, unreadOnly);
     }
 
-    public void markAsRead(long notificationId) {
-        walletDao.markNotificationRead(notificationId);
+    public void markAsRead(long notificationId, long userId) {
+        walletDao.markNotificationRead(notificationId, userId);
     }
 
     public void markAllAsRead(long userId) {

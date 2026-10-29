@@ -4,39 +4,12 @@ import realtime from '../../services/websocket';
 import LiveMap from '../../components/LiveMap';
 import ModalPortal from '../../components/ModalPortal';
 
-const MOCK_ACTIVE_DISPATCH = {
-  orderId: 101,
-  orderNumber: 'ORD-20261025-002',
-  status: 'ACCEPTED',
-  restaurantName: 'Spice Symphony & Grill',
-  chefName: 'Executive Chef',
-  restaurantAddress: 'Plot 88, 100 Feet Rd, HAL 2nd Stage, Indiranagar',
-  restaurantPhone: '+91 98490 11223',
-  restaurantLat: 12.9715987,
-  restaurantLng: 77.6350000,
-  customerName: 'Customer',
-  deliveryAddress: 'Apartment 402, Sunshine Heights, 12th Main Road, Indiranagar',
-  deliveryPhone: '+91 98490 12345',
-  deliveryLat: 12.9783692,
-  deliveryLng: 77.6408356,
-  deliveryInstructions: 'Ring bell twice. Please leave with security if unreachable.',
-  items: [
-    { id: 1001, itemName: 'Hyderabadi Chicken Dum Biryani', quantity: 1, sealType: 'Tamper-Evident Tape' },
-    { id: 1002, itemName: 'Garlic Butter Chur Chur Naan', quantity: 2, sealType: 'Insulated Foil Pack' },
-    { id: 1003, itemName: 'Chilled Gulab Jamun (2 pcs)', quantity: 1, sealType: 'Cooling Pod' }
-  ],
-  basePay: 35.00,
-  distancePay: 18.00,
-  tipAmount: 25.00,
-  totalEarning: 93.00,
-  distanceKm: 1.8,
-  expectedPickupMinutes: 8,
-  expectedDeliveryMinutes: 20
-};
 
 const RiderActiveJob = () => {
   const [profile, setProfile] = useState(null);
   const [activeJob, setActiveJob] = useState(null);
+  const [gpsCoords, setGpsCoords] = useState(null);
+  const [dispatchError, setDispatchError] = useState('');
   const [activeJobOffer, setActiveJobOffer] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +34,7 @@ const RiderActiveJob = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('PUNCTURE_OR_BREAKDOWN');
 
-  // Fetch active job or seed mock
+  // Fetch the authenticated rider?s current dispatch
   const fetchActiveJob = async () => {
     try {
       const pRes = await api.get('/rider/profile');
@@ -84,6 +57,14 @@ const RiderActiveJob = () => {
     fetchActiveJob();
   }, []);
 
+  useEffect(() => {
+    const loadOffers = () => api.get('/rider/offers').then(res => { if (res.success) setActiveJobOffer(res.data?.[0] || null); }).catch(err => setDispatchError(err.message));
+    loadOffers();
+    const off = realtime.on('rider_job_offer', loadOffers);
+    const timer = setInterval(() => { loadOffers(); fetchActiveJob(); }, 15000);
+    return () => { off(); clearInterval(timer); };
+  }, []);
+
   // Wait time counter
   useEffect(() => {
     let interval;
@@ -95,26 +76,15 @@ const RiderActiveJob = () => {
     return () => clearInterval(interval);
   }, [waitingAtKitchen]);
 
-  // Periodic Telemetry GPS emitter
+  // Only device GPS positions are sent; permission failures never fabricate movement.
   useEffect(() => {
-    if (!activeJob) return;
-
-    let step = 0;
-    const interval = setInterval(() => {
-      step += 0.0003;
-      realtime.send({
-        action: 'rider_telemetry',
-        riderId: profile?.id || 1,
-        orderId: activeJob.orderId,
-        latitude: (activeJob.restaurantLat || 12.9715) + step,
-        longitude: (activeJob.restaurantLng || 77.6350) + step,
-        speed: 28.5,
-        heading: 45.0,
-      });
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [activeJob, profile]);
+    if (!activeJob || !navigator.geolocation) return;
+    const watch = navigator.geolocation.watchPosition(pos => {
+      setGpsCoords([pos.coords.latitude, pos.coords.longitude]);
+      api.post('/rider/telemetry', { orderId: activeJob.orderId, latitude: pos.coords.latitude, longitude: pos.coords.longitude, speed: pos.coords.speed == null ? 0 : pos.coords.speed * 3.6, heading: pos.coords.heading || 0 }).catch(err => console.warn('Location update failed', err.message));
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+    return () => navigator.geolocation.clearWatch(watch);
+  }, [activeJob?.orderId]);
 
   const toggleItemVerified = (itemId) => {
     setVerifiedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -123,12 +93,11 @@ const RiderActiveJob = () => {
   const allItemsVerified = activeJob?.items?.length > 0 && activeJob.items.every(i => verifiedItems[i.id]);
 
   const handleArriveAtKitchen = async () => {
-    setWaitingAtKitchen(true);
-    setWaitTimerMinutes(10);
-    setCurrentStep('AT_KITCHEN');
+
     if (activeJob) {
       try {
         await api.post(`/rider/orders/${activeJob.orderId}/status`, { status: 'ARRIVED_AT_RESTAURANT' });
+        setWaitingAtKitchen(true); setWaitTimerMinutes(0); setCurrentStep('AT_KITCHEN');
       } catch (e) {
         console.warn('Failed to record kitchen arrival milestone', e);
       }
@@ -142,10 +111,10 @@ const RiderActiveJob = () => {
         if (res.success && res.data && res.data.compensationCredited !== undefined) {
           setClaimedWaitPay(parseFloat(res.data.compensationCredited));
         } else {
-          setClaimedWaitPay(Math.max(0, waitTimerMinutes - 8) * 2);
+          window.alert('Wait compensation was not credited. Please retry.');
         }
       } catch (e) {
-        setClaimedWaitPay(Math.max(0, waitTimerMinutes - 8) * 2);
+        window.alert('Wait compensation was not credited. Please retry.');
       }
       setWaitingAtKitchen(false);
     } else {
@@ -154,10 +123,10 @@ const RiderActiveJob = () => {
   };
 
   const handleConfirmPickup = async () => {
-    setCurrentStep('PICKED_UP');
     if (activeJob) {
       try {
         await api.post(`/rider/orders/${activeJob.orderId}/status`, { status: 'PICKED_UP' });
+        setCurrentStep('PICKED_UP');
       } catch (e) {
         console.warn('Failed to record pickup milestone', e);
       }
@@ -198,6 +167,9 @@ const RiderActiveJob = () => {
 
   return (
     <div className="rider-cockpit-container position-relative">
+      {dispatchError && <div className="alert alert-danger" role="alert">{dispatchError}</div>}
+      {!activeJob && activeJobOffer && <div className="card p-4 mb-4"><h2 className="h5">New delivery offer</h2><p>{activeJobOffer.orderNumber || `Order ${activeJobOffer.orderId}`} ? Earning: {Number(activeJobOffer.totalEarning || 0).toFixed(2)} INR</p><div className="d-flex flex-wrap gap-2"><button className="btn btn-success" onClick={async () => { try { await api.post(`/rider/${activeJobOffer.id}/accept`, {}); setActiveJobOffer(null); await fetchActiveJob(); } catch (err) { setDispatchError(err.message); } }}>Accept delivery</button><button className="btn btn-outline-secondary" onClick={async () => { try { await api.post(`/rider/${activeJobOffer.id}/reject`, {}); setActiveJobOffer(null); } catch (err) { setDispatchError(err.message); } }}>Decline</button></div></div>}
+
       {activeJob ? (
         <div className="row g-3 g-xl-4 align-items-start">
           {/* ====================================================================
@@ -230,7 +202,7 @@ const RiderActiveJob = () => {
 
                 <div className="text-end">
                   <span className="display-6 fw-extrabold lh-1 d-block mb-1" style={{ color: '#00e676', fontSize: '2rem' }}>
-                    ₹{activeJob.totalEarning.toFixed(2)}
+                    ₹{Number(activeJob.totalEarning || 0).toFixed(2)}
                   </span>
                   <div className="badge bg-dark border border-secondary border-opacity-50 text-secondary" style={{ fontSize: 9 }}>
                     BASE ₹{activeJob.basePay} + DIST ₹{activeJob.distancePay} + 100% TIP ₹{activeJob.tipAmount}
@@ -608,7 +580,7 @@ const RiderActiveJob = () => {
                 <LiveMap
                   restaurantCoords={[activeJob.restaurantLat, activeJob.restaurantLng]}
                   deliveryCoords={[activeJob.deliveryLat, activeJob.deliveryLng]}
-                  riderCoords={[activeJob.restaurantLat + 0.003, activeJob.restaurantLng + 0.002]}
+                  riderCoords={gpsCoords}
                   riderName={profile?.fullName || 'Captain Prasad Rao'}
                   darkMode={true}
                   height="420px"
@@ -693,18 +665,9 @@ const RiderActiveJob = () => {
           <div className="fs-1 mb-3">📡</div>
           <h3 className="fw-extrabold text-white mb-2">Captain Radar Online</h3>
           <p className="text-secondary small mb-4">
-            Scanning for high-tip customer runs in the <strong>Indiranagar Culinary District</strong>.
+            Waiting for delivery offers in your service area.
           </p>
-          {import.meta.env.VITE_DEMO_MODE === 'true' && (
-            <button
-              type="button"
-              className="btn btn-success rounded-pill px-5 py-3 fw-extrabold text-dark shadow-lg transition hover-lift"
-              style={{ minHeight: 52, background: '#00e676', border: 'none', boxShadow: '0 0 20px rgba(0,230,118,0.4)' }}
-              onClick={() => setActiveJob(MOCK_ACTIVE_DISPATCH)}
-            >
-              Simulate Incoming Delivery Dispatch ⚡
-            </button>
-          )}
+
         </div>
       )}
 

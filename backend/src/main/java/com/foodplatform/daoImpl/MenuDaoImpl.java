@@ -35,6 +35,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching categories for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -56,6 +57,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching menu items for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -76,6 +78,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching item by id: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -101,6 +104,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching variants for item: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -125,6 +129,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching addons for item: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -139,6 +144,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating item availability: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -153,6 +159,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating item prices: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -181,6 +188,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating menu item: {}", item.getName(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -211,6 +219,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating menu item: {}", item.getId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -223,6 +232,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error soft deleting menu item: {}", itemId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -246,6 +256,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error in bulkUpdateAvailability for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -264,6 +275,7 @@ public class MenuDaoImpl implements MenuDao {
             ps.executeBatch();
         } catch (SQLException e) {
             logger.error("Error reordering items for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -281,6 +293,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating category for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -301,6 +314,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error adding variant: {}", variant.getVariantName(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -319,6 +333,7 @@ public class MenuDaoImpl implements MenuDao {
             }
         } catch (SQLException e) {
             logger.error("Error adding addon: {}", addon.getAddonName(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 

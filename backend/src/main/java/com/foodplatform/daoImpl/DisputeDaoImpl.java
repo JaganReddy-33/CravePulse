@@ -39,6 +39,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating dispute for order: {}", dispute.getOrderId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -61,6 +62,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding dispute by id: {}", disputeId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -82,6 +84,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing disputes", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -105,6 +108,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing customer disputes: {}", customerId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -122,6 +126,7 @@ public class DisputeDaoImpl implements DisputeDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error resolving dispute: {}", disputeId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -154,6 +159,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all disputes with status: {}", status, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -169,8 +175,8 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error checking dispute existence for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
-        return false;
     }
 
     @Override
@@ -187,6 +193,7 @@ public class DisputeDaoImpl implements DisputeDao {
             }
         } catch (SQLException e) {
             logger.error("Error counting customer disputes in window: customerId={}, days={}", customerId, days, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }

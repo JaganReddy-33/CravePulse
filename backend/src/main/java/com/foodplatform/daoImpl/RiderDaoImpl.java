@@ -35,6 +35,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding rider by user id: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -55,6 +56,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding rider by id: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -85,6 +87,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding nearest riders", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -130,6 +133,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding nearest riders with exclusions", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -145,6 +149,7 @@ public class RiderDaoImpl implements RiderDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating online status for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -175,7 +180,7 @@ public class RiderDaoImpl implements RiderDao {
                 }
 
                 conn.commit();
-            } catch (SQLException ex) {
+            } catch (SQLException | RuntimeException ex) {
                 conn.rollback();
                 throw ex;
             } finally {
@@ -183,6 +188,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error updating rider telemetry for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -286,7 +292,7 @@ public class RiderDaoImpl implements RiderDao {
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
                 "JOIN users u ON o.customer_id = u.id " +
                 "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.rider_id = ? AND d.dispatch_status IN ('OFFERED', 'ACCEPTED') " +
+                "WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED' " +
                 "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
                 "ORDER BY d.id DESC LIMIT 1";
 
@@ -300,6 +306,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting active dispatch for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -318,6 +325,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting excluded rider ids for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return ids;
     }
@@ -342,6 +350,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding timed out offers", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -373,6 +382,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting active offers for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -402,6 +412,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding dispatch by order id: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -431,6 +442,7 @@ public class RiderDaoImpl implements RiderDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating rider profile details: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -488,7 +500,7 @@ public class RiderDaoImpl implements RiderDao {
 
                 conn.commit();
                 return newCash;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error depositing COD cash for rider: {}", riderId, e);
             } finally {
@@ -496,6 +508,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Connection error during COD deposit", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return BigDecimal.ZERO;
     }
@@ -527,6 +540,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting COD settlements for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -535,12 +549,12 @@ public class RiderDaoImpl implements RiderDao {
     public Map<String, Object> getRiderEarningsSummary(long riderId) {
         Map<String, Object> map = new HashMap<>();
         String sql = "SELECT " +
-                "COALESCE(SUM(CASE WHEN DATE(d.offered_at) = CURRENT_DATE THEN d.total_earning ELSE 0 END), 0) AS today_earned, " +
-                "COALESCE(SUM(CASE WHEN YEARWEEK(d.offered_at, 1) = YEARWEEK(CURRENT_DATE, 1) THEN d.total_earning ELSE 0 END), 0) AS week_earned, " +
+                "COALESCE(SUM(CASE WHEN DATE(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE)) = DATE(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE)) THEN d.total_earning ELSE 0 END), 0) AS today_earned, " +
+                "COALESCE(SUM(CASE WHEN YEARWEEK(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE), 1) = YEARWEEK(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE), 1) THEN d.total_earning ELSE 0 END), 0) AS week_earned, " +
                 "COALESCE(SUM(d.tip_amount), 0) AS total_tips, " +
                 "COALESCE(SUM(d.wait_time_pay), 0) AS total_wait_pay, " +
-                "COUNT(CASE WHEN d.dispatch_status = 'ACCEPTED' AND d.delivered_at IS NOT NULL THEN 1 END) AS runs_completed " +
-                "FROM delivery_dispatches d WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED'";
+                "COUNT(CASE WHEN d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL THEN 1 END) AS runs_completed " +
+                "FROM delivery_dispatches d WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -556,6 +570,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting earnings summary for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return map;
     }
@@ -573,7 +588,7 @@ public class RiderDaoImpl implements RiderDao {
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
                 "JOIN users u ON o.customer_id = u.id " +
                 "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED' " +
+                "WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') " +
                 "ORDER BY d.id DESC LIMIT ? OFFSET ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
@@ -588,6 +603,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting completed trips for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -649,8 +665,8 @@ public class RiderDaoImpl implements RiderDao {
             ps.setBoolean(5, rp.isKycApproved());
             ps.setBoolean(6, rp.isOnline());
             ps.setBoolean(7, rp.isAvailable());
-            ps.setBigDecimal(8, rp.getCurrentLatitude() != null ? rp.getCurrentLatitude() : BigDecimal.valueOf(12.9715987));
-            ps.setBigDecimal(9, rp.getCurrentLongitude() != null ? rp.getCurrentLongitude() : BigDecimal.valueOf(77.5945627));
+            ps.setBigDecimal(8, rp.getCurrentLatitude());
+            ps.setBigDecimal(9, rp.getCurrentLongitude());
             ps.setBigDecimal(10, rp.getWalletBalance() != null ? rp.getWalletBalance() : BigDecimal.ZERO);
 
             int affected = ps.executeUpdate();
@@ -665,6 +681,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating rider profile for user: {}", rp.getUserId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -679,6 +696,7 @@ public class RiderDaoImpl implements RiderDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating kyc for rider: {}", riderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -700,6 +718,7 @@ public class RiderDaoImpl implements RiderDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all riders", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }

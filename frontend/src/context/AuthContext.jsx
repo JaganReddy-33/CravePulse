@@ -1,95 +1,48 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { setAccessToken } from '../services/session';
 import realtime from '../services/websocket';
+import { loadPreferences, clearPreferences } from '../services/preferences';
 
 const AuthContext = createContext(null);
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const refreshProfile = async () => {
+    const res = await api.get('/auth/me');
+    if (!res.success) throw new Error('Unable to load profile');
+    setUser(res.data);
+    return res.data;
+  };
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        try {
-          const res = await api.get('/auth/me');
-          if (res.success) {
-            setUser(res.data);
-            localStorage.setItem('user', JSON.stringify(res.data));
-            realtime.connect();
-          }
-        } catch (e) {
-          // Token invalid or expired
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    };
-    initAuth();
+    let active = true;
+    api.get('/auth/me').then(res => {
+      if (active && res.success) setUser(res.data);
+    }).catch(() => {}).finally(() => { if (active) setLoading(false); });
+    const expired = () => { setUser(null); realtime.disconnect(); };
+    window.addEventListener('session-expired', expired);
+    return () => { active = false; window.removeEventListener('session-expired', expired); };
   }, []);
-
-  const login = async (email, password) => {
-    const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const res = await api.post('/auth/login', { email: cleanEmail, password });
-    if (res.success) {
-      const { accessToken, refreshToken, user: u } = res.data;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(u));
-      setUser(u);
-      realtime.connect();
-      return u;
-    }
+  useEffect(() => {
+    if (user) { realtime.connect(); loadPreferences().catch(() => {}); }
+    else { realtime.disconnect(); clearPreferences(); }
+  }, [user?.id]);
+  const authenticate = async (path, payload) => {
+    const res = await api.post(path, payload);
+    if (!res.success || !res.data?.accessToken) throw new Error(res.message || 'Authentication failed');
+    setAccessToken(res.data.accessToken);
+    setUser(res.data.user);
+    return res.data.user;
   };
-
-  const register = async (fullName, email, phone, password) => {
-    const res = await api.post('/auth/register', { 
-      fullName: fullName ? fullName.trim() : '', 
-      email: email ? email.trim().toLowerCase() : '', 
-      phone: phone ? phone.trim() : '', 
-      password 
-    });
-    if (res.success) {
-      const { accessToken, refreshToken, user: u } = res.data;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(u));
-      setUser(u);
-      realtime.connect();
-      return u;
-    }
-  };
-
+  const login = (email, password) => authenticate('/auth/login', { email: email.trim().toLowerCase(), password });
+  const register = (fullName, email, phone, password) => authenticate('/auth/register', {
+    fullName: fullName.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), password,
+  });
   const logout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      await api.post('/auth/logout', { refreshToken });
-    } catch (e) {
-      // Ignore network errors on logout cleanup
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setUser(null);
-      realtime.disconnect();
-    }
+    try { await api.post('/auth/logout', {}); }
+    finally { setAccessToken(null); setUser(null); realtime.disconnect(); }
   };
-
-  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isDemoMode }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, refreshProfile, isDemoMode: false }}>{children}</AuthContext.Provider>;
 };
-
 export const useAuth = () => useContext(AuthContext);
 export default AuthContext;

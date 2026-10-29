@@ -35,7 +35,7 @@ export function useRestaurantDetail(restaurantId) {
         // Fetch menu items from backend API
         const menuRes = await api.get(`/menu/restaurant/${restaurantId}`);
         if (!isCancelled && menuRes.success && menuRes.data) {
-          const menuItems = Array.isArray(menuRes.data) ? menuRes.data : [];
+          const menuItems = Array.isArray(menuRes.data) ? menuRes.data : menuRes.data.items || [];
           setItems(menuItems);
 
           // Extract distinct categories
@@ -48,7 +48,7 @@ export function useRestaurantDetail(restaurantId) {
               });
             }
           });
-          setCategories(Array.from(catMap.values()));
+          setCategories(Array.isArray(menuRes.data.categories) ? menuRes.data.categories : Array.from(catMap.values()));
         }
       } catch (err) {
         if (!isCancelled) {

@@ -1,3 +1,4 @@
+import { getAccessToken } from './session';
 class RealtimeClient {
   constructor() {
     this.ws = null;
@@ -13,7 +14,7 @@ class RealtimeClient {
       return;
     }
 
-    const token = localStorage.getItem('accessToken');
+    const token = getAccessToken();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
     // In production or custom environments, respect VITE_WS_URL; otherwise default to host / dev port
@@ -67,7 +68,7 @@ class RealtimeClient {
 
   scheduleReconnect() {
     // Don't reconnect if there is no auth token - user is logged out
-    if (!localStorage.getItem('accessToken')) return;
+    if (!getAccessToken()) return;
 
     this.reconnectAttempts++;
     // Cap at 3 attempts to prevent infinite console noise if backend is offline

@@ -56,6 +56,7 @@ public class WalletDaoImpl implements WalletDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting wallet transactions for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -73,6 +74,7 @@ public class WalletDaoImpl implements WalletDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error creating notification for user: {}", notif.getUserId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -101,19 +103,22 @@ public class WalletDaoImpl implements WalletDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting notifications for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
 
     @Override
-    public void markNotificationRead(long notificationId) {
-        String sql = "UPDATE notifications SET is_read = TRUE WHERE id = ?";
+    public void markNotificationRead(long notificationId, long userId) {
+        String sql = "UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, notificationId);
+            ps.setLong(2, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error marking notification read: {}", notificationId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -126,6 +131,7 @@ public class WalletDaoImpl implements WalletDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error marking all notifications read for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -138,6 +144,7 @@ public class WalletDaoImpl implements WalletDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error clearing notifications for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -174,6 +181,7 @@ public class WalletDaoImpl implements WalletDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting coupon: {}", code, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -192,6 +200,7 @@ public class WalletDaoImpl implements WalletDao {
             }
         } catch (SQLException e) {
             logger.error("Error checking coupon usage count: user {} coupon {}", userId, couponId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }
@@ -229,6 +238,7 @@ public class WalletDaoImpl implements WalletDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching platform setting: {}", key, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return defaultValue;
     }

@@ -61,7 +61,7 @@ public class NotificationServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, "Notification ID required");
                 return;
             }
-            notificationService.markAsRead(notifId);
+            notificationService.markAsRead(notifId, userId);
             JsonUtil.sendSuccess(res, 200, "Notification marked as read", null);
             return;
         }

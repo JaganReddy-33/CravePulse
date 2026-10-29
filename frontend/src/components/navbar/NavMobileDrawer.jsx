@@ -149,7 +149,7 @@ const NavMobileDrawer = ({
               <Link
                 to="/register"
                 className="btn btn-primary w-50 rounded-pill fw-bold touch-target text-center text-white"
-                style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                 onClick={onClose}
               >
                 Sign Up

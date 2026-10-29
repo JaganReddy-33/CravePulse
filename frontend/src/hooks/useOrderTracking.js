@@ -1,111 +1,65 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import realtime from '../services/websocket';
-
+import { useAuth } from '../context/AuthContext';
 export function useOrderTracking(orderNumber) {
+  const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [riderCoords, setRiderCoords] = useState([12.9740, 77.6370]);
+  const [riderCoords, setRiderCoords] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const fetchOrder = async () => {
-      try {
-        const res = await api.get(`/orders/number/${orderNumber}`);
-        if (!isCancelled && res.success && res.data) {
-          setOrder(res.data);
-          if (res.data.riderLat && res.data.riderLng) {
-            setRiderCoords([res.data.riderLat, res.data.riderLng]);
-          }
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          console.warn('API error fetching order tracking:', err);
-          setError(err.message || 'Failed to load order');
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    if (orderNumber) {
-      fetchOrder();
-    }
-
-    // Connect WebSocket channel for real-time order status and GPS updates
-    const unsubscribe = realtime.subscribe(`order:${orderNumber}`, (data) => {
-      if (!isCancelled && data) {
-        if (data.status) {
-          setOrder((prev) => (prev ? { ...prev, status: data.status } : prev));
-        }
-        if (data.riderLat && data.riderLng) {
-          setRiderCoords([data.riderLat, data.riderLng]);
-        }
-        if (data.type === 'chat_message') {
-          setChatMessages((prev) => [
-            ...prev,
-            { text: data.message, sender: data.senderRole, time: 'Just now' },
-          ]);
-        }
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-      if (unsubscribe) unsubscribe();
-    };
+  const load = useCallback(async () => {
+    const res = await api.get(`/orders/number/${encodeURIComponent(orderNumber)}`);
+    if (!res.success || !res.data) throw new Error('Order could not be loaded');
+    setOrder(res.data);
+    const coords = [res.data.riderLat, res.data.riderLng];
+    if (coords.every(v => v != null && Number.isFinite(Number(v)))) setRiderCoords(coords.map(Number));
+    return res.data;
   }, [orderNumber]);
-
-  const cancelOrder = async (reason) => {
-    if (!order) return;
-    try {
-      await api.post(`/orders/${order.id}/status`, {
-        status: 'CANCELLED',
-        reason,
-      });
-    } catch (e) {
-      // optimistic
-    }
-    setOrder((prev) => ({
-      ...prev,
-      status: 'CANCELLED',
-      cancellationReason: reason,
-    }));
-  };
-
-  const sendChatMessage = (text, target) => {
-    setChatMessages((prev) => [...prev, { text, sender: 'ME', time: 'Just now' }]);
-    realtime.send(`order:${orderNumber}`, {
-      type: 'chat_message',
-      target,
-      message: text,
+  const loadChat = useCallback(async id => {
+    const res = await api.get(`/orders/${id}/messages`);
+    if (!res.success) throw new Error('Unable to load messages');
+    setChatMessages((res.data || []).map(m => ({ id: m.id, text: m.messageText, sender: m.senderUserId === user?.id ? 'ME' : m.senderRole, time: m.createdAt ? new Date(m.createdAt).toLocaleTimeString('en-IN') : '' })));
+  }, [user?.id]);
+  useEffect(() => {
+    let active = true;
+    setLoading(true); setError(null); setOrder(null); setRiderCoords(null); setChatMessages([]);
+    let channel;
+    const refresh = async () => {
+      try {
+        const current = await load();
+        if (!active) return;
+        const nextChannel = `order:${current.id}`;
+        if (channel !== nextChannel) { if (channel) realtime.unsubscribe(channel); channel = nextChannel; realtime.subscribe(channel); }
+        await loadChat(current.id);
+      } catch (err) { if (active) setError(err.message); }
+      finally { if (active) setLoading(false); }
+    };
+    const offStatus = realtime.on('order_status_updated', data => { if (!data?.orderId || channel === `order:${data.orderId}`) refresh(); });
+    const offChat = realtime.on('new_chat_message', data => { if (channel === `order:${data.orderId}`) loadChat(data.orderId).catch(err => setError(err.message)); });
+    const offLocation = realtime.on('rider_location_updated', data => {
+      if (data?.orderId && channel !== `order:${data.orderId}`) return;
+      const coords = [data.latitude ?? data.lat, data.longitude ?? data.lng];
+      if (coords.every(v => v != null && Number.isFinite(Number(v)))) setRiderCoords(coords.map(Number));
     });
+    refresh();
+    const poll = setInterval(refresh, 15000);
+    return () => { active = false; clearInterval(poll); offStatus(); offChat(); offLocation(); if (channel) realtime.unsubscribe(channel); };
+  }, [load, loadChat]);
+  const cancelOrder = async reason => {
+    try { const res = await api.post(`/orders/${order.id}/status`, { status: 'CANCELLED', reason }); if (!res.success) throw new Error('Cancellation failed'); await load(); return true; }
+    catch (err) { setError(err.message); return false; }
   };
-
-  const submitReview = async (reviewData) => {
-    if (!order) return;
-    try {
-      await api.post(`/orders/${order.id}/review`, reviewData);
-    } catch (e) {
-      // optimistic
-    }
+  const sendChatMessage = async (text, target) => {
+    const res = await api.post(`/orders/${order.id}/messages`, { messageText: text, recipientRole: target });
+    if (!res.success) throw new Error('Message was not sent');
+    await loadChat(order.id);
   };
-
-  return {
-    order,
-    loading,
-    error,
-    riderCoords,
-    chatMessages,
-    cancelOrder,
-    sendChatMessage,
-    submitReview,
+  const submitReview = async payload => {
+    const res = await api.post('/reviews', { ...payload, orderId: order.id });
+    if (!res.success) throw new Error('Review was not saved');
   };
+  return { order, loading, error, riderCoords, chatMessages, cancelOrder, sendChatMessage, submitReview };
 }
-
 export default useOrderTracking;

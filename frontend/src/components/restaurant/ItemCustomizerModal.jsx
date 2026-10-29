@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ModalPortal from '../ModalPortal';
 import { useCart } from '../../context/CartContext';
 
 /**
  * ItemCustomizerModal: Item customization sheet for portions, add-ons, and special cooking instructions.
  */
-const ItemCustomizerModal = ({ dish, show, onClose }) => {
+const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
   const { addItem } = useCart();
 
   const [selectedVariant, setSelectedVariant] = useState(() => {
@@ -19,6 +19,9 @@ const ItemCustomizerModal = ({ dish, show, onClose }) => {
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [specialInstructions, setSpecialInstructions] = useState('');
 
+  useEffect(() => {
+    if (show) { setSelectedVariant(dish?.variants?.find(v => v.isDefault)?.id || dish?.variants?.[0]?.id || null); setSelectedAddons([]); setSpecialInstructions(''); }
+  }, [show, dish]);
   if (!show || !dish) return null;
 
   const basePrice = Number(dish.platformPrice || dish.dineInPrice || dish.price || 0);
@@ -41,18 +44,7 @@ const ItemCustomizerModal = ({ dish, show, onClose }) => {
   const handleAddToCart = () => {
     const activeAddonsList = dish.addons?.filter((a) => selectedAddons.includes(a.id)) || [];
 
-    addItem({
-      id: dish.id,
-      name: dish.name,
-      price: finalPrice,
-      dineInPrice: finalPrice,
-      imageUrl: dish.imageUrl,
-      isVeg: dish.veg !== undefined ? dish.veg : dish.isVeg,
-      restaurantId: dish.restaurantId,
-      selectedVariant: activeVariant ? activeVariant.variantName : null,
-      selectedAddons: activeAddonsList.map((a) => a.addonName),
-      specialInstructions: specialInstructions.trim() || null,
-    });
+    addItem({ restaurantId: dish.restaurantId, restaurantName, item: dish, variant: activeVariant || null, addons: activeAddonsList, specialInstructions: specialInstructions.trim() });
 
     onClose();
   };
@@ -172,7 +164,7 @@ const ItemCustomizerModal = ({ dish, show, onClose }) => {
             <button
               type="button"
               className="btn btn-primary rounded-pill px-4 py-2 fw-bold touch-target shadow hover-lift"
-              style={{ background: '#ff5722', borderColor: '#ff5722' }}
+              style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
               onClick={handleAddToCart}
             >
               Add Custom Item

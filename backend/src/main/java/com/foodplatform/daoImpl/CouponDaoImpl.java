@@ -26,6 +26,7 @@ public class CouponDaoImpl implements CouponDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all coupons", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -42,6 +43,7 @@ public class CouponDaoImpl implements CouponDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing active coupons", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -59,6 +61,7 @@ public class CouponDaoImpl implements CouponDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding coupon by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -76,6 +79,7 @@ public class CouponDaoImpl implements CouponDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding coupon by code: {}", code, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -108,6 +112,7 @@ public class CouponDaoImpl implements CouponDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating coupon: {}", coupon.getCode(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -131,6 +136,7 @@ public class CouponDaoImpl implements CouponDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating coupon: {}", coupon.getId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -144,6 +150,7 @@ public class CouponDaoImpl implements CouponDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error toggling coupon status: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -156,6 +163,7 @@ public class CouponDaoImpl implements CouponDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error deleting coupon: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 

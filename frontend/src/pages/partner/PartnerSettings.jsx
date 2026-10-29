@@ -1,3 +1,4 @@
+import ChangePassword from '../../components/ChangePassword';
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import api from '../../services/api';
@@ -140,7 +141,7 @@ const PartnerSettings = () => {
         <div>
           <h4 className="fw-extrabold mb-1 text-dark">Kitchen & Merchant Profile Studio</h4>
           <p className="text-muted small mb-0">
-            Secure regulatory licensing, auto-reject SLA, operating hours schedule, and encrypted bank payout details for <strong className="text-dark">{restaurant?.name}</strong>.
+            Secure regulatory licensing, auto-reject SLA, operating hours schedule, and bank payout details for <strong className="text-dark">{restaurant?.name}</strong>.
           </p>
         </div>
         <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
@@ -262,7 +263,7 @@ const PartnerSettings = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h5 className="fw-bold mb-0 text-dark">🏦 Payout Bank & UPI Settlement</h5>
-                <small className="text-muted">Sensitive banking credentials are masked on presentation and stored in PostgreSQL/MySQL ledger.</small>
+                <small className="text-muted">Banking details are available to authorized account operations.</small>
               </div>
               <span className="badge bg-light text-muted border small">T+1 Daily Settlement</span>
             </div>
@@ -420,7 +421,7 @@ const PartnerSettings = () => {
 
         {payouts.length === 0 ? (
           <div className="text-center py-4 text-muted small bg-light rounded-3 border">
-            No bank payouts processed yet. Settlements occur daily at 23:59 IST.
+            No bank payouts processed yet. Settlements appear when processed.
           </div>
         ) : (
           <div className="table-responsive">
@@ -457,6 +458,7 @@ const PartnerSettings = () => {
           </div>
         )}
       </div>
+      <ChangePassword />
     </div>
   );
 };

@@ -14,6 +14,7 @@
     <description>Production-Grade Real-Time Multi-Portal Food Delivery API and Real-Time WebSocket</description>
 
     <properties>
+        <cravepulse.build.directory>target</cravepulse.build.directory>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -142,7 +143,9 @@
     </dependencies>
 
     <build>
+        <directory>${cravepulse.build.directory}</directory>
         <finalName>food-delivery-backend</finalName>
+        <resources><resource><directory>src/main/resources</directory><excludes><exclude>db/seed-demo.sql</exclude><exclude>db/*.py</exclude></excludes></resource></resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -157,6 +160,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <systemPropertyVariables><cravepulse.testMode>true</cravepulse.testMode></systemPropertyVariables>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -177,6 +183,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.foodplatform.ServerMain</mainClass>

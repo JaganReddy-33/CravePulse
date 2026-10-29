@@ -25,6 +25,7 @@ const CheckoutPage = () => {
     addItem,
     removeItem,
     clearCart,
+    setDeliveryCoordinates,
   } = useCart();
   const { user } = useAuth();
 
@@ -44,8 +45,9 @@ const CheckoutPage = () => {
     error,
     walletBalance,
     codMaxLimit,
+    onlineAvailable,
     handlePlaceOrder,
-  } = useCheckout({ cart, billDetails, couponCode, riderTip, clearCart, user });
+  } = useCheckout({ cart, billDetails, couponCode, riderTip, clearCart, user, setDeliveryCoordinates });
 
   // Empty cart fallback
   if (!cart.restaurantId || cart.items.length === 0) {
@@ -59,7 +61,7 @@ const CheckoutPage = () => {
         <Link
           to="/"
           className="btn btn-primary rounded-pill px-4 py-2 fw-bold touch-target shadow hover-lift"
-          style={{ background: '#ff5722', borderColor: '#ff5722' }}
+          style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
         >
           Browse Restaurants
         </Link>
@@ -113,6 +115,7 @@ const CheckoutPage = () => {
             setPaymentMode={setPaymentMode}
             walletBalance={walletBalance}
             codMaxLimit={codMaxLimit}
+            onlineAvailable={onlineAvailable}
             totalAmount={billDetails?.totalAmount || 0}
           />
         </div>
@@ -133,9 +136,9 @@ const CheckoutPage = () => {
             <button
               type="button"
               className="btn btn-primary w-100 py-3 rounded-pill fw-bold fs-5 shadow-lg d-flex justify-content-between align-items-center px-4 touch-target hover-lift transition mb-3 text-white"
-              style={{ background: '#ff5722', borderColor: '#ff5722' }}
+              style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
               onClick={handlePlaceOrder}
-              disabled={submitting}
+              disabled={submitting || !billDetails || !selectedAddressId}
             >
               <span>{submitting ? 'Confirming Order...' : 'Place Secure Order'}</span>
               <span className="fs-5">₹{billDetails?.totalAmount || 0} →</span>

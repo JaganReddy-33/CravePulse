@@ -14,7 +14,7 @@ const LoadingState = ({ message = 'Loading fresh delicious data...', minHeight =
     >
       <div 
         className="spinner-border text-primary mb-3" 
-        style={{ width: '2.75rem', height: '2.75rem', color: '#ff5722' }} 
+        style={{ width: '2.75rem', height: '2.75rem', color: 'var(--c-primary)' }}
         aria-hidden="true"
       ></div>
       <p className="fw-semibold text-muted small mb-0">{message}</p>

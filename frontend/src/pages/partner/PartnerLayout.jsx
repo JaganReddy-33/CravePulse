@@ -104,7 +104,7 @@ const PartnerLayout = () => {
           <div className="fs-3 mb-1">🛡️</div>
           <h6 className="fw-bold mb-1 small text-dark">0% Markup Certified</h6>
           <p className="text-muted small mb-0" style={{ fontSize: 11 }}>
-            All dishes verified with 100% dine-in physical menu price parity.
+            Menu management with 100% dine-in physical menu price parity.
           </p>
         </div>
       </aside>

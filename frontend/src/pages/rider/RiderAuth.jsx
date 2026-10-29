@@ -10,6 +10,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [vehicleNumber, setVehicleNumber] = useState('');
   const [vehicleType, setVehicleType] = useState('ELECTRIC_BIKE');
   const [drivingLicense, setDrivingLicense] = useState('');
   const [cityZone, setCityZone] = useState('Indiranagar, Bengaluru');
@@ -18,7 +19,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const { user, login, isDemoMode } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,10 +47,10 @@ const RiderAuth = ({ initialMode = 'login' }) => {
         await api.post('/rider/apply', {
           fullName: fullName.trim(),
           email: email.trim().toLowerCase(),
-          phone: phone.trim() || '+919876543210',
+          phone: phone.trim(),
           password,
           vehicleType,
-          vehicleNumber: 'KA-04-REG-2026',
+          vehicleNumber: vehicleNumber.trim(),
           drivingLicense: drivingLicense.trim()
         });
         setSuccessMsg('Rider onboarding application submitted! Your account is in PENDING_KYC status pending admin review.');
@@ -69,18 +70,6 @@ const RiderAuth = ({ initialMode = 'login' }) => {
     }
   };
 
-  const handleDemoFill = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await login('rider@swiftlogistics.com', 'Password@123');
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.message || 'Demo fleet login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative" style={{ background: '#071118' }}>
@@ -106,7 +95,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
             >
               ⚡
             </div>
-            <span className="fs-2 fw-extrabold text-white tracking-tight">CravePulse Fleet</span>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Fleet</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister ? 'Join India’s Highest-Paying Delivery Fleet • Zero Arbitrary Penalties' : 'Log in to your Captain Cockpit, live dispatch radar & payout wallet'}
@@ -159,6 +148,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
           )}
 
           <form onSubmit={handleSubmit}>
+            {isRegister && <div className="mb-3"><label className="form-label" htmlFor="rider-registration">Vehicle registration number</label><input id="rider-registration" required className="form-control" value={vehicleNumber} onChange={e => setVehicleNumber(e.target.value)} /></div>}
             {isRegister && (
               <>
                 <div className="mb-3">
@@ -260,48 +250,7 @@ const RiderAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona Demo Login Card - only visible in demo mode */}
-          {isDemoMode && (
-            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                  Demo Mode Fast Access
-                </span>
-                <span className="badge rounded-pill bg-success bg-opacity-25 text-success border border-success border-opacity-50" style={{ fontSize: 10 }}>
-                  DEMO RIDER
-                </span>
-              </div>
 
-              <div 
-                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-                onClick={handleDemoFill}
-              >
-                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                  <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
-                    style={{ width: 36, height: 36, background: '#00e676' }}
-                  >
-                    ⚡
-                  </div>
-                  <div className="text-truncate">
-                    <div className="fw-bold text-white small lh-1 mb-1">Demo Delivery Fleet Captain</div>
-                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                      rider@swiftlogistics.com
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                  style={{ fontSize: 11 }}
-                  disabled={loading}
-                >
-                  Launch →
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
             <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">← Back to Customer App</Link>

@@ -36,7 +36,7 @@ public class PricingEngineTest {
 
     @BeforeEach
     void setUp() {
-        pricingService = new PricingService(menuDao, restaurantDao, walletDao);
+        pricingService = new PricingService(menuDao, restaurantDao, walletDao, null, mock(com.foodplatform.dao.OrderDao.class));
     }
 
     @Test

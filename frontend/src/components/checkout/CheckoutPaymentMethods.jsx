@@ -9,6 +9,7 @@ const CheckoutPaymentMethods = ({
   walletBalance,
   codMaxLimit,
   totalAmount,
+  onlineAvailable = false,
 }) => {
   const isCodDisabled = totalAmount > codMaxLimit;
   const isWalletInsufficient = walletBalance < totalAmount;
@@ -32,13 +33,14 @@ const CheckoutPaymentMethods = ({
               type="radio"
               name="paymentMode"
               checked={paymentMode === 'RAZORPAY'}
+              disabled={!onlineAvailable}
               onChange={() => setPaymentMode('RAZORPAY')}
               className="form-check-input mt-0"
             />
             <div>
               <strong className="d-block text-dark small">UPI, Cards, Net Banking & Wallets</strong>
               <small className="text-muted" style={{ fontSize: 11 }}>
-                Instant verification via Razorpay Gateway (GPay, PhonePe, Cards)
+                {onlineAvailable ? 'Verified through Razorpay' : 'Online payments are currently unavailable'}
               </small>
             </div>
           </div>

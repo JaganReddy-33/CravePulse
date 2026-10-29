@@ -3,6 +3,7 @@ import React from 'react';
 /**
  * CheckoutOrderSummary: Cart item review with restaurant banner and quantity steppers.
  */
+const unitPrice = item => Number(item.platformPrice || 0) + Number(item.selectedVariant?.priceAdjustment || 0) + (item.selectedAddons || []).reduce((sum, addon) => sum + Number(addon.price || 0), 0);
 const CheckoutOrderSummary = ({
   cart,
   onAddItem,
@@ -26,7 +27,7 @@ const CheckoutOrderSummary = ({
       <div className="d-flex flex-column gap-3 mb-3">
         {cart.items.map((item) => (
           <div
-            key={item.id}
+            key={item.cartKey}
             className="d-flex justify-content-between align-items-center p-2 rounded-3 bg-light"
           >
             <div className="d-flex align-items-center gap-2 text-truncate">
@@ -37,8 +38,8 @@ const CheckoutOrderSummary = ({
               <div className="text-truncate">
                 <strong className="d-block small text-dark text-truncate">{item.name}</strong>
                 <small className="text-muted" style={{ fontSize: 11 }}>
-                  ₹{item.price} each
-                  {item.selectedVariant ? ` • ${item.selectedVariant}` : ''}
+                  ₹{unitPrice(item)} each
+                  {item.selectedVariant ? ` • ${item.selectedVariant.variantName}` : ''}
                 </small>
               </div>
             </div>
@@ -48,7 +49,7 @@ const CheckoutOrderSummary = ({
                 <button
                   type="button"
                   className="btn btn-light border-0 fw-bold px-2 touch-target"
-                  onClick={() => onRemoveItem(item.id)}
+                  onClick={() => onRemoveItem(item.cartKey)}
                   aria-label="Decrease quantity"
                 >
                   -
@@ -59,14 +60,14 @@ const CheckoutOrderSummary = ({
                 <button
                   type="button"
                   className="btn btn-light border-0 fw-bold px-2 touch-target text-danger"
-                  onClick={() => onAddItem(item)}
+                  onClick={() => onAddItem({ restaurantId: cart.restaurantId, restaurantName: cart.restaurantName, item, variant: item.selectedVariant, addons: item.selectedAddons, specialInstructions: item.specialInstructions })}
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
               <strong className="small text-dark" style={{ minWidth: 60, textAlign: 'right' }}>
-                ₹{(item.price * item.quantity).toFixed(2)}
+                ₹{(unitPrice(item) * item.quantity).toFixed(2)}
               </strong>
             </div>
           </div>

@@ -36,7 +36,7 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
         <div className="row g-0">
           <div className="col-md-5 col-lg-4 position-relative" style={{ minHeight: 200 }}>
             <img
-              src={restaurant.bannerImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800'}
+              src={restaurant.bannerImage || '/food-placeholder.svg'}
               alt={restaurant.name}
               className="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
               style={{ maxHeight: 280 }}
@@ -57,12 +57,12 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
                 <div>
                   <h1 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">{restaurant.name}</h1>
                   <p className="text-muted small mb-0">
-                    {restaurant.cuisine || 'North Indian • Biryani • Mughlai'} • {restaurant.locality || 'Indiranagar, Bengaluru'}
+                    {restaurant.cuisineTypes || ''} • {restaurant.locality || ''}
                   </p>
                 </div>
                 <div className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-2 rounded-3 text-center">
-                  <div className="fw-extrabold fs-6">★ {restaurant.rating || '4.8'}</div>
-                  <small style={{ fontSize: 10 }}>{restaurant.totalReviews || 1200}+ reviews</small>
+                  <div className="fw-extrabold fs-6">★ {restaurant.totalReviews > 0 ? restaurant.rating : 'New'}</div>
+                  <small style={{ fontSize: 10 }}>{restaurant.totalReviews || 0} reviews</small>
                 </div>
               </div>
 

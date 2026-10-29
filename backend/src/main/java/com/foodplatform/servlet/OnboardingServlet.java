@@ -44,9 +44,9 @@ public class OnboardingServlet extends BaseServlet {
                 String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : "";
                 String password = body.get("password").getAsString();
                 String restaurantName = body.get("restaurantName").getAsString();
-                String address = body.has("address") && !body.get("address").isJsonNull() ? body.get("address").getAsString() : "Bengaluru";
-                Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : 12.9715987;
-                Double lng = body.has("longitude") && !body.get("longitude").isJsonNull() ? body.get("longitude").getAsDouble() : 77.5945627;
+                String address = body.has("address") && !body.get("address").isJsonNull() ? body.get("address").getAsString() : null;
+                Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : null;
+                Double lng = body.has("longitude") && !body.get("longitude").isJsonNull() ? body.get("longitude").getAsDouble() : null;
                 String cuisineTypes = body.has("cuisineTypes") && !body.get("cuisineTypes").isJsonNull() ? body.get("cuisineTypes").getAsString() : "Multi-Cuisine";
                 String fssaiLicense = body.get("fssaiLicense").getAsString();
 

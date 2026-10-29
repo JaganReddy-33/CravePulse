@@ -60,17 +60,17 @@ const OpsDashboard = () => {
     ? [Number(currentActiveOrder.restaurantLatitude), Number(currentActiveOrder.restaurantLongitude)]
     : activeRest?.latitude && activeRest?.longitude
     ? [Number(activeRest.latitude), Number(activeRest.longitude)]
-    : [12.9715987, 77.5945627];
+    : null;
 
   const deliveryCoords = currentActiveOrder?.deliveryLatitude && currentActiveOrder?.deliveryLongitude
     ? [Number(currentActiveOrder.deliveryLatitude), Number(currentActiveOrder.deliveryLongitude)]
-    : [12.9783692, 77.6408356];
+    : null;
 
   const riderCoords = currentActiveOrder?.riderLatitude && currentActiveOrder?.riderLongitude
     ? [Number(currentActiveOrder.riderLatitude), Number(currentActiveOrder.riderLongitude)]
     : activeRider?.currentLatitude && activeRider?.currentLongitude
     ? [Number(activeRider.currentLatitude), Number(activeRider.currentLongitude)]
-    : [12.9740000, 77.6370000];
+    : null;
 
   const riderName = currentActiveOrder?.riderName || activeRider?.riderName || 'Fleet Captain';
 

@@ -13,15 +13,17 @@ const TrackingChatModal = ({
   onSendMessage,
   order,
 }) => {
+  const [error, setError] = useState('');
   const [chatInput, setChatInput] = useState('');
 
   if (!show || !order) return null;
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    onSendMessage(chatInput.trim(), chatTarget);
-    setChatInput('');
+    setError('');
+    try { await onSendMessage(chatInput.trim(), chatTarget); setChatInput(''); }
+    catch (err) { setError(err.message || 'Message was not sent'); }
   };
 
   return (
@@ -39,12 +41,13 @@ const TrackingChatModal = ({
           aria-modal="true"
           aria-labelledby="chat-title"
         >
+          {error && <div className="alert alert-danger" role="alert">{error}</div>}
           {/* Header */}
           <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
             <div className="d-flex align-items-center gap-2">
               <div 
                 className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs"
-                style={{ width: 34, height: 34, background: chatTarget === 'RIDER' ? '#10b981' : '#ff5722' }}
+                style={{ width: 34, height: 34, background: chatTarget === 'RIDER' ? '#10b981' : 'var(--c-primary)' }}
               >
                 {chatTarget === 'RIDER' ? '🛵' : '🍳'}
               </div>
@@ -106,7 +109,7 @@ const TrackingChatModal = ({
                       }`}
                       style={{
                         maxWidth: '80%',
-                        backgroundColor: isMe ? '#ff5722' : '#ffffff',
+                        backgroundColor: isMe ? 'var(--c-primary)' : '#ffffff',
                       }}
                     >
                       {msg.text}
@@ -133,7 +136,7 @@ const TrackingChatModal = ({
             <button
               type="submit"
               className="btn btn-primary rounded-circle touch-target d-flex align-items-center justify-content-center text-white"
-              style={{ width: 44, height: 44, background: '#ff5722', borderColor: '#ff5722' }}
+              style={{ width: 44, height: 44, background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
               aria-label="Send message"
             >
               <i className="bi bi-send-fill"></i>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { getPreference } from '../../services/preferences';
 import { RestaurantCardSkeleton } from '../../components/Skeleton';
 import ScrollCarousel from '../../components/common/ScrollCarousel';
 import ErrorState from '../../components/states/ErrorState';
@@ -8,14 +10,14 @@ import EmptyState from '../../components/states/EmptyState';
 import { DEFAULT_HUB } from '../../config/panIndiaLocations';
 
 const CATEGORIES = [
-  { name: 'All', icon: '🍽️' },
-  { name: 'North Indian', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=160' },
-  { name: 'Biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=160' },
-  { name: 'Pizza', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160' },
-  { name: 'Burgers', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160' },
-  { name: 'Sushi', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=160' },
-  { name: 'Salads', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=160' },
-  { name: 'Desserts', image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=160' },
+  { name: 'All', icon: 'grid' },
+  { name: 'North Indian', icon: 'egg-fried' },
+  { name: 'Biryani', icon: 'fire' },
+  { name: 'Pizza', icon: 'triangle' },
+  { name: 'Burgers', icon: 'stack' },
+  { name: 'Sushi', icon: 'water' },
+  { name: 'Salads', icon: 'flower1' },
+  { name: 'Desserts', icon: 'cake2' },
 ];
 
 const CustomerHome = () => {
@@ -25,28 +27,22 @@ const CustomerHome = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  // Favorites state persisted in localStorage
-  const [favorites, setFavorites] = useState(() => {
+  const { user } = useAuth();
+  const [favorites, setFavorites] = useState([]);
+  useEffect(() => {
+    let active = true;
+    setFavorites([]);
+    if (user) api.get('/account/favorites').then(res => { if (active) setFavorites(res.data || []); }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
+  const toggleFavorite = async (e, restId) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!user) { window.alert('Sign in to save your favourite restaurants.'); return; }
     try {
-      const saved = localStorage.getItem('cravepulse_favs');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const toggleFavorite = (e, restId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorites((prev) => {
-      const next = prev.includes(restId) ? prev.filter((id) => id !== restId) : [...prev, restId];
-      try {
-        localStorage.setItem('cravepulse_favs', JSON.stringify(next));
-      } catch (err) {
-        console.error('Failed to save favorites', err);
-      }
-      return next;
-    });
+      const favorite = !favorites.includes(restId);
+      await api.post('/account/favorites', { restaurantId: restId, favorite });
+      setFavorites(prev => favorite ? [...new Set([...prev, restId])] : prev.filter(id => id !== restId));
+    } catch (err) { window.alert(err.message); }
   };
 
   // Real-time URL query parameter bindings
@@ -59,8 +55,8 @@ const CustomerHome = () => {
   const [sortBy, setSortBy] = useState(() => searchParams.get('sort') || 'relevance');
 
   const [currentHub, setCurrentHub] = useState(() => {
-    const saved = localStorage.getItem('cravepulse_hub');
-    return saved ? JSON.parse(saved) : DEFAULT_HUB;
+    const saved = getPreference('hub');
+    return saved || DEFAULT_HUB;
   });
 
   // Sync state to URL search parameters
@@ -79,11 +75,11 @@ const CustomerHome = () => {
 
   useEffect(() => {
     const handleStorage = () => {
-      const saved = localStorage.getItem('cravepulse_hub');
-      if (saved) setCurrentHub(JSON.parse(saved));
+      const saved = getPreference('hub');
+      setCurrentHub(saved || DEFAULT_HUB);
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('preferences-changed', handleStorage);
+    return () => window.removeEventListener('preferences-changed', handleStorage);
   }, []);
 
   const loadRestaurants = useCallback(async () => {
@@ -91,6 +87,7 @@ const CustomerHome = () => {
     setFetchError(null);
     try {
       const params = {};
+      if (currentHub?.coords) { params.lat = currentHub.coords[0]; params.lng = currentHub.coords[1]; }
       if (search) params.search = search;
       if (selectedCuisine && selectedCuisine !== 'All') params.cuisine = selectedCuisine;
       if (vegOnly) params.vegOnly = true;
@@ -107,7 +104,7 @@ const CustomerHome = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedCuisine, vegOnly]);
+  }, [search, selectedCuisine, vegOnly, currentHub]);
 
   useEffect(() => {
     const timer = setTimeout(loadRestaurants, 200);
@@ -218,24 +215,10 @@ const CustomerHome = () => {
               </Link>
             </div>
 
-            {/* Sidebar Promo Card */}
-            <div className="mt-4 p-3 rounded-4 text-center position-relative overflow-hidden" style={{ background: '#fff5f0', border: '1px dashed #ff8a65' }}>
-              <div className="badge bg-danger rounded-pill mb-2">HOT PROMO</div>
-              <h6 className="fw-extrabold mb-1" style={{ color: '#ff5722' }}>50% OFF</h6>
-              <p className="small text-muted mb-2">On your first order with code</p>
-              <div className="bg-white rounded-3 py-1 px-2 border fw-bold text-dark mb-3 small font-monospace">
-                FOOD50
-              </div>
-              <img
-                src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=120"
-                alt="Promo Burger"
-                className="img-fluid rounded-circle mb-2 shadow-sm object-fit-cover"
-                style={{ width: 80, height: 80 }}
-                loading="lazy"
-              />
-              <a href="#restaurants-grid" className="btn btn-sm btn-primary w-100 rounded-pill fw-bold" style={{ background: '#ff5722', borderColor: '#ff5722' }}>
-                Order Now →
-              </a>
+            <div className="mt-4 p-3 rounded-4 bg-light border">
+              <h6 className="fw-bold">Find your next favourite</h6>
+              <p className="small text-muted">Browse menus and current offers from restaurants near you.</p>
+              <Link to="/offers" className="btn btn-sm btn-outline-primary rounded-pill">View available offers</Link>
             </div>
           </div>
         </div>
@@ -253,13 +236,13 @@ const CustomerHome = () => {
             <div className="row align-items-center">
               <div className="col-md-7 z-1">
                 <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                  <span className="badge bg-danger rounded-pill px-3 py-2 fw-bold">🔥 50% OFF WITH 'FOOD50'</span>
+                  <span className="badge bg-light text-dark border rounded-pill px-3 py-2">Explore local kitchens</span>
                   <span className="badge bg-success rounded-pill px-3 py-2 fw-bold d-none d-sm-inline">
                     <i className="bi bi-patch-check-fill me-1"></i> 100% Price Parity
                   </span>
                 </div>
                 <h1 className="display-6 fw-extrabold text-dark mb-2" style={{ fontSize: 'clamp(1.5rem, 3.2vw, 2.25rem)' }}>
-                  Delicious food, <span style={{ color: '#ff5722' }}>zero menu markups</span>
+                  Delicious food, <span style={{ color: 'var(--c-primary)' }}>zero menu markups</span>
                 </h1>
                 <p className="text-secondary mb-4" style={{ maxWidth: 440 }}>
                   Order from verified neighborhood kitchens at exact dining room prices with guaranteed honest ETA tracking.
@@ -268,7 +251,7 @@ const CustomerHome = () => {
                   <a 
                     href="#restaurants-grid" 
                     className="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm transition hover-lift" 
-                    style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                    style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                   >
                     Order Now →
                   </a>
@@ -301,48 +284,33 @@ const CustomerHome = () => {
                   <h5 className="fw-bold mb-0" style={{ fontSize: 'clamp(1.1rem, 2vw, 1.3rem)' }}>
                     What's on your mind?
                   </h5>
-                  <small className="text-muted">Explore popular hand-picked cuisines</small>
+                  <small className="text-muted">Browse by cuisine</small>
                 </div>
               }
             >
-              {CATEGORIES.map((cat, idx) => {
+              {CATEGORIES.map((cat) => {
                 const isActive = selectedCuisine === cat.name || (!selectedCuisine && cat.name === 'All');
                 return (
-                  <div
-                    key={idx}
-                    className={`card border-0 rounded-4 text-center p-2 p-sm-3 shadow-sm flex-shrink-0 cursor-pointer transition hover-lift ${
-                      isActive ? 'border border-2 border-primary bg-primary-subtle' : 'bg-white'
+                  <button
+                    key={cat.name}
+                    type="button"
+                    className={`card rounded-4 text-center p-2 p-sm-3 flex-shrink-0 transition hover-lift ${
+                      isActive ? 'border border-2 border-primary bg-primary-subtle' : 'border bg-white'
                     }`}
                     style={{ width: 110, cursor: 'pointer' }}
                     onClick={() => setSelectedCuisine(cat.name === 'All' ? '' : cat.name)}
-                    role="button"
-                    tabIndex={0}
                     aria-label={`Select ${cat.name} cuisine`}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        setSelectedCuisine(cat.name === 'All' ? '' : cat.name);
-                      }
-                    }}
+                    aria-pressed={isActive}
                   >
-                    {cat.image ? (
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        className="rounded-circle mx-auto mb-2 shadow-sm object-fit-cover"
-                        style={{ width: 64, height: 64 }}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div 
-                        className="rounded-circle mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center bg-light fs-3"
-                        style={{ width: 64, height: 64 }}
-                      >
-                        {cat.icon}
-                      </div>
-                    )}
-                    <div className="fw-bold small text-dark text-truncate">{cat.name}</div>
-                  </div>
+                    <span
+                      className="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center fs-3"
+                      style={{ width: 64, height: 64, background: 'var(--c-primary-light)', color: 'var(--c-primary)' }}
+                      aria-hidden="true"
+                    >
+                      <i className={`bi bi-${cat.icon}`} />
+                    </span>
+                    <span className="fw-bold small text-dark w-100 text-truncate">{cat.name}</span>
+                  </button>
                 );
               })}
             </ScrollCarousel>
@@ -434,7 +402,9 @@ const CustomerHome = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h5 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.15rem, 2vw, 1.4rem)' }}>
-                  Top Restaurant Chains in {currentHub?.cityName || currentHub?.name || 'Your City'}
+                  {currentHub?.id && currentHub.id !== 'unselected'
+                    ? `Restaurants in ${currentHub.cityName || currentHub.name}`
+                    : 'Explore restaurants'}
                 </h5>
                 <p className="text-muted small mb-0">100% Dine-In Menu Price Parity • Zero Delivery Markups</p>
               </div>
@@ -474,7 +444,7 @@ const CustomerHome = () => {
 
                   const isFav = favorites.includes(rest.id);
                   const isClosed = rest.isOpen === false;
-                  const discountOffer = rest.discountTag || (Number(rest.rating) >= 4.5 ? '50% OFF UPTO ₹100' : 'FLAT ₹100 OFF ABOVE ₹499');
+                  const discountOffer = rest.discountTag || '';
 
                   return (
                     <div key={rest.id} className="restaurant-card position-relative">
@@ -483,7 +453,7 @@ const CustomerHome = () => {
                           {/* Image Container with 16:10 Aspect Ratio */}
                           <div className="restaurant-card-img-wrap">
                             <img
-                              src={rest.bannerImage || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600'}
+                              src={rest.bannerImage || '/food-placeholder.svg'}
                               alt={rest.name}
                               loading="lazy"
                               decoding="async"
@@ -491,7 +461,7 @@ const CustomerHome = () => {
                             />
 
                             {/* Offer Banner Gradient Overlay (Swiggy / Zomato Signature) */}
-                            {!isClosed && (
+                            {!isClosed && discountOffer && (
                               <div className="restaurant-card-offer-overlay">
                                 <span>🏷️</span>
                                 <span>{discountOffer}</span>
@@ -507,7 +477,7 @@ const CustomerHome = () => {
                                 <span className="badge bg-danger fs-6 px-3 py-1 rounded-pill mb-1 shadow">
                                   CLOSED
                                 </span>
-                                <small className="fw-semibold text-light">Opens tomorrow at 11 AM</small>
+                                <small className="fw-semibold text-light">Currently unavailable</small>
                               </div>
                             )}
                           </div>
@@ -521,24 +491,24 @@ const CustomerHome = () => {
                                   {rest.name}
                                 </h6>
                                 <span className="rating-pill-green flex-shrink-0">
-                                  ★ {rest.rating || '4.2'}
+                                  ★ {rest.totalReviews > 0 ? rest.rating : 'New'}
                                 </span>
                               </div>
 
                               {/* 2. ETA • Distance • Cost for Two (Zomato Pattern) */}
                               <div className="d-flex align-items-center gap-1 text-muted small mb-1" style={{ fontSize: 12 }}>
                                 <span className="fw-semibold text-dark">
-                                  {rest.prepTimeMin ? `${rest.prepTimeMin}-${rest.prepTimeMax || rest.prepTimeMin + 10} mins` : '25-35 mins'}
+                                  {rest.prepTimeMin ? `${rest.prepTimeMin}-${rest.prepTimeMax || rest.prepTimeMin + 10} mins` : 'Prep time unavailable'}
                                 </span>
                                 <span>•</span>
-                                <span>{rest.distanceKm ? `${rest.distanceKm} km` : '1.2 km'}</span>
+                                <span>{rest.distanceKm != null ? `${Number(rest.distanceKm).toFixed(1)} km` : 'Choose location'}</span>
                                 <span>•</span>
-                                <span>{rest.costForTwo ? `₹${rest.costForTwo} for two` : (rest.priceTier ? `${rest.priceTier} · ₹350 for two` : '₹350 for two')}</span>
+                                <span>{rest.costForTwo != null ? `INR ${rest.costForTwo} for two` : 'Cost not provided'}</span>
                               </div>
 
                               {/* 3. Cuisines */}
                               <p className="text-secondary small text-truncate mb-2" style={{ fontSize: 12 }}>
-                                {rest.cuisineTypes || 'North Indian, Street Food'}
+                                {rest.cuisineTypes || ''}
                               </p>
 
                               {/* 4. Chips Strip: 0% Markup Parity, Veg, Auto-throttled */}
@@ -566,7 +536,7 @@ const CustomerHome = () => {
                                 {rest.locality || rest.street || (rest.address ? rest.address.split(',')[0] : `${currentHub.name}, ${currentHub.cityName}`)}
                               </span>
                               <span className="text-success fw-bold">
-                                {rest.deliveryFee === 0 || !rest.deliveryFee ? 'FREE DELIVERY' : `₹${rest.deliveryFee} Delivery`}
+                                {rest.deliveryFee == null ? 'Calculated at checkout' : rest.deliveryFee === 0 ? 'Free delivery' : `INR ${rest.deliveryFee} delivery`}
                               </span>
                             </div>
                           </div>

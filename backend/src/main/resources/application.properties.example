@@ -17,16 +17,18 @@ db.pool.timeout=30000
 server.port=8081
 
 # JWT Authentication & Security
-jwt.secret=YourSuperSecureJwtSecretKeyMustBeAtLeast32CharsLong!
-jwt.expirationMillis=86400000
+jwt.secret=
+# Required: generate a unique random secret of at least 32 bytes.
+jwt.expirationMillis=900000
 jwt.refreshTokenExpirationMillis=604800000
 
 # Payment Gateway (Razorpay Sandbox Credentials)
-razorpay.keyId=rzp_test_your_key_id
-razorpay.keySecret=rzp_secret_your_secret
+razorpay.keyId=
+razorpay.keySecret=
+razorpay.webhookSecret=
 
 # CORS Allowed Origins
-cors.allowedOrigins=http://localhost:5173,http://localhost:5174
+cors.allowedOrigins=http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174
 
 # Dispatch Engine Parameters
 dispatch.maxSearchRadiusKm=7.0

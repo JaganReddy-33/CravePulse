@@ -18,7 +18,7 @@ const AdminRiders = () => {
           status: r.activeOrderId ? 'ON_DELIVERY' : (r.isOnline && r.isAvailable ? 'AVAILABLE' : (r.isOnline ? 'BUSY' : 'OFFLINE')),
           currentOrder: r.activeOrderId ? `ORD-${r.activeOrderId}` : null,
           totalTrips: r.totalDeliveries || 0,
-          rating: Number(r.rating || 5.0).toFixed(1)
+          rating: Number(r.rating ?? 0).toFixed(1)
         }));
         setRiders(mapped);
       } else {

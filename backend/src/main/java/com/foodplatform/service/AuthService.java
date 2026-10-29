@@ -1,4 +1,5 @@
 package com.foodplatform.service;
+import com.foodplatform.config.AppProperties;
 
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.RiderDao;
@@ -69,7 +70,7 @@ public class AuthService {
         User user = new User();
         user.setFullName(fullName.trim());
         user.setEmail(cleanEmail);
-        user.setPhone(cleanPhone.isEmpty() ? "+919876543210" : cleanPhone);
+        user.setPhone(cleanPhone.isEmpty() ? null : cleanPhone);
         user.setPasswordHash(PasswordUtil.hashPassword(password));
         user.setRole("CUSTOMER"); // strictly CUSTOMER
         user.setStatus("ACTIVE");
@@ -108,10 +109,11 @@ public class AuthService {
             throw new IllegalArgumentException("An account with this phone number already exists.");
         }
 
+        if (latitude == null || longitude == null || !Double.isFinite(latitude) || !Double.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180 || address==null || address.isBlank()) throw new IllegalArgumentException("Kitchen address and valid coordinates are required");
         User user = new User();
         user.setFullName(fullName.trim());
         user.setEmail(cleanEmail);
-        user.setPhone(cleanPhone);
+        user.setPhone(cleanPhone.isBlank() ? null : cleanPhone);
         user.setPasswordHash(PasswordUtil.hashPassword(password));
         user.setRole("RESTAURANT_OWNER");
         user.setStatus("PENDING_KYC");
@@ -129,20 +131,21 @@ public class AuthService {
         rest.setName(restaurantName.trim());
         rest.setSlug(slug);
         rest.setDescription("Authentic cuisine partner onboarded on CravePulse.");
-        rest.setBannerImage("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800");
-        rest.setLogoImage("https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200");
+        rest.setBannerImage(null);
+        rest.setLogoImage(null);
         rest.setPhone(cleanPhone);
         rest.setEmail(cleanEmail);
         rest.setCuisineTypes(cuisineTypes != null && !cuisineTypes.isBlank() ? cuisineTypes.trim() : "Multi-Cuisine");
-        rest.setLatitude(latitude != null ? BigDecimal.valueOf(latitude) : BigDecimal.valueOf(12.9715987));
-        rest.setLongitude(longitude != null ? BigDecimal.valueOf(longitude) : BigDecimal.valueOf(77.5945627));
-        rest.setAddress(address != null && !address.isBlank() ? address.trim() : "Bengaluru");
+        rest.setLatitude(BigDecimal.valueOf(latitude));
+        rest.setLongitude(BigDecimal.valueOf(longitude));
+        rest.setAddress(address.trim());
         rest.setFssaiLicense(fssaiLicense.trim());
         rest.setOpen(false); // Closed until approved
         rest.setAutoThrottled(false);
         rest.setKycApproved(false); // Unapproved until admin reviews
 
         Long restId = restaurantDao.createRestaurant(rest);
+        if (restId == null) throw new IllegalStateException("Kitchen profile could not be created; contact support to complete onboarding");
         rest.setId(restId);
 
         Map<String, Object> resp = new HashMap<>();
@@ -179,7 +182,7 @@ public class AuthService {
         User user = new User();
         user.setFullName(fullName.trim());
         user.setEmail(cleanEmail);
-        user.setPhone(cleanPhone);
+        user.setPhone(cleanPhone.isBlank() ? null : cleanPhone);
         user.setPasswordHash(PasswordUtil.hashPassword(password));
         user.setRole("RIDER");
         user.setStatus("PENDING_KYC");
@@ -199,8 +202,8 @@ public class AuthService {
         rp.setKycApproved(false); // Unapproved until admin reviews
         rp.setOnline(false);
         rp.setAvailable(false);
-        rp.setCurrentLatitude(BigDecimal.valueOf(12.9715987));
-        rp.setCurrentLongitude(BigDecimal.valueOf(77.5945627));
+        rp.setCurrentLatitude(null);
+        rp.setCurrentLongitude(null);
         rp.setWalletBalance(BigDecimal.ZERO);
 
         Long riderId = riderDao.createRiderProfile(rp);
@@ -261,6 +264,7 @@ public class AuthService {
             throw new IllegalArgumentException("User not found");
         }
 
+        if (!"ACTIVE".equals(user.getStatus()) && !"PENDING_KYC".equals(user.getStatus())) throw new IllegalArgumentException("Account is not active");
         // Rotate token: revoke old, generate new
         userDao.revokeRefreshToken(refreshToken);
         return generateAuthResponse(user);
@@ -278,7 +282,7 @@ public class AuthService {
     private Map<String, Object> generateAuthResponse(User user) {
         String accessToken = JwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), user.getFullName());
         String newRefreshToken = JwtUtil.generateRefreshToken();
-        Timestamp refreshExpiry = Timestamp.from(Instant.now().plusSeconds(7 * 24 * 3600)); // 7 days
+        Timestamp refreshExpiry = new Timestamp(System.currentTimeMillis() + AppProperties.getRefreshTokenExpirationMillis()); // 7 days
 
         userDao.storeRefreshToken(user.getId(), newRefreshToken, refreshExpiry);
 

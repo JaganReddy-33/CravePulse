@@ -30,6 +30,7 @@ public class AdminAuditDaoImpl implements AdminAuditDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error writing admin audit log: action={}, target={}", action, targetId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -58,6 +59,7 @@ public class AdminAuditDaoImpl implements AdminAuditDao {
             }
         } catch (SQLException e) {
             logger.error("Error retrieving admin audit logs", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return logs;
     }

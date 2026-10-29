@@ -1,3 +1,4 @@
+import { getAccessToken, setAccessToken } from './session';
 import axios from 'axios';
 
 /**
@@ -17,6 +18,7 @@ export class ApiError extends Error {
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -43,7 +45,7 @@ function addRefreshSubscriber(callback) {
 // Request interceptor: attach bearer token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getAccessToken();
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -95,22 +97,8 @@ api.interceptors.response.use(
     }
 
     // 3. Handle 401 Unauthorized with concurrency-safe refresh token exchange
-    if (error.response && error.response.status === 401 && !originalRequest._isRetryAuth) {
+    if (error.response && error.response.status === 401 && !originalRequest._isRetryAuth && !/\/auth\/(login|register|refresh|logout)$/.test(originalRequest.url)) {
       originalRequest._isRetryAuth = true;
-
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        return Promise.reject(
-          new ApiError({
-            message: 'Session expired. Please sign in again.',
-            code: 'UNAUTHORIZED',
-            status: 401,
-          })
-        );
-      }
 
       if (isRefreshing) {
         // Wait for active refresh to complete
@@ -135,11 +123,11 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post('/api/auth/refresh', { refreshToken });
+        const res = await axios.post(`${api.defaults.baseURL.replace(/\/$/, '')}/auth/refresh`, {}, { withCredentials: true, timeout: 15000 });
         if (res.data && res.data.success) {
-          const { accessToken, refreshToken: newRt } = res.data.data;
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', newRt);
+          const { accessToken } = res.data.data;
+          setAccessToken(accessToken);
+
           onTokenRefreshed(accessToken);
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
@@ -148,10 +136,8 @@ api.interceptors.response.use(
         }
       } catch (refreshErr) {
         onTokenRefreshed(null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login?sessionExpired=true';
+        setAccessToken(null);
+        window.dispatchEvent(new Event('session-expired'));
         return Promise.reject(
           new ApiError({
             message: 'Session expired. Please sign in again.',

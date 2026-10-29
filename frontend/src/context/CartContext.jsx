@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useRef } from 'react';
 import api from '../services/api';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
@@ -83,99 +84,42 @@ const cartReducer = (state, action) => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, { restaurantId: null, restaurantName: null, items: [] }, () => {
-    try {
-      const saved = localStorage.getItem('cart');
-      return saved ? JSON.parse(saved) : { restaurantId: null, restaurantName: null, items: [] };
-    } catch (e) {
-      return { restaurantId: null, restaurantName: null, items: [] };
-    }
-  });
+  const { user } = useAuth();
+  const emptyCart = { restaurantId: null, restaurantName: null, items: [] };
+  const [state, dispatch] = useReducer(cartReducer, emptyCart);
+  const [hydratedFor, setHydratedFor] = useState(null);
+  const saveQueue = useRef(Promise.resolve());
+  useEffect(() => {
+    let active = true;
+    setHydratedFor(null);
+    setCouponCode('');
+    setRiderTip(0);
+    dispatch({ type: 'SET_CART', payload: emptyCart });
+    if (!user) return;
+    api.get('/account/cart').then(res => {
+      if (active) {
+        dispatch({ type: 'SET_CART', payload: res.data || emptyCart });
+        setHydratedFor(user.id);
+      }
+    }).catch(err => { if (active) setCouponError(err.message); });
+    return () => { active = false; };
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user || hydratedFor !== user.id) return;
+    // Serialize updates so a slower earlier save cannot overwrite the latest cart.
+    saveQueue.current = saveQueue.current.catch(() => {}).then(() => api.put('/account/cart', state))
+      .catch(err => setCouponError(`Cart not saved: ${err.message}`));
+  }, [state, user?.id, hydratedFor]);
 
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState(null);
   const [couponCode, setCouponCode] = useState('');
-  const [riderTip, setRiderTip] = useState(20);
+  const [riderTip, setRiderTip] = useState(0);
   const [billDetails, setBillDetails] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [couponError, setCouponError] = useState('');
 
-  // Local fallback calculation engine
-  const calculateLocalBill = (items, coupon, tip = 0) => {
-    let subtotal = 0;
-    let dineInSubtotal = 0;
-
-    items.forEach(it => {
-      let unitPrice = Number(it.platformPrice || 0);
-      let dineIn = Number(it.dineInPrice || it.platformPrice || 0);
-
-      if (it.selectedVariant?.priceAdjustment) {
-        unitPrice += Number(it.selectedVariant.priceAdjustment);
-        dineIn += Number(it.selectedVariant.priceAdjustment);
-      }
-
-      let addonsSum = 0;
-      if (it.selectedAddons && it.selectedAddons.length > 0) {
-        addonsSum = it.selectedAddons.reduce((acc, a) => acc + Number(a.price || 0), 0);
-      }
-
-      subtotal += (unitPrice + addonsSum) * it.quantity;
-      dineInSubtotal += (dineIn + addonsSum) * it.quantity;
-    });
-
-    subtotal = Math.round(subtotal * 100) / 100;
-    dineInSubtotal = Math.round(dineInSubtotal * 100) / 100;
-
-    let discount = 0;
-    const cUpper = (coupon || '').trim().toUpperCase();
-
-    if (cUpper === 'FOOD50') {
-      if (subtotal >= 199) {
-        discount = Math.min(150, Math.round(subtotal * 0.5 * 100) / 100);
-      }
-    } else if (cUpper === 'WELCOME100') {
-      if (subtotal >= 399) {
-        discount = 100;
-      }
-    } else if (cUpper === 'FREESHIP') {
-      if (subtotal >= 249) {
-        discount = 35;
-      }
-    }
-
-    const packagingFee = 15.00;
-    const deliveryFee = 35.00;
-    const platformFee = 5.00;
-    const tipAmount = Math.max(0, Number(tip) || 0);
-    const taxable = Math.max(0, subtotal - discount + packagingFee);
-    const gstTax = Math.round(taxable * 0.05 * 100) / 100;
-    const totalAmount = Math.round((taxable + deliveryFee + platformFee + gstTax + tipAmount) * 100) / 100;
-
-    return {
-      subtotal,
-      dineInSubtotal,
-      restaurantDiscount: 0,
-      couponId: discount > 0 ? 1 : null,
-      couponCode: discount > 0 ? cUpper : null,
-      couponDiscount: discount,
-      packagingFee,
-      deliveryFee,
-      platformFee,
-      gstTax,
-      tipAmount,
-      totalAmount,
-      distanceKm: 2.4,
-      etaMinMinutes: 25,
-      etaMaxMinutes: 35,
-      priceTransparency: {
-        dineInSubtotal,
-        platformSubtotal: subtotal,
-        dineInMarkup: Math.max(0, subtotal - dineInSubtotal),
-        isPurePriceParity: subtotal <= dineInSubtotal,
-      }
-    };
-  };
-
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
+    let active = true;
 
     const recalculateBill = async () => {
       if (!state.restaurantId || state.items.length === 0) {
@@ -184,14 +128,13 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      // Compute immediate local bill
-      const localBill = calculateLocalBill(state.items, couponCode, riderTip);
-      setBillDetails(localBill);
-
+      setBillDetails(null);
+      if (!deliveryCoordinates) { setCalculating(false); setCouponError('Choose a saved delivery address at checkout to calculate delivery fees.'); return; }
       setCalculating(true);
       try {
         const payload = {
           restaurantId: state.restaurantId,
+          userLat: deliveryCoordinates.latitude, userLng: deliveryCoordinates.longitude,
           items: state.items.map(it => ({
             menuItemId: it.id,
             quantity: it.quantity,
@@ -204,21 +147,20 @@ export const CartProvider = ({ children }) => {
 
         const res = await api.post('/cart/calculate', payload);
         if (res.success && res.data) {
+          if (!active) return;
           setBillDetails(res.data);
           setCouponError('');
         }
       } catch (e) {
-        // If coupon was rejected by server, provide clear user feedback
-        if (couponCode && e.message && e.message.toLowerCase().includes('coupon')) {
-          setCouponError(e.message);
-        }
+        if (active) { setBillDetails(null); setCouponError(e.message || 'Unable to calculate price'); }
       } finally {
-        setCalculating(false);
+        if (active) setCalculating(false);
       }
     };
 
     recalculateBill();
-  }, [state, couponCode, riderTip]);
+    return () => { active = false; };
+  }, [state, couponCode, riderTip, deliveryCoordinates]);
 
   const applyCoupon = (code) => {
     setCouponError('');
@@ -235,6 +177,7 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{
       cart: state,
+      setDeliveryCoordinates,
       billDetails,
       calculating,
       couponCode,

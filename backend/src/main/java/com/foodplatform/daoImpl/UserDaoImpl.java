@@ -29,6 +29,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding user by email: {}", email, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -46,6 +47,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding user by phone: {}", phone, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -63,6 +65,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding user by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -108,6 +111,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating user: {}", user.getEmail(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -123,6 +127,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating failed attempts for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -135,6 +140,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error resetting failed attempts for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -149,6 +155,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error storing refresh token for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -165,6 +172,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error validating refresh token", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -178,6 +186,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error revoking refresh token", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -190,6 +199,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error revoking all refresh tokens for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -230,6 +240,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting addresses for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -260,6 +271,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting address by id: {}", addressId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -275,7 +287,7 @@ public class UserDaoImpl implements UserDao {
             ps.setString(3, addr.getAddressLine());
             ps.setString(4, addr.getLandmark());
             ps.setString(5, addr.getCity());
-            ps.setString(6, addr.getState() != null ? addr.getState() : "Karnataka");
+            ps.setString(6, addr.getState());
             ps.setString(7, addr.getPostalCode());
             ps.setBigDecimal(8, addr.getLatitude());
             ps.setBigDecimal(9, addr.getLongitude());
@@ -288,6 +300,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error adding address for user: {}", addr.getUserId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -302,6 +315,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error deleting address {} for user {}", addressId, userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -321,7 +335,7 @@ public class UserDaoImpl implements UserDao {
                 ps2.executeUpdate();
 
                 conn.commit();
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 throw e;
             } finally {
@@ -329,6 +343,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error setting default address {} for user {}", addressId, userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -344,6 +359,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating profile for user {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -392,6 +408,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error searching users with query: {}, role: {}, status: {}", query, role, status, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -406,6 +423,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating user status: {} for user: {}", status, userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -418,6 +436,7 @@ public class UserDaoImpl implements UserDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error incrementing fraud flag for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -434,6 +453,7 @@ public class UserDaoImpl implements UserDao {
             }
         } catch (SQLException e) {
             logger.error("Error reading fraud flag count for user: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }

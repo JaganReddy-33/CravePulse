@@ -1,3 +1,4 @@
+import { setPreference } from '../../services/preferences';
 import React from 'react';
 import ModalPortal from '../ModalPortal';
 import { PAN_INDIA_CITIES } from '../../config/panIndiaLocations';
@@ -106,7 +107,7 @@ const NavLocationModal = ({
                   onClick={() => {
                     setSelectedCity(city);
                     setSelectedHub(city.hubs[0]);
-                    localStorage.setItem('cravepulse_hub', JSON.stringify(city.hubs[0]));
+                    setPreference('hub', city.hubs[0]);
                     onClose();
                   }}
                 >
@@ -128,7 +129,7 @@ const NavLocationModal = ({
                 onClick={() => {
                   setSelectedCity(hub.city);
                   setSelectedHub(hub);
-                  localStorage.setItem('cravepulse_hub', JSON.stringify(hub));
+                  setPreference('hub', hub);
                   onClose();
                 }}
               >

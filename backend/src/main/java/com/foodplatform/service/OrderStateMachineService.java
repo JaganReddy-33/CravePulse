@@ -72,7 +72,7 @@ public class OrderStateMachineService {
                 Order updated = transition(conn, orderId, targetStatus, triggeredByUserId, actorRole, deliveryOtp, reason, currentLat, currentLng);
                 conn.commit();
                 return updated;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Failed transition for order: {} to {}", orderId, targetStatus, e);
                 throw new RuntimeException("Order state transition failed: " + e.getMessage(), e);

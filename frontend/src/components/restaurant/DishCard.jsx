@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 /**
  * DishCard: Menu item card showcasing price parity, dietary flags, and cart steppers.
  */
-const DishCard = ({ dish, onCustomize, isStoreClosed }) => {
+const DishCard = ({ dish, restaurantName, onCustomize, isStoreClosed }) => {
   const { cart, addItem, removeItem } = useCart();
 
   // Check if item is currently in cart
@@ -18,15 +18,7 @@ const DishCard = ({ dish, onCustomize, isStoreClosed }) => {
     if (hasCustomizations && onCustomize) {
       onCustomize(dish);
     } else {
-      addItem({
-        id: dish.id,
-        name: dish.name,
-        price: Number(dish.platformPrice || dish.dineInPrice || dish.price),
-        dineInPrice: Number(dish.dineInPrice || dish.platformPrice || dish.price),
-        imageUrl: dish.imageUrl,
-        isVeg: dish.veg !== undefined ? dish.veg : dish.isVeg,
-        restaurantId: dish.restaurantId,
-      });
+      addItem({ restaurantId: dish.restaurantId, restaurantName, item: dish });
     }
   };
 
@@ -93,7 +85,7 @@ const DishCard = ({ dish, onCustomize, isStoreClosed }) => {
       <div className="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
         <div className="position-relative" style={{ width: 100, height: 75 }}>
           <img
-            src={dish.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300'}
+            src={dish.imageUrl || '/food-placeholder.svg'}
             alt={dish.name}
             className="w-100 h-100 rounded-3 object-fit-cover shadow-xs"
             loading="lazy"
@@ -110,7 +102,7 @@ const DishCard = ({ dish, onCustomize, isStoreClosed }) => {
               <button
                 type="button"
                 className="btn btn-light border-0 fw-bold px-2 touch-target"
-                onClick={() => removeItem(dish.id)}
+                onClick={() => removeItem(cartItem?.cartKey)}
                 aria-label={`Decrease quantity of ${dish.name}`}
               >
                 -

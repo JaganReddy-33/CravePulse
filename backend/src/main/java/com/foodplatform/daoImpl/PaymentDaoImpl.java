@@ -54,6 +54,7 @@ public class PaymentDaoImpl implements PaymentDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding payment by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -71,6 +72,7 @@ public class PaymentDaoImpl implements PaymentDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding payment by idempotency key: {}", idempotencyKey, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -88,6 +90,7 @@ public class PaymentDaoImpl implements PaymentDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding payment by order id: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -105,6 +108,7 @@ public class PaymentDaoImpl implements PaymentDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding payment by razorpay_order_id: {}", razorpayOrderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -134,12 +138,13 @@ public class PaymentDaoImpl implements PaymentDao {
 
     @Override
     public void recordRefund(Connection conn, long paymentId, String refundId, BigDecimal refundAmount, String refundStatus) throws SQLException {
-        String sql = "UPDATE payments SET status = 'REFUNDED', refund_id = ?, refund_amount = ?, refund_status = ? WHERE id = ?";
+        String sql = "UPDATE payments SET status = CASE WHEN ? = 'PROCESSED' THEN 'REFUNDED' ELSE status END, refund_id = ?, refund_amount = ?, refund_status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, refundId);
-            ps.setBigDecimal(2, refundAmount);
-            ps.setString(3, refundStatus != null ? refundStatus : "PROCESSED");
-            ps.setLong(4, paymentId);
+            ps.setString(1, refundStatus);
+            ps.setString(2, refundId);
+            ps.setBigDecimal(3, refundAmount);
+            ps.setString(4, refundStatus != null ? refundStatus : "PROCESSED");
+            ps.setLong(5, paymentId);
             ps.executeUpdate();
         }
     }
@@ -170,6 +175,7 @@ public class PaymentDaoImpl implements PaymentDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error saving webhook event {}: {}", eventId, e.getMessage());
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 

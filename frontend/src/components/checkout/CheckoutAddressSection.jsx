@@ -15,21 +15,26 @@ const CheckoutAddressSection = ({
     title: 'Home',
     addressLine: '',
     landmark: '',
-    city: 'Bangalore',
-    postalCode: '560038',
+    city: '', latitude: '', longitude: '', state: '',
+    postalCode: '',
   });
 
-  const handleCreateSubmit = (e) => {
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
     if (!newAddress.addressLine.trim()) return;
-    onSaveAddress(newAddress);
+    setSaveError(''); setSaving(true);
+    try { await onSaveAddress({ ...newAddress, latitude: Number(newAddress.latitude), longitude: Number(newAddress.longitude) }); }
+    catch (err) { setSaveError(err.message); return; }
+    finally { setSaving(false); }
     setShowAddModal(false);
     setNewAddress({
       title: 'Home',
       addressLine: '',
       landmark: '',
-      city: 'Bangalore',
-      postalCode: '560038',
+      city: '', latitude: '', longitude: '', state: '',
+      postalCode: '',
     });
   };
 
@@ -79,7 +84,7 @@ const CheckoutAddressSection = ({
               {/* Google Maps External Navigation Link */}
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  `${addr.addressLine}, ${addr.city || 'Bangalore'} ${addr.postalCode || ''}`
+                  `${addr.addressLine}, ${addr.city || ''} ${addr.postalCode || ''}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -172,6 +177,11 @@ const CheckoutAddressSection = ({
                   </div>
                 </div>
 
+                {saveError && <div className="alert alert-danger" role="alert">{saveError}</div>}
+                <div className="row g-2 mb-3">
+                  {['city', 'state', 'latitude', 'longitude'].map(key => <div className="col-12 col-sm-6" key={key}><label className="form-label" htmlFor={`address-${key}`}>{key[0].toUpperCase() + key.slice(1)}</label><input id={`address-${key}`} className="form-control" required type={['latitude', 'longitude'].includes(key) ? 'number' : 'text'} step="any" min={key === 'latitude' ? -90 : key === 'longitude' ? -180 : undefined} max={key === 'latitude' ? 90 : key === 'longitude' ? 180 : undefined} value={newAddress[key]} onChange={e => setNewAddress(prev => ({ ...prev, [key]: e.target.value }))} /></div>)}
+                </div>
+                <p className="small text-muted">Use coordinates from your map pin so delivery distance can be calculated accurately.</p>
                 <div className="d-flex justify-content-end gap-2 pt-2 border-top">
                   <button
                     type="button"
@@ -181,11 +191,11 @@ const CheckoutAddressSection = ({
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    type="submit" disabled={saving}
                     className="btn btn-sm btn-primary rounded-pill px-4 fw-bold touch-target text-white"
-                    style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                    style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                   >
-                    Save Address
+                    {saving ? 'Saving...' : 'Save Address'}
                   </button>
                 </div>
               </form>

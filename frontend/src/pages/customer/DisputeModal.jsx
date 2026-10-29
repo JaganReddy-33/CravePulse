@@ -6,8 +6,8 @@ const DisputeModal = ({ show, onClose, order }) => {
   const [issueType, setIssueType] = useState('MISSING_ITEM');
   const [description, setDescription] = useState('');
   const [refundAmount, setRefundAmount] = useState('50');
-  const [photoUrl, setPhotoUrl] = useState('https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300');
-  const [fileName, setFileName] = useState('dish_evidence_sample.jpg');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [fileName, setFileName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -15,18 +15,6 @@ const DisputeModal = ({ show, onClose, order }) => {
   if (!show || !order) return null;
 
   const totalBill = Number(order.totalAmount || 0);
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotoUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,26 +27,16 @@ const DisputeModal = ({ show, onClose, order }) => {
         issueType,
         description,
         photoEvidenceUrl: photoUrl,
-        requestedRefundAmount: parseFloat(refundAmount) || 50,
+        requestedRefundAmount: Number(refundAmount),
       });
 
       if (res.success) {
         setResult(res.data);
       } else {
-        // Optimistic fallback for immediate demo reassurance
-        setResult({
-          autoRefundApproved: parseFloat(refundAmount) <= 100,
-          requestedRefundAmount: parseFloat(refundAmount) || 50,
-          ticketNumber: `DSP-${Date.now().toString().slice(-6)}`
-        });
+        throw new Error(res.message || 'The dispute could not be submitted');
       }
     } catch (err) {
-      // Resilient fallback for demonstration
-      setResult({
-        autoRefundApproved: parseFloat(refundAmount) <= 100,
-        requestedRefundAmount: parseFloat(refundAmount) || 50,
-        ticketNumber: `DSP-${Date.now().toString().slice(-6)}`
-      });
+      setError(err.message || 'The dispute was not submitted. Please retry.');
     } finally {
       setSubmitting(false);
     }
@@ -122,12 +100,12 @@ const DisputeModal = ({ show, onClose, order }) => {
                   </div>
                   <p className="text-muted small mb-4">
                     {result.autoRefundApproved
-                      ? 'Because your claim meets our transparent instant resolution threshold (≤ ₹100), funds have been automatically disbursed without customer service wait times.'
+                      ? 'Because your claim meets our transparent instant resolution threshold (≤ ₹100), your claim was accepted for processing. Check your wallet or payment status for the recorded refund.'
                       : 'Your photo evidence and kitchen ticket have been dispatched directly to the Head Chef and Central Ops Console. A notification will appear momentarily.'}
                   </p>
                   <button 
                     className="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow"
-                    style={{ background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)', borderColor: '#ff5c35' }}
+                    style={{ background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)', borderColor: 'var(--c-primary)' }}
                     onClick={onClose}
                   >
                     Done
@@ -190,7 +168,7 @@ const DisputeModal = ({ show, onClose, order }) => {
                           key={val}
                           type="button"
                           className={`btn btn-sm rounded-pill px-3 fw-bold border ${refundAmount === val ? 'btn-primary text-white shadow-sm' : 'btn-light'}`}
-                          style={refundAmount === val ? { background: '#ff5c35', borderColor: '#ff5c35' } : {}}
+                          style={refundAmount === val ? { background: 'var(--c-primary)', borderColor: 'var(--c-primary)' } : {}}
                           onClick={() => setRefundAmount(val)}
                         >
                           {val === String(totalBill) ? `Full Bill (₹${val})` : `₹${val}`}
@@ -233,16 +211,11 @@ const DisputeModal = ({ show, onClose, order }) => {
                       )}
                       <div className="flex-grow-1 overflow-hidden">
                         <label className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold mb-1 cursor-pointer">
-                          <i className="bi bi-camera me-1"></i> Choose / Take Photo
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="d-none"
-                            onChange={handlePhotoUpload}
-                          />
+                          <i className="bi bi-camera me-1"></i> Evidence image URL
+                          <input type="url" className="form-control" value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} placeholder="https://.../photo.jpg" />
                         </label>
                         <div className="small text-muted text-truncate" style={{ fontSize: 11 }}>
-                          {fileName || 'Upload photo of affected food container or receipt'}
+                          {fileName || 'Enter a publicly accessible HTTPS image link'}
                         </div>
                       </div>
                     </div>

@@ -8,7 +8,7 @@ public class User {
     private String fullName;
     private String email;
     private String phone;
-    private String passwordHash;
+    private transient String passwordHash;
     private String role; // CUSTOMER, RESTAURANT_OWNER, RIDER, ADMIN
     private String status; // ACTIVE, PENDING_KYC, SUSPENDED
     private int failedAttempts;

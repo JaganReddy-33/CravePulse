@@ -55,7 +55,7 @@ public class ReviewDaoImpl implements ReviewDao {
 
                 conn.commit();
                 return reviewId;
-            } catch (SQLException ex) {
+            } catch (SQLException | RuntimeException ex) {
                 conn.rollback();
                 throw ex;
             } finally {
@@ -63,8 +63,8 @@ public class ReviewDaoImpl implements ReviewDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating review for order: {}", review.getOrderId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
-        return null;
     }
 
     @Override
@@ -84,6 +84,7 @@ public class ReviewDaoImpl implements ReviewDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding review for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -105,6 +106,7 @@ public class ReviewDaoImpl implements ReviewDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding review by id: {}", reviewId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -129,6 +131,7 @@ public class ReviewDaoImpl implements ReviewDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing reviews for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -143,6 +146,7 @@ public class ReviewDaoImpl implements ReviewDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error replying to review: {}", reviewId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 

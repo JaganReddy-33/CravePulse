@@ -2,10 +2,9 @@
    CRAVEPULSE GLOBAL STYLES & MULTI-DEVICE RESPONSIVENESS
    ========================================================================== */
 
-/* Prevent horizontal overflow across all viewports */
+/* Let layout overflow remain observable instead of hiding clipped controls. */
 html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
+  width: 100%;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -671,4 +670,187 @@ html, body {
   .rider-cockpit-main {
     padding-top: 96px;
   }
+}
+
+/* Shared application finish: warm dining surfaces, clear operational workspaces. */
+:root {
+  --bs-body-font-family: var(--font-family);
+  --bs-body-color: var(--c-text-main);
+  --bs-body-bg: var(--c-bg);
+  --bs-primary: var(--c-primary);
+  --bs-primary-rgb: 185, 64, 22;
+  --focus-ring-color: #b94016;
+  --focus-ring: 0 0 0 3px rgba(185, 64, 22, 0.2);
+}
+
+#root, main, .row > *, .customer-portal, .partner-portal, .admin-portal, .rider-portal {
+  min-width: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(1.9rem, 4vw, 3.5rem); }
+h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
+p { text-wrap: pretty; }
+img, video { max-width: 100%; }
+textarea { resize: vertical; }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { touch-action: manipulation; }
+
+.customer-portal {
+  background: var(--c-bg);
+  isolation: isolate;
+}
+
+.customer-portal > canvas { opacity: 0.12; }
+.customer-portal .text-primary { color: var(--c-primary) !important; }
+.customer-portal .text-muted { color: var(--c-text-muted) !important; }
+.customer-portal .bg-primary-subtle { background-color: var(--c-primary-light) !important; }
+.customer-portal .card {
+  border-color: var(--c-border);
+  box-shadow: 0 2px 12px rgba(49, 40, 25, 0.035);
+}
+.customer-portal .restaurant-card {
+  border: 1px solid var(--c-border) !important;
+  background: var(--c-card-bg);
+  overflow: hidden;
+}
+.customer-portal .list-group-item-action:hover {
+  color: var(--c-primary);
+  background: var(--c-primary-light);
+}
+.customer-portal .list-group-item-action { min-height: 44px; }
+.customer-portal .btn-primary, .btn-primary {
+  --bs-btn-bg: var(--c-primary);
+  --bs-btn-border-color: var(--c-primary);
+  --bs-btn-hover-bg: var(--c-primary-hover);
+  --bs-btn-hover-border-color: var(--c-primary-hover);
+  --bs-btn-active-bg: var(--c-primary-hover);
+  --bs-btn-active-border-color: var(--c-primary-hover);
+  --bs-btn-disabled-bg: #8f766b;
+  --bs-btn-disabled-border-color: #8f766b;
+}
+.customer-portal .btn-primary {
+  background: var(--c-primary) !important;
+  border-color: var(--c-primary) !important;
+  color: #fff !important;
+}
+.customer-portal .btn-primary:hover {
+  background: var(--c-primary-hover) !important;
+  border-color: var(--c-primary-hover) !important;
+}
+
+.btn {
+  font-weight: 650;
+  line-height: 1.35;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.btn:not(.btn-sm) { min-height: 44px; }
+.btn:disabled, .btn.disabled { cursor: not-allowed; opacity: 0.6; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.form-control, .form-select {
+  min-width: 0;
+  min-height: 46px;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+.form-label { font-weight: 650; margin-bottom: 0.5rem; }
+.form-control:focus, .form-select:focus {
+  border-color: var(--c-primary);
+  box-shadow: var(--focus-ring);
+}
+.input-group > .form-control, .input-group > .form-select { min-width: 0; }
+.table { --bs-table-bg: transparent; }
+.table > :not(caption) > * > * { padding-block: 0.9rem; }
+.table th { font-size: 0.76rem; letter-spacing: 0.045em; text-transform: uppercase; }
+.table td { vertical-align: middle; overflow-wrap: anywhere; }
+
+.partner-portal > aside, .admin-portal > aside { flex-shrink: 0; }
+.partner-portal main, .admin-portal main { scrollbar-gutter: stable; }
+.partner-portal .nav-link, .admin-portal .nav-link { min-height: 46px; }
+.admin-portal, .rider-portal {
+  --focus-ring-color: #82c9ee;
+  --focus-ring: 0 0 0 3px rgba(130, 201, 238, 0.22);
+  color-scheme: dark;
+}
+.rider-portal {
+  --focus-ring-color: #62dfad;
+  --focus-ring: 0 0 0 3px rgba(98, 223, 173, 0.22);
+}
+.admin-portal .text-muted, .rider-portal .text-muted,
+.admin-portal .text-secondary, .rider-portal .text-secondary { color: #a9b6c9 !important; }
+.admin-portal .table, .rider-portal .table { --bs-table-color: #e7edf6; --bs-table-border-color: #2b384d; }
+.rider-card, .admin-card, .partner-card { box-shadow: var(--shadow-xs); }
+
+/* Tall dialogs scroll inside the viewport, including with a mobile keyboard. */
+.cravepulse-modal-overlay {
+  width: 100% !important;
+  height: 100dvh !important;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left)) !important;
+  overscroll-behavior: contain;
+}
+.cravepulse-modal-overlay > .modal-content,
+.cravepulse-modal-overlay > .cravepulse-modal-dialog {
+  min-width: 0;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-content { overflow-wrap: anywhere; }
+.modal-body { min-height: 0; }
+
+/* Explicit support for half-step utilities used by existing screens. */
+.p-3\.5 { padding: 1.125rem !important; }
+.p-2\.5 { padding: 0.625rem !important; }
+.px-2\.5 { padding-inline: 0.625rem !important; }
+.py-2\.5 { padding-block: 0.625rem !important; }
+.gap-2\.5 { gap: 0.625rem !important; }
+.gap-3\.5 { gap: 1.125rem !important; }
+
+@keyframes workspaceReveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .customer-content-container, .partner-portal main, .admin-portal main {
+    animation: workspaceReveal 240ms ease-out both;
+  }
+}
+@media (hover: hover) {
+  .restaurant-card:hover { box-shadow: 0 10px 24px rgba(49, 40, 25, 0.1); }
+}
+@media (max-width: 767.98px) {
+  .btn-sm { min-height: 40px; }
+  .form-control, .form-select { font-size: 1rem; }
+  .customer-portal main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .partner-portal main, .admin-portal main { padding-inline: 1rem !important; }
+  .partner-card, .admin-card, .rider-card { padding: 1rem; }
+  .table-responsive { overscroll-behavior-x: contain; }
+  .navbar .container-fluid { gap: 0.5rem; }
+  .cravepulse-modal-overlay > .modal-content,
+  .cravepulse-modal-overlay > .cravepulse-modal-dialog { max-height: calc(100dvh - 1.5rem); }
+}
+@media (max-width: 359.98px) {
+  .navbar-brand { margin-right: 0.25rem; }
+  .container-fluid { padding-inline: 0.75rem !important; }
+  .display-5 { font-size: 1.7rem !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  .customer-portal > canvas { display: none; }
+}
+
+/* Fixed header height follows actual wrapping, font size and viewport. */
+.cp-layout-root { padding-top: var(--nav-measured-height, var(--cravepulse-nav-height)) !important; }
+.customer-content-container > .row { --bs-gutter-x: 1rem; }
+@media (max-width: 575.98px) {
+  .customer-portal .row { --bs-gutter-x: 1rem; }
+  .customer-portal .navbar > .container-fluid { flex-wrap: nowrap; padding-inline: 0.625rem !important; gap: 0.25rem; }
+  .customer-portal .navbar > .container-fluid > .d-flex { min-width: 0; }
+  .customer-portal .navbar > .container-fluid > .d-flex:last-child { flex-shrink: 0; gap: 0.25rem !important; }
+  .customer-portal .navbar .touch-target.rounded-circle { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
 }

@@ -28,7 +28,7 @@ const EmptyState = ({
           type="button"
           onClick={onAction}
           className="btn btn-sm btn-primary rounded-pill px-4 fw-bold touch-target"
-          style={{ background: '#ff5722', borderColor: '#ff5722' }}
+          style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
         >
           {actionText}
         </button>

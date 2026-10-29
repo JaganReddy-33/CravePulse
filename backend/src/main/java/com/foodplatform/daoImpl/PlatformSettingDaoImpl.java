@@ -30,6 +30,7 @@ public class PlatformSettingDaoImpl implements PlatformSettingDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching platform setting: {}", key, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return defaultValue;
     }
@@ -46,6 +47,7 @@ public class PlatformSettingDaoImpl implements PlatformSettingDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating platform setting: {}", key, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -66,6 +68,7 @@ public class PlatformSettingDaoImpl implements PlatformSettingDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all platform settings", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }

@@ -23,8 +23,8 @@ const CareersPage = () => {
       if (activeDept && activeDept !== 'All') params.department = activeDept;
 
       const res = await api.get('/jobs', { params });
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setJobs(res.data.data);
+      if (res.success && Array.isArray(res.data)) {
+        setJobs(res.data);
       } else {
         setJobs([]);
       }
@@ -41,8 +41,8 @@ const CareersPage = () => {
   const fetchDepartments = useCallback(async () => {
     try {
       const res = await api.get('/jobs/departments');
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setDepartments(['All', ...res.data.data]);
+      if (res.success && Array.isArray(res.data)) {
+        setDepartments(['All', ...res.data]);
       }
     } catch {
       // Fallback departments
@@ -75,7 +75,7 @@ const CareersPage = () => {
           🚀 CRAVEPULSE TALENT NETWORK
         </span>
         <h1 className="fw-bold text-dark display-5 mb-3">
-          Build the Future of <span style={{ color: 'var(--c-primary, #ff5c35)' }}>Fair Food Delivery</span>
+          Build the Future of <span style={{ color: 'var(--c-primary)' }}>Fair Food Delivery</span>
         </h1>
         <p className="text-muted lead mx-auto" style={{ maxWidth: 680 }}>
           Join an ambitious team redefining the Indian food delivery landscape with 100% dine-in price parity, fair compensation for delivery captains, and honest platform commission.
@@ -124,7 +124,7 @@ const CareersPage = () => {
                   ? 'btn-primary text-white shadow-sm'
                   : 'btn-light border text-secondary bg-white'
               }`}
-              style={isActive ? { background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)', borderColor: '#ff5c35' } : {}}
+              style={isActive ? { background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)', borderColor: 'var(--c-primary)' } : {}}
               onClick={() => {
                 if (dept === 'All') setSearchParams({}, { replace: true });
                 else setSearchParams({ dept }, { replace: true });

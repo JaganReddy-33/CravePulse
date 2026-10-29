@@ -29,7 +29,7 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
         <Link 
           to="/register" 
           className="btn btn-primary rounded-pill px-3 py-1 btn-sm fw-bold touch-target text-white"
-          style={{ background: '#ff5722', borderColor: '#ff5722' }}
+          style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
         >
           Sign Up
         </Link>
@@ -52,7 +52,7 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
       >
         <div 
           className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm"
-          style={{ width: 38, height: 38, background: 'linear-gradient(135deg, #ff4d29 0%, #ff8a65 100%)', fontSize: 16 }}
+          style={{ width: 38, height: 38, background: 'linear-gradient(135deg, #ff4d29 0%, var(--c-secondary) 100%)', fontSize: 16 }}
         >
           {initial}
         </div>

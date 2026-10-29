@@ -48,7 +48,7 @@ const NotFound = () => {
             <button 
               type="submit" 
               className="btn btn-primary px-4 fw-bold touch-target"
-              style={{ background: '#ff5722', borderColor: '#ff5722' }}
+              style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
             >
               Search
             </button>

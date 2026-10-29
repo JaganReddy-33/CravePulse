@@ -47,6 +47,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating job posting: {}", job.getTitle(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -63,6 +64,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding job posting by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -98,6 +100,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing job postings", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -127,6 +130,7 @@ public class JobDaoImpl implements JobDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating job posting: {}", job.getId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -140,6 +144,7 @@ public class JobDaoImpl implements JobDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating job status: {}", jobId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -152,6 +157,7 @@ public class JobDaoImpl implements JobDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error deleting job posting: {}", jobId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -165,6 +171,7 @@ public class JobDaoImpl implements JobDao {
             while (rs.next()) departments.add(rs.getString("department"));
         } catch (SQLException e) {
             logger.error("Error listing departments", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return departments;
     }
@@ -194,6 +201,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating job application for job: {}", app.getJobId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -210,6 +218,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding application by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -246,6 +255,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing applications", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -263,6 +273,7 @@ public class JobDaoImpl implements JobDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating application status: {}", applicationId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -277,6 +288,7 @@ public class JobDaoImpl implements JobDao {
             }
         } catch (SQLException e) {
             logger.error("Error counting applications for job: {}", jobId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }

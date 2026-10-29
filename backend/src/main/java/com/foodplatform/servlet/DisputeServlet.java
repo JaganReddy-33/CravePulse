@@ -46,7 +46,7 @@ public class DisputeServlet extends BaseServlet {
             String issueType = body.get("issueType").getAsString();
             String desc = body.get("description").getAsString();
             String photoUrl = body.has("photoEvidenceUrl") && !body.get("photoEvidenceUrl").isJsonNull() ?
-                    body.get("photoEvidenceUrl").getAsString() : "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300";
+                    body.get("photoEvidenceUrl").getAsString() : null;
             BigDecimal refundAmt = body.has("requestedRefundAmount") ?
                     body.get("requestedRefundAmount").getAsBigDecimal() : BigDecimal.valueOf(50.00);
 

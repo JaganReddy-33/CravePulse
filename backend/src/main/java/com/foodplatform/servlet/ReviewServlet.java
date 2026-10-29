@@ -59,6 +59,7 @@ public class ReviewServlet extends BaseServlet {
             review.setDeliveryRating(body.has("deliveryRating") ? body.get("deliveryRating").getAsInt() : 5);
             review.setReviewText(body.has("reviewText") ? body.get("reviewText").getAsString() : "");
 
+            if (review.getFoodRating()<1 || review.getFoodRating()>5 || review.getPackagingRating()<1 || review.getPackagingRating()>5 || review.getDeliveryRating()<1 || review.getDeliveryRating()>5) { JsonUtil.sendError(res,400,"Ratings must be from 1 to 5"); return; }
             Long reviewId = reviewDao.createReview(review);
             review.setId(reviewId);
             JsonUtil.sendSuccess(res, 201, "Review submitted successfully", review);

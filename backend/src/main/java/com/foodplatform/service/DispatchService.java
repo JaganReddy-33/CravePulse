@@ -237,7 +237,7 @@ public class DispatchService {
                 logger.info("Offered order {} to rider {} with payout ₹{} (Tip: ₹{}, Radius: {}km)",
                         orderId, chosenRider.getId(), totalEarning, tip, searchRadius);
                 return true;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error creating dispatch offer for order {}", orderId, e);
             } finally {
@@ -293,7 +293,7 @@ public class DispatchService {
                     ));
                 }
                 return true;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error accepting dispatch {}", dispatchId, e);
             } finally {
@@ -322,7 +322,7 @@ public class DispatchService {
                 // Immediately trigger re-dispatch to next candidate
                 dispatchOrder(dispatch.getOrderId());
                 return true;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error rejecting dispatch {}", dispatchId, e);
             } finally {
@@ -384,7 +384,7 @@ public class DispatchService {
 
                 RiderProfile rider = riderDao.findById(d.getRiderId());
                 if (rider != null) {
-                    User user = userDao.findById(rider.getUserId());
+                    User user = userDao.findByIdWithLock(conn, rider.getUserId());
                     if (user != null) {
                         BigDecimal newBal = (user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO).add(compensation);
                         userDao.updateWalletBalance(conn, user.getId(), newBal);
@@ -403,7 +403,7 @@ public class DispatchService {
                 conn.commit();
                 logger.info("Credited verified ₹{} wait-time compensation to rider {} for dispatch {}", compensation, d.getRiderId(), dispatchId);
                 return compensation;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error claiming wait-time compensation", e);
             } finally {
@@ -438,11 +438,13 @@ public class DispatchService {
                 riderDao.recordRiderMilestoneTimestamp(conn, dispatch.getId(), column);
 
                 if ("PICKED_UP".equals(milestone)) {
-                    orderDao.updateOrderStatus(conn, orderId, "OUT_FOR_DELIVERY", null);
+                    Order current=orderDao.findWithLock(conn,orderId);
+                    if(current==null || !"READY".equals(current.getStatus())) { conn.rollback();return false; }
+                    orderDao.updateOrderStatus(conn, orderId, "PICKED_UP", null);
                     OrderEvent event = new OrderEvent();
                     event.setOrderId(orderId);
                     event.setPreviousStatus("PREPARING");
-                    event.setNewStatus("OUT_FOR_DELIVERY");
+                    event.setNewStatus("PICKED_UP");
                     event.setTriggeredByUserId(riderDao.findById(riderId).getUserId());
                     event.setReason("Fleet partner picked up package from restaurant");
                     orderDao.recordOrderEvent(conn, event);
@@ -453,12 +455,12 @@ public class DispatchService {
                 if (registry != null) {
                     registry.broadcastToOrder(orderId, "order_status_updated", Map.of(
                             "orderId", orderId,
-                            "status", "PICKED_UP".equals(milestone) ? "OUT_FOR_DELIVERY" : milestone,
+                            "status", "PICKED_UP".equals(milestone) ? "PICKED_UP" : milestone,
                             "milestone", milestone
                     ));
                 }
                 return true;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error updating milestone {} for order {}", milestone, orderId, e);
             } finally {
@@ -481,7 +483,7 @@ public class DispatchService {
                 }
 
                 Order order = orderDao.findWithLock(conn, orderId);
-                if (order == null || "DELIVERED".equals(order.getStatus())) {
+                if (order == null || !"PICKED_UP".equals(order.getStatus())) {
                     conn.rollback();
                     throw new IllegalStateException("Order is not in deliverable state");
                 }
@@ -511,7 +513,7 @@ public class DispatchService {
                 // Credit Rider Earnings (Base + Distance + Surge + 100% Tip)
                 RiderProfile rider = riderDao.findById(riderId);
                 if (rider != null) {
-                    User user = userDao.findById(rider.getUserId());
+                    User user = userDao.findByIdWithLock(conn, rider.getUserId());
                     if (user != null) {
                         BigDecimal payout = dispatch.getTotalEarning() != null ? dispatch.getTotalEarning() : BigDecimal.valueOf(35.00);
                         BigDecimal newBal = (user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO).add(payout);
@@ -547,7 +549,7 @@ public class DispatchService {
                 }
                 logger.info("Order {} successfully marked DELIVERED by rider {}", orderId, riderId);
                 return true;
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error completing delivery for order {}", orderId, e);
             } finally {

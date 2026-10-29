@@ -17,7 +17,7 @@ const AdminRestaurants = () => {
           cuisine: r.cuisineTypes || r.cuisine || 'Multi-Cuisine',
           fssai: r.fssaiLicense || r.fssai || 'FSSAI-VERIFIED',
           commission: r.commissionRate || r.commission || 15.00,
-          rating: r.rating || 4.5,
+          rating: r.rating ?? 0,
           status: r.isKycApproved === false ? 'PENDING_AUDIT' : (r.isOpen ? 'ACTIVE' : 'PAUSED')
         }));
         setRestaurants(mapped);

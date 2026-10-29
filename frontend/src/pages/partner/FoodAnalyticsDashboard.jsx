@@ -80,7 +80,7 @@ const FoodAnalyticsDashboard = () => {
   const activeSummary = getActiveSummary();
   const cancellation = analytics?.cancellation || { totalOrders: 0, cancelledOrders: 0, cancellationRate: 0 };
   const peakHours = analytics?.peakHours || { peakHourLabel: '12:00 PM - 2:00 PM', orderCount: 0 };
-  const ratings = analytics?.ratings || { overallRating: restaurant?.rating || 4.5, totalReviews: restaurant?.totalReviews || 0 };
+  const ratings = analytics?.ratings || { overallRating: restaurant?.rating ?? 0, totalReviews: restaurant?.totalReviews || 0 };
   const topDishes = analytics?.topDishes || [];
   const dailyTrend = analytics?.dailyTrend7Days || [];
   const statusGauge = analytics?.statusGauge || {};
@@ -348,7 +348,7 @@ const FoodAnalyticsDashboard = () => {
                   </div>
                   <div className="py-2 border-bottom d-flex justify-content-between align-items-center">
                     <span className="text-muted">Customer Rating:</span>
-                    <strong className="text-success">⭐ {Number(ratings.overallRating || 4.5).toFixed(1)} / 5.0</strong>
+                    <strong className="text-success">⭐ {Number(ratings.overallRating ?? 0).toFixed(1)} / 5.0</strong>
                   </div>
                   <div className="py-2 border-bottom d-flex justify-content-between align-items-center">
                     <span className="text-muted">Total Customer Reviews:</span>

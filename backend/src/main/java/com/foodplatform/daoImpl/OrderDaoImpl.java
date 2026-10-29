@@ -176,6 +176,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding order by id: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -193,6 +194,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding order by number: {}", orderNumber, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -211,6 +213,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding order by idempotency key: {}", idempotencyKey, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -228,6 +231,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting customer order count: {}", customerId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }
@@ -257,6 +261,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching order items for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -285,6 +290,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching timeline for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -320,6 +326,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing customer orders: {}", customerId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -366,6 +373,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing restaurant orders: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -399,6 +407,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all orders", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -444,6 +453,7 @@ public class OrderDaoImpl implements OrderDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding unassigned orders for dispatch", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }

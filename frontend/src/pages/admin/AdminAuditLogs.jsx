@@ -26,10 +26,16 @@ const AdminAuditLogs = () => {
     fetchLogs();
   }, []);
 
-  const handleExportCsv = (type) => {
-    const token = localStorage.getItem('token');
-    const url = `/api/admin/export?type=${type}&token=${encodeURIComponent(token || '')}`;
-    window.open(url, '_blank');
+  const handleExportCsv = async (type) => {
+    try {
+      const data = await api.get('/admin/export', { params: { type }, responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `cravepulse_${type}.csv`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) { window.alert(err.message || 'Export failed'); }
   };
 
   const getActionBadgeClass = (action) => {

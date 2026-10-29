@@ -20,6 +20,7 @@ public class ServerMain {
     private static final Logger logger = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
+        AppProperties.getJwtSecret(); // Validate secrets before touching the database
         // Run database migrations on startup
         logger.info("Initializing CravePulse database migrations...");
         DatabaseMigrationRunner.runMigrations();
@@ -48,6 +49,7 @@ public class ServerMain {
         // Register WebSocket SCI
         ctx.addServletContainerInitializer(new WsSci(), Set.of(RealtimeEndpoint.class));
 
+        addFilter(ctx, "ApiExceptionFilter", new ApiExceptionFilter(), "/api/*");
         // Register Filters in proper security order
         addFilter(ctx, "SecurityHeadersFilter", new SecurityHeadersFilter(), "/*");
         addFilter(ctx, "CorsFilter", new CorsFilter(), "/*");
@@ -64,6 +66,13 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/metrics", "HealthObservabilityServlet");
         ctx.addServletMappingDecoded("/api/metrics", "HealthObservabilityServlet");
 
+        Tomcat.addServlet(ctx, "JobServlet", new JobServlet());
+        ctx.addServletMappingDecoded("/api/jobs", "JobServlet");
+        ctx.addServletMappingDecoded("/api/jobs/*", "JobServlet");
+        Tomcat.addServlet(ctx, "UserDataServlet", new UserDataServlet());
+        ctx.addServletMappingDecoded("/api/account/*", "UserDataServlet");
+        Tomcat.addServlet(ctx, "CatalogServlet", new CatalogServlet());
+        ctx.addServletMappingDecoded("/api/catalog/*", "CatalogServlet");
         // Register Servlets
         Tomcat.addServlet(ctx, "AuthServlet", new AuthServlet()).setAsyncSupported(true);
         ctx.addServletMappingDecoded("/api/auth/*", "AuthServlet");

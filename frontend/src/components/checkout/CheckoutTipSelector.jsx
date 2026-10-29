@@ -81,7 +81,7 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
               onChange={(e) => setCustomTip(e.target.value)}
               autoFocus
             />
-            <button type="submit" className="btn btn-primary px-3 fw-bold" style={{ background: '#ff5722', borderColor: '#ff5722' }}>
+            <button type="submit" className="btn btn-primary px-3 fw-bold" style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}>
               Set
             </button>
           </div>

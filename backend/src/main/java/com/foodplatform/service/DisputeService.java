@@ -155,7 +155,7 @@ public class DisputeService {
                     walletDao.recordTransaction(conn, tx);
                 }
                 conn.commit();
-            } catch (SQLException e) {
+            } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Error crediting refund to user wallet", e);
             } finally {

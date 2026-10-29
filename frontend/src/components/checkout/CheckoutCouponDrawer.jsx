@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import api from '../../services/api';
+import React, { useState, useEffect } from 'react';
 import ModalPortal from '../ModalPortal';
 
 /**
@@ -13,32 +14,9 @@ const CheckoutCouponDrawer = ({
 }) => {
   const [inputCoupon, setInputCoupon] = useState('');
 
-  const coupons = [
-    {
-      code: 'FOOD50',
-      title: '50% OFF up to ₹100',
-      minOrder: 199,
-      description: 'Applies to any gourmet kitchen meal',
-    },
-    {
-      code: 'WELCOME100',
-      title: 'Flat ₹100 OFF',
-      minOrder: 299,
-      description: 'Special first-time diner welcome perk',
-    },
-    {
-      code: 'FREESHIP',
-      title: 'Free Delivery (Save ₹35)',
-      minOrder: 249,
-      description: 'Zero doorstep partner delivery fee',
-    },
-    {
-      code: 'MEGAMATCH',
-      title: 'Flat ₹150 OFF',
-      minOrder: 599,
-      description: 'Party handis and family feast discount',
-    },
-  ];
+  const [coupons, setCoupons] = useState([]);
+  useEffect(() => { if (show) api.get('/catalog/offers').then(res => setCoupons(res.data || [])).catch(() => setCoupons([])); }, [show]);
+
 
   if (!show) return null;
 
@@ -85,7 +63,7 @@ const CheckoutCouponDrawer = ({
               <button
                 type="submit"
                 className="btn btn-primary px-4 fw-bold touch-target text-white"
-                style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
               >
                 Apply
               </button>

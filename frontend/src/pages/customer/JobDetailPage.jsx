@@ -19,7 +19,7 @@ const JobDetailPage = () => {
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [experienceYears, setExperienceYears] = useState('');
   const [currentCompany, setCurrentCompany] = useState('');
-  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeUrl, setResumeUrl] = useState('');
   const [coverNote, setCoverNote] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -47,8 +47,8 @@ const JobDetailPage = () => {
         }
 
         const res = await api.get(`/jobs/${jobId}`);
-        if (res.data?.success && res.data.data) {
-          setJob(res.data.data);
+        if (res.success && res.data) {
+          setJob(res.data);
         } else {
           setError('Job posting not found.');
         }
@@ -79,23 +79,10 @@ const JobDetailPage = () => {
     return tags.split(',').map(t => t.trim()).filter(Boolean);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit. Please upload a smaller PDF or Word document.');
-        e.target.value = null;
-        setResumeFile(null);
-        return;
-      }
-      setResumeFile(file);
-    }
-  };
-
   const handleSubmitApplication = async (e) => {
     e.preventDefault();
-    if (!resumeFile) {
-      alert('Please upload your Resume / CV (PDF or DOCX format).');
+    if (!/^https:\/\//i.test(resumeUrl)) {
+      alert('Enter a secure HTTPS link to your resume.');
       return;
     }
 
@@ -109,17 +96,17 @@ const JobDetailPage = () => {
         email: applicantEmail.trim(),
         phone: applicantPhone.trim() || null,
         portfolioUrl: portfolioUrl.trim() || null,
-        resumeFilename: resumeFile.name,
+        resumeFilename: resumeUrl.trim(),
         coverNote: coverNote.trim() || null,
         experienceYears: experienceYears.trim() || null,
         currentCompany: currentCompany.trim() || null
       };
 
       const res = await api.post('/jobs/apply', payload);
-      if (res.data?.success) {
+      if (res.success) {
         setSubmitted(true);
       } else {
-        setSubmitError(res.data?.message || 'Failed to submit application.');
+        setSubmitError(res.message || 'Failed to submit application.');
       }
     } catch (err) {
       console.error('Application submit error:', err);
@@ -214,7 +201,7 @@ const JobDetailPage = () => {
             <a
               href="#apply-form"
               className="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)', borderColor: '#ff5c35' }}
+              style={{ background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)', borderColor: 'var(--c-primary)' }}
             >
               Apply for This Position ↓
             </a>
@@ -266,14 +253,14 @@ const JobDetailPage = () => {
         <div className="col-lg-5" id="apply-form">
           <div className="card border-0 rounded-4 shadow-sm p-4 p-md-5 bg-white sticky-top" style={{ top: 90 }}>
             <h5 className="fw-bold text-dark mb-1">Submit Your Application</h5>
-            <p className="text-muted small mb-4">Fill out your information and attach your resume below</p>
+            <p className="text-muted small mb-4">Fill out your information and provide a link to your resume below</p>
 
             {submitted ? (
               <div className="text-center py-4">
                 <div className="fs-1 mb-2">🎉</div>
                 <h4 className="fw-bold text-success mb-2">Application Received!</h4>
                 <p className="text-muted small mb-3">
-                  Thank you, {applicantName}. Your profile and resume (<strong>{resumeFile?.name}</strong>) have been entered into our recruitment pipeline.
+                  Thank you, {applicantName}. Your profile and resume (<strong>{resumeUrl}</strong>) have been entered into our recruitment pipeline.
                 </p>
                 <div className="p-3 bg-light rounded-3 small text-muted mb-4">
                   Our talent acquisition team will review your credentials and get back to you at <strong>{applicantEmail}</strong> within 48 business hours.
@@ -329,20 +316,11 @@ const JobDetailPage = () => {
                 <div className="mb-3 p-3 rounded-4 bg-light border border-2 border-dashed">
                   <label className="form-label small fw-bold text-dark d-flex align-items-center gap-2 mb-1">
                     <i className="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
-                    <span>Attach Resume / CV (PDF or DOCX) *</span>
+                    <span>Resume / CV link *</span>
                   </label>
-                  <input type="file" className="form-control form-control-sm mb-2"
-                    accept=".pdf,.doc,.docx" required onChange={handleFileChange} />
-                  {resumeFile ? (
-                    <div className="d-flex align-items-center gap-2 text-success small fw-bold">
-                      <i className="bi bi-check-circle-fill"></i>
-                      <span>Attached: {resumeFile.name} ({(resumeFile.size / 1024).toFixed(1)} KB)</span>
-                    </div>
-                  ) : (
-                    <small className="text-muted d-block" style={{ fontSize: 11 }}>
-                      Accepted formats: .pdf, .docx (Max 5MB)
-                    </small>
-                  )}
+                  <input type="url" className="form-control" value={resumeUrl} onChange={e => setResumeUrl(e.target.value)} required placeholder="https://.../resume.pdf" />
+                  <small className="text-muted">Share a read-only HTTPS resume link accessible to the recruitment team.</small>
+
                 </div>
 
                 <div className="mb-3">
@@ -355,7 +333,7 @@ const JobDetailPage = () => {
                 <button
                   type="submit" disabled={submitting}
                   className="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm"
-                  style={{ background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)', borderColor: '#ff5c35' }}
+                  style={{ background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)', borderColor: 'var(--c-primary)' }}
                 >
                   {submitting ? 'Submitting Application...' : 'Submit Application →'}
                 </button>

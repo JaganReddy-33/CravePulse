@@ -37,9 +37,9 @@ const OrderTracking = () => {
 
   const handleConfirmCancel = async (reason) => {
     setCancelling(true);
-    await cancelOrder(reason);
+    const cancelled = await cancelOrder(reason);
     setCancelling(false);
-    setShowCancelModal(false);
+    if (cancelled) setShowCancelModal(false);
   };
 
   if (loading && !order) {
@@ -61,11 +61,13 @@ const OrderTracking = () => {
     );
   }
 
+  if (!order) return <div className="container py-5">Order unavailable.</div>;
   const isDelivered = order.status === 'DELIVERED';
   const isCancelled = order.status === 'CANCELLED';
 
   return (
     <div className="container py-4 customer-content-container" style={{ maxWidth: 1040 }}>
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
       {/* 1. Accessible Status Timeline */}
       <TrackingTimeline order={order} />
 
@@ -86,8 +88,8 @@ const OrderTracking = () => {
               </div>
               <div style={{ height: 320, borderRadius: 16, overflow: 'hidden' }}>
                 <LiveMap
-                  restaurantCoords={[order.restaurantLat || 12.9716, order.restaurantLng || 77.6350]}
-                  customerCoords={[order.deliveryLat || 12.9784, order.deliveryLng || 77.6408]}
+                  restaurantCoords={order.restaurantLat != null && order.restaurantLng != null ? [order.restaurantLat, order.restaurantLng] : null}
+                  deliveryCoords={order.deliveryLat != null && order.deliveryLng != null ? [order.deliveryLat, order.deliveryLng] : null}
                   riderCoords={riderCoords}
                   status={order.status}
                 />
@@ -133,7 +135,7 @@ const OrderTracking = () => {
               <button
                 type="button"
                 className="btn btn-primary rounded-pill py-2 fw-bold touch-target shadow hover-lift text-white"
-                style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                 onClick={() => setShowReviewModal(true)}
               >
                 ★ Rate Your Meal Experience

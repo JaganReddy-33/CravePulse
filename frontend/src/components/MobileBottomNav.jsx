@@ -34,7 +34,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           className={`d-flex flex-column align-items-center justify-content-center text-decoration-none touch-target tap-highlight-none ${
             isHomeActive ? 'text-primary fw-bold' : 'text-secondary'
           }`}
-          style={{ minWidth: 64, color: isHomeActive ? '#ff5722' : '#64748b' }}
+          style={{ minWidth: 64, color: isHomeActive ? 'var(--c-primary)' : '#64748b' }}
           aria-label="Explore Restaurants"
         >
           <i className={`bi bi-${isHomeActive ? 'house-door-fill' : 'house-door'} fs-5 mb-1`}></i>
@@ -47,7 +47,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           className={`d-flex flex-column align-items-center justify-content-center text-decoration-none touch-target tap-highlight-none ${
             isOffersActive ? 'text-primary fw-bold' : 'text-secondary'
           }`}
-          style={{ minWidth: 64, color: isOffersActive ? '#ff5722' : '#64748b' }}
+          style={{ minWidth: 64, color: isOffersActive ? 'var(--c-primary)' : '#64748b' }}
           aria-label="Active Offers and Deals"
         >
           <i className={`bi bi-${isOffersActive ? 'tag-fill' : 'tag'} fs-5 mb-1`}></i>
@@ -59,7 +59,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           type="button"
           onClick={onOpenCart}
           className="btn btn-link p-0 d-flex flex-column align-items-center justify-content-center text-decoration-none touch-target position-relative tap-highlight-none"
-          style={{ minWidth: 64, color: totalItemCount > 0 ? '#ff5722' : '#64748b' }}
+          style={{ minWidth: 64, color: totalItemCount > 0 ? 'var(--c-primary)' : '#64748b' }}
           aria-label={`View food bag with ${totalItemCount} items`}
         >
           <div className="position-relative">
@@ -82,7 +82,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           className={`d-flex flex-column align-items-center justify-content-center text-decoration-none touch-target tap-highlight-none ${
             isOrdersActive ? 'text-primary fw-bold' : 'text-secondary'
           }`}
-          style={{ minWidth: 64, color: isOrdersActive ? '#ff5722' : '#64748b' }}
+          style={{ minWidth: 64, color: isOrdersActive ? 'var(--c-primary)' : '#64748b' }}
           aria-label="My Orders History"
         >
           <i className={`bi bi-${isOrdersActive ? 'receipt-cutoff' : 'receipt'} fs-5 mb-1`}></i>
@@ -95,7 +95,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           className={`d-flex flex-column align-items-center justify-content-center text-decoration-none touch-target tap-highlight-none ${
             isProfileActive ? 'text-primary fw-bold' : 'text-secondary'
           }`}
-          style={{ minWidth: 64, color: isProfileActive ? '#ff5722' : '#64748b' }}
+          style={{ minWidth: 64, color: isProfileActive ? 'var(--c-primary)' : '#64748b' }}
           aria-label="Account Settings"
         >
           <i className={`bi bi-${isProfileActive ? 'person-circle' : 'person'} fs-5 mb-1`}></i>

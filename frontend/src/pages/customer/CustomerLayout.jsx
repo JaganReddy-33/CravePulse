@@ -54,7 +54,7 @@ const CustomerLayout = () => {
               <div className="d-flex align-items-center gap-2">
                 <div 
                   className="rounded-circle d-flex align-items-center justify-content-center text-white" 
-                  style={{ width: 34, height: 34, background: '#ff5722' }}
+                  style={{ width: 34, height: 34, background: 'var(--c-primary)' }}
                 >
                   <i className="bi bi-bag-check-fill fs-6"></i>
                 </div>
@@ -88,7 +88,7 @@ const CustomerLayout = () => {
                   <p className="text-muted small mb-4">Explore delicious items and enjoy genuine dine-in menu prices delivered!</p>
                   <button 
                     className="btn btn-sm btn-primary rounded-pill px-4 fw-bold"
-                    style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                    style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                     onClick={() => setShowCartDrawer(false)}
                   >
                     Browse Kitchens
@@ -172,7 +172,7 @@ const CustomerLayout = () => {
                         <button 
                           type="submit" 
                           className="btn btn-primary fw-bold px-3"
-                          style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                          style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                         >
                           Apply
                         </button>
@@ -183,35 +183,7 @@ const CustomerLayout = () => {
                       <small className="text-danger d-block mt-1">{couponError}</small>
                     )}
 
-                    {/* Quick Suggestion Pills */}
-                    {!couponCode && (
-                      <div className="d-flex flex-wrap gap-1 mt-2">
-                        <button 
-                          type="button" 
-                          className="btn btn-white bg-white border btn-sm py-0 px-2 rounded-pill text-secondary"
-                          style={{ fontSize: 10 }}
-                          onClick={() => setCouponCode('FOOD50')}
-                        >
-                          FOOD50 (50% OFF)
-                        </button>
-                        <button 
-                          type="button" 
-                          className="btn btn-white bg-white border btn-sm py-0 px-2 rounded-pill text-secondary"
-                          style={{ fontSize: 10 }}
-                          onClick={() => setCouponCode('WELCOME100')}
-                        >
-                          WELCOME100 (₹100 OFF)
-                        </button>
-                        <button 
-                          type="button" 
-                          className="btn btn-white bg-white border btn-sm py-0 px-2 rounded-pill text-secondary"
-                          style={{ fontSize: 10 }}
-                          onClick={() => setCouponCode('FREESHIP')}
-                        >
-                          FREESHIP (Free Delivery)
-                        </button>
-                      </div>
-                    )}
+
                   </div>
 
                   {/* Radical Price Parity Assurance Pill */}
@@ -251,14 +223,14 @@ const CustomerLayout = () => {
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3 pt-2 border-top">
                   <span className="fw-bold text-dark">To Pay</span>
-                  <span className="fs-4 fw-extrabold" style={{ color: '#ff5722' }}>
+                  <span className="fs-4 fw-extrabold" style={{ color: 'var(--c-primary)' }}>
                     ₹{billDetails.totalAmount}
                   </span>
                 </div>
                 <Link
                   to="/checkout"
                   className="btn btn-primary w-100 py-3 rounded-pill fw-bold d-flex justify-content-between align-items-center px-4 shadow transition hover-lift"
-                  style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                  style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                   onClick={() => setShowCartDrawer(false)}
                 >
                   <span>Proceed to Checkout</span>

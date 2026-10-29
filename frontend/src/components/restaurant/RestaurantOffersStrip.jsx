@@ -1,20 +1,15 @@
-import React, { useState } from 'react';
+import api from '../../services/api';
+import React, { useState, useEffect } from 'react';
 import ScrollCarousel from '../common/ScrollCarousel';
 
 /**
  * RestaurantOffersStrip: Interactive promotional coupon carousel strip with quick-copy.
  */
-const RestaurantOffersStrip = ({ offers = [] }) => {
+const RestaurantOffersStrip = ({ restaurantId }) => {
   const [copiedCode, setCopiedCode] = useState(null);
 
-  const defaultOffers = [
-    { code: 'FOOD50', discount: '50% OFF', details: 'Up to ₹100 on orders above ₹199' },
-    { code: 'WELCOME100', discount: '₹100 FLAT', details: 'Flat discount on your first order' },
-    { code: 'FREESHIP', discount: 'FREE DELIVERY', details: 'Free doorstep drop above ₹299' },
-  ];
-
-  const activeOffers = offers.length > 0 ? offers : defaultOffers;
-
+  const [activeOffers, setOffers] = useState([]);
+  useEffect(() => { api.get('/catalog/offers', { params: { restaurantId } }).then(res => setOffers(res.data || [])).catch(() => setOffers([])); }, [restaurantId]);
   const handleCopy = (code) => {
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(code);
@@ -23,6 +18,7 @@ const RestaurantOffersStrip = ({ offers = [] }) => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  if (!activeOffers.length) return null;
   return (
     <div className="mb-4">
       <small className="text-muted fw-bold text-uppercase d-block mb-2" style={{ fontSize: 11, letterSpacing: '0.05em' }}>

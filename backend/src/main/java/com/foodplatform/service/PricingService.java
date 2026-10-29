@@ -93,10 +93,9 @@ public class PricingService {
         }
 
         // Distance & delivery radius calculation
-        double lat = userLat != null ? userLat : 12.9783692;
-        double lng = userLng != null ? userLng : 77.6408356;
-        double restLat = restaurant.getLatitude() != null ? restaurant.getLatitude().doubleValue() : 12.9715987;
-        double restLng = restaurant.getLongitude() != null ? restaurant.getLongitude().doubleValue() : 77.6350000;
+        if (userLat == null || userLng == null || !Double.isFinite(userLat) || !Double.isFinite(userLng) || Math.abs(userLat)>90 || Math.abs(userLng)>180 || restaurant.getLatitude()==null || restaurant.getLongitude()==null) throw new IllegalArgumentException("Valid delivery and kitchen coordinates are required for pricing");
+        double lat = userLat, lng = userLng;
+        double restLat = restaurant.getLatitude().doubleValue(), restLng = restaurant.getLongitude().doubleValue();
         double distance = calculateHaversineDistance(restLat, restLng, lat, lng);
         result.distanceKm = Math.round(distance * 10.0) / 10.0;
 

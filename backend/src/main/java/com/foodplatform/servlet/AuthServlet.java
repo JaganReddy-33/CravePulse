@@ -8,6 +8,7 @@ import com.foodplatform.model.Address;
 import com.foodplatform.model.User;
 import com.foodplatform.service.AuthService;
 import com.foodplatform.util.JsonUtil;
+import com.foodplatform.util.SessionCookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
@@ -34,6 +35,7 @@ public class AuthServlet extends BaseServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
 
+        if (!SessionCookie.allowedOrigin(req)) { JsonUtil.sendError(res, 403, "Origin not allowed"); return; }
         try {
             switch (path) {
                 case "/register" -> {
@@ -49,6 +51,7 @@ public class AuthServlet extends BaseServlet {
                     String role = body.has("role") && !body.get("role").isJsonNull() ? body.get("role").getAsString() : "CUSTOMER";
 
                     Map<String, Object> resp = authService.register(fullName, email, phone, password, role);
+                    SessionCookie.write(req, res, resp);
                     JsonUtil.sendSuccess(res, 201, "Registration successful", resp);
                 }
                 case "/login" -> {
@@ -61,23 +64,26 @@ public class AuthServlet extends BaseServlet {
                     String password = body.get("password").getAsString();
 
                     Map<String, Object> resp = authService.login(email, password);
+                    SessionCookie.write(req, res, resp);
                     JsonUtil.sendSuccess(res, 200, "Login successful", resp);
                 }
                 case "/refresh" -> {
                     JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-                    if (body == null || !body.has("refreshToken")) {
+                    if ((body == null || !body.has("refreshToken")) && SessionCookie.read(req) == null) {
                         JsonUtil.sendError(res, 400, "refreshToken is required");
                         return;
                     }
-                    String rt = body.get("refreshToken").getAsString();
+                    String rt = SessionCookie.read(req) != null ? SessionCookie.read(req) : body.get("refreshToken").getAsString();
                     Map<String, Object> resp = authService.refreshToken(rt);
+                    SessionCookie.write(req, res, resp);
                     JsonUtil.sendSuccess(res, 200, "Token refreshed successfully", resp);
                 }
                 case "/logout" -> {
                     Long userId = getAuthenticatedUserId(req);
                     JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-                    String rt = (body != null && body.has("refreshToken")) ? body.get("refreshToken").getAsString() : null;
+                    String rt = SessionCookie.read(req) != null ? SessionCookie.read(req) : (body != null && body.has("refreshToken") ? body.get("refreshToken").getAsString() : null);
                     authService.logout(userId, rt);
+                    SessionCookie.clear(req, res);
                     JsonUtil.sendSuccess(res, 200, "Logged out successfully. All refresh tokens revoked.", null);
                 }
                 case "/revoke-token" -> {
@@ -91,14 +97,29 @@ public class AuthServlet extends BaseServlet {
                     if (!requireAuthenticated(req, res)) return;
                     Long userId = getAuthenticatedUserId(req);
                     Address addr = JsonUtil.readRequestBody(req, Address.class);
-                    if (addr == null || addr.getAddressLine() == null || addr.getLatitude() == null) {
+                    if (addr == null || addr.getAddressLine() == null || addr.getLatitude() == null || addr.getLongitude() == null || addr.getLatitude().abs().compareTo(new BigDecimal("90")) > 0 || addr.getLongitude().abs().compareTo(new BigDecimal("180")) > 0) {
                         JsonUtil.sendError(res, 400, "Address line and coordinates are required");
                         return;
                     }
                     addr.setUserId(userId);
                     Long id = userDao.addAddress(addr);
+                    if (id == null) throw new IllegalStateException("Address could not be saved");
                     addr.setId(id);
                     JsonUtil.sendSuccess(res, 201, "Address saved", addr);
+                }
+                case "/password" -> {
+                    if(!requireAuthenticated(req,res)) return;
+                    JsonObject body=JsonUtil.readRequestBody(req,JsonObject.class);
+                    if(body==null || !body.has("currentPassword") || !body.has("newPassword")) throw new IllegalArgumentException("Current and new password are required");
+                    String current=body.get("currentPassword").getAsString(), next=body.get("newPassword").getAsString();
+                    User account=userDao.findById(getAuthenticatedUserId(req));
+                    if(account==null || !com.foodplatform.util.PasswordUtil.checkPassword(current,account.getPasswordHash())) throw new IllegalArgumentException("Current password is incorrect");
+                    if(next.length()<12 || next.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>72) throw new IllegalArgumentException("Use a password of at least 12 characters and no more than 72 bytes");
+                    try(var c=com.foodplatform.config.DatabaseConfig.getConnection();var ps=c.prepareStatement("UPDATE users SET password_hash=? WHERE id=?")) {
+                        ps.setString(1,com.foodplatform.util.PasswordUtil.hashPassword(next));ps.setLong(2,account.getId());ps.executeUpdate();
+                    }
+                    userDao.revokeAllUserTokens(account.getId());SessionCookie.clear(req,res);
+                    JsonUtil.sendSuccess(res,200,"Password changed. Please sign in again.",null);
                 }
                 case "/profile" -> {
                     if (!requireAuthenticated(req, res)) return;
@@ -116,7 +137,8 @@ public class AuthServlet extends BaseServlet {
                     String fullName = body.has("fullName") && !body.get("fullName").isJsonNull() ? body.get("fullName").getAsString() : user.getFullName();
                     String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : user.getPhone();
                     String avatar = body.has("avatarUrl") && !body.get("avatarUrl").isJsonNull() ? body.get("avatarUrl").getAsString() : user.getAvatarUrl();
-                    userDao.updateProfile(userId, fullName, phone, avatar);
+                    if (fullName.trim().length()<2 || fullName.length()>120 || (phone!=null && phone.length()>20) || (avatar!=null && !avatar.isBlank() && (!avatar.startsWith("https://") || avatar.length()>500))) throw new IllegalArgumentException("Provide a valid name, phone and optional HTTPS image URL");
+                    userDao.updateProfile(userId, fullName.trim(), phone==null||phone.isBlank()?null:phone.trim(), avatar);
                     user.setFullName(fullName);
                     user.setPhone(phone);
                     user.setAvatarUrl(avatar);
@@ -125,12 +147,7 @@ public class AuthServlet extends BaseServlet {
                 case "/verify-phone-otp" -> {
                     if (!requireAuthenticated(req, res)) return;
                     JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-                    String otp = body != null && body.has("otp") ? body.get("otp").getAsString().trim() : "";
-                    if (otp.length() < 4) {
-                        JsonUtil.sendError(res, 400, "Invalid verification code");
-                        return;
-                    }
-                    JsonUtil.sendSuccess(res, 200, "Phone number verified successfully", Map.of("verified", true));
+                    JsonUtil.sendError(res, 503, "Phone verification is unavailable until an SMS verification provider is configured.");
                 }
                 default -> {
                     if (path.startsWith("/addresses/") && path.endsWith("/default")) {
@@ -157,7 +174,7 @@ public class AuthServlet extends BaseServlet {
                         if (!requireAuthenticated(req, res)) return;
                         Long notifId = parseIdFromPath(req);
                         if (notifId != null) {
-                            walletDao.markNotificationRead(notifId);
+                            walletDao.markNotificationRead(notifId, getAuthenticatedUserId(req));
                             JsonUtil.sendSuccess(res, 200, "Notification marked as read", null);
                             return;
                         }

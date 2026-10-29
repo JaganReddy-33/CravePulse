@@ -43,6 +43,10 @@ id_ed25519*
 # ==============================================================================
 # ARCHIVES & BACKUP ARTIFACTS
 # ==============================================================================
+.local-backups/
+backend/target-verified/
+.local-runtime/
+backend/dependency-reduced-pom.xml
 *.zip
 *.tar
 *.gz
@@ -117,3 +121,7 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+backend/target-unit/
+frontend/test-results/
+frontend/playwright-report/

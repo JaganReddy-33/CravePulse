@@ -53,7 +53,7 @@ class ErrorBoundary extends React.Component {
                 type="button"
                 onClick={this.handleReload}
                 className="btn btn-primary rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center justify-content-center gap-2 touch-target"
-                style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
               >
                 <i className="bi bi-arrow-clockwise"></i>
                 Reload Page

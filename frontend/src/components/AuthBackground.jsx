@@ -12,7 +12,7 @@ const AuthBackground = ({ role = 'CUSTOMER' }) => {
       url: 'https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-gourmet-dish-being-prepared-42525-large.mp4',
       poster: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1600&q=80',
       gradient: 'linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 27, 75, 0.85) 100%)',
-      accentColor: '#ff5c35'
+      accentColor: 'var(--c-primary)'
     },
     PARTNER: {
       url: 'https://assets.mixkit.co/videos/preview/mixkit-chef-stirring-food-in-a-pan-with-flames-43093-large.mp4',

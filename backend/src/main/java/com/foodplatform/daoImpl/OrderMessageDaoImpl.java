@@ -36,6 +36,7 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
             }
         } catch (SQLException e) {
             logger.error("Error saving order message for order: {}", message.getOrderId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -67,6 +68,7 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
             }
         } catch (SQLException e) {
             logger.error("Error fetching order messages for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -104,6 +106,7 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
             }
         } catch (SQLException e) {
             logger.error("Error verifying user participation in order chat: orderId={}, userId={}", orderId, userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return false;
     }

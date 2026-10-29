@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { getPreference, setPreference } from '../services/preferences';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useRealtime } from '../context/RealtimeContext';
 import BrandLogo from './BrandLogo';
-import { PAN_INDIA_CITIES, DEFAULT_HUB } from '../config/panIndiaLocations';
+import { PAN_INDIA_CITIES, DEFAULT_HUB, DEFAULT_CITY, loadLocations } from '../config/panIndiaLocations';
 import NavSearchAutocomplete from './navbar/NavSearchAutocomplete';
 import NavLocationModal from './navbar/NavLocationModal';
 import NavNotificationsDropdown from './navbar/NavNotificationsDropdown';
@@ -17,20 +18,34 @@ import NavMobileDrawer from './navbar/NavMobileDrawer';
  * and user session state.
  */
 const Navbar = ({ onOpenCart }) => {
+  const navRef = useRef(null);
+  useEffect(() => {
+    const node = navRef.current;
+    if (!node) return;
+    const sync = () => document.documentElement.style.setProperty('--nav-measured-height', `${Math.ceil(node.getBoundingClientRect().height)}px`);
+    const observer = new ResizeObserver(sync); observer.observe(node); sync();
+    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--nav-measured-height'); };
+  }, []);
   const { user, logout } = useAuth();
   const { totalItemCount } = useCart();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAllNotifications, isConnected } = useRealtime();
 
+  useEffect(() => { loadLocations().then(cities => { if (cities.length) setSelectedCity(cities[0]); }).catch(() => {}); }, []);
   // Multi-City state
-  const [selectedCity, setSelectedCity] = useState(PAN_INDIA_CITIES[0]);
+  const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
   const [selectedHub, setSelectedHub] = useState(() => {
     try {
-      const saved = localStorage.getItem('cravepulse_hub');
-      return saved ? JSON.parse(saved) : DEFAULT_HUB;
+      const saved = getPreference('hub');
+      return saved || DEFAULT_HUB;
     } catch {
       return DEFAULT_HUB;
     }
   });
+  useEffect(() => {
+    const sync = () => setSelectedHub(getPreference('hub') || DEFAULT_HUB);
+    window.addEventListener('preferences-changed', sync);
+    return () => window.removeEventListener('preferences-changed', sync);
+  }, []);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locationSearch, setLocationSearch] = useState('');
   const [detectingGps, setDetectingGps] = useState(false);
@@ -56,28 +71,15 @@ const Navbar = ({ onOpenCart }) => {
             coords: [lat, lng],
           };
           setSelectedHub(detectedHub);
-          localStorage.setItem('cravepulse_hub', JSON.stringify(detectedHub));
+          setPreference('hub', detectedHub);
           setDetectingGps(false);
           setGpsLocked(true);
           setShowLocationModal(false);
         },
         (err) => {
           setDetectingGps(false);
-          if (import.meta.env.VITE_DEMO_MODE === 'true') {
-            const simulatedHub = {
-              id: 'gps_sim',
-              name: selectedCity.hubs[0].name,
-              area: 'Live GPS Pinpoint (Verified)',
-              cityName: selectedCity.name,
-              coords: selectedCity.hubs[0].coords,
-            };
-            setSelectedHub(simulatedHub);
-            localStorage.setItem('cravepulse_hub', JSON.stringify(simulatedHub));
-            setGpsLocked(true);
-            setShowLocationModal(false);
-          } else {
-            console.warn('GPS location access denied or unavailable', err);
-          }
+          setGpsLocked(false);
+          window.alert('Location permission was denied. Please choose your locality.');
         },
         { timeout: 5000 }
       );
@@ -89,7 +91,7 @@ const Navbar = ({ onOpenCart }) => {
 
   return (
     <>
-      <nav 
+      <nav ref={navRef}
         className="navbar navbar-expand-lg fixed-top border-bottom cravepulse-fixed-top" 
         style={{ 
           backgroundColor: 'rgba(255, 255, 255, 0.98)', 

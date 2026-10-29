@@ -1,3 +1,4 @@
+import { getPreference, setPreference } from '../../services/preferences';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -9,14 +10,12 @@ const NavSearchAutocomplete = ({ selectedHub, className = '' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestionData, setSuggestionData] = useState({ restaurants: [], dishes: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [recentSearches, setRecentSearches] = useState(() => {
-    try {
-      const saved = localStorage.getItem('cravepulse_recent_searches');
-      return saved ? JSON.parse(saved) : ['Biryani', 'Pizza', 'Paneer Butter Masala', 'Burger'];
-    } catch {
-      return ['Biryani', 'Pizza', 'Paneer Butter Masala', 'Burger'];
-    }
-  });
+  const [recentSearches, setRecentSearches] = useState(() => getPreference('recentSearches') || []);
+  useEffect(() => {
+    const sync = () => setRecentSearches(getPreference('recentSearches') || []);
+    window.addEventListener('preferences-changed', sync);
+    return () => window.removeEventListener('preferences-changed', sync);
+  }, []);
 
   const searchRef = useRef(null);
   const navigate = useNavigate();
@@ -27,7 +26,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = '' }) => {
     setRecentSearches((prev) => {
       const filtered = prev.filter((t) => t.toLowerCase() !== clean.toLowerCase());
       const updated = [clean, ...filtered].slice(0, 5);
-      localStorage.setItem('cravepulse_recent_searches', JSON.stringify(updated));
+      queueMicrotask(() => setPreference('recentSearches', updated));
       return updated;
     });
   };
@@ -142,7 +141,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = '' }) => {
                   className="btn btn-link p-0 text-muted small text-decoration-none"
                   style={{ fontSize: 11 }}
                   onClick={() => {
-                    localStorage.removeItem('cravepulse_recent_searches');
+                    setPreference('recentSearches', []);
                     setRecentSearches([]);
                   }}
                 >

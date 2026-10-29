@@ -67,7 +67,7 @@ const AdminAuth = () => {
             >
               🛡️
             </div>
-            <span className="fs-2 fw-extrabold text-white tracking-tight">CravePulse Ops</span>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Ops</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             Restricted Central Control Tower • Authorized Operations Personnel Only
@@ -89,7 +89,7 @@ const AdminAuth = () => {
             <span className="fw-bold text-info small text-uppercase tracking-wider">
               <i className="bi bi-shield-lock-fill me-1"></i> Root Administration
             </span>
-            <span className="badge bg-dark border border-secondary text-light small font-monospace">TLS 1.3 / AES-256</span>
+            <span className="badge bg-dark border border-secondary text-light small font-monospace">Administrator access</span>
           </div>
 
           {error && (
@@ -138,19 +138,7 @@ const AdminAuth = () => {
               </div>
             </div>
 
-            <div className="mb-4">
-              <label className="form-label small fw-semibold text-light text-opacity-90">Hardware / MFA Root Passkey (Optional)</label>
-              <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-cpu"></i></span>
-                <input
-                  type="text"
-                  className="auth-input font-monospace"
-                  placeholder="YubiKey / Security Key Token"
-                  value={passkey}
-                  onChange={(e) => setPasskey(e.target.value)}
-                />
-              </div>
-            </div>
+
 
             <button
               type="submit"

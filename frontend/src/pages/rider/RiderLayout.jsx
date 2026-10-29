@@ -37,15 +37,15 @@ const RIDER_NAV_ITEMS = [
 const RiderLayout = () => {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [shiftDuration, setShiftDuration] = useState('4h 25m');
+  const [shiftDuration, setShiftDuration] = useState('?');
   const location = useLocation();
   const navigate = useNavigate();
 
-  const riderName = localStorage.getItem('cravepulse_rider_name') || user?.fullName || 'Delivery Captain';
-  const riderAvatar = localStorage.getItem('cravepulse_rider_avatar') || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150';
-  const vehicleModel = localStorage.getItem('cravepulse_rider_vehicle') || 'Ather 450X EV (KA-03-EQ-4421)';
+  const riderName = user?.fullName || 'Delivery Captain';
+  const riderAvatar = user?.avatarUrl || '/avatar-placeholder.svg';
+  const vehicleModel = profile?.vehicleNumber || 'Vehicle not added';
 
   useEffect(() => {
     api.get('/rider/profile').then(res => {
@@ -62,7 +62,7 @@ const RiderLayout = () => {
       await api.post('/rider/profile/status', { online: next });
       setIsOnline(next);
     } catch (e) {
-      setIsOnline(!isOnline);
+      window.alert(e.message || 'Unable to update online status');
     }
   };
 

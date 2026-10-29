@@ -118,7 +118,7 @@ public class WalletServlet extends BaseServlet {
                             "newBalance", newBalance
                     );
                     JsonUtil.sendSuccess(res, 200, "Funds added to wallet successfully", result);
-                } catch (SQLException e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 } finally {

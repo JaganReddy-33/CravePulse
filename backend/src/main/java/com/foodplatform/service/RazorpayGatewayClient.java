@@ -66,17 +66,7 @@ public class RazorpayGatewayClient {
             body.add("notes", notesObj);
         }
 
-        // Check if demo or test mock key
-        if (isDemoOrMockKey(keyId)) {
-            logger.info("Demo Razorpay credentials detected ({}). Generating simulated order ID.", keyId);
-            JsonObject mockRes = new JsonObject();
-            mockRes.addProperty("id", "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-            mockRes.addProperty("entity", "order");
-            mockRes.addProperty("amount", amountInPaise);
-            mockRes.addProperty("currency", "INR");
-            mockRes.addProperty("status", "created");
-            return mockRes;
-        }
+        requireCredentials();
 
         try {
             String authHeader = "Basic " + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
@@ -94,22 +84,11 @@ public class RazorpayGatewayClient {
                 return JsonParser.parseString(response.body()).getAsJsonObject();
             } else {
                 logger.warn("Razorpay API create order returned status {}: {}", response.statusCode(), response.body());
-                // Fallback to simulated order if gateway rejected demo credentials
-                JsonObject fallback = new JsonObject();
-                fallback.addProperty("id", "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-                fallback.addProperty("amount", amountInPaise);
-                fallback.addProperty("currency", "INR");
-                fallback.addProperty("status", "created");
-                return fallback;
+                throw new IllegalStateException("Payment gateway rejected the request");
             }
         } catch (Exception e) {
-            logger.error("Error communicating with Razorpay API, falling back to simulated order: {}", e.getMessage());
-            JsonObject fallback = new JsonObject();
-            fallback.addProperty("id", "order_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-            fallback.addProperty("amount", amountInPaise);
-            fallback.addProperty("currency", "INR");
-            fallback.addProperty("status", "created");
-            return fallback;
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            throw new IllegalStateException("Payment gateway unavailable; payment has not been completed", e);
         }
     }
 
@@ -128,9 +107,6 @@ public class RazorpayGatewayClient {
                     expected.getBytes(StandardCharsets.UTF_8),
                     razorpaySignature.trim().getBytes(StandardCharsets.UTF_8)
             );
-            if (!matches && isDemoOrMockKey(keyId) && "simulated_valid_sig".equals(razorpaySignature.trim())) {
-                return true;
-            }
             return matches;
         } catch (Exception e) {
             logger.error("Error verifying Razorpay signature: {}", e.getMessage());
@@ -142,7 +118,7 @@ public class RazorpayGatewayClient {
      * Verifies webhook signature using HMAC-SHA256 with constant-time equality check.
      */
     public boolean verifyWebhookSignature(String payload, String signatureHeader) {
-        if (payload == null || signatureHeader == null) {
+        if (payload == null || signatureHeader == null || webhookSecret == null || webhookSecret.isBlank()) {
             return false;
         }
 
@@ -171,17 +147,7 @@ public class RazorpayGatewayClient {
         notes.addProperty("reason", reason != null ? reason : "Order cancellation refund");
         body.add("notes", notes);
 
-        if (isDemoOrMockKey(keyId)) {
-            logger.info("Demo Razorpay credentials. Simulating refund for payment {}", razorpayPaymentId);
-            JsonObject mockRefund = new JsonObject();
-            mockRefund.addProperty("id", "rfnd_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-            mockRefund.addProperty("entity", "refund");
-            mockRefund.addProperty("amount", amountInPaise);
-            mockRefund.addProperty("currency", "INR");
-            mockRefund.addProperty("payment_id", razorpayPaymentId);
-            mockRefund.addProperty("status", "processed");
-            return mockRefund;
-        }
+        requireCredentials();
 
         try {
             String authHeader = "Basic " + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
@@ -199,17 +165,11 @@ public class RazorpayGatewayClient {
                 return JsonParser.parseString(response.body()).getAsJsonObject();
             } else {
                 logger.warn("Razorpay Refund API returned status {}: {}", response.statusCode(), response.body());
-                JsonObject fallback = new JsonObject();
-                fallback.addProperty("id", "rfnd_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-                fallback.addProperty("status", "processed");
-                return fallback;
+                throw new IllegalStateException("Refund gateway rejected the request");
             }
         } catch (Exception e) {
-            logger.error("Error creating Razorpay refund, falling back to simulated refund: {}", e.getMessage());
-            JsonObject fallback = new JsonObject();
-            fallback.addProperty("id", "rfnd_" + UUID.randomUUID().toString().replace("-", "").substring(0, 14));
-            fallback.addProperty("status", "processed");
-            return fallback;
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            throw new IllegalStateException("Refund has not been processed; gateway unavailable", e);
         }
     }
 
@@ -231,8 +191,10 @@ public class RazorpayGatewayClient {
         }
     }
 
-    private boolean isDemoOrMockKey(String key) {
-        return key == null || key.isBlank() || key.contains("demo") || key.contains("test_cravepulse");
+    private void requireCredentials() {
+        if (keyId == null || keyId.isBlank() || keySecret == null || keySecret.isBlank() || keyId.contains("demo") || keyId.contains("placeholder") || keyId.contains("your_key")) {
+            throw new IllegalStateException("Online payments are not configured");
+        }
     }
 
     public String getKeyId() {

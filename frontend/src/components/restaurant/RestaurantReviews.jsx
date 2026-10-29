@@ -158,9 +158,9 @@ const ReviewCard = ({ rev }) => {
       {rev.reply && (
         <div
           className="mt-2 p-2 rounded-3"
-          style={{ background: '#f8f9fa', borderLeft: '3px solid var(--c-primary, #ff5722)', fontSize: 12 }}
+          style={{ background: '#f8f9fa', borderLeft: '3px solid var(--c-primary)', fontSize: 12 }}
         >
-          <strong className="d-block mb-1" style={{ fontSize: 11, color: '#ff5722' }}>Restaurant replied:</strong>
+          <strong className="d-block mb-1" style={{ fontSize: 11, color: 'var(--c-primary)' }}>Restaurant replied:</strong>
           <span className="text-secondary">{rev.reply}</span>
         </div>
       )}

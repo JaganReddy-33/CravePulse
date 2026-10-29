@@ -49,7 +49,7 @@ public class JobServlet extends BaseServlet {
                 try { if (req.getParameter("limit") != null) limit = Integer.parseInt(req.getParameter("limit")); } catch (NumberFormatException ignored) {}
                 try { if (req.getParameter("offset") != null) offset = Integer.parseInt(req.getParameter("offset")); } catch (NumberFormatException ignored) {}
 
-                List<JobApplication> apps = jobDao.listApplications(jobId, status, limit, offset);
+                List<JobApplication> apps = jobDao.listApplications(jobId, status, Math.max(1, Math.min(100, limit)), Math.max(0, offset));
                 JsonUtil.sendSuccess(res, 200, "Applications retrieved", apps);
                 return;
             }
@@ -89,7 +89,8 @@ public class JobServlet extends BaseServlet {
         try { if (req.getParameter("limit") != null) limit = Integer.parseInt(req.getParameter("limit")); } catch (NumberFormatException ignored) {}
         try { if (req.getParameter("offset") != null) offset = Integer.parseInt(req.getParameter("offset")); } catch (NumberFormatException ignored) {}
 
-        List<JobPosting> jobs = jobDao.listJobPostings(status, department, limit, offset);
+        if (!"ADMIN".equals(getAuthenticatedRole(req))) status = "ACTIVE";
+        List<JobPosting> jobs = jobDao.listJobPostings(status, department, Math.max(1, Math.min(100, limit)), Math.max(0, offset));
         JsonUtil.sendSuccess(res, 200, "Job postings retrieved", jobs);
     }
 
@@ -129,6 +130,9 @@ public class JobServlet extends BaseServlet {
             app.setCurrentCompany(body.has("currentCompany") && !body.get("currentCompany").isJsonNull() ? body.get("currentCompany").getAsString().trim() : null);
             app.setStatus("UNDER_REVIEW");
 
+            if (app.getApplicantName().length() < 2 || app.getApplicantName().length() > 200 || !app.getEmail().matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") || app.getEmail().length()>255 || app.getResumeFilename()==null || !app.getResumeFilename().startsWith("https://") || app.getResumeFilename().length()>255) {
+                JsonUtil.sendError(res,400,"Valid name, email and HTTPS resume link (maximum 255 characters) are required"); return;
+            }
             Long appId = jobDao.createApplication(app);
             if (appId == null) {
                 JsonUtil.sendError(res, 500, "An unexpected error occurred while processing your application");

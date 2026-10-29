@@ -1,3 +1,4 @@
+import ChangePassword from '../../components/ChangePassword';
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 
@@ -124,6 +125,7 @@ const AdminSettings = () => {
           </div>
         )}
       </div>
+      <ChangePassword />
     </div>
   );
 };

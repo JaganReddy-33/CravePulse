@@ -3,26 +3,11 @@ import realtime from '../services/websocket';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
 
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: 'Welcome to CravePulse!',
-    message: 'Enjoy 100% Dine-In Menu Price Parity across top kitchens in your city.',
-    createdAt: 'Just now',
-    isRead: false,
-    type: 'welcome'
-  }
-];
-
 const RealtimeContext = createContext(null);
 
 export const RealtimeProvider = ({ children }) => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('cravepulse_notifications');
-    return saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS;
-  });
-
+  const [notifications, setNotifications] = useState([]);
   const [activeJobOffer, setActiveJobOffer] = useState(null);
   const [incomingKitchenOrder, setIncomingKitchenOrder] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -41,15 +26,6 @@ export const RealtimeProvider = ({ children }) => {
     };
   }, []);
 
-  // Sync notifications to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('cravepulse_notifications', JSON.stringify(notifications));
-    } catch (e) {
-      console.warn('Failed to save notifications', e);
-    }
-  }, [notifications]);
-
   // Web Audio synth tones
   const playAlertSound = (type = 'ding') => {
     try {
@@ -58,6 +34,7 @@ export const RealtimeProvider = ({ children }) => {
       const ctx = new AudioCtx();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
+      osc.onended = () => ctx.close();
       osc.connect(gain);
       gain.connect(ctx.destination);
 
@@ -81,6 +58,9 @@ export const RealtimeProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    setNotifications([]);
+    setActiveJobOffer(null);
+    setIncomingKitchenOrder(null);
     if (!user) {
       setIsConnected(false);
       return;
@@ -93,8 +73,8 @@ export const RealtimeProvider = ({ children }) => {
     });
 
     // Fetch initial notifications
-    api.get('/auth/notifications').then((res) => {
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+    api.get('/notifications').then((res) => {
+      if (res.success && Array.isArray(res.data)) {
         setNotifications(res.data);
       }
     }).catch(() => {});
@@ -113,15 +93,7 @@ export const RealtimeProvider = ({ children }) => {
 
     // Listen to general order status updates
     const offOrderStatus = realtime.on('order_status_updated', (payload) => {
-      const newNotif = {
-        id: Date.now(),
-        title: `Order Update: ${payload.orderNumber || ''}`,
-        message: `Status is now ${payload.status}`,
-        createdAt: 'Just now',
-        isRead: false,
-        type: 'order'
-      };
-      setNotifications((prev) => [newNotif, ...prev]);
+      api.get('/notifications').then(res => { if (res.success) setNotifications(res.data || []); }).catch(() => {});
       playAlertSound('ding');
     });
 
@@ -133,22 +105,19 @@ export const RealtimeProvider = ({ children }) => {
     };
   }, [user]);
 
-  // Interactive read/unread functions
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-    api.post(`/notifications/${id}/read`).catch(() => {});
+  const markAsRead = async (id) => {
+    try {
+      await api.post(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) { console.error(err.message); }
   };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    api.post('/notifications/read-all').catch(() => {});
+  const markAllAsRead = async () => {
+    try { await api.post('/notifications/read-all'); setNotifications(prev => prev.map(n => ({ ...n, isRead: true }))); }
+    catch (err) { console.error(err.message); }
   };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('cravepulse_notifications');
+  const clearAllNotifications = async () => {
+    try { await api.delete('/notifications'); setNotifications([]); }
+    catch (err) { console.error(err.message); }
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;

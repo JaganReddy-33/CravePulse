@@ -39,10 +39,10 @@ public class Restaurant {
     private String locality;
     private String landmark;
     private String pincode;
-    private String bankAccountNumber;
-    private String bankIfsc;
-    private String bankBeneficiaryName;
-    private String upiId;
+    private transient String bankAccountNumber;
+    private transient String bankIfsc;
+    private transient String bankBeneficiaryName;
+    private transient String upiId;
     private int autoRejectMinutes = 10;
 
     public Restaurant() {

@@ -3,20 +3,13 @@ import { useOutletContext } from 'react-router-dom';
 import api from '../../services/api';
 import ModalPortal from '../../components/ModalPortal';
 
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: 'Chef Specials' },
-  { id: 2, name: 'Main Course / Biryanis' },
-  { id: 3, name: 'Rich Curries & Gravies' },
-  { id: 4, name: 'Clay Oven Breads' },
-  { id: 5, name: 'Artisan Desserts & Beverages' }
-];
 
 const MenuManagement = () => {
   const { restaurant } = useOutletContext();
   const restId = restaurant?.id;
 
   const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [toastMessage, setToastMessage] = useState('');
@@ -319,7 +312,7 @@ const MenuManagement = () => {
             </span>
           </div>
           <p className="text-muted small mb-0 mt-1">
-            Zero localStorage fallbacks. Real-time dine-in parity verification, schedule limits, and soft-delete archive.
+            Manage your menu, availability, pricing and preparation times.
           </p>
         </div>
 

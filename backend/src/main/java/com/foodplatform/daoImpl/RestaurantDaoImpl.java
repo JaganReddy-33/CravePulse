@@ -22,8 +22,8 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search, Boolean vegOnly, int limit, int offset) {
         List<Restaurant> list = new ArrayList<>();
-        double lat = userLat != null ? userLat : 12.9715987;
-        double lng = userLng != null ? userLng : 77.5945627;
+        Double lat = userLat;
+        Double lng = userLng;
 
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT r.*, ")
@@ -66,12 +66,14 @@ public class RestaurantDaoImpl implements RestaurantDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Restaurant r = mapRestaurant(rs);
-                    r.setDistanceKm(rs.getDouble("distance_km"));
+                    double distance = rs.getDouble("distance_km");
+                    r.setDistanceKm(rs.wasNull() ? null : distance);
                     list.add(r);
                 }
             }
         } catch (SQLException e) {
             logger.error("Error listing restaurants", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -89,6 +91,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding restaurant by id: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -106,6 +109,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding restaurant by slug: {}", slug, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -123,6 +127,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error finding restaurant by user id: {}", userId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -137,6 +142,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating open status for restaurant: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -150,6 +156,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating auto-throttle for restaurant: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -185,6 +192,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating kyc for restaurant: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -199,14 +207,14 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.setString(2, r.getName());
             ps.setString(3, r.getSlug());
             ps.setString(4, r.getDescription() != null ? r.getDescription() : "");
-            ps.setString(5, r.getBannerImage() != null ? r.getBannerImage() : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800");
-            ps.setString(6, r.getLogoImage() != null ? r.getLogoImage() : "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200");
+            ps.setString(5, r.getBannerImage());
+            ps.setString(6, r.getLogoImage());
             ps.setString(7, r.getPhone());
             ps.setString(8, r.getEmail());
             ps.setString(9, r.getCuisineTypes() != null ? r.getCuisineTypes() : "Multi-Cuisine");
-            ps.setBigDecimal(10, r.getLatitude() != null ? r.getLatitude() : java.math.BigDecimal.valueOf(12.9715987));
-            ps.setBigDecimal(11, r.getLongitude() != null ? r.getLongitude() : java.math.BigDecimal.valueOf(77.5945627));
-            ps.setString(12, r.getAddress() != null ? r.getAddress() : "Bengaluru");
+            ps.setBigDecimal(10, r.getLatitude());
+            ps.setBigDecimal(11, r.getLongitude());
+            ps.setString(12, r.getAddress());
             ps.setString(13, r.getFssaiLicense() != null ? r.getFssaiLicense() : "PENDING");
             ps.setBoolean(14, r.isOpen());
             ps.setBoolean(15, r.isAutoThrottled());
@@ -224,6 +232,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error creating restaurant profile for user: {}", r.getUserId(), e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return null;
     }
@@ -243,6 +252,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error listing all restaurants", e);
+            throw new IllegalStateException("Database operation failed", e);
         }
         return list;
     }
@@ -322,6 +332,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating settings for restaurant: {}", id, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -378,6 +389,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.executeBatch();
         } catch (SQLException e) {
             logger.error("Error updating operating hours for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
     }
 
@@ -442,6 +454,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
                 }
             } catch (SQLException e) {
                 logger.error("Error computing dynamic payout for restaurant: {}", restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
             }
         }
         return payouts;
@@ -482,6 +495,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error searching restaurant suggestions for {}", query, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
 
         // Query matching dishes
@@ -508,6 +522,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
             }
         } catch (SQLException e) {
             logger.error("Error searching dish suggestions for {}", query, e);
+            throw new IllegalStateException("Database operation failed", e);
         }
 
         result.put("restaurants", restaurants);

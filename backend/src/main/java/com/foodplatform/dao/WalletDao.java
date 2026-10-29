@@ -18,7 +18,7 @@ public interface WalletDao {
 
     List<Notification> getUserNotifications(long userId, boolean unreadOnly);
 
-    void markNotificationRead(long notificationId);
+    void markNotificationRead(long notificationId, long userId);
 
     void markAllNotificationsRead(long userId);
 

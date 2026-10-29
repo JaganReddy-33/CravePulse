@@ -11,14 +11,17 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
   const [fullName, setFullName] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [fssaiLicense, setFssaiLicense] = useState('');
-  const [cuisineTypes, setCuisineTypes] = useState('North Indian, Biryani');
+  const [cuisineTypes, setCuisineTypes] = useState('');
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const { user, login, isDemoMode } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,9 +49,10 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
         await api.post('/partner/apply', {
           fullName: fullName.trim() || 'Restaurant Partner',
           email: email.trim().toLowerCase(),
-          phone: phone.trim() || '+919876543210',
+          phone: phone.trim(),
           password,
           restaurantName: restaurantName.trim(),
+          address: address.trim(), latitude: Number(latitude), longitude: Number(longitude),
           fssaiLicense: fssaiLicense.trim(),
           cuisineTypes: cuisineTypes.trim() || 'Multi-Cuisine'
         });
@@ -69,18 +73,6 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
     }
   };
 
-  const handleDemoFill = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await login('chef@foodanalytics.com', 'Password@123');
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.message || 'Demo partner login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative" style={{ background: '#120d08' }}>
@@ -106,7 +98,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             >
               🍳
             </div>
-            <span className="fs-2 fw-extrabold text-white tracking-tight">CravePulse Kitchen</span>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Kitchen</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister ? 'List your culinary brand with 0% predatory commission' : 'Log in to your live kitchen terminal & order dispatch kanban'}
@@ -159,6 +151,11 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
           )}
 
           <form onSubmit={handleSubmit}>
+            {isRegister && <div className="row g-2 mb-3">
+              <div className="col-12"><label className="form-label" htmlFor="partner-address">Kitchen address</label><input id="partner-address" required className="form-control" value={address} onChange={e => setAddress(e.target.value)} /></div>
+              <div className="col-6"><label className="form-label" htmlFor="partner-lat">Latitude</label><input id="partner-lat" required className="form-control" type="number" step="any" min="-90" max="90" value={latitude} onChange={e => setLatitude(e.target.value)} /></div>
+              <div className="col-6"><label className="form-label" htmlFor="partner-lng">Longitude</label><input id="partner-lng" required className="form-control" type="number" step="any" min="-180" max="180" value={longitude} onChange={e => setLongitude(e.target.value)} /></div>
+            </div>}
             {isRegister && (
               <>
                 <div className="mb-3">
@@ -271,48 +268,7 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona Demo Login Card - only visible in demo mode */}
-          {isDemoMode && (
-            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                  Demo Mode Fast Access
-                </span>
-                <span className="badge rounded-pill bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50" style={{ fontSize: 10 }}>
-                  DEMO MERCHANT
-                </span>
-              </div>
 
-              <div 
-                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-                onClick={handleDemoFill}
-              >
-                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                  <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold flex-shrink-0"
-                    style={{ width: 36, height: 36, background: '#f59e0b' }}
-                  >
-                    👨‍🍳
-                  </div>
-                  <div className="text-truncate">
-                    <div className="fw-bold text-white small lh-1 mb-1">Demo Partner Restaurant</div>
-                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                      chef@foodanalytics.com
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-warning rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                  style={{ fontSize: 11 }}
-                  disabled={loading}
-                >
-                  Access →
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
             <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">← Back to Customer App</Link>

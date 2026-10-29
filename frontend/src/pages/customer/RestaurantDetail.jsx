@@ -91,7 +91,7 @@ const RestaurantDetail = () => {
       <RestaurantHeader restaurant={restaurant} openPriceExplainer={openPriceExplainer} />
 
       {/* 2. Active Promotional Offers Carousel */}
-      <RestaurantOffersStrip />
+      <RestaurantOffersStrip restaurantId={restaurant.id} />
 
       {/* 3. Sticky Category Navigation & Filters */}
       <RestaurantCategoryNav
@@ -127,6 +127,7 @@ const RestaurantDetail = () => {
             <div key={dish.id} className="col">
               <DishCard
                 dish={dish}
+                restaurantName={restaurant.name}
                 onCustomize={openCustomizer}
                 isStoreClosed={restaurant.isOpen === false}
               />
@@ -145,6 +146,7 @@ const RestaurantDetail = () => {
       {/* 6. Item Customization Modal */}
       <ItemCustomizerModal
         dish={customizingDish}
+        restaurantName={restaurant.name}
         show={showCustomizer}
         onClose={closeCustomizer}
       />

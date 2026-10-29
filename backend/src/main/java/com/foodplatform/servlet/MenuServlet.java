@@ -131,9 +131,10 @@ public class MenuServlet extends BaseServlet {
                 item.setDineInPrice(item.getPlatformPrice());
             }
             if (item.getImageUrl() == null || item.getImageUrl().isBlank()) {
-                item.setImageUrl("https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500");
+                item.setImageUrl(null);
             }
             Long id = menuDao.createItem(item);
+            if(id==null) throw new IllegalStateException("Menu item could not be saved");
             item.setId(id);
             JsonUtil.sendSuccess(res, 201, "Menu item created", item);
             return;

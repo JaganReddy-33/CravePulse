@@ -14,6 +14,7 @@ const TrackingReviewModal = ({
   const [packagingRating, setPackagingRating] = useState(5);
   const [deliveryRating, setDeliveryRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   if (!show) return null;
@@ -21,14 +22,16 @@ const TrackingReviewModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    await onSubmitReview({
+    setError('');
+    try { await onSubmitReview({
       foodRating,
       packagingRating,
       deliveryRating,
       reviewText: reviewText.trim(),
     });
-    setSubmitting(false);
     onClose();
+    } catch (err) { setError(err.message || 'Review was not saved'); }
+    finally { setSubmitting(false); }
   };
 
   const renderStarInput = (val, setVal, label) => (
@@ -80,6 +83,7 @@ const TrackingReviewModal = ({
           </p>
 
           <form onSubmit={handleSubmit}>
+            {error && <div className="alert alert-danger" role="alert">{error}</div>}
             <div className="p-3 bg-light rounded-4 mb-3">
               {renderStarInput(foodRating, setFoodRating, 'Food Taste & Freshness')}
               {renderStarInput(packagingRating, setPackagingRating, 'Packaging & Spill Protection')}
@@ -109,7 +113,7 @@ const TrackingReviewModal = ({
               <button
                 type="submit"
                 className="btn btn-sm btn-primary rounded-pill px-4 fw-bold touch-target text-white"
-                style={{ background: '#ff5722', borderColor: '#ff5722' }}
+                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
                 disabled={submitting}
               >
                 {submitting ? 'Submitting...' : 'Submit Review'}

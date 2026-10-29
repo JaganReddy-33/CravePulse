@@ -13,7 +13,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { user, login, register, isDemoMode } = useAuth();
+  const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -55,18 +55,6 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
     }
   };
 
-  const handleDemoFill = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await login('customer@foodora.com', 'Password@123');
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.message || 'Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative" style={{ background: '#0a0f1d' }}>
@@ -79,7 +67,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
         style={{ 
           maxWidth: 480, 
           zIndex: 10,
-          '--auth-focus-color': '#ff5c35',
+          '--auth-focus-color': 'var(--c-primary)',
           '--auth-focus-glow': 'rgba(255, 92, 53, 0.35)'
         }}
       >
@@ -88,11 +76,11 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
           <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
             <div 
               className="rounded-4 text-white fw-bold d-flex align-items-center justify-content-center shadow-lg"
-              style={{ width: 48, height: 48, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)', fontSize: 24 }}
+              style={{ width: 48, height: 48, background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)', fontSize: 24 }}
             >
               🔥
             </div>
-            <span className="fs-2 fw-extrabold text-white tracking-tight">CravePulse</span>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister ? 'Join India’s Fair Food Network • 0% Price Inflation Guarantee' : 'Welcome back! Taste authentic food with direct-from-kitchen pricing'}
@@ -115,7 +103,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
             <button
               type="button"
               className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${!isRegister ? 'text-white shadow-sm' : 'text-light text-opacity-75 border-0'}`}
-              style={!isRegister ? { background: '#ff5c35' } : {}}
+              style={!isRegister ? { background: 'var(--c-primary)' } : {}}
               onClick={() => { setIsRegister(false); setError(''); }}
             >
               Sign In
@@ -123,7 +111,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
             <button
               type="button"
               className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${isRegister ? 'text-white shadow-sm' : 'text-light text-opacity-75 border-0'}`}
-              style={isRegister ? { background: '#ff5c35' } : {}}
+              style={isRegister ? { background: 'var(--c-primary)' } : {}}
               onClick={() => { setIsRegister(true); setError(''); }}
             >
               Create Account
@@ -217,7 +205,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
             <button
               type="submit"
               className="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-lg mb-3 text-white border-0 transition hover-lift"
-              style={{ background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}
+              style={{ background: 'linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)' }}
               disabled={loading}
             >
               {loading ? (
@@ -227,48 +215,7 @@ const CustomerAuth = ({ initialMode = 'login' }) => {
             </button>
           </form>
 
-          {/* Test Persona Demo Login Card - only visible in demo mode */}
-          {isDemoMode && (
-            <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
-              <div className="d-flex align-items-center justify-content-between mb-2">
-                <span className="text-secondary small fw-bold text-uppercase" style={{ fontSize: 10, letterSpacing: 0.8 }}>
-                  Demo Mode Fast Access
-                </span>
-                <span className="badge rounded-pill bg-primary bg-opacity-25 text-white border border-primary border-opacity-50" style={{ fontSize: 10 }}>
-                  DEMO USER
-                </span>
-              </div>
 
-              <div 
-                className="demo-stakeholder-card p-2.5 d-flex align-items-center justify-content-between cursor-pointer"
-                onClick={handleDemoFill}
-              >
-                <div className="d-flex align-items-center gap-2.5 overflow-hidden">
-                  <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
-                    style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ff5c35 0%, #ff8c42 100%)' }}
-                  >
-                    CU
-                  </div>
-                  <div className="text-truncate">
-                    <div className="fw-bold text-white small lh-1 mb-1">Demo Customer Account</div>
-                    <div className="text-light text-opacity-60 text-truncate" style={{ fontSize: 11 }}>
-                      customer@foodora.com
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-light rounded-pill px-3 py-1 fw-bold flex-shrink-0 ms-2"
-                  style={{ fontSize: 11 }}
-                  disabled={loading}
-                >
-                  Sign In →
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Cross-Portal Switcher */}
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">

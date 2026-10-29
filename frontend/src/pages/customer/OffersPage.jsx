@@ -1,56 +1,12 @@
-import React, { useState } from 'react';
+import api from '../../services/api';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
-const PROMOS = [
-  {
-    code: 'FOOD50',
-    title: 'Flat 50% Off Gourmet Dining',
-    discount: '50% OFF up to ₹100',
-    minOrder: '₹199',
-    description: 'Valid on all partner restaurants for our anniversary celebration.',
-    tag: 'MOST POPULAR',
-    color: '#ff5722'
-  },
-  {
-    code: 'WELCOME100',
-    title: 'Welcome to CravePulse Fair Trade',
-    discount: 'Flat ₹100 OFF',
-    minOrder: '₹299',
-    description: 'Exclusive first-order discount for new gourmet food lovers.',
-    tag: 'NEW USERS',
-    color: '#00b894'
-  },
-  {
-    code: 'FREESHIP',
-    title: 'Zero Delivery Fee Feast',
-    discount: '100% Free Delivery',
-    minOrder: '₹149',
-    description: 'We cover the delivery partner distance fare on your meal.',
-    tag: 'FREE DELIVERY',
-    color: '#38bdf8'
-  },
-  {
-    code: 'HEALTHY20',
-    title: 'Clean Eating Salad & Bowl Offer',
-    discount: '20% OFF up to ₹80',
-    minOrder: '₹250',
-    description: 'Applicable on verified organic and nutrient-dense kitchens.',
-    tag: 'HEALTHY EATS',
-    color: '#10b981'
-  },
-  {
-    code: 'BIRYANI25',
-    title: 'Dum Biryani Festival Bonanza',
-    discount: '25% OFF up to ₹120',
-    minOrder: '₹350',
-    description: 'Authentic Hyderabadi and Lucknowi dum pots cooked to perfection.',
-    tag: 'CHEF SPECIAL',
-    color: '#f59e0b'
-  }
-];
-
 const OffersPage = () => {
+  const [PROMOS, setPromos] = useState([]);
+  const [error, setError] = useState('');
+  useEffect(() => { api.get('/catalog/offers').then(res => setPromos(res.data || [])).catch(err => setError(err.message)); }, []);
   const { setCouponCode } = useCart();
   const [copiedCode, setCopiedCode] = useState(null);
 
@@ -76,6 +32,8 @@ const OffersPage = () => {
 
       {/* Promos Grid */}
       <div className="row g-4 mb-5">
+        {error && <div role="alert" className="alert alert-danger">{error}</div>}
+        {!PROMOS.length && !error && <p className="text-muted">No offers are available right now.</p>}
         {PROMOS.map((promo) => (
           <div key={promo.code} className="col-md-6 col-lg-4">
             <div className="card border-0 rounded-4 shadow-sm h-100 bg-white overflow-hidden d-flex flex-column justify-content-between p-4 hover-lift transition">

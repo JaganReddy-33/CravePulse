@@ -134,6 +134,7 @@ public class AdminServlet extends BaseServlet {
             boolean approved = body == null || !body.has("approved") || body.get("approved").getAsBoolean();
             String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "KYC compliance verification";
 
+            if (restId == null) { JsonUtil.sendError(res,400,"Restaurant ID required"); return; }
             restaurantDao.updateKyc(restId, approved);
             adminAuditDao.logAction(adminId, adminName, approved ? "APPROVE_RESTAURANT_KYC" : "REVOKE_RESTAURANT_KYC",
                     "RESTAURANT", String.valueOf(restId), reason, ip);
@@ -150,6 +151,7 @@ public class AdminServlet extends BaseServlet {
             boolean approved = body == null || !body.has("approved") || body.get("approved").getAsBoolean();
             String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "License and RC verification";
 
+            if (riderId == null) { JsonUtil.sendError(res,400,"Rider ID required"); return; }
             riderDao.updateKyc(riderId, approved);
             adminAuditDao.logAction(adminId, adminName, approved ? "APPROVE_RIDER_KYC" : "REVOKE_RIDER_KYC",
                     "RIDER", String.valueOf(riderId), reason, ip);

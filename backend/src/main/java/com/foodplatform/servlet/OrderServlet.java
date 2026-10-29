@@ -139,6 +139,7 @@ public class OrderServlet extends BaseServlet {
                 if (idempotencyKey != null && !idempotencyKey.isBlank()) {
                     Order existing = orderDao.findByIdempotencyKey(idempotencyKey.trim());
                     if (existing != null) {
+                        if (!customerId.equals(existing.getCustomerId())) { JsonUtil.sendError(res,403,"Order key is not owned by this account"); return; }
                         Map<String, Object> resp = new HashMap<>();
                         resp.put("id", existing.getId());
                         resp.put("orderId", existing.getId());
@@ -284,7 +285,7 @@ public class OrderServlet extends BaseServlet {
                         orderDao.recordOrderEvent(conn, ev);
 
                         conn.commit();
-                    } catch (SQLException ex) {
+                    } catch (SQLException | RuntimeException ex) {
                         conn.rollback();
                         throw ex;
                     } finally {
@@ -453,6 +454,7 @@ public class OrderServlet extends BaseServlet {
             int offset = parseIntParam(req, "offset", 0);
 
             List<Order> list = orderDao.listRestaurantOrders(restaurantId, status, limit, offset);
+            list.forEach(order -> order.setDeliveryOtp(null));
             JsonUtil.sendSuccess(res, 200, "Restaurant orders", list);
             return;
         }
@@ -467,6 +469,7 @@ public class OrderServlet extends BaseServlet {
             }
             if (!requireOwnerOfOrder(req, res, o.getId())) return;
 
+            if (!"CUSTOMER".equals(getAuthenticatedRole(req))) o.setDeliveryOtp(null);
             JsonUtil.sendSuccess(res, 200, "Order details", o);
             return;
         }
@@ -513,6 +516,7 @@ public class OrderServlet extends BaseServlet {
                 return;
             }
 
+            if (!"CUSTOMER".equals(getAuthenticatedRole(req))) o.setDeliveryOtp(null);
             JsonUtil.sendSuccess(res, 200, "Order details", o);
             return;
         }

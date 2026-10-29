@@ -31,8 +31,8 @@ public class RestaurantServlet extends BaseServlet {
 
         if (path.isEmpty() || "/".equals(path)) {
             // Discovery list with geo-distance and filters
-            Double lat = parseDoubleParam(req, "lat", 12.9783692);
-            Double lng = parseDoubleParam(req, "lng", 77.6408356);
+            Double lat = parseDoubleParam(req, "lat", null);
+            Double lng = parseDoubleParam(req, "lng", null);
             String cuisine = req.getParameter("cuisine");
             String search = req.getParameter("search");
             Boolean vegOnly = "true".equalsIgnoreCase(req.getParameter("vegOnly"));
@@ -262,7 +262,7 @@ public class RestaurantServlet extends BaseServlet {
         doPost(req, res);
     }
 
-    private Double parseDoubleParam(HttpServletRequest req, String name, double defVal) {
+    private Double parseDoubleParam(HttpServletRequest req, String name, Double defVal) {
         String s = req.getParameter(name);
         if (s != null && !s.isBlank()) {
             try {

@@ -77,8 +77,8 @@ const AdminJobs = () => {
     try {
       setLoading(true);
       const res = await api.get('/jobs');
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setJobs(res.data.data);
+      if (res.success && Array.isArray(res.data)) {
+        setJobs(res.data);
       }
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -95,8 +95,8 @@ const AdminJobs = () => {
       if (filterJobId) params.jobId = filterJobId;
       if (filterAppStatus) params.status = filterAppStatus;
       const res = await api.get('/jobs/applications', { params });
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setApplications(res.data.data);
+      if (res.success && Array.isArray(res.data)) {
+        setApplications(res.data);
       }
     } catch (err) {
       console.error('Error fetching applications:', err);
