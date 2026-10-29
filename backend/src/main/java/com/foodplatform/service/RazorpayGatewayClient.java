@@ -37,8 +37,7 @@ public class RazorpayGatewayClient {
                 AppProperties.getRazorpayWebhookSecret(),
                 HttpClient.newBuilder()
                         .connectTimeout(Duration.ofSeconds(10))
-                        .build()
-        );
+                        .build());
     }
 
     public RazorpayGatewayClient(String keyId, String keySecret, String webhookSecret, HttpClient httpClient) {
@@ -69,7 +68,8 @@ public class RazorpayGatewayClient {
         requireCredentials();
 
         try {
-            String authHeader = "Basic " + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
+            String authHeader = "Basic "
+                    + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(RAZORPAY_API_BASE + "/orders"))
                     .header("Authorization", authHeader)
@@ -87,13 +87,15 @@ public class RazorpayGatewayClient {
                 throw new IllegalStateException("Payment gateway rejected the request");
             }
         } catch (Exception e) {
-            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException)
+                Thread.currentThread().interrupt();
             throw new IllegalStateException("Payment gateway unavailable; payment has not been completed", e);
         }
     }
 
     /**
-     * Verifies payment signature using HMAC-SHA256 with constant-time equality check.
+     * Verifies payment signature using HMAC-SHA256 with constant-time equality
+     * check.
      */
     public boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
         if (razorpayOrderId == null || razorpayPaymentId == null || razorpaySignature == null) {
@@ -105,8 +107,7 @@ public class RazorpayGatewayClient {
             String expected = calculateHmacSha256(data, keySecret);
             boolean matches = MessageDigest.isEqual(
                     expected.getBytes(StandardCharsets.UTF_8),
-                    razorpaySignature.trim().getBytes(StandardCharsets.UTF_8)
-            );
+                    razorpaySignature.trim().getBytes(StandardCharsets.UTF_8));
             return matches;
         } catch (Exception e) {
             logger.error("Error verifying Razorpay signature: {}", e.getMessage());
@@ -115,7 +116,8 @@ public class RazorpayGatewayClient {
     }
 
     /**
-     * Verifies webhook signature using HMAC-SHA256 with constant-time equality check.
+     * Verifies webhook signature using HMAC-SHA256 with constant-time equality
+     * check.
      */
     public boolean verifyWebhookSignature(String payload, String signatureHeader) {
         if (payload == null || signatureHeader == null || webhookSecret == null || webhookSecret.isBlank()) {
@@ -126,8 +128,7 @@ public class RazorpayGatewayClient {
             String expected = calculateHmacSha256(payload, webhookSecret);
             return MessageDigest.isEqual(
                     expected.getBytes(StandardCharsets.UTF_8),
-                    signatureHeader.trim().getBytes(StandardCharsets.UTF_8)
-            );
+                    signatureHeader.trim().getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             logger.error("Error verifying Razorpay webhook signature: {}", e.getMessage());
             return false;
@@ -150,7 +151,8 @@ public class RazorpayGatewayClient {
         requireCredentials();
 
         try {
-            String authHeader = "Basic " + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
+            String authHeader = "Basic "
+                    + Base64.getEncoder().encodeToString((keyId + ":" + keySecret).getBytes(StandardCharsets.UTF_8));
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(RAZORPAY_API_BASE + "/payments/" + razorpayPaymentId + "/refund"))
                     .header("Authorization", authHeader)
@@ -168,7 +170,8 @@ public class RazorpayGatewayClient {
                 throw new IllegalStateException("Refund gateway rejected the request");
             }
         } catch (Exception e) {
-            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException)
+                Thread.currentThread().interrupt();
             throw new IllegalStateException("Refund has not been processed; gateway unavailable", e);
         }
     }
@@ -182,7 +185,8 @@ public class RazorpayGatewayClient {
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();
@@ -192,7 +196,8 @@ public class RazorpayGatewayClient {
     }
 
     private void requireCredentials() {
-        if (keyId == null || keyId.isBlank() || keySecret == null || keySecret.isBlank() || keyId.contains("demo") || keyId.contains("placeholder") || keyId.contains("your_key")) {
+        if (keyId == null || keyId.isBlank() || keySecret == null || keySecret.isBlank() || keyId.contains("demo")
+                || keyId.contains("placeholder") || keyId.contains("your_key")) {
             throw new IllegalStateException("Online payments are not configured");
         }
     }
