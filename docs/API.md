@@ -707,6 +707,8 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 - **Endpoint:** `POST /api/menu/item/{id}/variants` (Add portion variant)
 - **Endpoint:** `POST /api/menu/item/{id}/addons` (Add customer add-on)
 
+Menu item creation requires an active `categoryId` that belongs to the supplied restaurant. An invalid, inactive, or other-restaurant category returns `400 Bad Request` rather than attempting an insert that violates the category foreign key.
+
 Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpoint not found: /item` is emitted by the menu servlet's GET fallback, not its POST handler. If it appears while creating an item, inspect the browser Network request method and verify the backend deployment revision and API origin.
 
 ---

@@ -121,11 +121,16 @@ public class MenuServlet extends BaseServlet {
 
         if ("/item".equals(path)) {
             MenuItem item = JsonUtil.readRequestBody(req, MenuItem.class);
-            if (item == null || item.getName() == null || item.getPlatformPrice() == null || item.getRestaurantId() == null) {
-                JsonUtil.sendError(res, 400, "restaurantId, item name and platformPrice are required");
+            if (item == null || item.getName() == null || item.getPlatformPrice() == null ||
+                    item.getRestaurantId() == null || item.getCategoryId() == null) {
+                JsonUtil.sendError(res, 400, "restaurantId, categoryId, item name and platformPrice are required");
                 return;
             }
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
+            if (!menuDao.categoryBelongsToRestaurant(item.getCategoryId(), item.getRestaurantId())) {
+                JsonUtil.sendError(res, 400, "Select an active menu category belonging to this restaurant");
+                return;
+            }
 
             if (item.getDineInPrice() == null) {
                 item.setDineInPrice(item.getPlatformPrice());

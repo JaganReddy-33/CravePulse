@@ -24,6 +24,8 @@ public interface MenuDao {
 
     void updatePrices(long itemId, BigDecimal platformPrice, BigDecimal dineInPrice);
 
+    boolean categoryBelongsToRestaurant(long categoryId, long restaurantId);
+
     Long createItem(MenuItem item);
 
     void updateItem(MenuItem item);

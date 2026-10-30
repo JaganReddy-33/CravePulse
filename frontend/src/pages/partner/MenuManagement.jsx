@@ -25,7 +25,7 @@ const MenuManagement = () => {
   // Add Item Form State
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState(1);
+  const [categoryId, setCategoryId] = useState('');
   const [platformPrice, setPlatformPrice] = useState('');
   const [dineInPrice, setDineInPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500');
@@ -65,9 +65,7 @@ const MenuManagement = () => {
         } else if (Array.isArray(res.data)) {
           setItems(res.data);
         }
-        if (Array.isArray(res.data.categories) && res.data.categories.length > 0) {
-          setCategories(res.data.categories);
-        }
+        setCategories(Array.isArray(res.data.categories) ? res.data.categories : []);
       }
     } catch (e) {
       console.warn('API error fetching menu', e);
@@ -80,6 +78,12 @@ const MenuManagement = () => {
   useEffect(() => {
     fetchMenu();
   }, [restId]);
+
+  useEffect(() => {
+    if (!categories.some(category => String(category.id) === String(categoryId))) {
+      setCategoryId(categories.length > 0 ? String(categories[0].id) : '');
+    }
+  }, [categories, categoryId]);
 
   const handleToggleAvailability = async (item) => {
     const updatedState = !item.isAvailable;
@@ -142,6 +146,10 @@ const MenuManagement = () => {
 
     if (!name.trim()) {
       alert('Dish name is required');
+      return;
+    }
+    if (!categoryId || !categories.some(category => String(category.id) === String(categoryId))) {
+      showNotification('Create or select an active category for this restaurant before adding a dish.', 'danger');
       return;
     }
     const pPrice = parseFloat(platformPrice);
@@ -232,8 +240,13 @@ const MenuManagement = () => {
         displayOrder: categories.length + 1
       });
       if (res.success) {
+        const createdCategoryId = res.data?.id;
+        if (createdCategoryId == null) {
+          throw new Error('The server did not return the new category ID. Refresh the menu and try again.');
+        }
         showNotification(`Category "${newCatName}" created!`);
-        setCategories(prev => [...prev, { id: res.data?.id || (prev.length + 1), name: newCatName.trim() }]);
+        setCategories(prev => [...prev, { id: createdCategoryId, name: newCatName.trim() }]);
+        setCategoryId(String(createdCategoryId));
         setNewCatName('');
         setShowNewCatInput(false);
       }
@@ -555,11 +568,19 @@ const MenuManagement = () => {
                           className="form-select rounded-3"
                           value={categoryId}
                           onChange={(e) => setCategoryId(e.target.value)}
+                          required
+                          disabled={categories.length === 0}
                         >
+                          <option value="" disabled>
+                            {categories.length === 0 ? 'Create a category first' : 'Select a category'}
+                          </option>
                           {categories.map(c => (
                             <option key={c.id} value={c.id}>{c.name}</option>
                           ))}
                         </select>
+                        {categories.length === 0 && (
+                          <small className="text-danger">Add a category using “+ New Category” before creating a dish.</small>
+                        )}
                       </div>
 
                       <div className="col-12">
@@ -668,7 +689,7 @@ const MenuManagement = () => {
                       type="submit"
                       className="btn btn-danger rounded-pill px-4 fw-bold"
                       style={{ background: '#ff5c35' }}
-                      disabled={submitting}
+                      disabled={submitting || !categoryId || categories.length === 0}
                     >
                       {submitting ? 'Creating...' : 'Add Dish to Catalog'}
                     </button>

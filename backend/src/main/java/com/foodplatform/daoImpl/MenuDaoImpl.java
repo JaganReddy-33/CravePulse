@@ -164,6 +164,22 @@ public class MenuDaoImpl implements MenuDao {
     }
 
     @Override
+    public boolean categoryBelongsToRestaurant(long categoryId, long restaurantId) {
+        String sql = "SELECT 1 FROM menu_categories WHERE id = ? AND restaurant_id = ? AND is_active = TRUE";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, categoryId);
+            ps.setLong(2, restaurantId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Error validating menu category {} for restaurant {}", categoryId, restaurantId, e);
+            throw new IllegalStateException("Database operation failed", e);
+        }
+    }
+
+    @Override
     public Long createItem(MenuItem item) {
         String sql = "INSERT INTO menu_items (restaurant_id, category_id, name, description, image_url, dine_in_price, platform_price, is_veg, is_available, prep_time_minutes, calorie_count) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
