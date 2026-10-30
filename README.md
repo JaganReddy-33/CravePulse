@@ -18,7 +18,7 @@ built from scratch with **zero frameworks** — no Spring Boot, no Hibernate, no
 <div align="center">
 
 [Frontend (vercel)](https://crave-pulse-xi.vercel.app/)
-[Backend API (Render)](https://cravepulse-741y.onrender.com)
+[Backend API (Render)](https://cravepulse-74ry.onrender.com/api/health)
 
 </div>
 
@@ -127,7 +127,7 @@ CravePulse/
 │   │   ├── util/                     # JWT, Password (BCrypt), JSON utilities
 │   │   └── websocket/                # RealtimeEndpoint + SessionRegistry
 │   └── src/main/resources/
-│       └── db/migration/             # V1–V11 Flyway-style SQL migrations
+│       └── db/migration/             # V1–V21 versioned SQL migrations
 ├── frontend/                         # React 18 + Vite frontend
 │   └── src/
 │       ├── components/               # 25+ reusable UI components
@@ -140,7 +140,7 @@ CravePulse/
 │       │   └── rider/                # 6 rider delivery pages
 │       ├── services/                 # Axios API client + WebSocket client
 │       └── theme/                    # Design tokens, portal CSS, variables
-├── docs/                             # API.md, ARCHITECTURE.md, DECISIONS.md
+├── docs/                             # API, architecture, UI and operational documentation
 ├── scripts/
 │   └── seed-demo.sql                 # 27 restaurants, menus, users, orders
 ├── docker-compose.yml
@@ -165,6 +165,8 @@ CravePulse/
 | **Discovery** | **Price Parity Guarantee** | 100% dine-in price transparency badge on every dish |
 | **Discovery** | **Swiggy & Zomato Card UX** | 16:10 aspect ratio image, gradient deal overlay, green rating pill (`★ 4.8`), interactive favorites |
 | **Discovery** | **Horizontal Reviews Carousel** | Touch-swipe & keyboard snap carousel with live rating distribution and zero fake data |
+| **Discovery** | Photo Cuisine Filters | Admin-managed cuisine categories with HTTPS food photography |
+| **Discovery** | Paginated Restaurant Results | Server-backed offset/limit browsing with a load-more control |
 | **Layout & Mobile** | **Responsive Primitives** | Fluid `clamp()` typography, `ResponsiveTable` (table → cards on mobile), safe-area insets |
 | **Partner Portal** | **Mobile Single-Column Kanban** | Quick tab switcher on `< 768px` for one-thumb kitchen dispatch operations |
 | **Real-Time** | **Live WebSocket & Offline Radar** | Navbar live status indicator dot and browser offline detection alert banner |
@@ -193,7 +195,9 @@ CravePulse/
 | **Admin Console** | Rule-Based Dispute Engine | Auto-refund caps, 2-hour window rule, fraud flag evaluation |
 | **Admin Console** | Platform Levers & CSV Export | Live-tunable fees, GST, search radius, RFC-4180 streaming exports |
 | **Admin Console** | Audit Log Trail | Every admin action logged with actor, target, IP, and timestamp |
-| **Database** | V1–V11 Auto Migrations | Idempotent Flyway-style SQL applied on server startup |
+| **Admin Console** | Cuisine Category Management | Create, edit, reorder, hide, and restore customer cuisine filters |
+| **Admin Console** | Persisted Partner Approvals | KYC approval/revocation updates profile and account status transactionally; partners receive an in-app notice with the admin note |
+| **Database** | V1–V21 Versioned Migrations | Versioned SQL applied on server startup; existing migration files must remain immutable |
 | **Database** | Strict Constraints | MySQL 8 `CHECK` constraints, non-cascade FKs, pessimistic locking |
 | **Database** | 7-Day Telemetry Retention | Scheduled purge of GPS logs and stale dispatch records |
 | **Observability** | Structured Request IDs | `X-Request-ID` propagation through all SLF4J MDC logs |
@@ -301,12 +305,13 @@ cd backend
 mvn clean package -DskipTests
 java -jar target/food-delivery-backend.jar
 ```
-> Migrations V1–V11 apply automatically on first boot.
+> Migrations V1–V21 apply automatically on first boot. Use an isolated development database for local setup and tests.
 
 ### 4. Load Demo Data (Optional)
 ```bash
 mysql -u root -p food_delivery_db < scripts/seed-demo.sql
 ```
+> Demo fixtures are for local development only. Never load them into production.
 
 ### 5. Start Frontend
 ```bash
@@ -347,18 +352,20 @@ All demo accounts use the password: `Password@123`
 | `RAZORPAY_KEY_SECRET` | `rzp_secret_placeholder` | Razorpay HMAC secret |
 | `DISPATCH_MAX_RADIUS_KM` | `15.0` | Max rider search radius |
 | `WAIT_COMPENSATION_RATE` | `2.00` | Wait-time comp (₹/min) |
+| `VITE_API_URL` | `/api` locally | Frontend API base URL; configure the deployed backend origin for production |
+| `VITE_WS_URL` | empty | Optional WebSocket URL or backend origin; defaults to the WebSocket endpoint on the configured API host |
 
 ---
 
 ## 🧪 Testing
 
-### Backend (75 depth tests)
+### Backend
 ```bash
 cd backend && mvn test
 ```
 Covers: pricing engine, order state machine, payment HMAC, concurrency pessimistic locking, idempotency keys, RBAC matrix, telemetry retention.
 
-### Frontend (13 Vitest tests)
+### Frontend
 ```bash
 cd frontend && npm test
 ```
@@ -376,10 +383,11 @@ Covers: customer order flow, kitchen kanban, rider dispatch, admin verification.
 
 | Doc | Contents |
 |---|---|
-| [docs/API.md](docs/API.md) | Full REST endpoint reference with request/response schemas |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Deep-dive into architectural decisions |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | Engineering trade-offs and design rationale |
-| [docs/BASELINE.md](docs/BASELINE.md) | Feature baseline and scope definition |
+| [docs/API.md](docs/API.md) | REST endpoints, authentication, and response conventions (verify the deployed build matches this repository) |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and security boundaries |
+| [docs/REAL_DATA_SETUP.md](docs/REAL_DATA_SETUP.md) | Local configuration, migrations, operations, and verification notes |
+| [docs/UI_GUIDE.md](docs/UI_GUIDE.md) | UI patterns and visual conventions |
+| [docs/APPLICATION_AUDIT_2026-10-29.md](docs/APPLICATION_AUDIT_2026-10-29.md) | Historical audit and remediation record; not a current deployment certification |
 
 ---
 

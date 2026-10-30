@@ -24,7 +24,7 @@ const Footer = () => {
             </p>
             <div className="d-flex align-items-center gap-2 mb-3">
               <span className="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2 py-1 small">
-                <i className="bi bi-shield-check me-1"></i> FSSAI Certified: 11223344556677
+                <i className="bi bi-shield-check me-1"></i> Restaurant partner KYC reviewed
               </span>
             </div>
             <div className="text-muted small">
@@ -127,15 +127,15 @@ const Footer = () => {
               </a>
             </div>
 
-            <h6 className="fw-bold text-white text-uppercase tracking-wider small mb-2">Verified Security</h6>
+            <h6 className="fw-bold text-white text-uppercase tracking-wider small mb-2">Security &amp; compliance</h6>
             <div className="small text-secondary mb-2" style={{ fontSize: 11 }}>
-              <i className="bi bi-lock-fill text-success me-1"></i> 256-Bit SSL Encryption
+              <i className="bi bi-lock-fill text-success me-1"></i> HTTPS transport security
             </div>
             <div className="small text-secondary mb-2" style={{ fontSize: 11 }}>
-              <i className="bi bi-shield-check text-info me-1"></i> RBI Tokenized Checkout
+              <i className="bi bi-shield-check text-info me-1"></i> Payment provider checkout
             </div>
             <div className="small text-secondary" style={{ fontSize: 11 }}>
-              <i className="bi bi-patch-check-fill text-warning me-1"></i> Fair Trade Standards
+              <i className="bi bi-patch-check-fill text-warning me-1"></i> Transparent partner policies
             </div>
           </div>
         </div>

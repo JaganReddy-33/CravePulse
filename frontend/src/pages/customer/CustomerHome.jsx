@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -9,21 +9,23 @@ import ErrorState from '../../components/states/ErrorState';
 import EmptyState from '../../components/states/EmptyState';
 import { DEFAULT_HUB } from '../../config/panIndiaLocations';
 
-const CATEGORIES = [
-  { name: 'All', icon: 'grid' },
-  { name: 'North Indian', icon: 'egg-fried' },
-  { name: 'Biryani', icon: 'fire' },
-  { name: 'Pizza', icon: 'triangle' },
-  { name: 'Burgers', icon: 'stack' },
-  { name: 'Sushi', icon: 'water' },
-  { name: 'Salads', icon: 'flower1' },
-  { name: 'Desserts', icon: 'cake2' },
-];
+const RESTAURANT_PAGE_SIZE = 20;
+const ALL_CATEGORY = {
+  id: 'all',
+  name: 'All',
+  imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=240&h=240&fit=crop',
+};
 
 const CustomerHome = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [restaurants, setRestaurants] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [hasMoreRestaurants, setHasMoreRestaurants] = useState(false);
+  const [loadingMoreRestaurants, setLoadingMoreRestaurants] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState('');
+  const restaurantRequestId = useRef(0);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
@@ -59,6 +61,18 @@ const CustomerHome = () => {
     return saved || DEFAULT_HUB;
   });
 
+  useEffect(() => {
+    let active = true;
+    api.get('/catalog/categories')
+      .then((response) => {
+        if (active && Array.isArray(response.data)) setCategories(response.data);
+      })
+      .catch((error) => {
+        if (active) setCategoriesError(error.message || 'Cuisine filters are temporarily unavailable.');
+      });
+    return () => { active = false; };
+  }, []);
+
   // Sync state to URL search parameters
   useEffect(() => {
     const params = new URLSearchParams();
@@ -83,28 +97,64 @@ const CustomerHome = () => {
   }, []);
 
   const loadRestaurants = useCallback(async () => {
+    const requestId = ++restaurantRequestId.current;
     setLoading(true);
+    setLoadingMoreRestaurants(false);
     setFetchError(null);
+    setLoadMoreError('');
     try {
       const params = {};
       if (currentHub?.coords) { params.lat = currentHub.coords[0]; params.lng = currentHub.coords[1]; }
       if (search) params.search = search;
       if (selectedCuisine && selectedCuisine !== 'All') params.cuisine = selectedCuisine;
       if (vegOnly) params.vegOnly = true;
+      params.limit = RESTAURANT_PAGE_SIZE;
+      params.offset = 0;
 
       const res = await api.get('/restaurants', { params });
+      if (requestId !== restaurantRequestId.current) return;
       if (res.success && Array.isArray(res.data)) {
         setRestaurants(res.data);
+        setHasMoreRestaurants(res.data.length === RESTAURANT_PAGE_SIZE);
       } else {
         setRestaurants(res.data || []);
+        setHasMoreRestaurants(false);
       }
     } catch (e) {
+      if (requestId !== restaurantRequestId.current) return;
       console.error('Error fetching restaurants from backend:', e);
       setFetchError(e.message || 'Unable to connect to CravePulse servers.');
     } finally {
-      setLoading(false);
+      if (requestId === restaurantRequestId.current) setLoading(false);
     }
   }, [search, selectedCuisine, vegOnly, currentHub]);
+
+  const loadMoreRestaurants = async () => {
+    if (loadingMoreRestaurants || !hasMoreRestaurants) return;
+    const requestId = restaurantRequestId.current;
+    setLoadingMoreRestaurants(true);
+    setLoadMoreError('');
+    try {
+      const params = {
+        limit: RESTAURANT_PAGE_SIZE,
+        offset: restaurants.length,
+      };
+      if (currentHub?.coords) { params.lat = currentHub.coords[0]; params.lng = currentHub.coords[1]; }
+      if (search) params.search = search;
+      if (selectedCuisine && selectedCuisine !== 'All') params.cuisine = selectedCuisine;
+      if (vegOnly) params.vegOnly = true;
+      const response = await api.get('/restaurants', { params });
+      if (requestId !== restaurantRequestId.current) return;
+      if (!Array.isArray(response.data)) throw new Error('Restaurant page response was not a list.');
+      setRestaurants((current) => [...current, ...response.data]);
+      setHasMoreRestaurants(response.data.length === RESTAURANT_PAGE_SIZE);
+    } catch (error) {
+      if (requestId !== restaurantRequestId.current) return;
+      setLoadMoreError(error.message || 'Unable to load more restaurants.');
+    } finally {
+      if (requestId === restaurantRequestId.current) setLoadingMoreRestaurants(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(loadRestaurants, 200);
@@ -288,32 +338,25 @@ const CustomerHome = () => {
                 </div>
               }
             >
-              {CATEGORIES.map((cat) => {
+              {[ALL_CATEGORY, ...categories].map((cat) => {
                 const isActive = selectedCuisine === cat.name || (!selectedCuisine && cat.name === 'All');
                 return (
                   <button
-                    key={cat.name}
+                    key={cat.id}
                     type="button"
-                    className={`card rounded-4 text-center p-2 p-sm-3 flex-shrink-0 transition hover-lift ${
-                      isActive ? 'border border-2 border-primary bg-primary-subtle' : 'border bg-white'
-                    }`}
-                    style={{ width: 110, cursor: 'pointer' }}
+                    className={`cuisine-filter-button flex-shrink-0 transition ${isActive ? 'active' : ''}`}
                     onClick={() => setSelectedCuisine(cat.name === 'All' ? '' : cat.name)}
                     aria-label={`Select ${cat.name} cuisine`}
                     aria-pressed={isActive}
                   >
-                    <span
-                      className="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center fs-3"
-                      style={{ width: 64, height: 64, background: 'var(--c-primary-light)', color: 'var(--c-primary)' }}
-                      aria-hidden="true"
-                    >
-                      <i className={`bi bi-${cat.icon}`} />
-                    </span>
-                    <span className="fw-bold small text-dark w-100 text-truncate">{cat.name}</span>
+                    <img className="cuisine-filter-image" src={cat.imageUrl} alt="" loading="lazy"
+                      onError={(event) => { event.currentTarget.hidden = true; }} />
+                    <span className="fw-semibold small text-dark w-100 text-truncate">{cat.name}</span>
                   </button>
                 );
               })}
             </ScrollCarousel>
+            {categoriesError && <p className="small text-warning mt-2 mb-0" role="status">{categoriesError}</p>}
           </div>
 
           {/* Dynamic Filter Controls Bar */}
@@ -478,6 +521,15 @@ const CustomerHome = () => {
                                   CLOSED
                                 </span>
                                 <small className="fw-semibold text-light">Currently unavailable</small>
+                              </div>
+                            )}
+                            {loadMoreError && <div className="alert alert-warning mt-3 mb-0" role="alert">{loadMoreError}</div>}
+                            {!loading && !fetchError && hasMoreRestaurants && (
+                              <div className="text-center mt-4">
+                                <button type="button" className="btn btn-outline-primary rounded-pill px-4"
+                                  onClick={loadMoreRestaurants} disabled={loadingMoreRestaurants}>
+                                  {loadingMoreRestaurants ? 'Loading…' : 'Load more restaurants'}
+                                </button>
                               </div>
                             )}
                           </div>

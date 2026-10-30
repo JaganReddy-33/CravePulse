@@ -32,13 +32,13 @@ flowchart TD
             S_MENU["MenuServlet (/api/menu/*)"]
             S_CART["CartPricingServlet (/api/cart/*)"]
             S_ORD["OrderServlet (/api/orders/*)"]
-            S_RID["RiderServlet (/api/riders/*)"]
+            S_RID["RiderServlet (/api/rider/*)"]
             S_ADM["AdminServlet (/api/admin/*)"]
             S_DISP["DisputeServlet (/api/disputes/*)"]
             S_REV["ReviewServlet (/api/reviews/*)"]
             S_INV["InvoiceServlet (/api/invoices/*)"]
             WS_RT["RealtimeEndpoint (/ws/realtime)"]
-            S_SSE["SseServlet (/api/realtime/sse)"]
+            S_SSE["SseServlet (/api/events/sse)"]
         end
     end
 
@@ -414,13 +414,13 @@ Access permissions are enforced programmatically in `JwtAuthFilter` and verified
 | `POST /api/cart/price` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | `POST /api/orders` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | `GET /api/orders/{id}` | ✅ (Own) | ✅ (Own Rest.) | ✅ (Assigned) | ✅ (All) | ❌ |
-| `PUT /api/orders/{id}/status` | ❌ | ✅ (`ACCEPTED`, `PREPARING`, `READY`) | ✅ (`PICKED_UP`, `DELIVERED`) | ✅ (Any) | ❌ |
+| `POST /api/orders/{id}/status` | ❌ | ✅ (`ACCEPTED`, `PREPARING`, `READY`) | ✅ (`PICKED_UP`, `DELIVERED`) | ✅ (Any) | ❌ |
 | `POST /api/disputes` | ✅ (Own) | ❌ | ❌ | ❌ | ❌ |
-| `PUT /api/disputes/{id}/resolve`| ❌ | ❌ | ❌ | ✅ | ❌ |
-| `GET /api/riders/jobs` | ❌ | ❌ | ✅ (Active) | ✅ | ❌ |
-| `POST /api/riders/location` | ❌ | ❌ | ✅ | ❌ | ❌ |
+| `POST /api/disputes/{id}/resolve`| ❌ | ❌ | ❌ | ✅ | ❌ |
+| `GET /api/rider/offers` | ❌ | ❌ | ✅ | ✅ | ❌ |
+| `POST /api/rider/telemetry` | ❌ | ❌ | ✅ | ✅ | ❌ |
 | `GET /api/admin/metrics` | ❌ | ❌ | ❌ | ✅ | ❌ |
-| `PUT /api/admin/approvals` | ❌ | ❌ | ❌ | ✅ | ❌ |
+| `POST /api/admin/restaurant/{id}/kyc` | ❌ | ❌ | ❌ | ✅ | ❌ |
 | `GET /api/invoices/{id}` | ✅ (Own) | ✅ (Own Rest.) | ❌ | ✅ | ❌ |
 
 ---

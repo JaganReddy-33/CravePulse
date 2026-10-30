@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -54,6 +55,7 @@ public class OrderServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderServlet.class);
+    private static final SecureRandom OTP_RANDOM = new SecureRandom();
 
     private final OrderDao orderDao = new OrderDaoImpl();
     private final RestaurantDao restaurantDao = new RestaurantDaoImpl();
@@ -208,7 +210,7 @@ public class OrderServlet extends BaseServlet {
                 // Collision-safe order number: date + 6-char UUID fragment
                 String dateStr = DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
                 String orderNumber = "CP-" + dateStr + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-                String deliveryOtp = String.format("%04d", (int) (1000 + Math.random() * 9000));
+                String deliveryOtp = String.format("%04d", 1000 + OTP_RANDOM.nextInt(9000));
 
                 Order order = new Order();
                 order.setOrderNumber(orderNumber);
@@ -306,8 +308,11 @@ public class OrderServlet extends BaseServlet {
                 // Server-side persistent notification & real-time broadcasts
                 notificationService.sendNotification(customerId, "Order Placed",
                         "Your order #" + created.getOrderNumber() + " has been placed successfully.", "ORDER", String.valueOf(created.getId()));
+                String customerDeliveryOtp = created.getDeliveryOtp();
+                created.setDeliveryOtp(null);
                 registry.broadcastToRestaurant(restaurantId, "new_order_placed", created);
                 registry.broadcastToAdmin("new_order_placed", created);
+                created.setDeliveryOtp(customerDeliveryOtp);
 
                 // Trigger dispatch engine via scheduled executor
                 dispatchService.scheduleDispatch(orderId, 1500);
@@ -369,6 +374,7 @@ public class OrderServlet extends BaseServlet {
                     }
                 }
 
+                if (!"CUSTOMER".equalsIgnoreCase(role)) updated.setDeliveryOtp(null);
                 JsonUtil.sendSuccess(res, 200, "Order transitioned to " + targetStatus, updated);
             } catch (IllegalArgumentException | IllegalStateException e) {
                 JsonUtil.sendError(res, 400, e.getMessage());
@@ -437,6 +443,9 @@ public class OrderServlet extends BaseServlet {
             int offset = parseIntParam(req, "offset", 0);
 
             List<Order> list = orderDao.listCustomerOrders(customerId, limit, offset);
+            if (!"CUSTOMER".equalsIgnoreCase(getAuthenticatedRole(req))) {
+                list.forEach(order -> order.setDeliveryOtp(null));
+            }
             JsonUtil.sendSuccess(res, 200, "Customer orders", list);
             return;
         }

@@ -54,6 +54,9 @@ public class CatalogServlet extends BaseServlet {
                     }
                 }
                 JsonUtil.sendSuccess(res,200,"Configured delivery locations",cities.values());
+            } else if(path.equals("/categories")) {
+                List<Map<String,Object>> categories = new com.foodplatform.daoImpl.DiscoveryCategoryDaoImpl().listCategories(false);
+                JsonUtil.sendSuccess(res,200,"Restaurant discovery categories",categories);
             } else JsonUtil.sendError(res,404,"Endpoint not found");
         } catch(SQLException e) { JsonUtil.sendError(res,503,"Catalog unavailable. Please retry."); }
     }

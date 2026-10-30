@@ -1,6 +1,7 @@
 package com.foodplatform.servlet;
 
 import com.foodplatform.dao.RestaurantDao;
+import com.foodplatform.daoImpl.PayoutRequestDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.AnalyticsService;
@@ -22,6 +23,7 @@ public class RestaurantServlet extends BaseServlet {
     private static final long serialVersionUID = 1L;
 
     private final RestaurantDao restaurantDao = new RestaurantDaoImpl();
+    private final PayoutRequestDaoImpl payoutRequestDao = new PayoutRequestDaoImpl();
     private final AnalyticsService analyticsService = new AnalyticsService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
 
@@ -111,6 +113,7 @@ public class RestaurantServlet extends BaseServlet {
             settings.put("fssaiLicense", rest.getFssaiLicense());
             settings.put("gstNumber", rest.getGstNumber());
             settings.put("commissionRate", rest.getCommissionRate());
+            settings.put("costForTwo", rest.getCostForTwo());
             settings.put("bankAccountNumber", rest.getMaskedBankAccount());
             settings.put("bankIfsc", rest.getBankIfsc());
             settings.put("bankBeneficiaryName", rest.getBankBeneficiaryName());
@@ -145,6 +148,18 @@ public class RestaurantServlet extends BaseServlet {
             return;
         }
 
+        if (path.endsWith("/payout-requests")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID missing");
+                return;
+            }
+            if (!requireRestaurantOwner(req, res, restId)) return;
+            JsonUtil.sendSuccess(res, 200, "Restaurant payout balance and requests",
+                    payoutRequestDao.getRestaurantPayoutSummary(restId));
+            return;
+        }
+
         if (path.startsWith("/slug/")) {
             String slug = path.substring("/slug/".length()).trim();
             Restaurant r = restaurantDao.findBySlug(slug);
@@ -175,6 +190,32 @@ public class RestaurantServlet extends BaseServlet {
     @SuppressWarnings("unchecked")
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String path = req.getPathInfo() != null ? req.getPathInfo() : "";
+
+        if (path.endsWith("/payout-requests")) {
+            Long restId = parseIdFromPath(req);
+            if (restId == null) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "Restaurant ID is required");
+                return;
+            }
+            if (!requireRole(req, res, "RESTAURANT_OWNER")) return;
+            if (!requireRestaurantOwner(req, res, restId)) return;
+            JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (body == null || !body.has("amount") || !body.has("payoutDestination")) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "amount and payoutDestination are required");
+                return;
+            }
+            try {
+                Map<String, Object> request = payoutRequestDao.createRestaurantRequest(
+                        getAuthenticatedUserId(req), restId, body.get("amount").getAsBigDecimal(),
+                        body.get("payoutDestination").getAsString());
+                JsonUtil.sendSuccess(res, 201, "Payout request submitted for admin review", request);
+            } catch (IllegalArgumentException e) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            } catch (com.foodplatform.daoImpl.PayoutRequestConflictException e) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_CONFLICT, e.getMessage());
+            }
+            return;
+        }
 
         if (path.endsWith("/toggle-open")) {
             Long restId = parseIdFromPath(req);
@@ -229,8 +270,15 @@ public class RestaurantServlet extends BaseServlet {
                 String beneficiary = body.has("bankBeneficiaryName") && !body.get("bankBeneficiaryName").isJsonNull() ? body.get("bankBeneficiaryName").getAsString() : null;
                 String upi = body.has("upiId") && !body.get("upiId").isJsonNull() ? body.get("upiId").getAsString() : null;
                 int autoReject = body.has("autoRejectMinutes") ? body.get("autoRejectMinutes").getAsInt() : 10;
+                Integer costForTwo = body.has("costForTwo") && !body.get("costForTwo").isJsonNull()
+                        ? body.get("costForTwo").getAsInt() : null;
+                if (costForTwo != null && (costForTwo < 1 || costForTwo > 100000)) {
+                    JsonUtil.sendError(res, 400, "costForTwo must be between 1 and 100000");
+                    return;
+                }
 
-                restaurantDao.updateSettings(restId, name, phone, address, banner, bankAccount, ifsc, beneficiary, upi, autoReject);
+                restaurantDao.updateSettings(restId, name, phone, address, banner, bankAccount, ifsc, beneficiary,
+                        upi, autoReject, costForTwo, body.has("costForTwo"));
                 JsonUtil.sendSuccess(res, 200, "Restaurant settings updated successfully", Map.of("restaurantId", restId));
                 return;
             }

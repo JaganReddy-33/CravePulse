@@ -368,7 +368,7 @@ html, body {
 
 /* Global input placeholder readability guarantee */
 ::placeholder {
-  color: #94a3b8 !important;
+  color: #64748b !important;
   opacity: 1 !important;
 }
 

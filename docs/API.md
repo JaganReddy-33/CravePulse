@@ -22,16 +22,13 @@ Authorization: Bearer <jwt-access-token>
 ```json
 {
   "success": false,
-  "error": {
-    "code": "INVALID_STATE_TRANSITION",
-    "message": "Cannot transition order #104 from READY to ACCEPTED",
-    "timestamp": 1729881000000,
-    "path": "/api/orders/104/status"
-  }
+  "error": "Cannot transition order #104 from READY to ACCEPTED",
+  "statusCode": 400,
+  "timestamp": "2026-10-29T20:46:53.631497561Z"
 }
 ```
 
-Common HTTP status codes returned:
+The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response and commonly include:
 - `200 OK`: Request succeeded.
 - `201 Created`: Resource successfully created.
 - `400 Bad Request`: Payload validation failure or business rule violation.
@@ -155,8 +152,7 @@ Common HTTP status codes returned:
 ### 2.6 Verify Phone Number OTP
 - **Endpoint:** `POST /api/auth/verify-phone-otp`
 - **Auth Required:** Yes
-- **Request Body:** `{ "otp": "1234" }`
-- **Response (200 OK):** `{ "success": true, "data": { "verified": true } }`
+- Phone verification currently returns `503 Service Unavailable` until an SMS verification provider is configured.
 
 ### 2.7 Saved Address CRUD
 - **Endpoints:**
@@ -173,57 +169,19 @@ Common HTTP status codes returned:
 ### 3.1 Discover Restaurants (with Cross-Dish Search)
 - **Endpoint:** `GET /api/restaurants`
 - **Auth Required:** No
-- **Search Scope:** Matches restaurant name, cuisine types, description, AND dishes contained in active menus via SQL subquery.
+- **Query Parameters:** `lat`, `lng`, `cuisine`, `search`, `vegOnly`, `limit` (default 20), and `offset` (default 0).
+- `cuisine` matches `restaurant_profiles.cuisine_types`; `search` matches restaurant metadata and active menu items. `vegOnly=true` limits results to pure-vegetarian restaurants.
+- **Response:** `data` is a list of restaurant objects. Continue through the list with `offset += limit`; keep filters and coordinates unchanged between pages.
 
 ### 3.1.1 Search Suggestions (Dishes & Restaurants)
-- **Endpoint:** `GET /api/restaurants/suggestions?query={term}`
+- **Endpoint:** `GET /api/restaurants/suggestions?query={term}` (also accepts `q`)
 - **Auth Required:** No
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "restaurants": [
-      { "id": 1, "name": "Spice Symphony & Grill", "cuisineTypes": "North Indian, Biryani", "rating": 4.8 }
-    ],
-    "dishes": [
-      { "id": 1002, "name": "Hyderabadi Chicken Dum Biryani", "platformPrice": 320.00, "restaurantId": 1, "restaurantName": "Spice Symphony & Grill", "imageUrl": "..." }
-    ]
-  }
-}
-```
-- **Endpoint:** `GET /api/restaurants`
+- **Response:** `data` contains restaurant and dish suggestion lists.
+
+### 3.1.2 Customer Cuisine Filters
+- **Endpoint:** `GET /api/catalog/categories`
 - **Auth Required:** No
-- **Query Parameters:**
-  - `cuisine` (string, optional): Filter by cuisine e.g. "North Indian", "Burgers"
-  - `veg_only` (boolean, optional): `true` to show pure veg restaurants
-  - `lat` & `lng` (float, optional): User coordinates for Haversine distance ordering
-  - `rating_min` (float, optional): e.g. 4.0
-  - `search` (string, optional): Full-text search on name or cuisine
-  - `page` (int, default 1), `limit` (int, default 10)
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "id": 1,
-        "name": "Spice Symphony & Grill",
-        "cuisine_type": "North Indian, Tandoor",
-        "rating": 4.8,
-        "rating_count": 1420,
-        "average_prep_time_minutes": 22,
-        "distance_km": 2.4,
-        "is_open": true,
-        "is_busy_throttled": false,
-        "banner_image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"
-      }
-    ],
-    "pagination": { "page": 1, "limit": 10, "total": 14 }
-  }
-}
-```
+- Returns active, administrator-managed discovery categories with `id`, `name`, `imageUrl`, `displayOrder`, and `active`. The category name is used as the restaurant discovery `cuisine` parameter.
 
 ### 3.2 Get Menu Hierarchy
 - **Endpoint:** `GET /api/menu/restaurant/{restaurantId}`
@@ -331,33 +289,22 @@ Common HTTP status codes returned:
 - **Request Body:**
 ```json
 {
-  "restaurant_id": 1,
+  "restaurantId": 1,
   "items": [
-    { "menu_item_id": 101, "quantity": 2, "variant_id": 2, "addon_ids": [1] }
+    { "menuItemId": 101, "quantity": 2, "variantId": 2, "addonIds": [1] }
   ],
-  "delivery_address_id": 5,
-  "payment_method": "ONLINE",
-  "coupon_code": "FOOD50",
-  "delivery_notes": "Please ring bell and leave on shoe rack"
+  "deliveryAddressId": 5,
+  "paymentMode": "RAZORPAY",
+  "couponCode": "FOOD50",
+  "tipAmount": 0,
+  "specialInstructions": "Please ring bell and leave on shoe rack"
 }
 ```
-- **Response (201 Created):**
-```json
-{
-  "success": true,
-  "data": {
-    "order_id": 501,
-    "order_number": "ORD-20261025-501",
-    "order_status": "PLACED",
-    "total_amount": 1314.00,
-    "promised_delivery_time": "2026-10-25T19:35:00Z",
-    "websocket_channel": "order:501"
-  }
-}
-```
+- The request may include an `X-Idempotency-Key` header. The response data includes `id`, `orderId`, `orderNumber`, `status`, payment fields, the created `order`, and `paymentSession` when applicable.
+- The server generates a four-digit delivery PIN. The authenticated customer can retrieve it on the order tracking page; it is hidden from restaurant and rider order-detail responses and should only be shared when the rider arrives.
 
 ### 5.2 Transition Order State (Partner / Rider / Admin)
-- **Endpoint:** `PUT /api/orders/{id}/status`
+- **Endpoint:** `POST /api/orders/{id}/status`
 - **Auth Required:** Yes
 - **Request Body:**
 ```json
@@ -366,122 +313,33 @@ Common HTTP status codes returned:
   "reason": "Chef accepted ticket and initiated cooking"
 }
 ```
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "order_id": 501,
-    "previous_status": "ACCEPTED",
-    "current_status": "PREPARING",
-    "event_timestamp": "2026-10-25T18:58:12Z"
-  }
-}
-```
+- The response data is the updated order object. Allowed transitions depend on the caller's role and current order state.
 
-### 5.3 Order Events Audit Log
-- **Endpoint:** `GET /api/orders/{id}/events`
+### 5.3 Get Order Details
+- **Endpoint:** `GET /api/orders/{id}`
 - **Auth Required:** Yes
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": [
-    { "status": "PLACED", "created_at": "2026-10-25T18:55:00Z", "note": "Order placed with Razorpay transaction TXN_98712" },
-    { "status": "ACCEPTED", "created_at": "2026-10-25T18:56:10Z", "note": "Kitchen acknowledged" },
-    { "status": "PREPARING", "created_at": "2026-10-25T18:58:12Z", "note": "Chef started preparation" }
-  ]
-}
-```
+- The authenticated order participant receives the order details. Live status updates are delivered over the WebSocket order channel; this API does not expose a separate `/events` endpoint.
+- `GET /api/orders/number/{orderNumber}` returns the same owner-checked tracking detail. Only the owning customer receives `deliveryOtp`; the rider must enter the PIN provided at handoff.
 
 ---
 
 ## 6. Fair-Pay Rider Protocol APIs
 
-### 6.1 Available Dispatch Offers
-- **Endpoint:** `GET /api/riders/jobs`
-- **Auth Required:** Yes (Role: `RIDER`)
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "dispatch_id": 204,
-      "order_id": 501,
-      "restaurant_name": "Spice Symphony & Grill",
-      "restaurant_address": "Indiranagar 100ft Rd, Bangalore",
-      "customer_address": "Koramangala 4th Block, Bangalore",
-      "pickup_distance_km": 1.2,
-      "drop_distance_km": 3.8,
-      "total_distance_km": 5.0,
-      "fair_pay_breakdown": {
-        "base_pay": 35.00,
-        "distance_pay": 30.00,
-        "estimated_wait_compensation": 12.00,
-        "surge_incentive": 15.00,
-        "total_estimated_payout": 92.00
-      },
-      "dish_items_count": 2,
-      "timeout_seconds_remaining": 45
-    }
-  ]
-}
-```
+Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADMIN` authentication.
 
-### 6.2 Accept Job Dispatch
-- **Endpoint:** `PUT /api/riders/jobs/{dispatchId}/accept`
-- **Auth Required:** Yes (Role: `RIDER`)
-- **Response (200 OK):** Returns confirmed dispatch task with customer phone and navigation waypoint links.
-
-### 6.3 Zero-Penalty Job Rejection
-- **Endpoint:** `PUT /api/riders/jobs/{dispatchId}/reject`
-- **Auth Required:** Yes (Role: `RIDER`)
-- **Request Body:**
-```json
-{
-  "reason": "HEAVY_RAIN_NO_GEAR"
-}
-```
-*(Reasons: `DISTANCE_TOO_FAR`, `PUNCTURE_MECHANICAL`, `HEAVY_RAIN_NO_GEAR`, `SHIFT_END`, `PERSONAL_EMERGENCY`)*
-- **Response (200 OK):** Job reassigned to next nearest rider with 0 impact on acceptance rating or incentives.
-
-### 6.4 Record Restaurant Arrival (Initiate Wait-Timer)
-- **Endpoint:** `POST /api/riders/wait-timer`
-- **Auth Required:** Yes (Role: `RIDER`)
-- **Request Body:**
-```json
-{
-  "dispatch_id": 204,
-  "action": "ARRIVED_AT_RESTAURANT"
-}
-```
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "wait_timer_started_at": "2026-10-25T19:12:00Z",
-    "grace_period_minutes": 8,
-    "compensation_rate_per_minute": 2.00,
-    "status": "WAIT_METER_RUNNING"
-  }
-}
-```
-
-### 6.5 Push Live GPS Telemetry
-- **Endpoint:** `POST /api/riders/location`
-- **Auth Required:** Yes (Role: `RIDER`)
-- **Request Body:**
-```json
-{
-  "latitude": 12.9734,
-  "longitude": 77.5998,
-  "heading_degrees": 185.4,
-  "speed_kmh": 28.5
-}
-```
-- **Response (200 OK):** Broadcasts location update on subscribed `order:{orderId}` channel via WebSocket.
+- `GET /api/rider/profile`: retrieve the authenticated rider profile.
+- `POST /api/rider/profile`: update vehicle type, vehicle number, and driving license.
+- `POST /api/rider/profile/status`: toggle online state with `{ "online": true }` (also accepts `isOnline`).
+- `GET /api/rider/active-job` (aliases: `/orders/active`, `/active`): retrieve the active dispatch.
+- `GET /api/rider/offers`: retrieve dispatch offers.
+- `POST /api/rider/{dispatchId}/accept` and `/reject`: accept or reject an offer. Rejection accepts an optional `{ "reason": "..." }`.
+- `POST /api/rider/orders/{orderId}/status`: update a trip milestone; delivery completion requires `{ "status": "DELIVERED", "deliveryOtp": "..." }`.
+- `POST /api/rider/orders/{orderId}/wait-compensation`: claim eligible wait-time compensation.
+- `POST /api/rider/telemetry`: submit `{ "latitude", "longitude", "speed", "heading", "orderId" }`; coordinates are validated server-side.
+- `GET /api/rider/earnings`, `GET /api/rider/history?limit=50&offset=0`, and `GET /api/rider/cod-ledger?limit=50&offset=0`: earnings, paginated trips, and COD ledger.
+- `GET /api/rider/payout-requests`: wallet amount available for withdrawal, pending reservations, and the rider's payout request history. COD cash collected is tracked separately and is not part of the withdrawable wallet balance.
+- `POST /api/rider/payout-requests`: submit `{ "amount": 500.00, "payoutDestination": "name@bank" }`. The amount is reserved against the available wallet balance while pending. Requests are manually reviewed; a payout is not transferred automatically.
+- `POST /api/rider/cod-settlement`: record a COD cash deposit.
 
 ---
 
@@ -747,7 +605,7 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ## 10. Non-Blocking SSE & Order Chat REST Endpoints
 
 ### 10.1 Server-Sent Events (SSE) Stream
-- **Endpoint:** `GET /api/realtime/sse?token=<jwt>`
+- **Endpoint:** `GET /api/events/sse?token=<jwt>`
 - **Auth Required:** Yes (via query token or `Authorization: Bearer <jwt>`)
 - **Transport:** HTTP text/event-stream using non-blocking Servlet 3.0 `AsyncContext`.
 - **Keepalive:** Heartbeat comment `: ping` dispatched every 15 seconds.
@@ -824,16 +682,24 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ### 11.4 Partner Financial Settlements Ledger
 - **Endpoint:** `GET /api/restaurants/{id}/payouts`
 - **Auth Required:** Yes (Owner or `ADMIN`)
-- **Response (200 OK):** Array of historical settlement statements containing `payoutReference`, `grossSales`, `commissionAmount`, `netPayout`, `status`, and bank `utrNumber`.
+- **Response (200 OK):** Array of recorded settlement statements containing `payoutReference`, `grossSales`, `commissionAmount`, `netPayout`, `status`, and bank `utrNumber`. Empty ledgers remain empty; the API does not synthesize paid statements or transfer references.
 
-### 11.5 Real-Time SQL Analytics
+### 11.5 Partner Payout Requests
+- `GET /api/restaurants/{id}/payout-requests` returns the available balance, pending amount, net eligible earnings, and request history.
+- `POST /api/restaurants/{id}/payout-requests` accepts `{ "amount": 500.00, "payoutDestination": "restaurant@bank" }`. The destination is a UPI ID and is stored with the request. Available balance is calculated from delivered, paid orders after commission and commission GST, less recorded paid settlements and pending requests. COD orders are excluded until collection is reconciled.
+- Payout requests are manually reviewed. The application does not initiate a bank/UPI transfer.
+
+### 11.6 Real-Time SQL Analytics
 - **Endpoint:** `GET /api/restaurants/{id}/analytics`
 - **Auth Required:** Yes (Owner or `ADMIN`)
 - **Response (200 OK):** Computed SQL metrics containing `summaryToday`, `summary7Days`, `summary30Days`, `summaryAllTime`, `cancellation` (rate & count), `peakHours`, `dailyTrend7Days`, `topDishes`, and `ratings`.
 
-### 11.6 Menu Management & Soft Deletion
+### 11.7 Menu Management & Soft Deletion
+- **Endpoint:** `GET /api/menu/restaurant/{restaurantId}` (menu categories and items)
+- **Endpoint:** `GET /api/menu/item/{id}` (item details)
 - **Endpoint:** `POST /api/menu/item` (Create dish with image URL validation)
 - **Endpoint:** `POST /api/menu/item/{id}/update` (Update dish details and prices)
+- **Endpoint:** `POST /api/menu/item/{id}/toggle-availability`
 - **Endpoint:** `POST /api/menu/item/{id}/delete` (Soft delete dish, setting `is_deleted = TRUE`)
 - **Endpoint:** `POST /api/menu/restaurant/{id}/bulk-availability` (Bulk mark sold-out or in-stock)
 - **Endpoint:** `POST /api/menu/restaurant/{id}/reorder` (Update item display ordering)
@@ -841,9 +707,25 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 - **Endpoint:** `POST /api/menu/item/{id}/variants` (Add portion variant)
 - **Endpoint:** `POST /api/menu/item/{id}/addons` (Add customer add-on)
 
+Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpoint not found: /item` is emitted by the menu servlet's GET fallback, not its POST handler. If it appears while creating an item, inspect the browser Network request method and verify the backend deployment revision and API origin.
+
 ---
 
 ## 12. Admin Console & Platform Operations
+
+### Payout Review
+- `GET /api/admin/payout-requests?status=PENDING|PAID|REJECTED` lists payout requests for admin review.
+- `POST /api/admin/payout-requests/{id}/process` accepts `status` (`PAID` or `REJECTED`), `adminNote`, and `paymentReference`. Marking a request `PAID` requires a transfer reference and `transferConfirmed: true`; this records a completed external transfer but does not initiate one. Rider wallet debits and payout status changes are committed atomically.
+
+### 12.0 Discovery Categories, Partner Approval, and Restaurant Status
+- **List/manage categories:** `GET /api/admin/categories`
+- **Create category:** `POST /api/admin/categories` with `{ "name", "imageUrl", "displayOrder" }`. Photo URLs must use HTTPS.
+- **Edit/restore category:** `POST /api/admin/categories/{id}/update` with category fields and `active`.
+- **Hide category:** `POST /api/admin/categories/{id}/delete`; this deactivates the category without deleting history.
+- **Approve/revoke restaurant:** `POST /api/admin/restaurant/{id}/kyc` with `{ "approved": true|false, "reason": "..." }`.
+- **Approve/revoke rider:** `POST /api/admin/rider/{id}/kyc` with the same body shape.
+- Approval updates the profile KYC flag and linked account status in one database transaction (`ACTIVE` on approval, `SUSPENDED` on revocation). The reason is persisted in an in-app notification for the partner.
+- **Activate/pause restaurant:** `POST /api/admin/restaurant/{id}/status` with `{ "status": "ACTIVE"|"PAUSED" }`. An unapproved restaurant cannot be activated.
 
 ### 12.1 Real-Time Operations Telemetry & SQL Platform Metrics
 - **Endpoint:** `GET /api/admin/metrics`
@@ -904,7 +786,7 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ```
 
 ### 12.3 User Directory Moderation & Fraud Risk Management
-- **Search Users:** `GET /api/admin/users?q={query}&role={CUSTOMER|RESTAURANT|RIDER|ADMIN}&status={ACTIVE|SUSPENDED}&limit=50&offset=0`
+- **Search Users:** `GET /api/admin/users?query={query}&role={CUSTOMER|RESTAURANT_OWNER|RIDER|ADMIN}&status={ACTIVE|SUSPENDED}&limit=50&offset=0`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Response (200 OK):** Paginated array of users including `id`, `fullName`, `email`, `phone`, `role`, `status`, `fraudFlagCount`, and `createdAt`.
 
@@ -1039,4 +921,11 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 }
 ```
 
+---
 
+## 14. Job Listings & Applications
+
+- **List active jobs:** `GET /api/jobs?status=ACTIVE&department={department}&limit=12&offset=0`. Results are paginated with `limit` (maximum 100) and `offset`; non-admin callers only receive active jobs.
+- **Job details:** `GET /api/jobs/{id}`.
+- **Departments:** `GET /api/jobs/departments`.
+- **Apply:** `POST /api/jobs/apply` with `jobId`, `applicantName`, and `email` (optional fields include `phone`, `portfolioUrl`, `resumeFilename`, `coverNote`, `experienceYears`, and `currentCompany`).

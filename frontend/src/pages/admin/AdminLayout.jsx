@@ -19,7 +19,9 @@ const AdminLayout = () => {
   const navLinks = (
     <div className="nav flex-column gap-1 flex-grow-1">
       <Link to="/admin/service-areas" onClick={() => setShowMobileSidebar(false)} className="nav-link py-2 px-3 rounded-3 fw-semibold touch-target text-secondary">Service areas</Link>
+      <Link to="/admin/categories" onClick={() => setShowMobileSidebar(false)} className={`nav-link py-2 px-3 rounded-3 fw-semibold touch-target ${location.pathname === '/admin/categories' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}>Cuisine categories</Link>
       <Link to="/admin/support" onClick={() => setShowMobileSidebar(false)} className="nav-link py-2 px-3 rounded-3 fw-semibold touch-target text-secondary">Support inbox</Link>
+      <Link to="/admin/payouts" onClick={() => setShowMobileSidebar(false)} className={`nav-link py-2 px-3 rounded-3 fw-semibold touch-target ${location.pathname === '/admin/payouts' ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'}`}>Payout review</Link>
       <Link
         to="/admin"
         onClick={() => setShowMobileSidebar(false)}
@@ -250,6 +252,9 @@ const AdminLayout = () => {
           </Link>
           <Link to="/admin/approvals" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/approvals' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
             KYC Approvals
+          </Link>
+          <Link to="/admin/payouts" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/payouts' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
+            Payouts
           </Link>
           <Link to="/admin/users" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/admin/users' ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'}`}>
             Users

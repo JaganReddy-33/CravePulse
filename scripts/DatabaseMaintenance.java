@@ -49,12 +49,30 @@ public class DatabaseMaintenance {
                 Files.writeString(output,"Administrator: "+args[2]+"\nEmail: "+args[1]+"\nTemporary password: "+password+"\nKeep this file private.\n",StandardCharsets.UTF_8,StandardOpenOption.CREATE_NEW);
                 System.out.println("Administrator created. Credentials saved privately to "+output.toAbsolutePath());return;
             }
-            if(args[0].equals("clear-fixtures") || args[0].equals("clear-test")) {
+            if(args[0].equals("clear-fixtures") || args[0].equals("clear-test") || args[0].equals("reset-local-demo")) {
                 boolean test=args[0].equals("clear-test");
+                boolean localReset=args[0].equals("reset-local-demo");
                 if(test) {
                     if(!"cravepulse_test".equals(db)) throw new IllegalStateException("Test cleanup requires cravepulse_test");
                     try(Statement st=c.createStatement();ResultSet rs=st.executeQuery("SELECT COUNT(*) FROM users WHERE email NOT REGEXP '^[a-z]+-[a-f0-9]{8}@example[.]invalid$'")) {
                         rs.next();if(rs.getLong(1)>0) throw new IllegalStateException("Unrecognized test accounts; refusing cleanup");
+                    }
+                } else if(localReset) {
+                    if(args.length!=4 || !"food_delivery_db".equals(db) || !db.equals(args[1])
+                            || !"RESET_LOCAL_food_delivery_db".equals(args[3])) {
+                        throw new IllegalArgumentException("Local reset requires the exact database name and confirmation RESET_LOCAL_food_delivery_db");
+                    }
+                    String jdbcUrl=c.getMetaData().getURL();
+                    String host=java.net.URI.create(jdbcUrl.substring("jdbc:".length())).getHost();
+                    if(host==null || !Set.of("localhost","127.0.0.1","::1","[::1]").contains(host.toLowerCase(Locale.ROOT))) {
+                        throw new IllegalStateException("Local reset is allowed only for a loopback MySQL connection");
+                    }
+                    Path previous=Path.of(args[2]);
+                    if(!Files.isRegularFile(previous) || Files.size(previous)<100) throw new IllegalStateException("A nonempty local backup is required");
+                    try(BufferedReader reader=Files.newBufferedReader(previous)) {
+                        if(!("-- CravePulse database backup: "+db).equals(reader.readLine())) {
+                            throw new IllegalStateException("Backup does not identify the selected local database");
+                        }
                     }
                 } else {
                     if(args.length!=3 || !db.equals(args[1])) throw new IllegalArgumentException("Pass exact database name and backup path");
@@ -63,7 +81,7 @@ public class DatabaseMaintenance {
                     if(unknown>0) throw new IllegalStateException("Non-fixture accounts found; refusing to delete real user data");
                 }
                 Set<String> pending=new LinkedHashSet<>(tables);
-                pending.removeAll(Set.of("schema_migrations","platform_settings"));
+                pending.removeAll(Set.of("schema_migrations","platform_settings","discovery_categories"));
                 List<String> deletionOrder=new ArrayList<>();
                 Map<String,Set<String>> dependents=new HashMap<>();
                 try(PreparedStatement ps=c.prepareStatement("SELECT TABLE_NAME,REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=? AND REFERENCED_TABLE_NAME IS NOT NULL")) {
@@ -82,7 +100,7 @@ public class DatabaseMaintenance {
                 c.setAutoCommit(false);
                 try {
                     for(String table:deletionOrder) try(Statement st=c.createStatement()) {st.executeUpdate("DELETE FROM "+quote(table));}
-                    c.commit();System.out.println("Fixture records cleared transactionally. Configuration and migration history retained.");
+                    c.commit();System.out.println((localReset?"Local demo database":"Fixture records")+" cleared transactionally. Schema migration history, platform settings, and discovery categories retained.");
                 } catch(Exception e) {c.rollback();throw e;}
                 return;
             }

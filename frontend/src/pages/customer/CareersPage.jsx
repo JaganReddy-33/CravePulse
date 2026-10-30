@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+
+const JOB_PAGE_SIZE = 12;
 
 const CareersPage = () => {
   const { user } = useAuth();
@@ -12,31 +14,63 @@ const CareersPage = () => {
   const [jobs, setJobs] = useState([]);
   const [departments, setDepartments] = useState(['All']);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState('');
   const [error, setError] = useState(null);
+  const jobsRequestId = useRef(0);
 
   const activeDept = searchParams.get('dept') || 'All';
 
   const fetchJobs = useCallback(async () => {
+    const requestId = ++jobsRequestId.current;
+    setLoadingMore(false);
+    setLoadMoreError('');
     try {
       setLoading(true);
-      const params = { status: 'ACTIVE' };
+      const params = { status: 'ACTIVE', limit: JOB_PAGE_SIZE, offset: 0 };
       if (activeDept && activeDept !== 'All') params.department = activeDept;
 
       const res = await api.get('/jobs', { params });
+      if (requestId !== jobsRequestId.current) return;
       if (res.success && Array.isArray(res.data)) {
         setJobs(res.data);
+        setHasMore(res.data.length === JOB_PAGE_SIZE);
       } else {
         setJobs([]);
+        setHasMore(false);
       }
       setError(null);
     } catch (err) {
+      if (requestId !== jobsRequestId.current) return;
       console.error('Error fetching jobs:', err);
       setError('Unable to load open positions. Please try again.');
       setJobs([]);
     } finally {
-      setLoading(false);
+      if (requestId === jobsRequestId.current) setLoading(false);
     }
   }, [activeDept]);
+
+  const loadMoreJobs = async () => {
+    if (loadingMore || !hasMore) return;
+    const requestId = jobsRequestId.current;
+    setLoadingMore(true);
+    try {
+      setLoadMoreError('');
+      const params = { status: 'ACTIVE', limit: JOB_PAGE_SIZE, offset: jobs.length };
+      if (activeDept && activeDept !== 'All') params.department = activeDept;
+      const response = await api.get('/jobs', { params });
+      if (requestId !== jobsRequestId.current) return;
+      if (!Array.isArray(response.data)) throw new Error('Job page response was not a list.');
+      setJobs((current) => [...current, ...response.data]);
+      setHasMore(response.data.length === JOB_PAGE_SIZE);
+    } catch (loadError) {
+      if (requestId !== jobsRequestId.current) return;
+      setLoadMoreError(loadError.message || 'Unable to load more positions.');
+    } finally {
+      if (requestId === jobsRequestId.current) setLoadingMore(false);
+    }
+  };
 
   const fetchDepartments = useCallback(async () => {
     try {
@@ -214,6 +248,15 @@ const CareersPage = () => {
                           {tag}
                         </span>
                       ))}
+                    </div>
+                  )}
+                  {loadMoreError && <div role="alert" className="alert alert-warning">{loadMoreError}</div>}
+                  {!loading && !error && hasMore && (
+                    <div className="text-center mb-5">
+                      <button type="button" className="btn btn-outline-primary rounded-pill px-4"
+                        disabled={loadingMore} onClick={loadMoreJobs}>
+                        {loadingMore ? 'Loading…' : 'Load more positions'}
+                      </button>
                     </div>
                   )}
                 </div>

@@ -66,7 +66,9 @@ const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminAuditLogs = lazy(() => import('./pages/admin/AdminAuditLogs'));
 const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminServiceAreas = lazy(() => import('./pages/admin/AdminServiceAreas'));
+const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const AdminPayouts = lazy(() => import('./pages/admin/AdminPayouts'));
 const AdminAuth = lazy(() => import('./pages/admin/AdminAuth'));
 
 function App() {
@@ -242,7 +244,9 @@ function App() {
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="console/platform-dynamic-settings" element={<AdminSettings />} />
                     <Route path="support" element={<AdminSupport />} />
+                    <Route path="payouts" element={<AdminPayouts />} />
                     <Route path="service-areas" element={<AdminServiceAreas />} />
+                    <Route path="categories" element={<AdminCategories />} />
                     <Route path="audit-logs" element={<AdminAuditLogs />} />
                     <Route path="console/audit-trail-and-exports" element={<AdminAuditLogs />} />
                     <Route path="careers" element={<AdminJobs />} />

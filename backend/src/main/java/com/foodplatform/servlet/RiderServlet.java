@@ -3,6 +3,7 @@ package com.foodplatform.servlet;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.RiderDao;
 import com.foodplatform.daoImpl.OrderDaoImpl;
+import com.foodplatform.daoImpl.PayoutRequestDaoImpl;
 import com.foodplatform.daoImpl.RiderDaoImpl;
 import com.foodplatform.model.DeliveryDispatch;
 import com.foodplatform.model.OrderItem;
@@ -29,6 +30,7 @@ public class RiderServlet extends BaseServlet {
 
     private final RiderDao riderDao = new RiderDaoImpl();
     private final OrderDao orderDao = new OrderDaoImpl();
+    private final PayoutRequestDaoImpl payoutRequestDao = new PayoutRequestDaoImpl();
     private final DispatchService dispatchService = new DispatchService();
     private final RealtimeSessionRegistry registry = RealtimeSessionRegistry.getInstance();
 
@@ -68,6 +70,9 @@ public class RiderServlet extends BaseServlet {
                 summary.put("maxCashLimit", profile.getMaxCashLimit());
                 JsonUtil.sendSuccess(res, 200, "Earnings summary", summary);
             }
+
+            case "/payout-requests" -> JsonUtil.sendSuccess(res, 200, "Rider payout balance and requests",
+                    payoutRequestDao.getRiderPayoutSummary(userId));
 
             case "/history", "/trips" -> {
                 int limit = getIntParam(req, "limit", 50);
@@ -118,6 +123,28 @@ public class RiderServlet extends BaseServlet {
 
         if (!profile.isKycApproved()) {
             JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Rider account is pending KYC approval from platform administrators.");
+            return;
+        }
+
+        if ("/payout-requests".equals(path)) {
+            if (!"RIDER".equalsIgnoreCase(getAuthenticatedRole(req))) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Only the rider account owner can request a payout");
+                return;
+            }
+            JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (body == null || !body.has("amount") || !body.has("payoutDestination")) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "amount and payoutDestination are required");
+                return;
+            }
+            try {
+                Map<String, Object> request = payoutRequestDao.createRiderRequest(
+                        userId, body.get("amount").getAsBigDecimal(), body.get("payoutDestination").getAsString());
+                JsonUtil.sendSuccess(res, 201, "Payout request submitted for admin review", request);
+            } catch (IllegalArgumentException e) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            } catch (com.foodplatform.daoImpl.PayoutRequestConflictException e) {
+                JsonUtil.sendError(res, HttpServletResponse.SC_CONFLICT, e.getMessage());
+            }
             return;
         }
 

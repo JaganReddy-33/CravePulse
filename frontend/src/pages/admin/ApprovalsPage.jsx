@@ -38,9 +38,9 @@ const ApprovalsPage = () => {
         reason: reason || (currentStatus ? 'Revoked by compliance officer' : 'KYC and FSSAI verified')
       });
       if (res.success) {
-        setRestaurants(prev => prev.map(r => r.id === restId ? { ...r, kycApproved: !currentStatus } : r));
+        setRestaurants(prev => prev.map(r => r.id === restId ? { ...r, isKycApproved: !currentStatus } : r));
         if (selectedEntity && selectedEntity.id === restId) {
-          setSelectedEntity(prev => ({ ...prev, kycApproved: !currentStatus }));
+          setSelectedEntity(prev => ({ ...prev, isKycApproved: !currentStatus }));
         }
       }
     } catch (e) {
@@ -58,9 +58,9 @@ const ApprovalsPage = () => {
         reason: reason || (currentStatus ? 'Revoked by fleet supervisor' : 'Driver license & RC verified')
       });
       if (res.success) {
-        setRiders(prev => prev.map(r => r.id === riderId ? { ...r, kycApproved: !currentStatus } : r));
+        setRiders(prev => prev.map(r => r.id === riderId ? { ...r, isKycApproved: !currentStatus } : r));
         if (selectedEntity && selectedEntity.id === riderId) {
-          setSelectedEntity(prev => ({ ...prev, kycApproved: !currentStatus }));
+          setSelectedEntity(prev => ({ ...prev, isKycApproved: !currentStatus }));
         }
       }
     } catch (e) {
@@ -123,8 +123,8 @@ const ApprovalsPage = () => {
                         <td>{r.phone}</td>
                         <td>{r.commissionRate}%</td>
                         <td>
-                          <span className={`badge ${r.kycApproved ? 'bg-success' : 'bg-warning text-dark'}`}>
-                            {r.kycApproved ? 'VERIFIED' : 'PENDING'}
+                          <span className={`badge ${r.isKycApproved ? 'bg-success' : 'bg-warning text-dark'}`}>
+                            {r.isKycApproved ? 'VERIFIED' : 'PENDING'}
                           </span>
                         </td>
                         <td className="text-end">
@@ -136,10 +136,10 @@ const ApprovalsPage = () => {
                               <i className="bi bi-file-earmark-text me-1"></i> View Docs
                             </button>
                             <button
-                              className={`btn btn-sm rounded-pill px-3 ${r.kycApproved ? 'btn-outline-danger' : 'btn-success text-dark fw-bold'}`}
-                              onClick={() => handleToggleRestaurantKyc(r.id, r.kycApproved)}
+                              className={`btn btn-sm rounded-pill px-3 ${r.isKycApproved ? 'btn-outline-danger' : 'btn-success text-dark fw-bold'}`}
+                              onClick={() => handleToggleRestaurantKyc(r.id, r.isKycApproved)}
                             >
-                              {r.kycApproved ? 'Revoke' : 'Approve ✓'}
+                              {r.isKycApproved ? 'Revoke' : 'Approve ✓'}
                             </button>
                           </div>
                         </td>
@@ -187,8 +187,8 @@ const ApprovalsPage = () => {
                           <span className="text-warning">★ {rd.rating}</span>
                         </td>
                         <td>
-                          <span className={`badge ${rd.kycApproved ? 'bg-success' : 'bg-warning text-dark'}`}>
-                            {rd.kycApproved ? 'VERIFIED' : 'PENDING'}
+                          <span className={`badge ${rd.isKycApproved ? 'bg-success' : 'bg-warning text-dark'}`}>
+                            {rd.isKycApproved ? 'VERIFIED' : 'PENDING'}
                           </span>
                         </td>
                         <td className="text-end">
@@ -200,10 +200,10 @@ const ApprovalsPage = () => {
                               <i className="bi bi-file-earmark-text me-1"></i> View Docs
                             </button>
                             <button
-                              className={`btn btn-sm rounded-pill px-3 ${rd.kycApproved ? 'btn-outline-danger' : 'btn-success text-dark fw-bold'}`}
-                              onClick={() => handleToggleRiderKyc(rd.id, rd.kycApproved)}
+                              className={`btn btn-sm rounded-pill px-3 ${rd.isKycApproved ? 'btn-outline-danger' : 'btn-success text-dark fw-bold'}`}
+                              onClick={() => handleToggleRiderKyc(rd.id, rd.isKycApproved)}
                             >
-                              {rd.kycApproved ? 'Revoke' : 'Approve ✓'}
+                              {rd.isKycApproved ? 'Revoke' : 'Approve ✓'}
                             </button>
                           </div>
                         </td>
@@ -312,8 +312,8 @@ const ApprovalsPage = () => {
 
               <div className="modal-footer border-0 pt-0 d-flex justify-content-between">
                 <div>
-                  <span className={`badge ${selectedEntity.kycApproved ? 'bg-success' : 'bg-warning text-dark'} px-3 py-2`}>
-                    Status: {selectedEntity.kycApproved ? 'VERIFIED' : 'PENDING APPROVAL'}
+                  <span className={`badge ${selectedEntity.isKycApproved ? 'bg-success' : 'bg-warning text-dark'} px-3 py-2`}>
+                    Status: {selectedEntity.isKycApproved ? 'VERIFIED' : 'PENDING APPROVAL'}
                   </span>
                 </div>
                 <div className="d-flex gap-2">
@@ -323,18 +323,18 @@ const ApprovalsPage = () => {
                   {entityType === 'RESTAURANT' ? (
                     <button
                       type="button"
-                      className={`btn rounded-pill px-4 fw-bold ${selectedEntity.kycApproved ? 'btn-outline-danger' : 'btn-success text-dark'}`}
-                      onClick={() => handleToggleRestaurantKyc(selectedEntity.id, selectedEntity.kycApproved)}
+                      className={`btn rounded-pill px-4 fw-bold ${selectedEntity.isKycApproved ? 'btn-outline-danger' : 'btn-success text-dark'}`}
+                      onClick={() => handleToggleRestaurantKyc(selectedEntity.id, selectedEntity.isKycApproved)}
                     >
-                      {selectedEntity.kycApproved ? 'Revoke License' : 'Approve Partner ✓'}
+                      {selectedEntity.isKycApproved ? 'Revoke License' : 'Approve Partner ✓'}
                     </button>
                   ) : (
                     <button
                       type="button"
-                      className={`btn rounded-pill px-4 fw-bold ${selectedEntity.kycApproved ? 'btn-outline-danger' : 'btn-success text-dark'}`}
-                      onClick={() => handleToggleRiderKyc(selectedEntity.id, selectedEntity.kycApproved)}
+                      className={`btn rounded-pill px-4 fw-bold ${selectedEntity.isKycApproved ? 'btn-outline-danger' : 'btn-success text-dark'}`}
+                      onClick={() => handleToggleRiderKyc(selectedEntity.id, selectedEntity.isKycApproved)}
                     >
-                      {selectedEntity.kycApproved ? 'Revoke Clearance' : 'Approve Captain ✓'}
+                      {selectedEntity.isKycApproved ? 'Revoke Clearance' : 'Approve Captain ✓'}
                     </button>
                   )}
                 </div>

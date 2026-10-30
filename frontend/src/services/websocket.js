@@ -1,4 +1,23 @@
 import { getAccessToken } from './session';
+
+export function resolveRealtimeUrl(configuredWsUrl, configuredApiUrl, origin) {
+  const wsUrl = configuredWsUrl
+    ? new URL(configuredWsUrl, origin)
+    : new URL(configuredApiUrl, origin);
+  if (wsUrl.protocol === 'http:') wsUrl.protocol = 'ws:';
+  else if (wsUrl.protocol === 'https:') wsUrl.protocol = 'wss:';
+
+  const basePath = wsUrl.pathname.replace(/\/+$/, '');
+  if (/\/ws\/realtime$/.test(basePath)) {
+    wsUrl.pathname = basePath;
+  } else if (/\/ws$/.test(basePath)) {
+    wsUrl.pathname = `${basePath}/realtime`;
+  } else {
+    wsUrl.pathname = `${basePath.replace(/\/api$/, '')}/ws/realtime`;
+  }
+  return wsUrl;
+}
+
 class RealtimeClient {
   constructor() {
     this.ws = null;
@@ -15,18 +34,11 @@ class RealtimeClient {
     }
 
     const token = getAccessToken();
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-    // In production or custom environments, respect VITE_WS_URL; otherwise default to host / dev port
-    let baseWsUrl = import.meta.env.VITE_WS_URL;
-    if (!baseWsUrl) {
-      const hostname = window.location.hostname || 'localhost';
-      const host = import.meta.env.DEV ? `${hostname}:8081` : window.location.host;
-      baseWsUrl = `${protocol}//${host}/ws/realtime`;
-    }
-
-    const separator = baseWsUrl.includes('?') ? '&' : '?';
-    const url = token ? `${baseWsUrl}${separator}token=${encodeURIComponent(token)}` : baseWsUrl;
+    const configuredWsUrl = import.meta.env.VITE_WS_URL;
+    const configuredApiUrl = import.meta.env.VITE_API_URL || '/api';
+    const wsUrl = resolveRealtimeUrl(configuredWsUrl, configuredApiUrl, window.location.origin);
+    if (token) wsUrl.searchParams.set('token', token);
+    const url = wsUrl.toString();
 
     try {
       this.ws = new WebSocket(url);

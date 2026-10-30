@@ -98,6 +98,8 @@
   background-color: var(--p-bg);
   min-height: 100vh;
   color: var(--p-text-main);
+  --portal-link-color: #b9381a;
+  --portal-link-hover-color: #8f2d16;
 }
 
 .partner-card {
@@ -118,6 +120,8 @@
   background-color: var(--r-bg);
   color: var(--r-text-main);
   min-height: 100vh;
+  --portal-link-color: #62dfad;
+  --portal-link-hover-color: #a0f0d1;
 }
 
 .rider-card {
@@ -139,6 +143,17 @@
   background-color: var(--a-bg);
   color: var(--a-text-main);
   min-height: 100vh;
+  --portal-link-color: #82c9ee;
+  --portal-link-hover-color: #bae6fd;
+}
+
+.admin-portal .card {
+  --bs-card-bg: var(--a-card-bg);
+  --bs-card-color: var(--a-text-main);
+  --bs-card-border-color: var(--a-border);
+  background-color: var(--a-card-bg);
+  border-color: var(--a-border);
+  color: var(--a-text-main);
 }
 
 .admin-card {
@@ -175,6 +190,14 @@
   color: #ffffff !important;
 }
 
+.rider-portal input.form-control::placeholder,
+.rider-portal textarea.form-control::placeholder,
+.admin-portal input.form-control::placeholder,
+.admin-portal textarea.form-control::placeholder {
+  color: #a9b6c9 !important;
+  opacity: 1;
+}
+
 .rider-portal input.form-control:focus,
 .rider-portal select.form-select:focus,
 .rider-portal textarea.form-control:focus {
@@ -182,6 +205,20 @@
   box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.25) !important;
   background-color: #111c32 !important;
   color: #ffffff !important;
+}
+
+.partner-portal input.form-control,
+.partner-portal select.form-select,
+.partner-portal textarea.form-control {
+  background-color: var(--p-card-bg) !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: var(--p-text-main) !important;
+}
+
+.partner-portal input.form-control::placeholder,
+.partner-portal textarea.form-control::placeholder {
+  color: #667085 !important;
+  opacity: 1;
 }
 
 .admin-portal input.form-control,
@@ -204,8 +241,37 @@
 .partner-portal input.form-control:focus,
 .partner-portal select.form-select:focus,
 .partner-portal textarea.form-control:focus {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
+  border-color: #c2410c !important;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.22) !important;
+}
+
+.partner-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]),
+.rider-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]),
+.admin-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]) {
+  color: var(--portal-link-color);
+  text-underline-offset: 0.18em;
+}
+
+.partner-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]):hover,
+.rider-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]):hover,
+.admin-portal main a:not(.btn):not(.nav-link):not([class*="text-"]):not([class*="link-"]):hover {
+  color: var(--portal-link-hover-color);
+}
+
+.admin-portal .nav-link:not(.bg-primary-subtle):hover {
+  color: var(--portal-link-color) !important;
+}
+
+.admin-portal .nav-link.bg-primary-subtle {
+  background-color: rgba(56, 189, 248, 0.14) !important;
+  color: var(--portal-link-color) !important;
+}
+
+.partner-portal a:focus-visible,
+.rider-portal a:focus-visible,
+.admin-portal a:focus-visible {
+  outline: 2px solid var(--portal-link-color);
+  outline-offset: 3px;
 }
 
 /* ==============================================================================
@@ -263,4 +329,3 @@
     padding-top: 175px !important;
   }
 }
-

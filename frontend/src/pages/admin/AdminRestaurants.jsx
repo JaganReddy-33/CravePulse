@@ -4,31 +4,67 @@ import api from '../../services/api';
 const AdminRestaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const PAGE_SIZE = 50;
 
   const fetchRestaurants = async () => {
     try {
-      const res = await api.get('/admin/restaurants');
+      setError('');
+      const res = await api.get('/admin/restaurants', { params: { limit: PAGE_SIZE, offset: 0 } });
       if (res.success && Array.isArray(res.data)) {
         const mapped = res.data.map(r => ({
           id: r.id,
           name: r.name,
-          phone: r.phone || '+91 9876543210',
+          phone: r.phone || 'Phone not provided',
           cuisine: r.cuisineTypes || r.cuisine || 'Multi-Cuisine',
-          fssai: r.fssaiLicense || r.fssai || 'FSSAI-VERIFIED',
+          fssai: r.fssaiLicense || r.fssai || 'Not provided',
           commission: r.commissionRate || r.commission || 15.00,
           rating: r.rating ?? 0,
-          status: r.isKycApproved === false ? 'PENDING_AUDIT' : (r.isOpen ? 'ACTIVE' : 'PAUSED')
+          isKycApproved: Boolean(r.isKycApproved),
+          status: !r.isKycApproved ? 'PENDING_AUDIT' : (r.isOpen ? 'ACTIVE' : 'PAUSED')
         }));
         setRestaurants(mapped);
+        setHasMore(res.data.length === PAGE_SIZE);
       } else {
         setRestaurants([]);
+        setHasMore(false);
       }
     } catch (e) {
       console.warn('Error fetching admin restaurants', e);
-      setRestaurants([]);
+      setError(e.message || 'Unable to load restaurant partners.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    setError('');
+    try {
+      const response = await api.get('/admin/restaurants', {
+        params: { limit: PAGE_SIZE, offset: restaurants.length },
+      });
+      if (!Array.isArray(response.data)) throw new Error('Restaurant page response was not a list.');
+      setRestaurants((current) => [...current, ...response.data.map((r) => ({
+        id: r.id,
+        name: r.name,
+        phone: r.phone || 'Phone not provided',
+        cuisine: r.cuisineTypes || 'Multi-Cuisine',
+        fssai: r.fssaiLicense || 'Not provided',
+        commission: r.commissionRate || 15.00,
+        rating: r.rating ?? 0,
+        isKycApproved: Boolean(r.isKycApproved),
+        status: !r.isKycApproved ? 'PENDING_AUDIT' : (r.isOpen ? 'ACTIVE' : 'PAUSED')
+      }))]);
+      setHasMore(response.data.length === PAGE_SIZE);
+    } catch (loadError) {
+      setError(loadError.message || 'Unable to load more restaurant partners.');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -41,8 +77,15 @@ const AdminRestaurants = () => {
     r.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleStatus = (id) => {
-    setRestaurants(restaurants.map(r => r.id === id ? { ...r, status: r.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' } : r));
+  const toggleStatus = async (restaurant) => {
+    const newStatus = restaurant.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    setError('');
+    try {
+      await api.post(`/admin/restaurant/${restaurant.id}/status`, { status: newStatus });
+      await fetchRestaurants();
+    } catch (statusError) {
+      setError(statusError.message || 'Unable to update restaurant status.');
+    }
   };
 
   return (
@@ -52,6 +95,7 @@ const AdminRestaurants = () => {
           <h4 className="fw-bold mb-1 text-white">Merchant Directory & Commission Controls</h4>
           <p className="text-secondary small mb-0">Oversee onboarded culinary partners, FSSAI verification, and menu parity compliance</p>
         </div>
+        {error && <div role="alert" className="alert alert-danger">{error}</div>}
 
         <div style={{ maxWidth: 320 }} className="w-100">
           <input
@@ -103,7 +147,8 @@ const AdminRestaurants = () => {
                   <td className="text-end">
                     <button
                       className="btn btn-sm btn-outline-light rounded-pill px-3 me-2"
-                      onClick={() => toggleStatus(rest.id)}
+                      disabled={!rest.isKycApproved}
+                      onClick={() => toggleStatus(rest)}
                     >
                       {rest.status === 'ACTIVE' ? 'Pause' : 'Activate'}
                     </button>
@@ -122,6 +167,14 @@ const AdminRestaurants = () => {
           </table>
         </div>
       </div>
+      {loading ? <div className="text-center text-secondary mt-3">Loading restaurant partners…</div> : null}
+      {!loading && hasMore && (
+        <div className="text-center mt-3">
+          <button type="button" className="btn btn-outline-info rounded-pill px-4" disabled={loadingMore} onClick={loadMore}>
+            {loadingMore ? 'Loading…' : 'Load more restaurants'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

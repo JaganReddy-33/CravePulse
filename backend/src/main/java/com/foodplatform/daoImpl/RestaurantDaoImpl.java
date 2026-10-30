@@ -184,12 +184,36 @@ public class RestaurantDaoImpl implements RestaurantDao {
 
     @Override
     public void updateKyc(long id, boolean approved) {
-        String sql = "UPDATE restaurant_profiles SET is_kyc_approved = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, approved);
-            ps.setLong(2, id);
-            ps.executeUpdate();
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                long userId;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE restaurant_profiles SET is_kyc_approved = ? WHERE id = ?")) {
+                    ps.setBoolean(1, approved);
+                    ps.setLong(2, id);
+                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Restaurant not found");
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT user_id FROM restaurant_profiles WHERE id = ?")) {
+                    ps.setLong(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new IllegalArgumentException("Restaurant not found");
+                        userId = rs.getLong("user_id");
+                    }
+                }
+                try (PreparedStatement ps = conn.prepareStatement("UPDATE users SET status = ? WHERE id = ?")) {
+                    ps.setString(1, approved ? "ACTIVE" : "SUSPENDED");
+                    ps.setLong(2, userId);
+                    if (ps.executeUpdate() == 0) throw new IllegalStateException("Restaurant owner account not found");
+                }
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             logger.error("Error updating kyc for restaurant: {}", id, e);
             throw new IllegalStateException("Database operation failed", e);
@@ -304,7 +328,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
     }
 
     @Override
-    public void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes) {
+    public void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes, Integer costForTwo, boolean updateCostForTwo) {
         String sql = "UPDATE restaurant_profiles SET " +
                 "name = COALESCE(?, name), " +
                 "phone = COALESCE(?, phone), " +
@@ -314,6 +338,7 @@ public class RestaurantDaoImpl implements RestaurantDao {
                 "bank_ifsc = COALESCE(?, bank_ifsc), " +
                 "bank_beneficiary_name = COALESCE(?, bank_beneficiary_name), " +
                 "upi_id = COALESCE(?, upi_id), " +
+                "cost_for_two = CASE WHEN ? THEN ? ELSE cost_for_two END, " +
                 "auto_reject_minutes = CASE WHEN ? > 0 THEN ? ELSE auto_reject_minutes END " +
                 "WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -326,9 +351,11 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.setString(6, ifsc);
             ps.setString(7, beneficiary);
             ps.setString(8, upiId);
-            ps.setInt(9, autoRejectMinutes);
-            ps.setInt(10, autoRejectMinutes);
-            ps.setLong(11, id);
+            ps.setBoolean(9, updateCostForTwo);
+            if (costForTwo != null) ps.setInt(10, costForTwo); else ps.setNull(10, java.sql.Types.INTEGER);
+            ps.setInt(11, autoRejectMinutes);
+            ps.setInt(12, autoRejectMinutes);
+            ps.setLong(13, id);
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error("Error updating settings for restaurant: {}", id, e);
@@ -418,44 +445,8 @@ public class RestaurantDaoImpl implements RestaurantDao {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("Could not query restaurant_payouts table for restaurant {}: {}", restaurantId, e.getMessage());
-        }
-
-        // If no payout batches yet, compute dynamic settlement summary from delivered orders
-        if (payouts.isEmpty()) {
-            String ordSql = "SELECT COUNT(id) AS cnt, IFNULL(SUM(subtotal), 0) AS gross, " +
-                    "IFNULL(AVG(commission_rate), 15.00) AS comm_rate " +
-                    "FROM orders WHERE restaurant_id = ? AND status = 'DELIVERED'";
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(ordSql)) {
-                ps.setLong(1, restaurantId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next() && rs.getInt("cnt") > 0) {
-                        java.math.BigDecimal gross = rs.getBigDecimal("gross");
-                        java.math.BigDecimal rate = rs.getBigDecimal("comm_rate").divide(java.math.BigDecimal.valueOf(100));
-                        java.math.BigDecimal comm = gross.multiply(rate);
-                        java.math.BigDecimal gst = comm.multiply(java.math.BigDecimal.valueOf(0.18));
-                        java.math.BigDecimal net = gross.subtract(comm).subtract(gst);
-
-                        Map<String, Object> currentBatch = new HashMap<>();
-                        currentBatch.put("id", 1L);
-                        currentBatch.put("payoutReference", "SETTLE-" + restaurantId + "-CURRENT");
-                        currentBatch.put("periodStart", new java.sql.Timestamp(System.currentTimeMillis() - 7L * 86400000L));
-                        currentBatch.put("periodEnd", new java.sql.Timestamp(System.currentTimeMillis()));
-                        currentBatch.put("grossSales", gross);
-                        currentBatch.put("commissionAmount", comm);
-                        currentBatch.put("gstOnCommission", gst);
-                        currentBatch.put("netPayout", net);
-                        currentBatch.put("status", "PAID");
-                        currentBatch.put("utrNumber", "HDFC" + System.currentTimeMillis() % 100000000L);
-                        currentBatch.put("createdAt", new java.sql.Timestamp(System.currentTimeMillis()));
-                        payouts.add(currentBatch);
-                    }
-                }
-            } catch (SQLException e) {
-                logger.error("Error computing dynamic payout for restaurant: {}", restaurantId, e);
+            logger.error("Could not query restaurant payouts for restaurant {}", restaurantId, e);
             throw new IllegalStateException("Database operation failed", e);
-            }
         }
         return payouts;
     }

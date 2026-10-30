@@ -35,7 +35,7 @@ Use `http://127.0.0.1:5173` consistently. Frontend `.env`: `VITE_API_URL=/api`, 
 
 ## Migrations
 
-SQL lives in `backend/src/main/resources/db/migration`. Startup applies V1 through V18 automatically, once, using `schema_migrations`. New entries record checksums. Missing/invalid scripts and changed checksums stop startup. Existing schema migration history must be retained.
+SQL lives in `backend/src/main/resources/db/migration`. Startup applies V1 through V21 automatically, once, using `schema_migrations`. New entries record checksums. Missing/invalid scripts and changed checksums stop startup. Existing schema migration history must be retained.
 
 For migrations without starting HTTP, run from repository root after building:
 
@@ -45,7 +45,7 @@ java --class-path backend/target-verified/food-delivery-backend.jar scripts/Migr
 
 Do not execute every SQL file manually. V1 historically contains destructive reset statements and V2/V6 contain fixtures. The runner suppresses historical destructive initialization statements, retains only required V2 platform configuration, and skips V6 catalog fixtures. This preserves historical files while preventing new installations from repopulating fake data. Never run seed-demo.sql against this database.
 
-Forward migrations V13-V18 add API account state and integrity rules, remove invented catalog/identity defaults, allow absent photography/cost estimates, and support completed dispatch state. Applied SQL must not be edited; add a new migration for subsequent changes.
+Forward migrations V13-V18 add API account state and integrity rules, remove invented catalog/identity defaults, allow absent photography/cost estimates, and support completed dispatch state. V21 adds admin-reviewed manual payout requests; it does not integrate or initiate bank transfers. Applied SQL must not be edited; add a new migration for subsequent changes.
 
 ## Database maintenance
 
@@ -56,7 +56,22 @@ java --class-path backend/target-verified/food-delivery-backend.jar scripts/Data
 java --class-path backend/target-verified/food-delivery-backend.jar scripts/DatabaseMaintenance.java backup
 ```
 
-The requested sample cleanup is already complete. The `clear-fixtures` utility requires an exact database name and nonempty backup, and refuses deletion when any non-fixture user exists. It therefore deliberately refuses a second reset now that the real administrator exists. It deletes all business records, not selected sample rows, when its guards pass. Do not bypass these guards or use the historical seed/reset scripts. `docs/clear_sample_data.sql` now contains inspection guidance only.
+For a **local demo database only**, run migrations successfully first, stop the backend, and verify that `application.properties` points to `127.0.0.1` and `food_delivery_db`. From the repository root, inspect and back up the database:
+
+```powershell
+java --class-path backend/target/food-delivery-backend.jar scripts/DatabaseMaintenance.java inspect
+java --class-path backend/target/food-delivery-backend.jar scripts/DatabaseMaintenance.java backup
+```
+
+Confirm the inspection says `food_delivery_db` and the backup output gives a local `.sql` path. Then reset only that loopback database, substituting the exact backup path printed above:
+
+```powershell
+java --class-path backend/target/food-delivery-backend.jar scripts/DatabaseMaintenance.java reset-local-demo food_delivery_db .local-backups/database-<timestamp>.sql RESET_LOCAL_food_delivery_db
+```
+
+This explicit reset deletes rows but retains all tables, schema migration history, platform settings, and discovery categories. It requires a matching nonempty backup, the exact database name, a loopback connection, and the confirmation phrase. Then execute `backend/src/main/resources/db/seed-demo.sql` in Workbench with `food_delivery_db` selected. Never use this workflow or the demo seed against TiDB or production.
+
+The separate `clear-fixtures` command remains more restrictive and refuses deletion if non-fixture user accounts exist. Do not bypass its checks; use the explicit loopback-only reset above only when intentionally replacing all local application data with demo data.
 
 For a separate empty installation, after migrations, `bootstrap-admin` accepts an email and display name and writes a generated credential to `.local-backups/admin-login.txt`. It must not be rerun for the existing administrator.
 

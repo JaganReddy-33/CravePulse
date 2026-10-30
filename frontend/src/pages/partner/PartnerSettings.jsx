@@ -22,6 +22,7 @@ const PartnerSettings = () => {
   const [fssaiLicense, setFssaiLicense] = useState('');
   const [gstNumber, setGstNumber] = useState('');
   const [commissionRate, setCommissionRate] = useState(15.00);
+  const [costForTwo, setCostForTwo] = useState('');
   const [autoRejectMinutes, setAutoRejectMinutes] = useState(10);
 
   // Bank & UPI Settlement Fields
@@ -36,14 +37,19 @@ const PartnerSettings = () => {
 
   // Payout Settlements Ledger
   const [payouts, setPayouts] = useState([]);
+  const [payoutSummary, setPayoutSummary] = useState(null);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutRequesting, setPayoutRequesting] = useState(false);
+  const [payoutMessage, setPayoutMessage] = useState('');
 
   const fetchSettingsAndData = async () => {
     if (!restId) return;
     try {
       setLoading(true);
-      const [settingsRes, payoutsRes] = await Promise.all([
+      const [settingsRes, payoutsRes, payoutSummaryRes] = await Promise.all([
         api.get(`/restaurants/${restId}/settings`),
-        api.get(`/restaurants/${restId}/payouts`)
+        api.get(`/restaurants/${restId}/payouts`),
+        api.get(`/restaurants/${restId}/payout-requests`)
       ]);
 
       if (settingsRes.success && settingsRes.data) {
@@ -55,6 +61,7 @@ const PartnerSettings = () => {
         setFssaiLicense(s.fssaiLicense || '');
         setGstNumber(s.gstNumber || '');
         setCommissionRate(s.commissionRate || 15.00);
+        setCostForTwo(s.costForTwo ?? '');
         setAutoRejectMinutes(s.autoRejectMinutes || 10);
         setBankAccountNumber(s.bankAccountNumber || '');
         setBankIfsc(s.bankIfsc || '');
@@ -78,6 +85,9 @@ const PartnerSettings = () => {
       if (payoutsRes.success && Array.isArray(payoutsRes.data)) {
         setPayouts(payoutsRes.data);
       }
+      if (payoutSummaryRes.success && payoutSummaryRes.data) {
+        setPayoutSummary(payoutSummaryRes.data);
+      }
     } catch (e) {
       console.warn('Failed to load settings:', e);
       setErrorMsg(e.message || 'Error loading settings from database');
@@ -89,6 +99,27 @@ const PartnerSettings = () => {
   useEffect(() => {
     fetchSettingsAndData();
   }, [restId]);
+
+  const requestPayout = async (event) => {
+    event.preventDefault();
+    setPayoutRequesting(true);
+    setPayoutMessage('');
+    setErrorMsg('');
+    try {
+      const response = await api.post(`/restaurants/${restId}/payout-requests`, {
+        amount: Number(payoutAmount),
+        payoutDestination: upiId.trim()
+      });
+      if (!response.success) throw new Error('Unable to submit payout request');
+      setPayoutAmount('');
+      setPayoutMessage(`Payout request #${response.data.id} was submitted for admin review.`);
+      await fetchSettingsAndData();
+    } catch (error) {
+      setErrorMsg(error.message || 'Unable to submit payout request');
+    } finally {
+      setPayoutRequesting(false);
+    }
+  };
 
   const handleHourChange = (index, field, value) => {
     setOperatingHours(prev => {
@@ -116,7 +147,8 @@ const PartnerSettings = () => {
         bankIfsc: bankIfsc.trim().toUpperCase(),
         bankBeneficiaryName: bankBeneficiaryName.trim(),
         upiId: upiId.trim(),
-        autoRejectMinutes: Number(autoRejectMinutes) || 10
+        autoRejectMinutes: Number(autoRejectMinutes) || 10,
+        costForTwo: costForTwo === '' ? null : Number(costForTwo)
       };
 
       await api.post(`/restaurants/${restId}/settings`, settingsPayload);
@@ -254,6 +286,13 @@ const PartnerSettings = () => {
                   onChange={(e) => setAutoRejectMinutes(e.target.value)}
                 />
                 <small className="text-muted" style={{ fontSize: 11 }}>Orders cancel automatically if not accepted in SLA</small>
+              </div>
+              <div className="col-12 col-md-4">
+                <label className="form-label small fw-bold text-muted" htmlFor="restaurant-cost-for-two">Average cost for two (INR)</label>
+                <input id="restaurant-cost-for-two" type="number" min="1" max="100000" step="1"
+                  className="form-control rounded-3" placeholder="e.g. 600" value={costForTwo}
+                  onChange={(e) => setCostForTwo(e.target.value)} />
+                <small className="text-muted" style={{ fontSize: 11 }}>Displayed on customer restaurant cards.</small>
               </div>
             </div>
           </div>
@@ -409,19 +448,69 @@ const PartnerSettings = () => {
         </form>
       )}
 
-      {/* Section 4: Settlement Payout Ledger & Statements */}
+      {/* Section 4: Payout requests and settlement ledger */}
       <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
+        <h5 className="fw-bold mb-1 text-dark">Withdrawable balance</h5>
+        <p className="small text-muted mb-3">
+          Available balance includes delivered orders with confirmed payment, less commission, tax, recorded payouts, and pending requests.
+          Cash-on-delivery orders are excluded until their collection is reconciled.
+          Transfers are manual; an administrator records the payment only after it has actually completed.
+        </p>
+        {payoutSummary && <div className="row g-3 mb-4">
+          {[
+            ['Available to withdraw', payoutSummary.availableBalance],
+            ['Pending requests', payoutSummary.pendingAmount],
+            ['Net eligible earnings', payoutSummary.lifetimeNetEarnings]
+          ].map(([label, amount]) => <div className="col-12 col-md-4" key={label}>
+            <div className="rounded-3 border bg-light p-3 h-100">
+              <span className="small text-muted d-block">{label}</span>
+              <strong className="fs-5 text-dark">₹{Number(amount || 0).toFixed(2)}</strong>
+            </div>
+          </div>)}
+        </div>}
+        <form className="row g-3 mb-4" onSubmit={requestPayout}>
+          <div className="col-12 col-md-4">
+            <label htmlFor="partner-payout-amount" className="form-label text-dark">Request amount (INR)</label>
+            <input id="partner-payout-amount" className="form-control" type="number" min="0.01" step="0.01"
+              max={payoutSummary?.availableBalance || 0} required value={payoutAmount}
+              onChange={event => setPayoutAmount(event.target.value)} />
+          </div>
+          <div className="col-12 col-md-5">
+            <label htmlFor="partner-payout-upi" className="form-label text-dark">UPI ID for settlement</label>
+            <input id="partner-payout-upi" className="form-control" type="text" maxLength="100" required
+              placeholder="name@bank" value={upiId} onChange={event => setUpiId(event.target.value)} />
+          </div>
+          <div className="col-12 col-md-3 d-flex align-items-end">
+            <button type="submit" className="btn btn-primary w-100"
+              disabled={payoutRequesting || !payoutSummary || Number(payoutSummary.availableBalance) <= 0}>
+              {payoutRequesting ? 'Submitting...' : 'Request payout'}
+            </button>
+          </div>
+        </form>
+        {payoutMessage && <div role="status" className="alert alert-success">{payoutMessage}</div>}
+        {payoutSummary?.requests?.length > 0 && <div className="table-responsive mb-4">
+          <table className="table align-middle">
+            <thead className="table-light"><tr><th>Date</th><th>Amount</th><th>Status</th><th>UPI destination</th><th>Admin note</th></tr></thead>
+            <tbody>{payoutSummary.requests.map(request => <tr key={request.id}>
+              <td>{request.createdAt ? new Date(request.createdAt).toLocaleDateString('en-IN') : '—'}</td>
+              <td>₹{Number(request.amount).toFixed(2)}</td>
+              <td><span className={`badge ${request.status === 'PAID' ? 'bg-success' : request.status === 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark'}`}>{request.status}</span></td>
+              <td>{request.payoutDestination}</td>
+              <td>{request.adminNote || request.paymentReference || '—'}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h5 className="fw-bold mb-0 text-dark">📜 Payout Ledger & Settlement Statements</h5>
-            <small className="text-muted">Certified banking payout statements transferred to partner bank/UPI.</small>
+            <small className="text-muted">Recorded restaurant settlement batches.</small>
           </div>
           <span className="badge bg-light text-muted border small">{payouts.length} Settlements</span>
         </div>
 
         {payouts.length === 0 ? (
           <div className="text-center py-4 text-muted small bg-light rounded-3 border">
-            No bank payouts processed yet. Settlements appear when processed.
+            No settlement batches recorded yet.
           </div>
         ) : (
           <div className="table-responsive">

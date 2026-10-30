@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS payout_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    requester_user_id BIGINT NOT NULL,
+    account_type ENUM('RIDER', 'RESTAURANT') NOT NULL,
+    restaurant_id BIGINT DEFAULT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payout_destination VARCHAR(200) NOT NULL,
+    status ENUM('PENDING', 'PAID', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    payment_reference VARCHAR(120) DEFAULT NULL,
+    admin_note VARCHAR(1000) DEFAULT NULL,
+    processed_by_user_id BIGINT DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_payout_request_user FOREIGN KEY (requester_user_id) REFERENCES users(id),
+    CONSTRAINT fk_payout_request_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles(id),
+    CONSTRAINT fk_payout_request_processor FOREIGN KEY (processed_by_user_id) REFERENCES users(id),
+    INDEX idx_payout_request_user_status (requester_user_id, account_type, status),
+    INDEX idx_payout_request_restaurant_status (restaurant_id, status),
+    INDEX idx_payout_request_status_created (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

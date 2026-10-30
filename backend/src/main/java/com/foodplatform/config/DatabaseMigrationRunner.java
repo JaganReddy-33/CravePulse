@@ -15,7 +15,10 @@ public final class DatabaseMigrationRunner {
         "V6__phase3_bangalore_catalog.sql", "V7__phase4_rider_dispatch_and_cod.sql",
         "V8__phase5_order_chat_and_realtime.sql", "V9__phase6_partner_portal.sql",
         "V10__phase8_admin_console.sql", "V11__phase10_database_hardening.sql",
-        "V12__jobs_and_applications.sql", "V13__real_application_data.sql", "V14__identity_and_integrity.sql", "V15__unknown_catalog_metadata.sql", "V16__optional_menu_photography.sql", "V17__completed_dispatch_state.sql", "V18__optional_cost_estimates.sql"
+        "V12__jobs_and_applications.sql", "V13__real_application_data.sql", "V14__identity_and_integrity.sql",
+        "V15__unknown_catalog_metadata.sql", "V16__optional_menu_photography.sql", "V17__completed_dispatch_state.sql",
+        "V18__optional_cost_estimates.sql", "V19__discovery_categories.sql", "V20__repair_rider_cash_columns.sql",
+        "V21__manual_payout_requests.sql"
     };
     public static void runMigrations() {
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -73,6 +76,17 @@ public final class DatabaseMigrationRunner {
         try (ResultSet rs = c.getMetaData().getColumns(c.getCatalog(), null, table, col)) { return rs.next(); }
     }
     private static void executeCompatible(Connection c, String sql) throws SQLException {
+        sql = sql.replaceFirst(";\\s*$", "").trim();
+        Matcher alterColumn = Pattern.compile("(?is)^ALTER TABLE (\\w+) ALTER COLUMN (\\w+) DROP DEFAULT$").matcher(sql);
+        if (alterColumn.matches() && !columnExists(c, alterColumn.group(1), alterColumn.group(2))) return;
+
+        Matcher modifyColumn = Pattern.compile("(?is)^ALTER TABLE (\\w+) MODIFY COLUMN (\\w+) (.+)$").matcher(sql);
+        if (modifyColumn.matches() && !columnExists(c, modifyColumn.group(1), modifyColumn.group(2))) {
+            execute(c, "ALTER TABLE " + modifyColumn.group(1) + " ADD COLUMN "
+                    + modifyColumn.group(2) + " " + modifyColumn.group(3));
+            return;
+        }
+
         Matcher m = Pattern.compile("(?is)^ALTER TABLE (\\w+) (ADD COLUMN .*)").matcher(sql);
         if (m.matches() && sql.contains("IF NOT EXISTS")) {
             String table = m.group(1);

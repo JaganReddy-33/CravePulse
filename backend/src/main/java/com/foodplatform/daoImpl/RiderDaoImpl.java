@@ -688,12 +688,35 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public void updateKyc(long riderId, boolean approved) {
-        String sql = "UPDATE rider_profiles SET is_kyc_approved = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, approved);
-            ps.setLong(2, riderId);
-            ps.executeUpdate();
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                long userId;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE rider_profiles SET is_kyc_approved = ? WHERE id = ?")) {
+                    ps.setBoolean(1, approved);
+                    ps.setLong(2, riderId);
+                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Rider not found");
+                }
+                try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM rider_profiles WHERE id = ?")) {
+                    ps.setLong(1, riderId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new IllegalArgumentException("Rider not found");
+                        userId = rs.getLong("user_id");
+                    }
+                }
+                try (PreparedStatement ps = conn.prepareStatement("UPDATE users SET status = ? WHERE id = ?")) {
+                    ps.setString(1, approved ? "ACTIVE" : "SUSPENDED");
+                    ps.setLong(2, userId);
+                    if (ps.executeUpdate() == 0) throw new IllegalStateException("Rider account not found");
+                }
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             logger.error("Error updating kyc for rider: {}", riderId, e);
             throw new IllegalStateException("Database operation failed", e);

@@ -30,7 +30,7 @@ public interface RestaurantDao {
 
     List<Restaurant> listAllRestaurants(int limit, int offset);
 
-    void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes);
+    void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes, Integer costForTwo, boolean updateCostForTwo);
 
     java.util.List<java.util.Map<String, Object>> getOperatingHours(long restaurantId);
 
