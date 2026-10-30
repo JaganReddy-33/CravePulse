@@ -90,8 +90,16 @@ public class JobServlet extends BaseServlet {
         try { if (req.getParameter("offset") != null) offset = Integer.parseInt(req.getParameter("offset")); } catch (NumberFormatException ignored) {}
 
         if (!"ADMIN".equals(getAuthenticatedRole(req))) status = "ACTIVE";
-        List<JobPosting> jobs = jobDao.listJobPostings(status, department, Math.max(1, Math.min(100, limit)), Math.max(0, offset));
-        JsonUtil.sendSuccess(res, 200, "Job postings retrieved", jobs);
+        limit = Math.max(1, Math.min(100, limit));
+        offset = Math.max(0, offset);
+        List<JobPosting> jobs = jobDao.listJobPostings(status, department, limit, offset);
+        int totalCount = jobDao.countJobPostings(status, department);
+        JsonUtil.sendSuccess(res, 200, "Job postings retrieved", jobs, java.util.Map.of(
+                "pagination", java.util.Map.of(
+                        "page", offset / limit + 1,
+                        "pageSize", limit,
+                        "totalCount", totalCount,
+                        "totalPages", (int) Math.ceil((double) totalCount / limit))));
     }
 
     // ─── POST ────────────────────────────────────────────────────────────

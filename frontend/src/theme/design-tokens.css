@@ -176,6 +176,57 @@ html, body {
   gap: var(--space-4, 1rem);
 }
 
+.results-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.results-pagination .pagination {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.results-pagination .page-link {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border-radius: 0.5rem;
+}
+
+.results-pagination .active .page-link {
+  background-color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.results-pagination .page-link:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c-primary) 35%, transparent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+@media (max-width: 575.98px) {
+  .results-pagination {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .results-pagination-summary {
+    flex-basis: 100%;
+  }
+
+  .results-pagination .pagination-edge-label,
+  .results-pagination .pagination-ellipsis,
+  .results-pagination .pagination-number:not([aria-current="page"]) {
+    display: none;
+  }
+}
+
 /* 16:10 Aspect Ratio Image Container with Smooth Zoom */
 .restaurant-card-img-wrap {
   aspect-ratio: 16 / 10;

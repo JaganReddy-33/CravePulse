@@ -60,12 +60,20 @@ public final class JsonUtil {
     }
 
     public static void sendSuccess(HttpServletResponse response, int statusCode, String message, Object data) throws IOException {
+        sendSuccess(response, statusCode, message, data, null);
+    }
+
+    public static void sendSuccess(HttpServletResponse response, int statusCode, String message, Object data,
+                                   Map<String, Object> metadata) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(statusCode);
         Map<String, Object> map = new HashMap<>();
         map.put("success", true);
         map.put("message", message);
         map.put("data", data);
+        if (metadata != null && !metadata.isEmpty()) {
+            map.putAll(metadata);
+        }
         map.put("timestamp", Instant.now().toString());
         response.getWriter().write(gson.toJson(map));
     }

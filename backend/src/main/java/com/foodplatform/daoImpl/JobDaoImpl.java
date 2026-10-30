@@ -83,7 +83,7 @@ public class JobDaoImpl implements JobDao {
             sql.append(" AND jp.department = ?");
             params.add(department);
         }
-        sql.append(" ORDER BY jp.created_at DESC LIMIT ? OFFSET ?");
+        sql.append(" ORDER BY jp.created_at DESC, jp.id DESC LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
 
@@ -103,6 +103,33 @@ public class JobDaoImpl implements JobDao {
             throw new IllegalStateException("Database operation failed", e);
         }
         return list;
+    }
+
+    @Override
+    public int countJobPostings(String status, String department) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM job_postings jp WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND jp.status = ?");
+            params.add(status);
+        }
+        if (department != null && !department.isEmpty() && !"All".equalsIgnoreCase(department)) {
+            sql.append(" AND jp.department = ?");
+            params.add(department);
+        }
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setString(i + 1, (String) params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting job postings", e);
+            throw new IllegalStateException("Database operation failed", e);
+        }
     }
 
     @Override
@@ -354,4 +381,3 @@ public class JobDaoImpl implements JobDao {
         else ps.setNull(index, Types.DECIMAL);
     }
 }
-

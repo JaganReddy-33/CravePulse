@@ -14,6 +14,8 @@ public interface JobDao {
 
     List<JobPosting> listJobPostings(String status, String department, int limit, int offset);
 
+    int countJobPostings(String status, String department);
+
     void updateJobPosting(JobPosting job);
 
     void updateJobStatus(long jobId, String status);
@@ -33,4 +35,3 @@ public interface JobDao {
 
     int countApplicationsByJob(long jobId);
 }
-

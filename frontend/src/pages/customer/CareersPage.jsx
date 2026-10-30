@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import Pagination from '../../components/common/Pagination';
 
 const JOB_PAGE_SIZE = 12;
 
@@ -14,62 +15,90 @@ const CareersPage = () => {
   const [jobs, setJobs] = useState([]);
   const [departments, setDepartments] = useState(['All']);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadMoreError, setLoadMoreError] = useState('');
+  const [totalJobCount, setTotalJobCount] = useState(0);
   const [error, setError] = useState(null);
   const jobsRequestId = useRef(0);
+  const lastSuccessfulPage = useRef(null);
+  const retryPage = useRef(null);
+  const skipPageFetch = useRef(false);
 
   const activeDept = searchParams.get('dept') || 'All';
+  const pageParam = Number(searchParams.get('page'));
+  const currentPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+  const totalPages = Math.max(1, Math.ceil(totalJobCount / JOB_PAGE_SIZE));
+
+  const changePage = (page) => {
+    if (page === currentPage) return;
+    retryPage.current = null;
+    setLoading(true);
+    setSearchParams((current) => {
+      const params = new URLSearchParams(current);
+      if (page > 1) params.set('page', String(page));
+      else params.delete('page');
+      return params;
+    }, { replace: true });
+  };
 
   const fetchJobs = useCallback(async () => {
     const requestId = ++jobsRequestId.current;
-    setLoadingMore(false);
-    setLoadMoreError('');
+    const handlePageFailure = (message) => {
+      setError(message);
+      retryPage.current = currentPage > 1 ? currentPage : null;
+
+      if (currentPage > 1) {
+        const previousPage = lastSuccessfulPage.current;
+        const restorePage = previousPage?.department === activeDept ? previousPage.page : 1;
+        if (restorePage !== currentPage) {
+          if (previousPage?.department === activeDept && previousPage.page === restorePage) {
+            skipPageFetch.current = true;
+          }
+          setSearchParams((current) => {
+            const params = new URLSearchParams(current);
+            if (restorePage > 1) params.set('page', String(restorePage));
+            else params.delete('page');
+            return params;
+          }, { replace: true });
+        }
+      }
+    };
     try {
       setLoading(true);
-      const params = { status: 'ACTIVE', limit: JOB_PAGE_SIZE, offset: 0 };
+      const params = {
+        status: 'ACTIVE',
+        limit: JOB_PAGE_SIZE,
+        offset: (currentPage - 1) * JOB_PAGE_SIZE,
+      };
       if (activeDept && activeDept !== 'All') params.department = activeDept;
 
       const res = await api.get('/jobs', { params });
       if (requestId !== jobsRequestId.current) return;
       if (res.success && Array.isArray(res.data)) {
         setJobs(res.data);
-        setHasMore(res.data.length === JOB_PAGE_SIZE);
+        setTotalJobCount(Number(res.pagination?.totalCount ?? (params.offset + res.data.length)));
+        lastSuccessfulPage.current = { page: currentPage, department: activeDept };
+        if (retryPage.current === null || retryPage.current === currentPage) {
+          setError(null);
+          retryPage.current = null;
+        }
       } else {
-        setJobs([]);
-        setHasMore(false);
+        handlePageFailure(res.message || 'Unable to load open positions. Please try again.');
       }
-      setError(null);
     } catch (err) {
       if (requestId !== jobsRequestId.current) return;
       console.error('Error fetching jobs:', err);
-      setError('Unable to load open positions. Please try again.');
-      setJobs([]);
+      handlePageFailure('Unable to load open positions. Please try again.');
     } finally {
       if (requestId === jobsRequestId.current) setLoading(false);
     }
-  }, [activeDept]);
+  }, [activeDept, currentPage, setSearchParams]);
 
-  const loadMoreJobs = async () => {
-    if (loadingMore || !hasMore) return;
-    const requestId = jobsRequestId.current;
-    setLoadingMore(true);
-    try {
-      setLoadMoreError('');
-      const params = { status: 'ACTIVE', limit: JOB_PAGE_SIZE, offset: jobs.length };
-      if (activeDept && activeDept !== 'All') params.department = activeDept;
-      const response = await api.get('/jobs', { params });
-      if (requestId !== jobsRequestId.current) return;
-      if (!Array.isArray(response.data)) throw new Error('Job page response was not a list.');
-      setJobs((current) => [...current, ...response.data]);
-      setHasMore(response.data.length === JOB_PAGE_SIZE);
-    } catch (loadError) {
-      if (requestId !== jobsRequestId.current) return;
-      setLoadMoreError(loadError.message || 'Unable to load more positions.');
-    } finally {
-      if (requestId === jobsRequestId.current) setLoadingMore(false);
+  const retryJobs = () => {
+    const pageToRetry = retryPage.current;
+    if (pageToRetry && pageToRetry !== currentPage) {
+      changePage(pageToRetry);
+      return;
     }
+    fetchJobs();
   };
 
   const fetchDepartments = useCallback(async () => {
@@ -84,9 +113,23 @@ const CareersPage = () => {
   }, []);
 
   useEffect(() => {
+    if (skipPageFetch.current) {
+      skipPageFetch.current = false;
+      return undefined;
+    }
     fetchJobs();
+    return () => {
+      jobsRequestId.current += 1;
+    };
+  }, [fetchJobs]);
+
+  useEffect(() => {
     fetchDepartments();
-  }, [fetchJobs, fetchDepartments]);
+  }, [fetchDepartments]);
+
+  useEffect(() => {
+    if (!loading && currentPage > totalPages) changePage(totalPages);
+  }, [currentPage, loading, totalPages]);
 
   const createSlug = (text) => {
     return (text || 'opening')
@@ -137,7 +180,7 @@ const CareersPage = () => {
       {/* Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
         <div>
-          <h4 className="fw-bold text-dark mb-1">Open Positions ({jobs.length})</h4>
+          <h4 className="fw-bold text-dark mb-1">Open Positions ({totalJobCount})</h4>
           <p className="text-muted small mb-0">Select any role to view detailed responsibilities, salary, and submit your CV</p>
         </div>
         <span className="badge bg-success-subtle text-success border border-success rounded-pill px-3 py-2 small">
@@ -179,9 +222,17 @@ const CareersPage = () => {
       )}
 
       {error && !loading && (
-        <div className="alert alert-warning text-center">
+        <div className="alert alert-warning text-center" role="alert" aria-live="assertive">
           {error}
-          <button className="btn btn-sm btn-outline-primary ms-3 rounded-pill" onClick={fetchJobs}>Retry</button>
+          {jobs.length > 0 && <span> Previously loaded positions remain visible.</span>}
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary ms-3 rounded-pill"
+            aria-label="Retry loading open positions"
+            onClick={retryJobs}
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -250,15 +301,6 @@ const CareersPage = () => {
                       ))}
                     </div>
                   )}
-                  {loadMoreError && <div role="alert" className="alert alert-warning">{loadMoreError}</div>}
-                  {!loading && !error && hasMore && (
-                    <div className="text-center mb-5">
-                      <button type="button" className="btn btn-outline-primary rounded-pill px-4"
-                        disabled={loadingMore} onClick={loadMoreJobs}>
-                        {loadingMore ? 'Loading…' : 'Load more positions'}
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Card Footer */}
@@ -271,6 +313,16 @@ const CareersPage = () => {
             </div>
           ))}
         </div>
+      )}
+      {totalJobCount > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          pageSize={JOB_PAGE_SIZE}
+          totalCount={totalJobCount}
+          itemLabel={totalJobCount === 1 ? 'position' : 'positions'}
+          onPageChange={changePage}
+          isLoading={loading}
+        />
       )}
     </div>
   );

@@ -10,6 +10,13 @@ public interface RestaurantDao {
 
     List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search, Boolean vegOnly, int limit, int offset);
 
+    List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search,
+                                         Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
+                                         String priceTier, String sortBy, int limit, int offset);
+
+    int countOpenRestaurants(String cuisine, String search, Boolean vegOnly, Double minRating,
+                             Integer maxDeliveryTime, String priceTier);
+
     Restaurant findById(long id);
 
     Restaurant findBySlug(String slug);

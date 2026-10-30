@@ -1,15 +1,15 @@
-import React from 'react';
-import { useParams, useSearchParams, useOutletContext } from 'react-router-dom';
-import RestaurantHeader from '../../components/restaurant/RestaurantHeader';
-import RestaurantOffersStrip from '../../components/restaurant/RestaurantOffersStrip';
-import RestaurantCategoryNav from '../../components/restaurant/RestaurantCategoryNav';
-import DishCard from '../../components/restaurant/DishCard';
-import ItemCustomizerModal from '../../components/restaurant/ItemCustomizerModal';
-import RestaurantReviews from '../../components/restaurant/RestaurantReviews';
-import LoadingState from '../../components/states/LoadingState';
-import EmptyState from '../../components/states/EmptyState';
-import ErrorState from '../../components/states/ErrorState';
-import useRestaurantDetail from '../../hooks/useRestaurantDetail';
+import React from "react";
+import { useParams, useSearchParams, useOutletContext } from "react-router-dom";
+import RestaurantHeader from "../../components/restaurant/RestaurantHeader";
+import RestaurantOffersStrip from "../../components/restaurant/RestaurantOffersStrip";
+import RestaurantCategoryNav from "../../components/restaurant/RestaurantCategoryNav";
+import DishCard from "../../components/restaurant/DishCard";
+import ItemCustomizerModal from "../../components/restaurant/ItemCustomizerModal";
+import RestaurantReviews from "../../components/restaurant/RestaurantReviews";
+import LoadingState from "../../components/states/LoadingState";
+import EmptyState from "../../components/states/EmptyState";
+import ErrorState from "../../components/states/ErrorState";
+import useRestaurantDetail from "../../hooks/useRestaurantDetail";
 
 /**
  * RestaurantDetail: Focused container orchestrating restaurant banner, category scroll-spy,
@@ -22,12 +22,12 @@ const RestaurantDetail = () => {
   const openPriceExplainer = outletCtx?.openPriceExplainer;
 
   // Resolve restaurant ID from route params, query params, or slug rest suffix
-  let restaurantId = searchParams.get('restaurant_id') || routeId;
+  let restaurantId = searchParams.get("restaurant_id") || routeId;
   if (!restaurantId && slug) {
     const match = slug.match(/rest(\d+)/);
     if (match) restaurantId = match[1];
   }
-  if (!restaurantId) restaurantId = '1';
+  if (!restaurantId) restaurantId = "1";
 
   const {
     restaurant,
@@ -61,7 +61,11 @@ const RestaurantDetail = () => {
       <div className="container py-5">
         <ErrorState
           title="Restaurant Not Available"
-          message={typeof error === 'string' ? error : "We couldn't retrieve menu information for this outlet. It may be offline or undergoing maintenance."}
+          message={
+            typeof error === "string"
+              ? error
+              : "We couldn't retrieve menu information for this outlet. It may be offline or undergoing maintenance."
+          }
           actionText="Retry"
           onAction={() => window.location.reload()}
         />
@@ -77,7 +81,7 @@ const RestaurantDetail = () => {
           title="Restaurant Not Found"
           description="The kitchen or outlet you are looking for could not be found."
           actionText="Go to Restaurants"
-          onAction={() => window.location.href = '/'}
+          onAction={() => (window.location.href = "/")}
         />
       </div>
     );
@@ -88,7 +92,10 @@ const RestaurantDetail = () => {
   return (
     <div className="container py-4 customer-content-container">
       {/* 1. Hero Header Banner with Breadcrumbs & 100% Price Parity Assurance */}
-      <RestaurantHeader restaurant={restaurant} openPriceExplainer={openPriceExplainer} />
+      <RestaurantHeader
+        restaurant={restaurant}
+        openPriceExplainer={openPriceExplainer}
+      />
 
       {/* 2. Active Promotional Offers Carousel */}
       <RestaurantOffersStrip restaurantId={restaurant.id} />
@@ -112,11 +119,13 @@ const RestaurantDetail = () => {
           description={
             searchFilter
               ? `No dishes match "${searchFilter}". Try searching for biryani, curry, or bread.`
-              : 'No items match your dietary preferences or category selection.'
+              : "No items match your dietary preferences or category selection."
           }
-          actionText={searchFilter || vegOnly || activeCategory ? 'Reset Filters' : null}
+          actionText={
+            searchFilter || vegOnly || activeCategory ? "Reset Filters" : null
+          }
           onAction={() => {
-            setSearchFilter('');
+            setSearchFilter("");
             setVegOnly(false);
             setActiveCategory(null);
           }}

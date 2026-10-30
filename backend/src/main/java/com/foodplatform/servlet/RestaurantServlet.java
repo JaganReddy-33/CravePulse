@@ -38,11 +38,23 @@ public class RestaurantServlet extends BaseServlet {
             String cuisine = req.getParameter("cuisine");
             String search = req.getParameter("search");
             Boolean vegOnly = "true".equalsIgnoreCase(req.getParameter("vegOnly"));
-            int limit = parseIntParam(req, "limit", 20);
-            int offset = parseIntParam(req, "offset", 0);
+            Double minRating = parseDoubleParam(req, "rating", null);
+            Integer maxDeliveryTime = parseIntParam(req, "time", -1);
+            if (maxDeliveryTime != null && maxDeliveryTime < 0) maxDeliveryTime = null;
+            String priceTier = req.getParameter("price");
+            String sortBy = req.getParameter("sort");
+            int limit = Math.max(1, Math.min(100, parseIntParam(req, "limit", 20)));
+            int offset = Math.max(0, parseIntParam(req, "offset", 0));
 
-            List<Restaurant> list = restaurantDao.listOpenRestaurants(lat, lng, cuisine, search, vegOnly, limit, offset);
-            JsonUtil.sendSuccess(res, 200, "Restaurants discovered", list);
+            List<Restaurant> list = restaurantDao.listOpenRestaurants(
+                    lat, lng, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier, sortBy, limit, offset);
+            int totalCount = restaurantDao.countOpenRestaurants(cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
+            JsonUtil.sendSuccess(res, 200, "Restaurants discovered", list, Map.of(
+                    "pagination", Map.of(
+                            "page", offset / limit + 1,
+                            "pageSize", limit,
+                            "totalCount", totalCount,
+                            "totalPages", (int) Math.ceil((double) totalCount / limit))));
             return;
         }
 

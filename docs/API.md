@@ -169,9 +169,9 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ### 3.1 Discover Restaurants (with Cross-Dish Search)
 - **Endpoint:** `GET /api/restaurants`
 - **Auth Required:** No
-- **Query Parameters:** `lat`, `lng`, `cuisine`, `search`, `vegOnly`, `limit` (default 20), and `offset` (default 0).
+- **Query Parameters:** `lat`, `lng`, `cuisine`, `search`, `vegOnly`, `rating` (minimum rating), `time` (maximum preparation time), `price` (`BUDGET`, `MID`, or `PREMIUM`), `sort` (`relevance`, `rating`, `time`, `costAsc`, or `costDesc`), `limit` (default 20), and `offset` (default 0).
 - `cuisine` matches `restaurant_profiles.cuisine_types`; `search` matches restaurant metadata and active menu items. `vegOnly=true` limits results to pure-vegetarian restaurants.
-- **Response:** `data` is a list of restaurant objects. Continue through the list with `offset += limit`; keep filters and coordinates unchanged between pages.
+- **Response:** `data` is the requested page of restaurant objects; `pagination` includes `page`, `pageSize`, `totalCount`, and `totalPages`. Counts and filters are calculated server-side. Continue through the list with `offset += limit`; keep filters and coordinates unchanged between pages.
 
 ### 3.1.1 Search Suggestions (Dishes & Restaurants)
 - **Endpoint:** `GET /api/restaurants/suggestions?query={term}` (also accepts `q`)
@@ -927,7 +927,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 
 ## 14. Job Listings & Applications
 
-- **List active jobs:** `GET /api/jobs?status=ACTIVE&department={department}&limit=12&offset=0`. Results are paginated with `limit` (maximum 100) and `offset`; non-admin callers only receive active jobs.
+- **List active jobs:** `GET /api/jobs?status=ACTIVE&department={department}&limit=12&offset=0`. Results are paginated with `limit` (maximum 100) and `offset`; non-admin callers only receive active jobs. The response includes `pagination.page`, `pagination.pageSize`, `pagination.totalCount`, and `pagination.totalPages`, counted with the same status and department filters.
 - **Job details:** `GET /api/jobs/{id}`.
 - **Departments:** `GET /api/jobs/departments`.
 - **Apply:** `POST /api/jobs/apply` with `jobId`, `applicantName`, and `email` (optional fields include `phone`, `portfolioUrl`, `resumeFilename`, `coverNote`, `experienceYears`, and `currentCompany`).

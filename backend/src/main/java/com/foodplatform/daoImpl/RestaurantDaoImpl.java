@@ -21,6 +21,13 @@ public class RestaurantDaoImpl implements RestaurantDao {
 
     @Override
     public List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search, Boolean vegOnly, int limit, int offset) {
+        return listOpenRestaurants(userLat, userLng, cuisine, search, vegOnly, null, null, null, null, limit, offset);
+    }
+
+    @Override
+    public List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search,
+                                                Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
+                                                String priceTier, String sortBy, int limit, int offset) {
         List<Restaurant> list = new ArrayList<>();
         Double lat = userLat;
         Double lng = userLng;
@@ -28,33 +35,14 @@ public class RestaurantDaoImpl implements RestaurantDao {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT r.*, ")
                 .append("(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(r.latitude)) * COS(RADIANS(r.longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(r.latitude))))) AS distance_km ")
-                .append("FROM restaurant_profiles r ")
-                .append("WHERE r.is_kyc_approved = TRUE ");
+                .append("FROM restaurant_profiles r ");
 
         List<Object> params = new ArrayList<>();
         params.add(lat);
         params.add(lng);
         params.add(lat);
-
-        if (cuisine != null && !cuisine.isBlank()) {
-            sb.append("AND r.cuisine_types LIKE ? ");
-            params.add("%" + cuisine.trim() + "%");
-        }
-        if (search != null && !search.isBlank()) {
-            sb.append("AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ? ")
-              .append("OR EXISTS (SELECT 1 FROM menu_items m WHERE m.restaurant_id = r.id AND m.is_deleted = FALSE AND (m.name LIKE ? OR m.description LIKE ?))) ");
-            String term = "%" + search.trim() + "%";
-            params.add(term);
-            params.add(term);
-            params.add(term);
-            params.add(term);
-            params.add(term);
-        }
-        if (vegOnly != null && vegOnly) {
-            sb.append("AND r.pure_veg = TRUE ");
-        }
-
-        sb.append("ORDER BY r.is_open DESC, distance_km ASC LIMIT ? OFFSET ?");
+        appendDiscoveryFilters(sb, params, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
+        sb.append("ORDER BY ").append(discoveryOrder(sortBy)).append(" LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
 
@@ -76,6 +64,73 @@ public class RestaurantDaoImpl implements RestaurantDao {
             throw new IllegalStateException("Database operation failed", e);
         }
         return list;
+    }
+
+    @Override
+    public int countOpenRestaurants(String cuisine, String search, Boolean vegOnly, Double minRating,
+                                    Integer maxDeliveryTime, String priceTier) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM restaurant_profiles r ");
+        List<Object> params = new ArrayList<>();
+        appendDiscoveryFilters(sql, params, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting discovered restaurants", e);
+            throw new IllegalStateException("Database operation failed", e);
+        }
+    }
+
+    private void appendDiscoveryFilters(StringBuilder sql, List<Object> params, String cuisine, String search,
+                                        Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
+                                        String priceTier) {
+        sql.append("WHERE r.is_kyc_approved = TRUE ");
+        if (cuisine != null && !cuisine.isBlank()) {
+            sql.append("AND r.cuisine_types LIKE ? ");
+            params.add("%" + cuisine.trim() + "%");
+        }
+        if (search != null && !search.isBlank()) {
+            sql.append("AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ? ")
+                    .append("OR EXISTS (SELECT 1 FROM menu_items m WHERE m.restaurant_id = r.id AND m.is_deleted = FALSE AND (m.name LIKE ? OR m.description LIKE ?))) ");
+            String term = "%" + search.trim() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+        if (Boolean.TRUE.equals(vegOnly)) {
+            sql.append("AND r.pure_veg = TRUE ");
+        }
+        if (minRating != null) {
+            sql.append("AND r.rating >= ? ");
+            params.add(minRating);
+        }
+        if (maxDeliveryTime != null) {
+            sql.append("AND r.prep_time_max <= ? ");
+            params.add(maxDeliveryTime);
+        }
+        if ("BUDGET".equals(priceTier)) {
+            sql.append("AND r.cost_for_two > 0 AND r.cost_for_two < 400 ");
+        } else if ("MID".equals(priceTier)) {
+            sql.append("AND r.cost_for_two >= 400 AND r.cost_for_two <= 1000 ");
+        } else if ("PREMIUM".equals(priceTier)) {
+            sql.append("AND r.cost_for_two > 1000 ");
+        }
+    }
+
+    private String discoveryOrder(String sortBy) {
+        if ("rating".equals(sortBy)) return "COALESCE(r.rating, 0) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if ("time".equals(sortBy)) return "COALESCE(r.prep_time_min, 20) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if ("costAsc".equals(sortBy)) return "COALESCE(r.cost_for_two, 300) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if ("costDesc".equals(sortBy)) return "COALESCE(r.cost_for_two, 300) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
+        return "r.is_open DESC, distance_km ASC, COALESCE(r.rating, 0) DESC, r.id DESC";
     }
 
     @Override
