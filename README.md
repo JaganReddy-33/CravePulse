@@ -127,7 +127,7 @@ CravePulse/
 │   │   ├── util/                     # JWT, Password (BCrypt), JSON utilities
 │   │   └── websocket/                # RealtimeEndpoint + SessionRegistry
 │   └── src/main/resources/
-│       └── db/migration/             # V1–V21 versioned SQL migrations
+│       └── db/migration/             # V1–V22 versioned SQL migrations
 ├── frontend/                         # React 18 + Vite frontend
 │   └── src/
 │       ├── components/               # 25+ reusable UI components
@@ -197,7 +197,7 @@ CravePulse/
 | **Admin Console** | Audit Log Trail | Every admin action logged with actor, target, IP, and timestamp |
 | **Admin Console** | Cuisine Category Management | Create, edit, reorder, hide, and restore customer cuisine filters |
 | **Admin Console** | Persisted Partner Approvals | KYC approval/revocation updates profile and account status transactionally; partners receive an in-app notice with the admin note |
-| **Database** | V1–V21 Versioned Migrations | Versioned SQL applied on server startup; existing migration files must remain immutable |
+| **Database** | V1–V22 Versioned Migrations | Versioned SQL applied on server startup; existing migration files must remain immutable |
 | **Database** | Strict Constraints | MySQL 8 `CHECK` constraints, non-cascade FKs, pessimistic locking |
 | **Database** | 7-Day Telemetry Retention | Scheduled purge of GPS logs and stale dispatch records |
 | **Observability** | Structured Request IDs | `X-Request-ID` propagation through all SLF4J MDC logs |
@@ -305,7 +305,7 @@ cd backend
 mvn clean package -DskipTests
 java -jar target/food-delivery-backend.jar
 ```
-> Migrations V1–V21 apply automatically on first boot. Use an isolated development database for local setup and tests.
+> Migrations V1–V22 apply automatically on first boot. Use an isolated development database for local setup and tests.
 
 ### 4. Load Demo Data (Optional)
 ```bash

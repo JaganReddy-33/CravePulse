@@ -35,7 +35,7 @@ Use `http://127.0.0.1:5173` consistently. Frontend `.env`: `VITE_API_URL=/api`, 
 
 ## Migrations
 
-SQL lives in `backend/src/main/resources/db/migration`. Startup applies V1 through V21 automatically, once, using `schema_migrations`. New entries record checksums. Missing/invalid scripts and changed checksums stop startup. Existing schema migration history must be retained.
+SQL lives in `backend/src/main/resources/db/migration`. Startup applies V1 through V22 automatically, once, using `schema_migrations`. New entries record checksums. Missing/invalid scripts and changed checksums stop startup. Existing schema migration history must be retained.
 
 For migrations without starting HTTP, run from repository root after building:
 
@@ -45,7 +45,7 @@ java --class-path backend/target-verified/food-delivery-backend.jar scripts/Migr
 
 Do not execute every SQL file manually. V1 historically contains destructive reset statements and V2/V6 contain fixtures. The runner suppresses historical destructive initialization statements, retains only required V2 platform configuration, and skips V6 catalog fixtures. This preserves historical files while preventing new installations from repopulating fake data. Never run seed-demo.sql against this database.
 
-Forward migrations V13-V18 add API account state and integrity rules, remove invented catalog/identity defaults, allow absent photography/cost estimates, and support completed dispatch state. V21 adds admin-reviewed manual payout requests; it does not integrate or initiate bank transfers. Applied SQL must not be edited; add a new migration for subsequent changes.
+Forward migrations V13-V18 add API account state and integrity rules, remove invented catalog/identity defaults, allow absent photography/cost estimates, and support completed dispatch state. V21 adds admin-reviewed manual payout requests; it does not integrate or initiate bank transfers. V22 repairs a missing `restaurant_profiles.commission_rate` column using the original 15% default. Applied SQL must not be edited; add a new migration for subsequent changes.
 
 ## Database maintenance
 

@@ -18,7 +18,7 @@ public final class DatabaseMigrationRunner {
         "V12__jobs_and_applications.sql", "V13__real_application_data.sql", "V14__identity_and_integrity.sql",
         "V15__unknown_catalog_metadata.sql", "V16__optional_menu_photography.sql", "V17__completed_dispatch_state.sql",
         "V18__optional_cost_estimates.sql", "V19__discovery_categories.sql", "V20__repair_rider_cash_columns.sql",
-        "V21__manual_payout_requests.sql"
+        "V21__manual_payout_requests.sql", "V22__repair_restaurant_commission_rate.sql"
     };
     public static void runMigrations() {
         try (Connection conn = DatabaseConfig.getConnection()) {
