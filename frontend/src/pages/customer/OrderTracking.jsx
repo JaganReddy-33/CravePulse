@@ -64,6 +64,7 @@ const OrderTracking = () => {
   if (!order) return <div className="container py-5">Order unavailable.</div>;
   const isDelivered = order.status === "DELIVERED";
   const isCancelled = order.status === "CANCELLED";
+  const canCancelOrder = ["PLACED", "ACCEPTED"].includes(order.status);
 
   return (
     <div
@@ -185,7 +186,7 @@ const OrderTracking = () => {
             </button>
 
             {/* Cancel Order Button */}
-            {!isDelivered && !isCancelled && (
+            {canCancelOrder && (
               <button
                 type="button"
                 className="btn btn-link text-danger text-decoration-none small touch-target"
@@ -193,6 +194,12 @@ const OrderTracking = () => {
               >
                 Cancel Order
               </button>
+            )}
+            {!isDelivered && !isCancelled && !canCancelOrder && (
+              <p className="small text-muted text-center mb-0">
+                Cancellation is unavailable after the kitchen starts preparing
+                your order.
+              </p>
             )}
 
             {/* Tax Invoice Link */}
@@ -239,9 +246,7 @@ const OrderTracking = () => {
       <DisputeModal
         show={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
-        orderId={order.id}
-        orderNumber={order.orderNumber || order.id}
-        totalAmount={order.totalAmount}
+        order={order}
       />
     </div>
   );

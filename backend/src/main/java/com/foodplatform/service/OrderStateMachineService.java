@@ -72,6 +72,9 @@ public class OrderStateMachineService {
                 Order updated = transition(conn, orderId, targetStatus, triggeredByUserId, actorRole, deliveryOtp, reason, currentLat, currentLng);
                 conn.commit();
                 return updated;
+            } catch (IllegalArgumentException | TransitionRejectedException e) {
+                conn.rollback();
+                throw e;
             } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 logger.error("Failed transition for order: {} to {}", orderId, targetStatus, e);
@@ -101,7 +104,7 @@ public class OrderStateMachineService {
         // 2. Validate generic state machine transition
         Set<String> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
         if (allowed == null || !allowed.contains(newStatus)) {
-            throw new IllegalStateException("Illegal state transition from " + currentStatus + " to " + newStatus);
+            throw new TransitionRejectedException("Illegal state transition from " + currentStatus + " to " + newStatus);
         }
 
         // 3. Resolve actor role if not explicitly provided
@@ -115,31 +118,31 @@ public class OrderStateMachineService {
         // 4. Enforce strict role-based authorization matrix on transitions
         if ("CUSTOMER".equalsIgnoreCase(actorRole)) {
             if (!"CANCELLED".equals(newStatus)) {
-                throw new IllegalStateException("Customers are only permitted to cancel their orders.");
+                throw new TransitionRejectedException("Customers are only permitted to cancel their orders.");
             }
             if (order.getCustomerId() == null || !order.getCustomerId().equals(triggeredByUserId)) {
-                throw new IllegalStateException("Access forbidden: you do not own this order.");
+                throw new TransitionRejectedException("Access forbidden: you do not own this order.");
             }
             if (!"PLACED".equals(currentStatus) && !"ACCEPTED".equals(currentStatus)) {
-                throw new IllegalStateException("Order cannot be cancelled once food preparation has begun.");
+                throw new TransitionRejectedException("Order cannot be cancelled once food preparation has begun.");
             }
         } else if ("RESTAURANT_OWNER".equalsIgnoreCase(actorRole)) {
             Set<String> restaurantAllowed = Set.of("ACCEPTED", "REJECTED", "PREPARING", "READY");
             if (!restaurantAllowed.contains(newStatus)) {
-                throw new IllegalStateException("Restaurant owners may only transition orders to ACCEPTED, REJECTED, PREPARING, or READY.");
+                throw new TransitionRejectedException("Restaurant owners may only transition orders to ACCEPTED, REJECTED, PREPARING, or READY.");
             }
             Restaurant rest = restaurantDao.findByUserId(triggeredByUserId);
             if (rest == null || order.getRestaurantId() == null || !order.getRestaurantId().equals(rest.getId())) {
-                throw new IllegalStateException("Access forbidden: you do not own the restaurant fulfilling this order.");
+                throw new TransitionRejectedException("Access forbidden: you do not own the restaurant fulfilling this order.");
             }
         } else if ("RIDER".equalsIgnoreCase(actorRole)) {
             Set<String> riderAllowed = Set.of("PICKED_UP", "DELIVERED");
             if (!riderAllowed.contains(newStatus)) {
-                throw new IllegalStateException("Delivery riders may only transition orders to PICKED_UP or DELIVERED.");
+                throw new TransitionRejectedException("Delivery riders may only transition orders to PICKED_UP or DELIVERED.");
             }
             RiderProfile rider = riderDao.findByUserId(triggeredByUserId);
             if (rider == null || order.getRiderId() == null || !order.getRiderId().equals(rider.getId())) {
-                throw new IllegalStateException("Access forbidden: you are not the assigned rider for this order.");
+                throw new TransitionRejectedException("Access forbidden: you are not the assigned rider for this order.");
             }
             if ("DELIVERED".equals(newStatus)) {
                 if (deliveryOtp == null || order.getDeliveryOtp() == null ||
@@ -148,7 +151,7 @@ public class OrderStateMachineService {
                 }
             }
         } else if (!"ADMIN".equalsIgnoreCase(actorRole)) {
-            throw new IllegalStateException("Unauthorized actor role for order transition: " + actorRole);
+            throw new TransitionRejectedException("Unauthorized actor role for order transition: " + actorRole);
         }
 
         Timestamp deliveryTimestamp = null;
@@ -244,5 +247,13 @@ public class OrderStateMachineService {
         }
 
         return updated != null ? updated : order;
+    }
+
+    private static final class TransitionRejectedException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+
+        private TransitionRejectedException(String message) {
+            super(message);
+        }
     }
 }

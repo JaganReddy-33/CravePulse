@@ -9,9 +9,12 @@ const RiderActiveJob = () => {
   const [profile, setProfile] = useState(null);
   const [activeJob, setActiveJob] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [gpsError, setGpsError] = useState("");
   const [dispatchError, setDispatchError] = useState("");
   const [activeJobOffer, setActiveJobOffer] = useState(null);
   const [riderProfileId, setRiderProfileId] = useState(null);
+  const offersRequestRef = useRef(0);
+  const offerEventRevisionRef = useRef(0);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
   const [milestoneUpdating, setMilestoneUpdating] = useState(false);
@@ -108,30 +111,66 @@ const RiderActiveJob = () => {
 
     const channel = `rider:${riderProfileId}`;
     realtime.subscribe(channel);
-    const loadOffers = () =>
-      api
-        .get("/rider/offers")
-        .then((res) => {
-          if (res.success) setActiveJobOffer(res.data?.[0] || null);
-        })
-        .catch((err) => setDispatchError(err.message));
+    const loadOffers = async () => {
+      const requestId = ++offersRequestRef.current;
+      const eventRevision = offerEventRevisionRef.current;
+      try {
+        const res = await api.get("/rider/offers");
+        if (requestId === offersRequestRef.current && res.success) {
+          if (res.data?.length) {
+            setActiveJobOffer(res.data[0]);
+          } else if (eventRevision === offerEventRevisionRef.current) {
+            setActiveJobOffer(null);
+          }
+        }
+      } catch (err) {
+        if (requestId === offersRequestRef.current) {
+          setDispatchError(err.message);
+        }
+      }
+    };
     const onJobOffer = (offer) => {
       if (offer && (offer.dispatchId != null || offer.id != null)) {
+        offerEventRevisionRef.current += 1;
         setActiveJobOffer({
           ...offer,
           id: offer.id ?? offer.dispatchId,
         });
       }
     };
+    const onOfferTimeout = (offer) => {
+      setActiveJobOffer((current) =>
+        current?.id === offer?.dispatchId ? null : current,
+      );
+      loadOffers();
+    };
+    const onConnectionStatus = (status) => {
+      if (status?.status === "connected") {
+        loadOffers();
+        fetchActiveJob();
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadOffers();
+        fetchActiveJob();
+      }
+    };
 
-    loadOffers();
     const off = realtime.on("rider_job_offer", onJobOffer);
+    const offTimeout = realtime.on("rider_offer_timed_out", onOfferTimeout);
+    const offConnection = realtime.on("connection_status", onConnectionStatus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    loadOffers();
     const timer = setInterval(() => {
       loadOffers();
       fetchActiveJob();
-    }, 15000);
+    }, 10000);
     return () => {
       off();
+      offTimeout();
+      offConnection();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       realtime.unsubscribe(channel);
       clearInterval(timer);
     };
@@ -148,27 +187,41 @@ const RiderActiveJob = () => {
     return () => clearInterval(interval);
   }, [waitingAtKitchen]);
 
-  // Only device GPS positions are sent; permission failures never fabricate movement.
+  // Keep the rider's dispatch location fresh while on duty, before an offer arrives.
   useEffect(() => {
-    if (!activeJob || !navigator.geolocation) return;
-    const watch = navigator.geolocation.watchPosition(
+    if (!isOnline && !activeJob) return undefined;
+    const geolocation = navigator.geolocation;
+    if (!geolocation) {
+      setGpsError("Enable device location to receive nearby delivery offers.");
+      return undefined;
+    }
+
+    const watch = geolocation.watchPosition(
       (pos) => {
-        setGpsCoords([pos.coords.latitude, pos.coords.longitude]);
+        const { latitude, longitude, speed, heading } = pos.coords;
+        setGpsCoords([latitude, longitude]);
+        setGpsError("");
         api
           .post("/rider/telemetry", {
-            orderId: activeJob.orderId,
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            speed: pos.coords.speed == null ? 0 : pos.coords.speed * 3.6,
-            heading: pos.coords.heading || 0,
+            orderId: activeJob?.orderId ?? null,
+            latitude,
+            longitude,
+            speed: speed == null ? 0 : speed * 3.6,
+            heading: heading || 0,
           })
-          .catch((err) => console.warn("Location update failed", err.message));
+          .catch((err) => setGpsError(err.message || "Location update failed."));
       },
-      () => {},
+      (error) => {
+        setGpsError(
+          error.code === error.PERMISSION_DENIED
+            ? "Allow location access to receive nearby delivery offers."
+            : "Unable to get your current location. Check your device GPS.",
+        );
+      },
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
     );
-    return () => navigator.geolocation.clearWatch(watch);
-  }, [activeJob?.orderId]);
+    return () => geolocation.clearWatch(watch);
+  }, [isOnline, activeJob?.orderId]);
 
   const toggleItemVerified = (itemId) => {
     setVerifiedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -1088,9 +1141,16 @@ const RiderActiveJob = () => {
           <h3 className="fw-extrabold text-white mb-2">No active delivery</h3>
           <p className="text-secondary small mb-4">
             {isOnline
-              ? "Waiting for a delivery offer."
+              ? gpsError || (gpsCoords
+                ? "Your live location is active. Searching for nearby delivery offers."
+                : "Starting live location and waiting for nearby delivery offers.")
               : "Go online when you're ready to receive delivery offers."}
           </p>
+          {isOnline && gpsCoords && !gpsError && (
+            <span className="badge rounded-pill bg-success-subtle text-success">
+              Live location connected
+            </span>
+          )}
         </div>
       ) : null}
 

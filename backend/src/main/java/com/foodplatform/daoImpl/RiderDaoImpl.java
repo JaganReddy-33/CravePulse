@@ -69,6 +69,7 @@ public class RiderDaoImpl implements RiderDao {
                 "FROM rider_profiles rp " +
                 "JOIN users u ON rp.user_id = u.id " +
                 "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
+                "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
                 "HAVING distance_km <= ? " +
                 "ORDER BY distance_km ASC LIMIT ?";
 
@@ -110,6 +111,7 @@ public class RiderDaoImpl implements RiderDao {
                 "FROM rider_profiles rp " +
                 "JOIN users u ON rp.user_id = u.id " +
                 "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
+                "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
                 "AND rp.id NOT IN (" + inClause + ") " +
                 "HAVING distance_km <= ? " +
                 "ORDER BY distance_km ASC LIMIT ?";

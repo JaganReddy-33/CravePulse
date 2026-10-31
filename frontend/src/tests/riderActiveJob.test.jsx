@@ -1,6 +1,6 @@
 import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import api from "../services/api";
 import realtime from "../services/websocket";
 import RiderActiveJob from "../pages/rider/RiderActiveJob";
@@ -8,6 +8,7 @@ import RiderActiveJob from "../pages/rider/RiderActiveJob";
 const { realtimeHandlers } = vi.hoisted(() => ({
   realtimeHandlers: new Map(),
 }));
+const originalNavigator = navigator;
 
 vi.mock("../services/api", () => ({
   default: { get: vi.fn(), post: vi.fn() },
@@ -30,6 +31,10 @@ vi.mock("../components/ModalPortal", () => ({
 }));
 
 describe("rider active delivery workflow", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     api.get.mockImplementation((url) => {
@@ -136,16 +141,18 @@ describe("rider active delivery workflow", () => {
 
     await waitFor(() => expect(realtime.subscribe).toHaveBeenCalledWith("rider:12"));
     await waitFor(() => expect(realtimeHandlers.has("rider_job_offer")).toBe(true));
-    realtimeHandlers.get("rider_job_offer")({
-      dispatchId: 91,
-      orderId: 71,
-      orderNumber: "CP-71",
-      restaurantName: "Kitchen",
-      restaurantLat: 12.9,
-      restaurantLng: 77.6,
-      customerLat: 12.91,
-      customerLng: 77.61,
-      totalEarning: 85,
+    act(() => {
+      realtimeHandlers.get("rider_job_offer")({
+        dispatchId: 91,
+        orderId: 71,
+        orderNumber: "CP-71",
+        restaurantName: "Kitchen",
+        restaurantLat: 12.9,
+        restaurantLng: 77.6,
+        customerLat: 12.91,
+        customerLng: 77.61,
+        totalEarning: 85,
+      });
     });
 
     expect(await screen.findByText(/New delivery offer/)).toBeTruthy();
@@ -155,5 +162,51 @@ describe("rider active delivery workflow", () => {
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith("/rider/91/accept", {}),
     );
+  });
+
+  it("sends live location while online with no active delivery", async () => {
+    const geolocation = {
+      watchPosition: vi.fn((onSuccess) => {
+        onSuccess({
+          coords: {
+            latitude: 12.9716,
+            longitude: 77.5946,
+            speed: null,
+            heading: null,
+          },
+        });
+        return 7;
+      }),
+      clearWatch: vi.fn(),
+    };
+    vi.stubGlobal(
+      "navigator",
+      Object.assign(Object.create(originalNavigator), { geolocation }),
+    );
+    api.get.mockImplementation((url) => {
+      if (url === "/rider/profile") {
+        return Promise.resolve({ success: true, data: { id: 12, online: true } });
+      }
+      if (url === "/rider/active-job") {
+        return Promise.resolve({ success: true, data: null });
+      }
+      if (url === "/rider/offers") {
+        return Promise.resolve({ success: true, data: [] });
+      }
+      return Promise.resolve({ success: true, data: {} });
+    });
+
+    render(<RiderActiveJob />);
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith("/rider/telemetry", {
+        orderId: null,
+        latitude: 12.9716,
+        longitude: 77.5946,
+        speed: 0,
+        heading: 0,
+      }),
+    );
+    expect(geolocation.watchPosition).toHaveBeenCalled();
   });
 });
