@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import ModalPortal from "../ModalPortal";
-import { sameAddressId } from "../../utils/address";
+import {
+  getAddressMapUrl,
+  getFullAddressParts,
+  sameAddressId,
+} from "../../utils/address";
 import {
   isSafeGoogleMapsUrl,
   parseGoogleMapsCoordinates,
@@ -21,6 +25,7 @@ const CheckoutAddressSection = ({
   selectedAddressId,
   onSelectAddress,
   onSaveAddress,
+  onDeleteAddress,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAddress, setNewAddress] = useState(initialAddress);
@@ -92,27 +97,36 @@ const CheckoutAddressSection = ({
         <div className="d-flex flex-column gap-3">
           {addresses.map((address) => {
             const selected = sameAddressId(selectedAddressId, address.id);
-            const fallbackMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-              `${address.addressLine}, ${address.city || ""} ${address.postalCode || ""}`,
-            )}`;
+            const mapsUrl = getAddressMapUrl(address);
+            const addressParts = getFullAddressParts(address);
+            const addressInputId = `delivery-address-${address.id}`;
             return (
-              <label
+              <div
                 key={address.id}
                 className={`d-flex align-items-start gap-3 p-3 rounded-4 border cursor-pointer transition ${
                   selected
                     ? "border-danger bg-danger-subtle"
                     : "border-light bg-light"
                 }`}
+                onClick={(event) => {
+                  if (event.target.closest("input, a, button")) return;
+                  onSelectAddress(address.id);
+                }}
               >
                 <input
+                  id={addressInputId}
                   type="radio"
                   name="deliveryAddress"
                   checked={selected}
                   onChange={() => onSelectAddress(address.id)}
-                  className="form-check-input mt-1"
+                  className="form-check-input mt-1 flex-shrink-0"
+                  aria-label={`Select ${address.title || "address"} for delivery`}
                 />
-                <div className="flex-grow-1 text-truncate">
-                  <div className="d-flex align-items-center gap-2 mb-1">
+                <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                  <label
+                    htmlFor={addressInputId}
+                    className="d-flex align-items-center gap-2 mb-1 cursor-pointer"
+                  >
                     <strong className="text-dark small text-uppercase">
                       {address.title || "Address"}
                     </strong>
@@ -121,35 +135,48 @@ const CheckoutAddressSection = ({
                         Default
                       </span>
                     )}
-                  </div>
-                  <p className="text-muted small mb-1">{address.addressLine}</p>
-                  {address.landmark && (
+                  </label>
+                  {addressParts.map((part) => (
                     <small
-                      className="text-secondary d-block"
-                      style={{ fontSize: 11 }}
+                      key={part}
+                      className="text-secondary d-block text-wrap"
+                      style={{ fontSize: 12, overflowWrap: "anywhere" }}
                     >
-                      Landmark: {address.landmark}
+                      {part}
                     </small>
+                  ))}
+                  {mapsUrl && (
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="small text-primary text-decoration-none d-inline-flex align-items-center gap-1 mt-1"
+                      style={{ fontSize: 11 }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <i className="bi bi-map"></i> View on Google Maps ↗
+                    </a>
                   )}
-                  <a
-                    href={
-                      isSafeGoogleMapsUrl(address.mapsUrl)
-                        ? address.mapsUrl
-                        : fallbackMapsUrl
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="small text-primary text-decoration-none d-inline-flex align-items-center gap-1 mt-1"
-                    style={{ fontSize: 11 }}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <i className="bi bi-map"></i> View on Google Maps ↗
-                  </a>
                 </div>
-                {selected && (
-                  <i className="bi bi-check-circle-fill text-danger fs-5"></i>
-                )}
-              </label>
+                <div className="d-flex align-items-start gap-2 flex-shrink-0">
+                  {selected && (
+                    <i className="bi bi-check-circle-fill text-danger fs-5 mt-1"></i>
+                  )}
+                  {onDeleteAddress && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      aria-label={`Delete ${address.title || "address"}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDeleteAddress(address.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

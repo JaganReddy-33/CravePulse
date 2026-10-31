@@ -27,12 +27,10 @@ const MenuManagement = () => {
   const [categoryId, setCategoryId] = useState("");
   const [platformPrice, setPlatformPrice] = useState("");
   const [dineInPrice, setDineInPrice] = useState("");
-  const [imageUrl, setImageUrl] = useState(
-    "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500",
-  );
+  const [imageUrl, setImageUrl] = useState("");
   const [isVeg, setIsVeg] = useState(true);
-  const [prepTimeMinutes, setPrepTimeMinutes] = useState(15);
-  const [calories, setCalories] = useState(350);
+  const [prepTimeMinutes, setPrepTimeMinutes] = useState("");
+  const [calories, setCalories] = useState("");
   const [availableFrom, setAvailableFrom] = useState("");
   const [availableTo, setAvailableTo] = useState("");
 
@@ -214,12 +212,11 @@ const MenuManagement = () => {
         description: description.trim(),
         platformPrice: pPrice,
         dineInPrice: dPrice,
-        imageUrl:
-          imageUrl.trim() ||
-          "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500",
+        imageUrl: imageUrl.trim() || null,
         isVeg: isVeg,
-        prepTimeMinutes: Number(prepTimeMinutes) || 15,
-        calories: Number(calories) || 300,
+        prepTimeMinutes:
+          prepTimeMinutes === "" ? null : Number(prepTimeMinutes),
+        calorieCount: calories === "" ? null : Number(calories),
         availableFrom: availableFrom || null,
         availableTo: availableTo || null,
         isAvailable: true,
@@ -234,6 +231,11 @@ const MenuManagement = () => {
         setDescription("");
         setPlatformPrice("");
         setDineInPrice("");
+        setImageUrl("");
+        setPrepTimeMinutes("");
+        setCalories("");
+        setAvailableFrom("");
+        setAvailableTo("");
         fetchMenu();
       }
     } catch (e) {
@@ -262,7 +264,14 @@ const MenuManagement = () => {
       setSubmitting(true);
       const res = await api.post(
         `/menu/item/${editingItem.id}/update`,
-        editingItem,
+        {
+          ...editingItem,
+          calorieCount:
+            editingItem.calorieCount === "" ||
+            editingItem.calorieCount == null
+              ? null
+              : Number(editingItem.calorieCount),
+        },
       );
       if (res.success) {
         showNotification(`"${editingItem.name}" updated successfully!`);
@@ -531,14 +540,22 @@ const MenuManagement = () => {
                   className={`card border-0 rounded-4 shadow-sm h-100 overflow-hidden bg-white ${!item.isAvailable ? "opacity-75" : ""}`}
                 >
                   <div className="position-relative" style={{ height: 160 }}>
-                    <img
-                      src={
-                        item.imageUrl ||
-                        "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500"
-                      }
-                      alt={item.name}
-                      className="w-100 h-100 object-fit-cover"
-                    />
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-100 h-100 object-fit-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-2 text-secondary bg-light"
+                        role="img"
+                        aria-label={`${item.name}: image unavailable`}
+                      >
+                        <i className="bi bi-egg-fried fs-2" aria-hidden="true"></i>
+                        <span className="small">Image unavailable</span>
+                      </div>
+                    )}
                     <div className="position-absolute top-0 end-0 m-2 d-flex gap-1">
                       <span
                         className={`badge rounded-pill ${item.isVeg ? "bg-success" : "bg-danger"}`}
@@ -754,7 +771,7 @@ const MenuManagement = () => {
                         <input
                           type="number"
                           step="0.01"
-                          min="1"
+                          min="0"
                           className="form-control rounded-3"
                           placeholder="e.g. 299"
                           required
@@ -776,7 +793,6 @@ const MenuManagement = () => {
                           onChange={(e) => setDineInPrice(e.target.value)}
                         />
                       </div>
-
                       <div className="col-12">
                         <label className="form-label small fw-bold text-muted">
                           Dish Image URL (Validated HTTP/HTTPS, max 500 chars)
@@ -784,7 +800,7 @@ const MenuManagement = () => {
                         <input
                           type="url"
                           className="form-control rounded-3"
-                          placeholder="https://images.unsplash.com/photo-..."
+                          placeholder="Optional image URL"
                           value={imageUrl}
                           onChange={(e) => setImageUrl(e.target.value)}
                         />
@@ -809,6 +825,8 @@ const MenuManagement = () => {
                         </label>
                         <input
                           type="number"
+                          min="0"
+                          placeholder="Optional"
                           className="form-control rounded-3"
                           value={prepTimeMinutes}
                           onChange={(e) => setPrepTimeMinutes(e.target.value)}
@@ -820,6 +838,8 @@ const MenuManagement = () => {
                         </label>
                         <input
                           type="number"
+                          min="1"
+                          placeholder="Optional"
                           className="form-control rounded-3"
                           value={calories}
                           onChange={(e) => setCalories(e.target.value)}
@@ -995,6 +1015,24 @@ const MenuManagement = () => {
                             })
                           }
                           required
+                        />
+                      </div>
+
+                      <div className="col-12 col-md-4">
+                        <label className="form-label small fw-bold text-muted">
+                          Calories (kcal)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          className="form-control rounded-3"
+                          value={editingItem.calorieCount ?? ""}
+                          onChange={(e) =>
+                            setEditingItem({
+                              ...editingItem,
+                              calorieCount: e.target.value,
+                            })
+                          }
                         />
                       </div>
 

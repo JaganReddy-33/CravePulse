@@ -51,6 +51,8 @@ describe('useCheckout saved-address flow', () => {
 
   it('selects the saved default by ID, supplies its coordinates, and requires a valid quote to place an order', async () => {
     const setDeliveryCoordinates = vi.fn();
+    const setDeliveryAddressId = vi.fn();
+    const setCheckoutQuoteEnabled = vi.fn();
     const clearCart = vi.fn();
     api.post.mockResolvedValue({
       success: true,
@@ -58,20 +60,29 @@ describe('useCheckout saved-address flow', () => {
     });
 
     const wrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
-    const { result, rerender } = renderHook(
-      ({ billDetails }) => useCheckout({
+    const { result, rerender, unmount } = renderHook(
+      ({ billDetails, billQuoteAddressId }) => useCheckout({
         cart,
         billDetails,
+        billQuoteAddressId,
+        billQuoteFresh: billQuoteAddressId != null,
         couponCode: '',
         riderTip: 0,
         clearCart,
         user: { id: 11 },
         setDeliveryCoordinates,
+        setDeliveryAddressId,
+        setCheckoutQuoteEnabled,
       }),
-      { initialProps: { billDetails: null }, wrapper },
+      {
+        initialProps: { billDetails: null, billQuoteAddressId: null },
+        wrapper,
+      },
     );
 
     await waitFor(() => expect(result.current.selectedAddressId).toBe(71));
+    expect(setCheckoutQuoteEnabled).toHaveBeenCalledWith(true);
+    expect(setDeliveryAddressId).toHaveBeenLastCalledWith(71);
     expect(setDeliveryCoordinates).toHaveBeenLastCalledWith({ latitude: 12.9716, longitude: 77.5946 });
     expect(result.current.hasValidQuote).toBe(false);
 
@@ -79,7 +90,16 @@ describe('useCheckout saved-address flow', () => {
     expect(api.post).not.toHaveBeenCalled();
     expect(result.current.error).toContain('valid server price quote');
 
-    rerender({ billDetails: quote });
+    rerender({ billDetails: quote, billQuoteAddressId: 70 });
+    expect(result.current.hasValidQuote).toBe(false);
+    await act(async () => result.current.handlePlaceOrder());
+    expect(api.post).not.toHaveBeenCalledWith(
+      "/orders",
+      expect.anything(),
+      expect.anything(),
+    );
+
+    rerender({ billDetails: quote, billQuoteAddressId: 71 });
     expect(result.current.hasValidQuote).toBe(true);
     await act(async () => result.current.handlePlaceOrder());
     expect(api.post).toHaveBeenCalledWith('/orders', expect.objectContaining({
@@ -87,5 +107,7 @@ describe('useCheckout saved-address flow', () => {
       deliveryAddress: '12 Park Road, Bengaluru, Karnataka 560001',
     }), expect.any(Object));
     expect(clearCart).toHaveBeenCalledOnce();
+    unmount();
+    expect(setCheckoutQuoteEnabled).toHaveBeenLastCalledWith(false);
   });
 });

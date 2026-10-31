@@ -5,16 +5,13 @@ import Footer from "../../components/Footer";
 import ParticleBackground from "../../components/ParticleBackground";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import { useCart } from "../../context/CartContext";
-import PriceBreakdownModal from "../../components/PriceBreakdownModal";
 import ModalPortal from "../../components/ModalPortal";
 
 const CustomerLayout = () => {
   const [showCartDrawer, setShowCartDrawer] = useState(false);
-  const [showPriceModal, setShowPriceModal] = useState(false);
   const [inputCoupon, setInputCoupon] = useState("");
   const {
     cart,
-    billDetails,
     removeItem,
     addItem,
     clearCart,
@@ -42,9 +39,7 @@ const CustomerLayout = () => {
       <Navbar onOpenCart={() => setShowCartDrawer(true)} />
 
       <main className="flex-grow-1 position-relative">
-        <Outlet
-          context={{ openPriceExplainer: () => setShowPriceModal(true) }}
-        />
+        <Outlet />
       </main>
 
       {/* Cart Drawer Offcanvas Backdrop wrapped in ModalPortal */}
@@ -218,13 +213,10 @@ const CustomerLayout = () => {
 
                       {couponCode ? (
                         <div className="badge bg-success-subtle text-success border border-success p-2 d-flex justify-content-between align-items-center rounded-3">
-                          <span>
-                            <strong>{couponCode}</strong> applied successfully!
-                          </span>
-                          <span className="fw-extrabold">
-                            Save ₹{billDetails?.couponDiscount || 0}
-                          </span>
-                        </div>
+                              <span>
+                                <strong>{couponCode}</strong> applied successfully!
+                              </span>
+                            </div>
                       ) : (
                         <form
                           onSubmit={handleApplyCoupon}
@@ -257,60 +249,13 @@ const CustomerLayout = () => {
                       )}
                     </div>
 
-                    {/* Radical Price Parity Assurance Pill */}
-                    <div className="p-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 d-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex align-items-center gap-2 small text-success">
-                        <i className="bi bi-patch-check-fill fs-6"></i>
-                        <span className="fw-bold">
-                          100% Dine-In Menu Parity
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-link btn-sm p-0 text-success text-decoration-none small fw-bold"
-                        onClick={() => setShowPriceModal(true)}
-                      >
-                        Audit Bill ⓘ
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
 
               {/* Drawer Checkout Footer */}
-              {cart.items.length > 0 && billDetails && (
+              {cart.items.length > 0 && (
                 <div className="p-3 border-top bg-light">
-                  <div className="d-flex justify-content-between align-items-center mb-1 text-muted small">
-                    <span>Item Subtotal:</span>
-                    <span>₹{billDetails.subtotal}</span>
-                  </div>
-                  {billDetails.couponDiscount > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mb-1 text-success small fw-bold">
-                      <span>Coupon Discount:</span>
-                      <span>-₹{billDetails.couponDiscount}</span>
-                    </div>
-                  )}
-                  <div className="d-flex justify-content-between align-items-center mb-2 text-muted small">
-                    <span>Taxes, Packaging & Delivery:</span>
-                    <span>
-                      ₹
-                      {(
-                        billDetails.deliveryFee +
-                        billDetails.packagingFee +
-                        billDetails.platformFee +
-                        billDetails.gstTax
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3 pt-2 border-top">
-                    <span className="fw-bold text-dark">To Pay</span>
-                    <span
-                      className="fs-4 fw-extrabold"
-                      style={{ color: "var(--c-primary)" }}
-                    >
-                      ₹{billDetails.totalAmount}
-                    </span>
-                  </div>
                   <Link
                     to="/checkout"
                     className="btn btn-primary w-100 py-3 rounded-pill fw-bold d-flex justify-content-between align-items-center px-4 shadow transition hover-lift"
@@ -329,13 +274,6 @@ const CustomerLayout = () => {
           </div>
         </ModalPortal>
       )}
-
-      {/* Radical Price Transparency Explainer Modal */}
-      <PriceBreakdownModal
-        show={showPriceModal}
-        onClose={() => setShowPriceModal(false)}
-        billDetails={billDetails}
-      />
 
       {/* Rich Multi-Column Production-Grade Footer */}
       <Footer />

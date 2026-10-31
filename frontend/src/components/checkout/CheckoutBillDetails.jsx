@@ -6,9 +6,7 @@ import React from "react";
 const CheckoutBillDetails = ({
   billDetails,
   riderTip,
-  couponCode,
   onOpenPriceExplainer,
-  onOpenCoupons,
 }) => {
   if (!billDetails) return null;
 
@@ -30,63 +28,46 @@ const CheckoutBillDetails = ({
         )}
       </div>
 
-      {/* Coupon promo trigger */}
-      <div className="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center mb-3">
-        <div className="d-flex align-items-center gap-2">
-          <i className="bi bi-tag-fill text-danger fs-5"></i>
-          <div>
-            <strong className="d-block small text-dark">
-              {couponCode
-                ? `Coupon '${couponCode}' Applied`
-                : "Have a Promo Coupon?"}
-            </strong>
-            <small className="text-muted" style={{ fontSize: 11 }}>
-              {couponCode
-                ? `Saved ₹${billDetails.couponDiscount} on this order`
-                : "Check eligible coupon discounts"}
-            </small>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold touch-target"
-          onClick={onOpenCoupons}
-        >
-          {couponCode ? "Change" : "Apply"}
-        </button>
-      </div>
-
       {/* Bill items */}
       <div className="d-flex flex-column gap-2 small text-muted mb-3">
+        {billDetails.distanceKm != null &&
+          Number.isFinite(Number(billDetails.distanceKm)) && (
+            <div className="d-flex justify-content-between align-items-center">
+              <span>Distance</span>
+              <span className="text-dark">
+                {Number(billDetails.distanceKm).toFixed(1)} km
+              </span>
+            </div>
+          )}
         <div className="d-flex justify-content-between align-items-center">
-          <span>Item Total (100% Dine-In Menu Parity):</span>
+          <span>Items subtotal</span>
           <span className="text-dark fw-semibold">₹{billDetails.subtotal}</span>
         </div>
         {billDetails.couponDiscount > 0 && (
           <div className="d-flex justify-content-between align-items-center text-success fw-bold">
-            <span>Coupon Discount:</span>
+            <span>Coupon discount</span>
             <span>-₹{billDetails.couponDiscount}</span>
           </div>
         )}
         <div className="d-flex justify-content-between align-items-center">
-          <span>Doorstep Delivery Partner Fee:</span>
+          <span>Delivery fee</span>
           <span className="text-dark">₹{billDetails.deliveryFee}</span>
         </div>
         <div className="d-flex justify-content-between align-items-center">
-          <span>Standard Hygienic Packaging Fee:</span>
+          <span>Packaging</span>
           <span className="text-dark">₹{billDetails.packagingFee}</span>
         </div>
         <div className="d-flex justify-content-between align-items-center">
-          <span>Platform Service Fee:</span>
+          <span>Platform fee</span>
           <span className="text-dark">₹{billDetails.platformFee}</span>
         </div>
         <div className="d-flex justify-content-between align-items-center">
-          <span>GST Tax (5% Direct Food Government Tax):</span>
+          <span>GST</span>
           <span className="text-dark">₹{billDetails.gstTax}</span>
         </div>
         {riderTip > 0 && (
           <div className="d-flex justify-content-between align-items-center text-primary fw-bold">
-            <span>Delivery Captain Tip (100% Pass-Through):</span>
+            <span>Tip</span>
             <span>+₹{riderTip}</span>
           </div>
         )}

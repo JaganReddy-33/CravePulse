@@ -16,8 +16,8 @@ public class MenuItem {
     private BigDecimal platformPrice;
     private boolean isVeg;
     private boolean isAvailable;
-    private int prepTimeMinutes;
-    private int calorieCount;
+    private Integer prepTimeMinutes;
+    private Integer calorieCount;
     private BigDecimal rating;
     private int totalOrders;
     private Timestamp createdAt;
@@ -79,11 +79,11 @@ public class MenuItem {
     public boolean isAvailable() { return isAvailable; }
     public void setAvailable(boolean available) { isAvailable = available; }
 
-    public int getPrepTimeMinutes() { return prepTimeMinutes; }
-    public void setPrepTimeMinutes(int prepTimeMinutes) { this.prepTimeMinutes = prepTimeMinutes; }
+    public Integer getPrepTimeMinutes() { return prepTimeMinutes; }
+    public void setPrepTimeMinutes(Integer prepTimeMinutes) { this.prepTimeMinutes = prepTimeMinutes; }
 
-    public int getCalorieCount() { return calorieCount; }
-    public void setCalorieCount(int calorieCount) { this.calorieCount = calorieCount; }
+    public Integer getCalorieCount() { return calorieCount; }
+    public void setCalorieCount(Integer calorieCount) { this.calorieCount = calorieCount; }
 
     public BigDecimal getRating() { return rating; }
     public void setRating(BigDecimal rating) { this.rating = rating; }

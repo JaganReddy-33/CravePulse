@@ -154,14 +154,9 @@ public class MenuServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
-            MenuItem update = JsonUtil.readRequestBody(req, MenuItem.class);
+            JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
+            MenuItem update = requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
-                update.setId(itemId);
-                if (update.getRestaurantId() == null) update.setRestaurantId(existing.getRestaurantId());
-                if (update.getCategoryId() == null) update.setCategoryId(existing.getCategoryId());
-                if (update.getPlatformPrice() == null) update.setPlatformPrice(existing.getPlatformPrice());
-                if (update.getDineInPrice() == null) update.setDineInPrice(existing.getDineInPrice());
-                if (update.getImageUrl() == null) update.setImageUrl(existing.getImageUrl());
                 menuDao.updateItem(update);
                 JsonUtil.sendSuccess(res, 200, "Menu item updated", update);
                 return;
@@ -300,20 +295,28 @@ public class MenuServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
-            MenuItem update = JsonUtil.readRequestBody(req, MenuItem.class);
+            JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
+            MenuItem update = requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
-                update.setId(itemId);
-                if (update.getRestaurantId() == null) update.setRestaurantId(existing.getRestaurantId());
-                if (update.getCategoryId() == null) update.setCategoryId(existing.getCategoryId());
-                if (update.getPlatformPrice() == null) update.setPlatformPrice(existing.getPlatformPrice());
-                if (update.getDineInPrice() == null) update.setDineInPrice(existing.getDineInPrice());
-                if (update.getImageUrl() == null) update.setImageUrl(existing.getImageUrl());
                 menuDao.updateItem(update);
                 JsonUtil.sendSuccess(res, 200, "Menu item updated", update);
                 return;
             }
         }
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
+    }
+
+    static MenuItem applyUpdateDefaults(JsonObject requestBody, MenuItem existing, Long itemId) {
+        MenuItem update = JsonUtil.getGson().fromJson(requestBody, MenuItem.class);
+        update.setId(itemId);
+        if (update.getRestaurantId() == null) update.setRestaurantId(existing.getRestaurantId());
+        if (update.getCategoryId() == null) update.setCategoryId(existing.getCategoryId());
+        if (update.getPlatformPrice() == null) update.setPlatformPrice(existing.getPlatformPrice());
+        if (update.getDineInPrice() == null) update.setDineInPrice(existing.getDineInPrice());
+        if (update.getImageUrl() == null) update.setImageUrl(existing.getImageUrl());
+        if (!requestBody.has("calorieCount")) update.setCalorieCount(existing.getCalorieCount());
+        if (update.getPrepTimeMinutes() == null) update.setPrepTimeMinutes(existing.getPrepTimeMinutes());
+        return update;
     }
 
     @Override

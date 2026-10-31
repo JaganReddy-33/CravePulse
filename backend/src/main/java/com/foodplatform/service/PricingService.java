@@ -176,7 +176,7 @@ public class PricingService {
                 packagingSum = packagingSum.add(mi.getPackagingCharge().multiply(BigDecimal.valueOf(inItem.quantity)));
             }
 
-            if (mi.getPrepTimeMinutes() > maxItemPrepTime) {
+            if (mi.getPrepTimeMinutes() != null && mi.getPrepTimeMinutes() > maxItemPrepTime) {
                 maxItemPrepTime = mi.getPrepTimeMinutes();
             }
 

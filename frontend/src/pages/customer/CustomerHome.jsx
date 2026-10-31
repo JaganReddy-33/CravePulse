@@ -660,19 +660,45 @@ const CustomerHome = () => {
 
           {/* Kitchens & Restaurants Section */}
           <div id="restaurants-grid">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h5
-                  className="fw-bold mb-1"
-                  style={{ fontSize: "clamp(1.15rem, 2vw, 1.4rem)" }}
-                >
-                  {currentHub?.id && currentHub.id !== "unselected"
-                    ? `Restaurants in ${currentHub.cityName || currentHub.name}`
-                    : "Explore restaurants"}
-                </h5>
-                <p className="text-muted small mb-0">
-                  100% Dine-In Menu Price Parity • Zero Delivery Markups
-                </p>
+            <div className="cp-discovery-heading d-flex justify-content-between align-items-center mb-3">
+              <div className="d-flex align-items-start gap-3">
+                <span className="cp-pulse-mark" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 32 32"
+                    focusable="false"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16 3C12.8 7 10 10.1 10 14.4c0 3.5 2.6 6.2 6 6.2s6-2.7 6-6.2C22 10.1 19.2 7 16 3Z"
+                      fill="currentColor"
+                      opacity=".9"
+                    />
+                    <path
+                      d="M4 25h6l3-5 4 7 3-5h8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <div>
+                  <div className="cp-discovery-kicker">
+                    CravePulse · Local tables
+                  </div>
+                  <h5
+                    className="fw-bold mb-1"
+                    style={{ fontSize: "clamp(1.15rem, 2vw, 1.4rem)" }}
+                  >
+                    {currentHub?.id && currentHub.id !== "unselected"
+                      ? `Restaurants in ${currentHub.cityName || currentHub.name}`
+                      : "Explore restaurants"}
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    100% Dine-In Menu Price Parity • Zero Delivery Markups
+                  </p>
+                </div>
               </div>
               <span className="badge bg-light text-dark border px-3 py-2 rounded-pill small">
                 {totalRestaurantCount} places
@@ -728,6 +754,26 @@ const CustomerHome = () => {
                     rest.rating != null &&
                     rest.rating !== "" &&
                     Number.isFinite(rating);
+                  const deliveryMinValue =
+                    rest.deliveryTimeMin ??
+                    rest.etaMinMinutes ??
+                    rest.estimatedDeliveryMin ??
+                    rest.deliveryTimeMinutes;
+                  const deliveryMaxValue =
+                    rest.deliveryTimeMax ??
+                    rest.etaMaxMinutes ??
+                    rest.estimatedDeliveryMax ??
+                    deliveryMinValue;
+                  const deliveryMin = Number(deliveryMinValue);
+                  const deliveryMax = Number(deliveryMaxValue);
+                  const hasDeliveryTime =
+                    deliveryMinValue != null &&
+                    deliveryMinValue !== "" &&
+                    Number.isFinite(deliveryMin) &&
+                    deliveryMin > 0;
+                  const deliveryLabel = hasDeliveryTime
+                    ? `Delivery ${deliveryMin}${Number.isFinite(deliveryMax) && deliveryMax >= deliveryMin ? `–${deliveryMax}` : ""} min`
+                    : null;
                   const prepMin = Number(rest.prepTimeMin);
                   const prepMax = Number(rest.prepTimeMax);
                   const hasPrepMin =
@@ -740,36 +786,19 @@ const CustomerHome = () => {
                     rest.prepTimeMax !== "" &&
                     Number.isFinite(prepMax) &&
                     prepMax > 0;
-                  const prepLabel = hasPrepMin
+                  const prepLabel = !deliveryLabel && hasPrepMin
                     ? `Prep ${prepMin}${hasPrepMax && prepMax >= prepMin ? `–${prepMax}` : ""} min`
                     : null;
-                  const costForTwo =
-                    rest.costForTwo != null &&
-                    rest.costForTwo !== "" &&
-                    Number.isFinite(Number(rest.costForTwo))
-                      ? Number(rest.costForTwo)
-                      : null;
                   const locationLabel =
                     rest.locality ||
+                    rest.localityName ||
                     rest.street ||
                     (typeof rest.address === "string"
                       ? rest.address.split(",")[0].trim()
                       : "");
-                  const deliveryFee =
-                    rest.deliveryFee != null &&
-                    rest.deliveryFee !== "" &&
-                    Number.isFinite(Number(rest.deliveryFee))
-                      ? Number(rest.deliveryFee)
-                      : null;
                   const cuisines = Array.isArray(rest.cuisineTypes)
                     ? rest.cuisineTypes.join(" · ")
                     : rest.cuisineTypes;
-                  const distanceKm =
-                    rest.distanceKm != null &&
-                    rest.distanceKm !== "" &&
-                    Number.isFinite(Number(rest.distanceKm))
-                      ? Number(rest.distanceKm)
-                      : null;
 
                   return (
                     <div
@@ -812,7 +841,6 @@ const CustomerHome = () => {
                                       WebkitBoxOrient: "vertical",
                                       WebkitLineClamp: 2,
                                       overflow: "hidden",
-                                      minHeight: "2.5em",
                                     }}
                                   >
                                     {cuisines}
@@ -830,11 +858,7 @@ const CustomerHome = () => {
                                     ({reviewCount})
                                   </small>
                                 </span>
-                              ) : (
-                                <span className="small text-muted flex-shrink-0">
-                                  No reviews yet
-                                </span>
-                              )}
+                              ) : null}
                             </div>
 
                             <div
@@ -845,27 +869,13 @@ const CustomerHome = () => {
                                 gap: ".4rem .8rem",
                               }}
                             >
-                              {prepLabel && (
+                              {(deliveryLabel || prepLabel) && (
                                 <span className="d-inline-flex align-items-center gap-1">
                                   <i
                                     className="bi bi-clock"
                                     aria-hidden="true"
                                   ></i>
-                                  {prepLabel}
-                                </span>
-                              )}
-                              {distanceKm != null && (
-                                <span className="d-inline-flex align-items-center gap-1">
-                                  <i
-                                    className="bi bi-geo-alt"
-                                    aria-hidden="true"
-                                  ></i>
-                                  {distanceKm.toFixed(1)} km
-                                </span>
-                              )}
-                              {costForTwo != null && (
-                                <span>
-                                  ₹{costForTwo.toLocaleString("en-IN")} for two
+                                  {deliveryLabel || prepLabel}
                                 </span>
                               )}
                             </div>
@@ -888,13 +898,6 @@ const CustomerHome = () => {
                               {rest.isAutoThrottled === true && (
                                 <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
                                   Busy
-                                </span>
-                              )}
-                              {deliveryFee != null && (
-                                <span className="small fw-semibold ms-auto">
-                                  {deliveryFee === 0
-                                    ? "Free delivery"
-                                    : `₹${deliveryFee.toLocaleString("en-IN")} delivery`}
                                 </span>
                               )}
                             </div>

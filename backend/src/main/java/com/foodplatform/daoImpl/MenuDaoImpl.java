@@ -194,8 +194,8 @@ public class MenuDaoImpl implements MenuDao {
             ps.setBigDecimal(7, item.getPlatformPrice());
             ps.setBoolean(8, item.isVeg());
             ps.setBoolean(9, item.isAvailable());
-            ps.setInt(10, item.getPrepTimeMinutes());
-            ps.setInt(11, item.getCalorieCount());
+            ps.setObject(10, item.getPrepTimeMinutes(), Types.INTEGER);
+            ps.setObject(11, item.getCalorieCount(), Types.INTEGER);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -223,8 +223,8 @@ public class MenuDaoImpl implements MenuDao {
             ps.setBigDecimal(5, item.getPlatformPrice());
             ps.setString(6, item.getImageUrl());
             ps.setBoolean(7, item.isVeg());
-            ps.setInt(8, item.getPrepTimeMinutes());
-            ps.setInt(9, item.getCalorieCount());
+            ps.setObject(8, item.getPrepTimeMinutes(), Types.INTEGER);
+            ps.setObject(9, item.getCalorieCount(), Types.INTEGER);
             ps.setString(10, item.getFoodType() != null ? item.getFoodType() : (item.isVeg() ? "VEG" : "NON_VEG"));
             ps.setString(11, item.getSpiceLevel() != null ? item.getSpiceLevel() : "MEDIUM");
             ps.setBigDecimal(12, item.getPackagingCharge() != null ? item.getPackagingCharge() : BigDecimal.ZERO);
@@ -365,8 +365,10 @@ public class MenuDaoImpl implements MenuDao {
         item.setPlatformPrice(rs.getBigDecimal("platform_price"));
         item.setVeg(rs.getBoolean("is_veg"));
         item.setAvailable(rs.getBoolean("is_available"));
-        item.setPrepTimeMinutes(rs.getInt("prep_time_minutes"));
-        item.setCalorieCount(rs.getInt("calorie_count"));
+        int prepTimeMinutes = rs.getInt("prep_time_minutes");
+        item.setPrepTimeMinutes(rs.wasNull() ? null : prepTimeMinutes);
+        int calorieCount = rs.getInt("calorie_count");
+        item.setCalorieCount(rs.wasNull() ? null : calorieCount);
         item.setRating(rs.getBigDecimal("rating"));
         item.setTotalOrders(rs.getInt("total_orders"));
         item.setCreatedAt(rs.getTimestamp("created_at"));

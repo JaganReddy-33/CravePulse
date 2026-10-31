@@ -22,12 +22,16 @@ const CheckoutPage = () => {
     couponError,
     couponCode,
     setCouponCode,
+    billQuoteFresh,
     riderTip,
     setRiderTip,
     addItem,
     removeItem,
     clearCart,
     setDeliveryCoordinates,
+    setDeliveryAddressId,
+    setCheckoutQuoteEnabled,
+    billQuoteAddressId,
   } = useCart();
   const { user } = useAuth();
 
@@ -55,11 +59,15 @@ const CheckoutPage = () => {
   } = useCheckout({
     cart,
     billDetails,
+    billQuoteFresh,
+    billQuoteAddressId,
     couponCode,
     riderTip,
     clearCart,
     user,
     setDeliveryCoordinates,
+    setDeliveryAddressId,
+    setCheckoutQuoteEnabled,
   });
 
   // Empty cart fallback
@@ -164,13 +172,47 @@ const CheckoutPage = () => {
         {/* Right Column: Bill Details, Guarantee & Place Order CTA */}
         <div className="col-lg-5">
           <div className="sticky-top" style={{ top: 90, zIndex: 10 }}>
+            <div className="card border-0 rounded-4 shadow-sm p-3 bg-white mb-3">
+              <div className="d-flex justify-content-between align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="bi bi-tag-fill text-danger fs-5"></i>
+                  <div>
+                    <strong className="d-block small text-dark">
+                      {couponCode
+                        ? `Coupon '${couponCode}' applied`
+                        : "Have a promo coupon?"}
+                    </strong>
+                    <small className="text-muted">
+                      {couponCode
+                        ? "Your coupon will be checked against this address quote."
+                        : "Apply an eligible offer to this order."}
+                    </small>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold touch-target"
+                  onClick={() => setShowCouponDrawer(true)}
+                >
+                  {couponCode ? "Change" : "Apply"}
+                </button>
+              </div>
+              {couponCode && (
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 mt-2 text-danger text-decoration-none"
+                  onClick={() => setCouponCode("")}
+                >
+                  Remove applied coupon
+                </button>
+              )}
+            </div>
+
             {/* Bill Details Breakdown */}
             <CheckoutBillDetails
               billDetails={billDetails}
               riderTip={riderTip}
-              couponCode={couponCode}
               onOpenPriceExplainer={() => setShowPriceModal(true)}
-              onOpenCoupons={() => setShowCouponDrawer(true)}
             />
 
             {/* Place Order Primary Action Button */}
@@ -224,7 +266,7 @@ const CheckoutPage = () => {
         onClose={() => setShowCouponDrawer(false)}
         couponCode={couponCode}
         setCouponCode={setCouponCode}
-        subtotal={billDetails?.subtotal || 0}
+        subtotal={billDetails?.subtotal}
       />
     </div>
   );

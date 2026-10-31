@@ -89,7 +89,11 @@ const CheckoutCouponDrawer = ({
           {/* Available Coupons List */}
           <div className="d-flex flex-column gap-3">
             {coupons.map((c) => {
-              const isEligible = subtotal >= c.minOrder;
+              const hasSubtotal =
+                subtotal != null &&
+                subtotal !== "" &&
+                Number.isFinite(Number(subtotal));
+              const isEligible = !hasSubtotal || Number(subtotal) >= c.minOrder;
               const isCurrent = couponCode === c.code;
 
               return (
@@ -125,8 +129,9 @@ const CheckoutCouponDrawer = ({
                         className="text-danger fw-bold"
                         style={{ fontSize: 11 }}
                       >
-                        Add items worth ₹{(c.minOrder - subtotal).toFixed(2)}{" "}
-                        more
+                        {hasSubtotal
+                          ? `Add items worth ₹${(c.minOrder - Number(subtotal)).toFixed(2)} more`
+                          : "Checking eligibility at checkout"}
                       </small>
                     )}
                   </div>

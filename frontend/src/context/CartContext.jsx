@@ -164,29 +164,59 @@ export const CartProvider = ({ children }) => {
   }, [state, user?.id, hydratedFor]);
 
   const [deliveryCoordinates, setDeliveryCoordinates] = useState(null);
+  const [deliveryAddressId, setDeliveryAddressId] = useState(null);
+  const [checkoutQuoteEnabled, setCheckoutQuoteEnabled] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [riderTip, setRiderTip] = useState(0);
   const [billDetails, setBillDetails] = useState(null);
+  const [billQuoteKey, setBillQuoteKey] = useState(null);
+  const [billQuoteAddressId, setBillQuoteAddressId] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [couponError, setCouponError] = useState("");
+
+  const currentBillQuoteKey = JSON.stringify({
+    restaurantId: state.restaurantId,
+    items: state.items.map((it) => ({
+      menuItemId: it.id,
+      quantity: it.quantity,
+      variantId: it.selectedVariant?.id || null,
+      addonIds: it.selectedAddons?.map((a) => a.id) || [],
+    })),
+    couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
+    tipAmount: riderTip || 0,
+    deliveryAddressId,
+    latitude: deliveryCoordinates?.latitude ?? null,
+    longitude: deliveryCoordinates?.longitude ?? null,
+  });
 
   useEffect(() => {
     let active = true;
 
     const recalculateBill = async () => {
+      if (!checkoutQuoteEnabled) {
+        setBillDetails(null);
+        setBillQuoteKey(null);
+        setBillQuoteAddressId(null);
+        setCouponError("");
+        setCalculating(false);
+        return;
+      }
+
       if (!state.restaurantId || state.items.length === 0) {
         setBillDetails(null);
+        setBillQuoteKey(null);
+        setBillQuoteAddressId(null);
         setCouponError("");
         setCalculating(false);
         return;
       }
 
       setBillDetails(null);
+      setBillQuoteKey(null);
+      setBillQuoteAddressId(null);
       if (!deliveryCoordinates) {
         setCalculating(false);
-        setCouponError(
-          "Choose a saved delivery address at checkout to calculate delivery fees.",
-        );
+        setCouponError("");
         return;
       }
       setCouponError("");
@@ -212,10 +242,16 @@ export const CartProvider = ({ children }) => {
               "The server did not return a valid price quote. Please try again.",
           );
         }
-        if (active) setBillDetails(res.data);
+        if (active) {
+          setBillDetails(res.data);
+          setBillQuoteKey(currentBillQuoteKey);
+          setBillQuoteAddressId(deliveryAddressId);
+        }
       } catch (e) {
         if (active) {
           setBillDetails(null);
+          setBillQuoteKey(null);
+          setBillQuoteAddressId(null);
           setCouponError(e.message || "Unable to calculate price");
         }
       } finally {
@@ -227,7 +263,15 @@ export const CartProvider = ({ children }) => {
     return () => {
       active = false;
     };
-  }, [state, couponCode, riderTip, deliveryCoordinates]);
+  }, [
+    checkoutQuoteEnabled,
+    state,
+    couponCode,
+    riderTip,
+    deliveryAddressId,
+    deliveryCoordinates,
+    currentBillQuoteKey,
+  ]);
 
   const applyCoupon = (code) => {
     setCouponError("");
@@ -247,7 +291,14 @@ export const CartProvider = ({ children }) => {
       value={{
         cart: state,
         setDeliveryCoordinates,
+        setDeliveryAddressId,
+        setCheckoutQuoteEnabled,
         billDetails,
+        billQuoteAddressId,
+        billQuoteFresh:
+          checkoutQuoteEnabled &&
+          isValidBillQuote(billDetails) &&
+          billQuoteKey === currentBillQuoteKey,
         calculating,
         couponCode,
         couponError,

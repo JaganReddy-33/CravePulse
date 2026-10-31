@@ -25,6 +25,33 @@ describe('CheckoutAddressSection', () => {
     expect(onSelectAddress).toHaveBeenCalledWith(42);
   });
 
+  it("shows every saved address field and only links to safe Google Maps URLs", () => {
+    render(
+      <CheckoutAddressSection
+        addresses={[{
+          id: 8,
+          title: "Home",
+          default: true,
+          addressLine: "12 Park Road",
+          landmark: "Opposite City Library",
+          city: "Bengaluru",
+          state: "Karnataka",
+          postalCode: "560001",
+          mapsUrl: "https://www.google.com/maps/@12.9716,77.5946,17z",
+        }]}
+        selectedAddressId={8}
+        onSelectAddress={vi.fn()}
+        onSaveAddress={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("12 Park Road")).toBeTruthy();
+    expect(screen.getByText("Landmark: Opposite City Library")).toBeTruthy();
+    expect(screen.getByText("Bengaluru, Karnataka, 560001")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /view on google maps/i }).getAttribute("href"))
+      .toBe("https://www.google.com/maps/@12.9716,77.5946,17z");
+  });
+
   it('rejects a map link without readable coordinates and sends no fabricated coordinates', async () => {
     const onSaveAddress = vi.fn().mockResolvedValue(undefined);
     render(

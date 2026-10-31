@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { findAddressById, getDefaultAddress, isValidBillQuote } from '../utils/address';
 
 
-export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart, user, setDeliveryCoordinates }) {
+export function useCheckout({ cart, billDetails, billQuoteFresh, billQuoteAddressId, couponCode, riderTip, clearCart, user, setDeliveryCoordinates, setDeliveryAddressId, setCheckoutQuoteEnabled }) {
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState([]);
@@ -20,6 +20,22 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
   const [codMaxLimit, setCodMaxLimit] = useState(2000);
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const requestKey = useMemo(() => crypto.randomUUID(), [cart, couponCode, riderTip, selectedAddressId, paymentMode]);
+  const hasValidQuote =
+    isValidBillQuote(billDetails) &&
+    billQuoteFresh !== false &&
+    (billQuoteAddressId == null ||
+      String(billQuoteAddressId) === String(selectedAddressId));
+
+  useEffect(() => {
+    setCheckoutQuoteEnabled?.(true);
+    setDeliveryCoordinates?.(null);
+    setDeliveryAddressId?.(null);
+    return () => {
+      setCheckoutQuoteEnabled?.(false);
+      setDeliveryCoordinates?.(null);
+      setDeliveryAddressId?.(null);
+    };
+  }, [setCheckoutQuoteEnabled, setDeliveryCoordinates, setDeliveryAddressId]);
 
   useEffect(() => {
     api.get('/payments/config')
@@ -71,6 +87,7 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
 
   useEffect(() => {
     const address = findAddressById(addresses, selectedAddressId);
+    setDeliveryAddressId?.(address?.id ?? null);
     if (setDeliveryCoordinates) {
       const latitude = Number(address?.latitude);
       const longitude = Number(address?.longitude);
@@ -83,7 +100,7 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
           : null,
       );
     }
-  }, [addresses, selectedAddressId, setDeliveryCoordinates]);
+  }, [addresses, selectedAddressId, setDeliveryCoordinates, setDeliveryAddressId]);
 
   const handleSaveAddress = async (newAddr) => {
     try {
@@ -110,7 +127,7 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
       if (addressesLoading) throw new Error('Wait for your saved delivery addresses to finish loading.');
       if (!activeAddress?.id) throw new Error('Select or add a delivery address first.');
       if (paymentMode === 'RAZORPAY' && (!window.Razorpay || !razorpayKeyId)) throw new Error('Online payment is unavailable. Choose another payment method.');
-      if (!isValidBillQuote(billDetails) || !cart.items.length) throw new Error('Wait for a valid server price quote.');
+      if (!hasValidQuote || !cart.items.length) throw new Error('Wait for a valid server price quote.');
 
       const orderPayload = {
         restaurantId: cart.restaurantId,
@@ -200,7 +217,7 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
     selectedAddressId,
     setSelectedAddressId,
     selectedAddress: findAddressById(addresses, selectedAddressId),
-    hasValidQuote: isValidBillQuote(billDetails),
+    hasValidQuote,
     handleSaveAddress,
     paymentMode,
     setPaymentMode,
