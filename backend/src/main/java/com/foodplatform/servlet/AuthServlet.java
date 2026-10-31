@@ -8,6 +8,7 @@ import com.foodplatform.model.Address;
 import com.foodplatform.model.User;
 import com.foodplatform.service.AuthService;
 import com.foodplatform.util.JsonUtil;
+import com.foodplatform.util.GoogleMapsUrlParser;
 import com.foodplatform.util.SessionCookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,15 +98,33 @@ public class AuthServlet extends BaseServlet {
                     if (!requireAuthenticated(req, res)) return;
                     Long userId = getAuthenticatedUserId(req);
                     Address addr = JsonUtil.readRequestBody(req, Address.class);
-                    if (addr == null || addr.getAddressLine() == null || addr.getLatitude() == null || addr.getLongitude() == null || addr.getLatitude().abs().compareTo(new BigDecimal("90")) > 0 || addr.getLongitude().abs().compareTo(new BigDecimal("180")) > 0) {
-                        JsonUtil.sendError(res, 400, "Address line and coordinates are required");
+                    if (addr == null ||
+                            addr.getTitle() == null || addr.getTitle().isBlank() || addr.getTitle().length() > 50 ||
+                            addr.getAddressLine() == null || addr.getAddressLine().isBlank() || addr.getAddressLine().length() > 255 ||
+                            addr.getCity() == null || addr.getCity().isBlank() || addr.getCity().length() > 100 ||
+                            addr.getState() == null || addr.getState().isBlank() || addr.getState().length() > 100 ||
+                            addr.getPostalCode() == null || addr.getPostalCode().isBlank() || addr.getPostalCode().length() > 20 ||
+                            (addr.getLandmark() != null && addr.getLandmark().length() > 120) ||
+                            addr.getMapsUrl() == null || addr.getMapsUrl().isBlank() || addr.getMapsUrl().length() > 500) {
+                        JsonUtil.sendError(res, 400, "Address tag, street, city, state, postal code, and Google Maps link are required.");
                         return;
                     }
+                    addr.setTitle(addr.getTitle().trim());
+                    addr.setAddressLine(addr.getAddressLine().trim());
+                    addr.setCity(addr.getCity().trim());
+                    addr.setState(addr.getState().trim());
+                    addr.setPostalCode(addr.getPostalCode().trim());
+                    addr.setLandmark(addr.getLandmark() == null || addr.getLandmark().isBlank() ? null : addr.getLandmark().trim());
+                    addr.setMapsUrl(addr.getMapsUrl().trim());
+                    GoogleMapsUrlParser.Coordinates coordinates = GoogleMapsUrlParser.parse(addr.getMapsUrl());
+                    addr.setLatitude(coordinates.latitude());
+                    addr.setLongitude(coordinates.longitude());
                     addr.setUserId(userId);
                     Long id = userDao.addAddress(addr);
                     if (id == null) throw new IllegalStateException("Address could not be saved");
-                    addr.setId(id);
-                    JsonUtil.sendSuccess(res, 201, "Address saved", addr);
+                    Address savedAddress = userDao.getAddressById(id);
+                    if (savedAddress == null) throw new IllegalStateException("Saved address could not be retrieved");
+                    JsonUtil.sendSuccess(res, 201, "Address saved", savedAddress);
                 }
                 case "/password" -> {
                     if(!requireAuthenticated(req,res)) return;

@@ -233,6 +233,7 @@ public class UserDaoImpl implements UserDao {
                     addr.setPostalCode(rs.getString("postal_code"));
                     addr.setLatitude(rs.getBigDecimal("latitude"));
                     addr.setLongitude(rs.getBigDecimal("longitude"));
+                    addr.setMapsUrl(rs.getString("maps_url"));
                     addr.setDefault(rs.getBoolean("is_default"));
                     addr.setCreatedAt(rs.getTimestamp("created_at"));
                     list.add(addr);
@@ -264,6 +265,7 @@ public class UserDaoImpl implements UserDao {
                     addr.setPostalCode(rs.getString("postal_code"));
                     addr.setLatitude(rs.getBigDecimal("latitude"));
                     addr.setLongitude(rs.getBigDecimal("longitude"));
+                    addr.setMapsUrl(rs.getString("maps_url"));
                     addr.setDefault(rs.getBoolean("is_default"));
                     addr.setCreatedAt(rs.getTimestamp("created_at"));
                     return addr;
@@ -278,31 +280,59 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Long addAddress(Address addr) {
-        String sql = "INSERT INTO user_addresses (user_id, title, address_line, landmark, city, state, postal_code, latitude, longitude, is_default) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user_addresses (user_id, title, address_line, landmark, city, state, postal_code, latitude, longitude, maps_url, is_default) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setLong(1, addr.getUserId());
-            ps.setString(2, addr.getTitle());
-            ps.setString(3, addr.getAddressLine());
-            ps.setString(4, addr.getLandmark());
-            ps.setString(5, addr.getCity());
-            ps.setString(6, addr.getState());
-            ps.setString(7, addr.getPostalCode());
-            ps.setBigDecimal(8, addr.getLatitude());
-            ps.setBigDecimal(9, addr.getLongitude());
-            ps.setBoolean(10, addr.isDefault());
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
+             PreparedStatement lockUser = conn.prepareStatement("SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                lockUser.setLong(1, addr.getUserId());
+                try (ResultSet rs = lockUser.executeQuery()) {
+                    if (!rs.next()) throw new IllegalArgumentException("Account not found");
                 }
+
+                boolean firstAddress;
+                try (PreparedStatement count = conn.prepareStatement("SELECT COUNT(*) FROM user_addresses WHERE user_id = ?")) {
+                    count.setLong(1, addr.getUserId());
+                    try (ResultSet rs = count.executeQuery()) {
+                        rs.next();
+                        firstAddress = rs.getLong(1) == 0;
+                    }
+                }
+
+                addr.setDefault(firstAddress);
+                try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setLong(1, addr.getUserId());
+                    ps.setString(2, addr.getTitle());
+                    ps.setString(3, addr.getAddressLine());
+                    ps.setString(4, addr.getLandmark());
+                    ps.setString(5, addr.getCity());
+                    ps.setString(6, addr.getState());
+                    ps.setString(7, addr.getPostalCode());
+                    ps.setBigDecimal(8, addr.getLatitude());
+                    ps.setBigDecimal(9, addr.getLongitude());
+                    ps.setString(10, addr.getMapsUrl());
+                    ps.setBoolean(11, addr.isDefault());
+                    ps.executeUpdate();
+                    try (ResultSet rs = ps.getGeneratedKeys()) {
+                        if (!rs.next()) throw new SQLException("Address ID was not generated");
+                        long id = rs.getLong(1);
+                        conn.commit();
+                        addr.setId(id);
+                        return id;
+                    }
+                }
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(previousAutoCommit);
             }
         } catch (SQLException e) {
             logger.error("Error adding address for user: {}", addr.getUserId(), e);
             throw new IllegalStateException("Database operation failed", e);
         }
-        return null;
     }
 
     @Override
@@ -325,8 +355,21 @@ public class UserDaoImpl implements UserDao {
         String setSql = "UPDATE user_addresses SET is_default = TRUE WHERE id = ? AND user_id = ?";
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement ps1 = conn.prepareStatement(resetSql);
+            try (PreparedStatement lockUser = conn.prepareStatement("SELECT id FROM users WHERE id = ? FOR UPDATE");
+                 PreparedStatement address = conn.prepareStatement("SELECT id FROM user_addresses WHERE id = ? AND user_id = ? FOR UPDATE");
+                 PreparedStatement ps1 = conn.prepareStatement(resetSql);
                  PreparedStatement ps2 = conn.prepareStatement(setSql)) {
+                lockUser.setLong(1, userId);
+                try (ResultSet rs = lockUser.executeQuery()) {
+                    if (!rs.next()) throw new IllegalArgumentException("Account not found");
+                }
+
+                address.setLong(1, addressId);
+                address.setLong(2, userId);
+                try (ResultSet rs = address.executeQuery()) {
+                    if (!rs.next()) throw new IllegalArgumentException("Saved address not found for this account");
+                }
+
                 ps1.setLong(1, userId);
                 ps1.executeUpdate();
 

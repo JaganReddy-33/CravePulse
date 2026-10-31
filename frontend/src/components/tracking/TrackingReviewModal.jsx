@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import ModalPortal from '../ModalPortal';
+import React, { useState } from "react";
+import ModalPortal from "../ModalPortal";
 
 /**
  * TrackingReviewModal: Post-delivery multi-criteria review form (food, packaging, delivery).
@@ -13,8 +13,8 @@ const TrackingReviewModal = ({
   const [foodRating, setFoodRating] = useState(5);
   const [packagingRating, setPackagingRating] = useState(5);
   const [deliveryRating, setDeliveryRating] = useState(5);
-  const [reviewText, setReviewText] = useState('');
-  const [error, setError] = useState('');
+  const [reviewText, setReviewText] = useState("");
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (!show) return null;
@@ -22,16 +22,20 @@ const TrackingReviewModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
-    try { await onSubmitReview({
-      foodRating,
-      packagingRating,
-      deliveryRating,
-      reviewText: reviewText.trim(),
-    });
-    onClose();
-    } catch (err) { setError(err.message || 'Review was not saved'); }
-    finally { setSubmitting(false); }
+    setError("");
+    try {
+      await onSubmitReview({
+        foodRating,
+        packagingRating,
+        deliveryRating,
+        reviewText: reviewText.trim(),
+      });
+      onClose();
+    } catch (err) {
+      setError(err.message || "Review was not saved");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderStarInput = (val, setVal, label) => (
@@ -48,7 +52,7 @@ const TrackingReviewModal = ({
             aria-label={`${star} stars for ${label}`}
           >
             <i
-              className={`bi ${star <= val ? 'bi-star-fill text-warning' : 'bi-star text-muted'} fs-5`}
+              className={`bi ${star <= val ? "bi-star-fill text-warning" : "bi-star text-muted"} fs-5`}
             ></i>
           </button>
         ))}
@@ -58,12 +62,12 @@ const TrackingReviewModal = ({
 
   return (
     <ModalPortal isOpen={show}>
-      <div 
+      <div
         className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
-        style={{ zIndex: 10050, backdropFilter: 'blur(4px)' }}
+        style={{ zIndex: 10050, backdropFilter: "blur(4px)" }}
         onClick={onClose}
       >
-        <div 
+        <div
           className="bg-white rounded-4 shadow-2xl p-4 w-100 animate-slide-left"
           style={{ maxWidth: 460 }}
           onClick={(e) => e.stopPropagation()}
@@ -75,23 +79,50 @@ const TrackingReviewModal = ({
             <h5 className="fw-extrabold text-dark mb-0" id="review-title">
               Rate Your Experience
             </h5>
-            <button type="button" className="btn-close touch-target" onClick={onClose} aria-label="Close dialog"></button>
+            <button
+              type="button"
+              className="btn-close touch-target"
+              onClick={onClose}
+              aria-label="Close dialog"
+            ></button>
           </div>
 
           <p className="text-muted small mb-3">
-            Help other food lovers find the best meals from <strong>{restaurantName}</strong>.
+            Help other food lovers find the best meals from{" "}
+            <strong>{restaurantName}</strong>.
           </p>
 
           <form onSubmit={handleSubmit}>
-            {error && <div className="alert alert-danger" role="alert">{error}</div>}
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
             <div className="p-3 bg-light rounded-4 mb-3">
-              {renderStarInput(foodRating, setFoodRating, 'Food Taste & Freshness')}
-              {renderStarInput(packagingRating, setPackagingRating, 'Packaging & Spill Protection')}
-              {renderStarInput(deliveryRating, setDeliveryRating, 'Delivery Partner Speed & Courteousness')}
+              {renderStarInput(
+                foodRating,
+                setFoodRating,
+                "Food Taste & Freshness",
+              )}
+              {renderStarInput(
+                packagingRating,
+                setPackagingRating,
+                "Packaging & Spill Protection",
+              )}
+              {renderStarInput(
+                deliveryRating,
+                setDeliveryRating,
+                "Delivery Partner Speed & Courteousness",
+              )}
             </div>
 
             <div className="mb-3">
-              <label htmlFor="reviewFeedbackText" className="form-label small fw-bold">Comments & Feedback</label>
+              <label
+                htmlFor="reviewFeedbackText"
+                className="form-label small fw-bold"
+              >
+                Comments & Feedback
+              </label>
               <textarea
                 id="reviewFeedbackText"
                 className="form-control rounded-3"
@@ -113,10 +144,13 @@ const TrackingReviewModal = ({
               <button
                 type="submit"
                 className="btn btn-sm btn-primary rounded-pill px-4 fw-bold touch-target text-white"
-                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+                style={{
+                  background: "var(--c-primary)",
+                  borderColor: "var(--c-primary)",
+                }}
                 disabled={submitting}
               >
-                {submitting ? 'Submitting...' : 'Submit Review'}
+                {submitting ? "Submitting..." : "Submit Review"}
               </button>
             </div>
           </form>

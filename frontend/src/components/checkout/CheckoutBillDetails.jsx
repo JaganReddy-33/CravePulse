@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * CheckoutBillDetails: Complete fee breakdown with radical price parity explainer modal trigger.
@@ -36,10 +36,14 @@ const CheckoutBillDetails = ({
           <i className="bi bi-tag-fill text-danger fs-5"></i>
           <div>
             <strong className="d-block small text-dark">
-              {couponCode ? `Coupon '${couponCode}' Applied` : 'Have a Promo Coupon?'}
+              {couponCode
+                ? `Coupon '${couponCode}' Applied`
+                : "Have a Promo Coupon?"}
             </strong>
             <small className="text-muted" style={{ fontSize: 11 }}>
-              {couponCode ? `Saved ₹${billDetails.couponDiscount} on this order` : 'Check eligible coupon discounts'}
+              {couponCode
+                ? `Saved ₹${billDetails.couponDiscount} on this order`
+                : "Check eligible coupon discounts"}
             </small>
           </div>
         </div>
@@ -48,7 +52,7 @@ const CheckoutBillDetails = ({
           className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold touch-target"
           onClick={onOpenCoupons}
         >
-          {couponCode ? 'Change' : 'Apply'}
+          {couponCode ? "Change" : "Apply"}
         </button>
       </div>
 
@@ -92,7 +96,9 @@ const CheckoutBillDetails = ({
       <div className="d-flex justify-content-between align-items-center pt-3 border-top">
         <div>
           <span className="text-dark fw-bold fs-6 d-block">To Pay</span>
-          <small className="text-muted" style={{ fontSize: 11 }}>Inclusive of all taxes & fees</small>
+          <small className="text-muted" style={{ fontSize: 11 }}>
+            Inclusive of all taxes & fees
+          </small>
         </div>
         <span className="fs-3 fw-extrabold text-danger">
           ₹{billDetails.totalAmount}

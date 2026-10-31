@@ -22,18 +22,15 @@ const RestaurantDetail = () => {
   const openPriceExplainer = outletCtx?.openPriceExplainer;
 
   // Resolve restaurant ID from route params, query params, or slug rest suffix
-  let restaurantId = searchParams.get("restaurant_id") || routeId;
-  if (!restaurantId && slug) {
-    const match = slug.match(/rest(\d+)/);
-    if (match) restaurantId = match[1];
-  }
-  if (!restaurantId) restaurantId = "1";
+  const slugId = slug?.match(/(?:^|-)rest(\d+)$/i)?.[1];
+  const requestedId = searchParams.get("restaurant_id") || routeId || slugId;
+  const restaurantId =
+    requestedId && /^\d+$/.test(requestedId) ? requestedId : null;
 
   const {
     restaurant,
     categories,
     filteredItems,
-    items,
     loading,
     error,
     activeCategory,
@@ -112,6 +109,13 @@ const RestaurantDetail = () => {
       />
 
       {/* 4. Menu Items Grid */}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {typeof error === "string"
+            ? error
+            : "We couldn't load this restaurant menu."}
+        </div>
+      )}
       {displayItems.length === 0 ? (
         <EmptyState
           icon="🔍"
@@ -131,7 +135,7 @@ const RestaurantDetail = () => {
           }}
         />
       ) : (
-        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-2 g-3">
+        <div className="row row-cols-1 row-cols-lg-2 g-3">
           {displayItems.map((dish) => (
             <div key={dish.id} className="col">
               <DishCard

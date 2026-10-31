@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 /**
  * CheckoutTipSelector: Delivery captain tip pills with 100% tip pass-through badge.
  */
 const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
-  const [customTip, setCustomTip] = useState('');
+  const [customTip, setCustomTip] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
   const tipOptions = [0, 20, 30, 50];
@@ -28,12 +28,15 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
           </span>
         </h6>
         {riderTip > 0 && (
-          <span className="badge bg-danger rounded-pill fw-bold">₹{riderTip} Applied</span>
+          <span className="badge bg-danger rounded-pill fw-bold">
+            ₹{riderTip} Applied
+          </span>
         )}
       </div>
 
       <p className="text-muted small mb-3" style={{ fontSize: 12 }}>
-        CravePulse takes 0% commission on tips. 100% of your generous tip goes straight to the delivery captain's bank account.
+        CravePulse takes 0% commission on tips. 100% of your generous tip goes
+        straight to the delivery captain's bank account.
       </p>
 
       {/* Tip Option Pills */}
@@ -44,22 +47,24 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
             type="button"
             className={`btn btn-sm rounded-pill px-3 py-1 fw-bold touch-target ${
               riderTip === amount && !showCustomInput
-                ? 'btn-danger text-white'
-                : 'btn-light border text-dark'
+                ? "btn-danger text-white"
+                : "btn-light border text-dark"
             }`}
             onClick={() => {
               setRiderTip(amount);
               setShowCustomInput(false);
             }}
           >
-            {amount === 0 ? 'No Tip' : `₹${amount}`}
+            {amount === 0 ? "No Tip" : `₹${amount}`}
           </button>
         ))}
 
         <button
           type="button"
           className={`btn btn-sm rounded-pill px-3 py-1 fw-bold touch-target ${
-            showCustomInput ? 'btn-danger text-white' : 'btn-light border text-dark'
+            showCustomInput
+              ? "btn-danger text-white"
+              : "btn-light border text-dark"
           }`}
           onClick={() => setShowCustomInput(!showCustomInput)}
         >
@@ -69,7 +74,10 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
 
       {showCustomInput && (
         <form onSubmit={handleCustomSubmit} className="mt-3">
-          <div className="input-group input-group-sm rounded-pill border overflow-hidden" style={{ maxWidth: 200 }}>
+          <div
+            className="input-group input-group-sm rounded-pill border overflow-hidden"
+            style={{ maxWidth: 200 }}
+          >
             <span className="input-group-text bg-white border-0 ps-3">₹</span>
             <input
               type="number"
@@ -81,7 +89,14 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
               onChange={(e) => setCustomTip(e.target.value)}
               autoFocus
             />
-            <button type="submit" className="btn btn-primary px-3 fw-bold" style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}>
+            <button
+              type="submit"
+              className="btn btn-primary px-3 fw-bold"
+              style={{
+                background: "var(--c-primary)",
+                borderColor: "var(--c-primary)",
+              }}
+            >
               Set
             </button>
           </div>

@@ -2,12 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import confetti from 'canvas-confetti';
+import { findAddressById, getDefaultAddress, isValidBillQuote } from '../utils/address';
 
 
 export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart, user, setDeliveryCoordinates }) {
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState([]);
+  const [addressesLoading, setAddressesLoading] = useState(Boolean(user?.id));
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMode, setPaymentMode] = useState('COD');
   const [specialInstructions, setSpecialInstructions] = useState('');
@@ -27,42 +29,70 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
           if (res.data.razorpayKeyId) setRazorpayKeyId(res.data.razorpayKeyId);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
-    if (user) {
-      api.get('/auth/addresses')
-        .then((res) => {
-          if (res.success && Array.isArray(res.data) ) {
-            setAddresses(res.data);
-            const def = res.data.find((a) => a.default) || res.data[0];
-            setSelectedAddressId(def?.id ?? null);
-          }
-        })
-        .catch(() => {});
-
-      api.get('/wallet')
-        .then((res) => {
-          if (res.success && res.data && res.data.balance !== undefined) {
-            setWalletBalance(Number(res.data.balance));
-          }
-        })
-        .catch(() => {});
+    let active = true;
+    if (!user?.id) {
+      setAddresses([]);
+      setSelectedAddressId(null);
+      setAddressesLoading(false);
+      return () => { active = false; };
     }
-  }, [user]);
+
+    setAddresses([]);
+    setSelectedAddressId(null);
+    setAddressesLoading(true);
+    setError('');
+    api.get('/auth/addresses')
+      .then((res) => {
+        if (!active) return;
+        if (!res.success || !Array.isArray(res.data)) {
+          throw new Error(res.message || 'Unable to load saved delivery addresses.');
+        }
+        setAddresses(res.data);
+        setSelectedAddressId(getDefaultAddress(res.data)?.id ?? null);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Unable to load saved delivery addresses.');
+      })
+      .finally(() => {
+        if (active) setAddressesLoading(false);
+      });
+
+    api.get('/wallet')
+      .then((res) => {
+        if (active && res.success && res.data && res.data.balance !== undefined) {
+          setWalletBalance(Number(res.data.balance));
+        }
+      })
+      .catch(() => { });
+    return () => { active = false; };
+  }, [user?.id]);
 
   useEffect(() => {
-    const address = addresses.find(a => a.id === selectedAddressId);
-    if (setDeliveryCoordinates) setDeliveryCoordinates(address?.latitude != null && address?.longitude != null ? { latitude: address.latitude, longitude: address.longitude } : null);
+    const address = findAddressById(addresses, selectedAddressId);
+    if (setDeliveryCoordinates) {
+      const latitude = Number(address?.latitude);
+      const longitude = Number(address?.longitude);
+      setDeliveryCoordinates(
+        Number.isFinite(latitude) &&
+          Number.isFinite(longitude) &&
+          Math.abs(latitude) <= 90 &&
+          Math.abs(longitude) <= 180
+          ? { latitude, longitude }
+          : null,
+      );
+    }
   }, [addresses, selectedAddressId, setDeliveryCoordinates]);
 
   const handleSaveAddress = async (newAddr) => {
     try {
       const res = await api.post('/auth/addresses', newAddr);
-      if (res.success && res.data) {
+      if (res.success && res.data?.id != null) {
         setAddresses((prev) => [...prev, res.data]);
         setSelectedAddressId(res.data.id);
       } else {
-        throw new Error('The address could not be saved. Please try again.');
+        throw new Error(res.message || 'The address could not be saved. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'Unable to save address');
@@ -75,16 +105,17 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
     setSubmitting(true);
 
     try {
-      const activeAddress = addresses.find((a) => a.id === selectedAddressId) || addresses[0];
+      const activeAddress = findAddressById(addresses, selectedAddressId);
 
-      if (!activeAddress?.id) throw new Error('Add and save a delivery address first.');
-      if (!billDetails || !cart.items.length) throw new Error('Wait for a valid server price quote.');
+      if (addressesLoading) throw new Error('Wait for your saved delivery addresses to finish loading.');
+      if (!activeAddress?.id) throw new Error('Select or add a delivery address first.');
       if (paymentMode === 'RAZORPAY' && (!window.Razorpay || !razorpayKeyId)) throw new Error('Online payment is unavailable. Choose another payment method.');
+      if (!isValidBillQuote(billDetails) || !cart.items.length) throw new Error('Wait for a valid server price quote.');
 
       const orderPayload = {
         restaurantId: cart.restaurantId,
-        deliveryAddressId: activeAddress.id,
-        deliveryAddress: `${activeAddress.addressLine}, ${activeAddress.city || ''} ${activeAddress.postalCode || ''}`,
+        deliveryAddressId: Number(activeAddress.id),
+        deliveryAddress: `${activeAddress.addressLine}, ${activeAddress.city || ''}, ${activeAddress.state || ''} ${activeAddress.postalCode || ''}`,
         paymentMode: paymentMode,
         couponCode: couponCode || null,
         tipAmount: riderTip || 0,
@@ -165,8 +196,11 @@ export function useCheckout({ cart, billDetails, couponCode, riderTip, clearCart
 
   return {
     addresses,
+    addressesLoading,
     selectedAddressId,
     setSelectedAddressId,
+    selectedAddress: findAddressById(addresses, selectedAddressId),
+    hasValidQuote: isValidBillQuote(billDetails),
     handleSaveAddress,
     paymentMode,
     setPaymentMode,

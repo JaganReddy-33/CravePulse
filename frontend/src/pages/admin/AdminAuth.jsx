@@ -1,95 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import AuthBackground from '../../components/AuthBackground';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import AuthBackground from "../../components/AuthBackground";
 
 const AdminAuth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passkey, setPasskey] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passkey, setPasskey] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from = searchParams.get('redirect') || location.state?.from?.pathname || '/admin';
+  const from =
+    searchParams.get("redirect") || location.state?.from?.pathname || "/admin";
 
   // If already logged in as platform admin, go directly to ops console
   useEffect(() => {
-    if (user && user.role === 'ADMIN') {
+    if (user && user.role === "ADMIN") {
       navigate(from, { replace: true });
     }
   }, [user, from, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       if (!email.trim() || !password.trim()) {
-        throw new Error('Please enter authorized admin credentials');
+        throw new Error("Please enter authorized admin credentials");
       }
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || 'Platform administrator authentication failed.');
+      setError(err.message || "Platform administrator authentication failed.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative" style={{ background: '#080d1a' }}>
+    <div
+      className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative"
+      style={{ background: "#080d1a" }}
+    >
       {/* Continuous Looping Digital Telemetry Cyber Stream Video Background */}
       <AuthBackground role="ADMIN" />
 
       {/* Main Glassmorphism Form Card */}
-      <div 
-        className="w-100 position-relative" 
-        style={{ 
-          maxWidth: 480, 
+      <div
+        className="w-100 position-relative"
+        style={{
+          maxWidth: 480,
           zIndex: 10,
-          '--auth-focus-color': '#38bdf8',
-          '--auth-focus-glow': 'rgba(56, 189, 248, 0.35)'
+          "--auth-focus-color": "#38bdf8",
+          "--auth-focus-glow": "rgba(56, 189, 248, 0.35)",
         }}
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
-            <div 
+          <Link
+            to="/"
+            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
+          >
+            <div
               className="rounded-4 text-white fw-bold d-inline-flex align-items-center justify-content-center shadow-lg"
-              style={{ width: 48, height: 48, background: '#1e293d', border: '1px solid #38bdf8', fontSize: 24 }}
+              style={{
+                width: 48,
+                height: 48,
+                background: "#1e293d",
+                border: "1px solid #38bdf8",
+                fontSize: 24,
+              }}
             >
               🛡️
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Ops</h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
+              CravePulse Ops
+            </h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
-            Restricted Central Control Tower • Authorized Operations Personnel Only
+            Restricted Central Control Tower • Authorized Operations Personnel
+            Only
           </p>
         </div>
 
         {/* Auth Glass Card */}
-        <div 
+        <div
           className="card border-0 rounded-4 shadow-2xl p-4 p-md-5 text-white"
           style={{
-            background: 'rgba(13, 20, 36, 0.88)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.75)'
+            background: "rgba(13, 20, 36, 0.88)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(56, 189, 248, 0.25)",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.75)",
           }}
         >
           <div className="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom border-secondary border-opacity-25">
             <span className="fw-bold text-info small text-uppercase tracking-wider">
-              <i className="bi bi-shield-lock-fill me-1"></i> Root Administration
+              <i className="bi bi-shield-lock-fill me-1"></i> Root
+              Administration
             </span>
-            <span className="badge bg-dark border border-secondary text-light small font-monospace">Administrator access</span>
+            <span className="badge bg-dark border border-secondary text-light small font-monospace">
+              Administrator access
+            </span>
           </div>
 
           {error && (
@@ -101,9 +120,13 @@ const AdminAuth = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label small fw-semibold text-light text-opacity-90">Admin Operator Email *</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90">
+                Admin Operator Email *
+              </label>
               <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-shield-shaded"></i></span>
+                <span className="auth-icon">
+                  <i className="bi bi-shield-shaded"></i>
+                </span>
                 <input
                   type="email"
                   className="auth-input"
@@ -116,11 +139,15 @@ const AdminAuth = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label small fw-semibold text-light text-opacity-90 mb-1">Security Password *</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90 mb-1">
+                Security Password *
+              </label>
               <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-key-fill"></i></span>
+                <span className="auth-icon">
+                  <i className="bi bi-key-fill"></i>
+                </span>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   className="auth-input"
                   placeholder="Enter administrator password"
                   value={password}
@@ -133,26 +160,38 @@ const AdminAuth = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                  <i
+                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
+                  ></i>
                 </button>
               </div>
             </div>
 
-
-
             <button
               type="submit"
               className="btn btn-info w-100 py-3 rounded-pill fw-bold text-dark shadow-lg mb-3 border-0 transition hover-lift"
-              style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)' }}
+              style={{
+                background: "linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)",
+              }}
               disabled={loading}
             >
-              {loading ? <span className="spinner-border spinner-border-sm me-2" role="status"></span> : null}
+              {loading ? (
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+              ) : null}
               Authorize Console Access →
             </button>
           </form>
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
-            <Link to="/" className="text-secondary text-decoration-none hover-underline">← Return to Consumer Home</Link>
+            <Link
+              to="/"
+              className="text-secondary text-decoration-none hover-underline"
+            >
+              ← Return to Consumer Home
+            </Link>
           </div>
         </div>
       </div>

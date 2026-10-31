@@ -9,7 +9,7 @@ export default function RiderProfile() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  
+
   useEffect(() => {
     api
       .get("/rider/profile")
@@ -92,11 +92,14 @@ export default function RiderProfile() {
       {!form ? (
         <p role="status">Loading profile...</p>
       ) : (
-        <form onSubmit={save} className="card p-4 shadow-sm text-light"
-      style={{
-        background: "rgba(15, 23, 42, 0.85)",
-        border: "1px solid rgba(255,255,255,0.08)",
-      }}>
+        <form
+          onSubmit={save}
+          className="card p-4 shadow-sm text-light"
+          style={{
+            background: "rgba(15, 23, 42, 0.85)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
           <div className="row g-3">
             {field("fullName", "Full name")}
             {field("phone", "Phone", "tel")}

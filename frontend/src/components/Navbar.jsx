@@ -17,7 +17,6 @@ import NavNotificationsDropdown from "./navbar/NavNotificationsDropdown";
 import NavUserDropdown from "./navbar/NavUserDropdown";
 import NavMobileDrawer from "./navbar/NavMobileDrawer";
 
-
 const Navbar = ({ onOpenCart }) => {
   const navRef = useRef(null);
   useEffect(() => {
@@ -198,7 +197,6 @@ const Navbar = ({ onOpenCart }) => {
 
           {/* Action Links & Utility Controls */}
           <div className="d-flex align-items-center gap-2 gap-md-3">
-            
             {/* Offers Link */}
             <Link
               to="/offers"

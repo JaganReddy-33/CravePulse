@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import LiveMap from '../../components/LiveMap';
-import DisputeModal from './DisputeModal';
-import TrackingTimeline from '../../components/tracking/TrackingTimeline';
-import TrackingRiderCard from '../../components/tracking/TrackingRiderCard';
-import TrackingCancelModal from '../../components/tracking/TrackingCancelModal';
-import TrackingChatModal from '../../components/tracking/TrackingChatModal';
-import TrackingReviewModal from '../../components/tracking/TrackingReviewModal';
-import LoadingState from '../../components/states/LoadingState';
-import ErrorState from '../../components/states/ErrorState';
-import useOrderTracking from '../../hooks/useOrderTracking';
+import React, { useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import LiveMap from "../../components/LiveMap";
+import DisputeModal from "./DisputeModal";
+import TrackingTimeline from "../../components/tracking/TrackingTimeline";
+import TrackingRiderCard from "../../components/tracking/TrackingRiderCard";
+import TrackingCancelModal from "../../components/tracking/TrackingCancelModal";
+import TrackingChatModal from "../../components/tracking/TrackingChatModal";
+import TrackingReviewModal from "../../components/tracking/TrackingReviewModal";
+import LoadingState from "../../components/states/LoadingState";
+import ErrorState from "../../components/states/ErrorState";
+import useOrderTracking from "../../hooks/useOrderTracking";
 
 /**
  * OrderTracking: Focused order tracking view with live GPS captain radar, status timeline,
@@ -31,7 +31,7 @@ const OrderTracking = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [chatTarget, setChatTarget] = useState('RIDER');
+  const [chatTarget, setChatTarget] = useState("RIDER");
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
 
@@ -62,12 +62,19 @@ const OrderTracking = () => {
   }
 
   if (!order) return <div className="container py-5">Order unavailable.</div>;
-  const isDelivered = order.status === 'DELIVERED';
-  const isCancelled = order.status === 'CANCELLED';
+  const isDelivered = order.status === "DELIVERED";
+  const isCancelled = order.status === "CANCELLED";
 
   return (
-    <div className="container py-4 customer-content-container" style={{ maxWidth: 1040 }}>
-      {error && <div className="alert alert-danger" role="alert">{error}</div>}
+    <div
+      className="container py-4 customer-content-container"
+      style={{ maxWidth: 1040 }}
+    >
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
       {/* 1. Accessible Status Timeline */}
       <TrackingTimeline order={order} />
 
@@ -79,17 +86,30 @@ const OrderTracking = () => {
             <div className="card border-0 rounded-4 shadow-sm p-3 bg-white mb-4 overflow-hidden">
               <div className="d-flex justify-content-between align-items-center mb-2 px-1">
                 <span className="small fw-bold text-dark d-flex align-items-center gap-1">
-                  <span className="spinner-grow spinner-grow-sm text-danger" role="status"></span>
+                  <span
+                    className="spinner-grow spinner-grow-sm text-danger"
+                    role="status"
+                  ></span>
                   Live Dispatch Radar
                 </span>
                 <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
                   GPS High Precision Locked
                 </span>
               </div>
-              <div style={{ height: 320, borderRadius: 16, overflow: 'hidden' }}>
+              <div
+                style={{ height: 320, borderRadius: 16, overflow: "hidden" }}
+              >
                 <LiveMap
-                  restaurantCoords={order.restaurantLat != null && order.restaurantLng != null ? [order.restaurantLat, order.restaurantLng] : null}
-                  deliveryCoords={order.deliveryLat != null && order.deliveryLng != null ? [order.deliveryLat, order.deliveryLng] : null}
+                  restaurantCoords={
+                    order.restaurantLat != null && order.restaurantLng != null
+                      ? [order.restaurantLat, order.restaurantLng]
+                      : null
+                  }
+                  deliveryCoords={
+                    order.deliveryLat != null && order.deliveryLng != null
+                      ? [order.deliveryLat, order.deliveryLng]
+                      : null
+                  }
                   riderCoords={riderCoords}
                   status={order.status}
                 />
@@ -111,18 +131,28 @@ const OrderTracking = () => {
             <h6 className="fw-bold text-dark mb-3">Order Details</h6>
             <div className="d-flex flex-column gap-3 small">
               <div>
-                <span className="text-muted d-block" style={{ fontSize: 11 }}>Restaurant Partner</span>
+                <span className="text-muted d-block" style={{ fontSize: 11 }}>
+                  Restaurant Partner
+                </span>
                 <strong className="text-dark">{order.restaurantName}</strong>
               </div>
               <div>
-                <span className="text-muted d-block" style={{ fontSize: 11 }}>Delivery Address</span>
+                <span className="text-muted d-block" style={{ fontSize: 11 }}>
+                  Delivery Address
+                </span>
                 <p className="text-dark mb-0">{order.deliveryAddress}</p>
               </div>
               <div>
-                <span className="text-muted d-block" style={{ fontSize: 11 }}>Payment Details</span>
+                <span className="text-muted d-block" style={{ fontSize: 11 }}>
+                  Payment Details
+                </span>
                 <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-dark fw-semibold">{order.paymentMode || 'Online Payment'}</span>
-                  <strong className="text-danger fs-6">₹{order.totalAmount}</strong>
+                  <span className="text-dark fw-semibold">
+                    {order.paymentMode || "Online Payment"}
+                  </span>
+                  <strong className="text-danger fs-6">
+                    ₹{order.totalAmount}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -135,7 +165,10 @@ const OrderTracking = () => {
               <button
                 type="button"
                 className="btn btn-primary rounded-pill py-2 fw-bold touch-target shadow hover-lift text-white"
-                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+                style={{
+                  background: "var(--c-primary)",
+                  borderColor: "var(--c-primary)",
+                }}
                 onClick={() => setShowReviewModal(true)}
               >
                 ★ Rate Your Meal Experience
@@ -167,7 +200,8 @@ const OrderTracking = () => {
               to={`/orders/${order.orderNumber || order.id}/invoice`}
               className="btn btn-link text-muted text-decoration-none small touch-target text-center"
             >
-              <i className="bi bi-file-earmark-text me-1"></i> Download Tax Invoice
+              <i className="bi bi-file-earmark-text me-1"></i> Download Tax
+              Invoice
             </Link>
           </div>
         </div>

@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 /**
  * Delightful 404 Not Found Page.
  * Offers search jumping, quick shortcuts, and back navigation.
  */
 const NotFound = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const handleSearchSubmit = (e) => {
@@ -18,17 +18,25 @@ const NotFound = () => {
 
   return (
     <main className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5 px-3">
-      <div 
+      <div
         className="card border-0 shadow-lg rounded-4 p-4 p-md-5 text-center bg-white mx-auto"
-        style={{ maxWidth: 620, width: '100%' }}
+        style={{ maxWidth: 620, width: "100%" }}
       >
-        <div className="display-1 fw-extrabold text-muted opacity-25 mb-1" style={{ letterSpacing: '4px' }}>
+        <div
+          className="display-1 fw-extrabold text-muted opacity-25 mb-1"
+          style={{ letterSpacing: "4px" }}
+        >
           404
         </div>
-        <div className="fs-1 mb-3" aria-hidden="true">🧭🍕</div>
-        <h2 className="fw-extrabold text-dark mb-2">We couldn't find that page</h2>
+        <div className="fs-1 mb-3" aria-hidden="true">
+          🧭🍕
+        </div>
+        <h2 className="fw-extrabold text-dark mb-2">
+          We couldn't find that page
+        </h2>
         <p className="text-muted small mb-4">
-          The dish, restaurant, or address you are looking for might have been moved, renamed, or is currently taking a cooking break!
+          The dish, restaurant, or address you are looking for might have been
+          moved, renamed, or is currently taking a cooking break!
         </p>
 
         {/* Search Jump Box */}
@@ -45,10 +53,13 @@ const NotFound = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search dishes or kitchens"
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary px-4 fw-bold touch-target"
-              style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+              style={{
+                background: "var(--c-primary)",
+                borderColor: "var(--c-primary)",
+              }}
             >
               Search
             </button>
@@ -88,7 +99,14 @@ const NotFound = () => {
         </div>
 
         <div className="text-muted small">
-          Need immediate support? Contact our customer desk at <Link to="/contact" className="text-primary text-decoration-none fw-bold">Contact Support</Link>.
+          Need immediate support? Contact our customer desk at{" "}
+          <Link
+            to="/contact"
+            className="text-primary text-decoration-none fw-bold"
+          >
+            Contact Support
+          </Link>
+          .
         </div>
       </div>
     </main>

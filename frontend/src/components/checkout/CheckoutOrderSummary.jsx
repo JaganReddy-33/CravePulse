@@ -1,9 +1,15 @@
-import React from 'react';
+import React from "react";
 
 /**
  * CheckoutOrderSummary: Cart item review with restaurant banner and quantity steppers.
  */
-const unitPrice = item => Number(item.platformPrice || 0) + Number(item.selectedVariant?.priceAdjustment || 0) + (item.selectedAddons || []).reduce((sum, addon) => sum + Number(addon.price || 0), 0);
+const unitPrice = (item) =>
+  Number(item.platformPrice || 0) +
+  Number(item.selectedVariant?.priceAdjustment || 0) +
+  (item.selectedAddons || []).reduce(
+    (sum, addon) => sum + Number(addon.price || 0),
+    0,
+  );
 const CheckoutOrderSummary = ({
   cart,
   onAddItem,
@@ -19,7 +25,7 @@ const CheckoutOrderSummary = ({
           Order Summary
         </h5>
         <span className="badge bg-light text-muted border">
-          {cart.restaurantName || 'Selected Kitchen'}
+          {cart.restaurantName || "Selected Kitchen"}
         </span>
       </div>
 
@@ -32,20 +38,27 @@ const CheckoutOrderSummary = ({
           >
             <div className="d-flex align-items-center gap-2 text-truncate">
               <span
-                className={`badge ${item.isVeg ? 'bg-success' : 'bg-danger'} p-1 rounded-circle`}
+                className={`badge ${item.isVeg ? "bg-success" : "bg-danger"} p-1 rounded-circle`}
                 style={{ width: 8, height: 8 }}
               ></span>
               <div className="text-truncate">
-                <strong className="d-block small text-dark text-truncate">{item.name}</strong>
+                <strong className="d-block small text-dark text-truncate">
+                  {item.name}
+                </strong>
                 <small className="text-muted" style={{ fontSize: 11 }}>
                   ₹{unitPrice(item)} each
-                  {item.selectedVariant ? ` • ${item.selectedVariant.variantName}` : ''}
+                  {item.selectedVariant
+                    ? ` • ${item.selectedVariant.variantName}`
+                    : ""}
                 </small>
               </div>
             </div>
 
             <div className="d-flex align-items-center gap-3">
-              <div className="input-group input-group-sm rounded-pill border overflow-hidden bg-white shadow-xs" style={{ width: 84 }}>
+              <div
+                className="input-group input-group-sm rounded-pill border overflow-hidden bg-white shadow-xs"
+                style={{ width: 84 }}
+              >
                 <button
                   type="button"
                   className="btn btn-light border-0 fw-bold px-2 touch-target"
@@ -60,13 +73,25 @@ const CheckoutOrderSummary = ({
                 <button
                   type="button"
                   className="btn btn-light border-0 fw-bold px-2 touch-target text-danger"
-                  onClick={() => onAddItem({ restaurantId: cart.restaurantId, restaurantName: cart.restaurantName, item, variant: item.selectedVariant, addons: item.selectedAddons, specialInstructions: item.specialInstructions })}
+                  onClick={() =>
+                    onAddItem({
+                      restaurantId: cart.restaurantId,
+                      restaurantName: cart.restaurantName,
+                      item,
+                      variant: item.selectedVariant,
+                      addons: item.selectedAddons,
+                      specialInstructions: item.specialInstructions,
+                    })
+                  }
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
-              <strong className="small text-dark" style={{ minWidth: 60, textAlign: 'right' }}>
+              <strong
+                className="small text-dark"
+                style={{ minWidth: 60, textAlign: "right" }}
+              >
                 ₹{(unitPrice(item) * item.quantity).toFixed(2)}
               </strong>
             </div>
@@ -76,8 +101,12 @@ const CheckoutOrderSummary = ({
 
       {/* Delivery Instructions Field */}
       <div>
-        <label htmlFor="deliveryInstructionsInput" className="form-label small fw-bold text-muted mb-1">
-          <i className="bi bi-chat-left-dots me-1"></i> Delivery Partner Instructions
+        <label
+          htmlFor="deliveryInstructionsInput"
+          className="form-label small fw-bold text-muted mb-1"
+        >
+          <i className="bi bi-chat-left-dots me-1"></i> Delivery Partner
+          Instructions
         </label>
         <input
           id="deliveryInstructionsInput"

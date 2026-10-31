@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
+import React, { useState, useEffect } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 const PartnerLayout = () => {
   const { user, logout } = useAuth();
@@ -16,13 +16,16 @@ const PartnerLayout = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/restaurants/my-profile');
+      const res = await api.get("/restaurants/my-profile");
       if (res.success && res.data) {
         setRestaurant(res.data);
       }
     } catch (err) {
-      console.warn('Failed to resolve authenticated partner restaurant profile:', err);
-      setError(err.message || 'Restaurant profile not found');
+      console.warn(
+        "Failed to resolve authenticated partner restaurant profile:",
+        err,
+      );
+      setError(err.message || "Restaurant profile not found");
     } finally {
       setLoading(false);
     }
@@ -34,47 +37,49 @@ const PartnerLayout = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/partner/login', { replace: true });
+    navigate("/partner/login", { replace: true });
   };
 
-  const chefName = user?.fullName || 'Partner Chef';
-  const restName = restaurant?.name || 'Kitchen Partner';
-  const chefPhoto = restaurant?.logoImage || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150';
+  const chefName = user?.fullName || "Partner Chef";
+  const restName = restaurant?.name || "Kitchen Partner";
+  const chefPhoto =
+    restaurant?.logoImage ||
+    "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150";
 
   const navLinks = (
     <div className="nav flex-column gap-1 flex-grow-1">
       <Link
         to="/partner"
         onClick={() => setShowMobileSidebar(false)}
-        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/partner" ? "bg-danger-subtle text-danger fw-bold" : "text-secondary"}`}
       >
         <i className="bi bi-grid-fill"></i> Dashboard
       </Link>
       <Link
         to="/partner/kanban"
         onClick={() => setShowMobileSidebar(false)}
-        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/kanban' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/partner/kanban" ? "bg-danger-subtle text-danger fw-bold" : "text-secondary"}`}
       >
         <i className="bi bi-kanban-fill"></i> Kitchen Kanban
       </Link>
       <Link
         to="/partner/menu"
         onClick={() => setShowMobileSidebar(false)}
-        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/menu' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/partner/menu" ? "bg-danger-subtle text-danger fw-bold" : "text-secondary"}`}
       >
         <i className="bi bi-menu-button-wide-fill"></i> Menu & Parity
       </Link>
       <Link
         to="/partner/orders"
         onClick={() => setShowMobileSidebar(false)}
-        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/orders' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/partner/orders" ? "bg-danger-subtle text-danger fw-bold" : "text-secondary"}`}
       >
         <i className="bi bi-receipt"></i> Orders Ledger
       </Link>
       <Link
         to="/partner/settings"
         onClick={() => setShowMobileSidebar(false)}
-        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === '/partner/settings' ? 'bg-danger-subtle text-danger fw-bold' : 'text-secondary'}`}
+        className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/partner/settings" ? "bg-danger-subtle text-danger fw-bold" : "text-secondary"}`}
       >
         <i className="bi bi-gear-fill"></i> Kitchen Settings
       </Link>
@@ -82,17 +87,38 @@ const PartnerLayout = () => {
   );
 
   return (
-    <div className="partner-portal d-flex min-vh-100" style={{ background: '#f5f6fa' }}>
+    <div
+      className="partner-portal d-flex min-vh-100"
+      style={{ background: "#f5f6fa" }}
+    >
       {/* FoodAnalytics Left Sidebar (Desktop) */}
-      <aside className="d-none d-lg-flex flex-column p-3 bg-white border-end shadow-sm" style={{ width: 250, minHeight: '100vh', zIndex: 10 }}>
+      <aside
+        className="d-none d-lg-flex flex-column p-3 bg-white border-end shadow-sm"
+        style={{ width: 250, minHeight: "100vh", zIndex: 10 }}
+      >
         {/* Brand */}
         <div className="d-flex align-items-center gap-2 mb-4 px-2">
-          <div className="rounded-3 d-flex align-items-center justify-content-center text-white shadow-sm" style={{ width: 38, height: 38, background: '#ff5c35', fontSize: 20 }}>
+          <div
+            className="rounded-3 d-flex align-items-center justify-content-center text-white shadow-sm"
+            style={{
+              width: 38,
+              height: 38,
+              background: "#ff5c35",
+              fontSize: 20,
+            }}
+          >
             🍳
           </div>
           <div>
-            <div className="fw-extrabold fs-5 lh-1" style={{ color: '#ff5c35' }}>FoodAnalytics</div>
-            <small className="text-muted" style={{ fontSize: 10 }}>Kitchen Intelligence</small>
+            <div
+              className="fw-extrabold fs-5 lh-1"
+              style={{ color: "#ff5c35" }}
+            >
+              FoodAnalytics
+            </div>
+            <small className="text-muted" style={{ fontSize: 10 }}>
+              Kitchen Intelligence
+            </small>
           </div>
         </div>
 
@@ -100,7 +126,10 @@ const PartnerLayout = () => {
         {navLinks}
 
         {/* FSSAI Badge & Live Compliance Box */}
-        <div className="p-3 rounded-4 mt-auto text-center" style={{ background: '#fff7ed', border: '1px solid #fed7aa' }}>
+        <div
+          className="p-3 rounded-4 mt-auto text-center"
+          style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+        >
           <div className="fs-3 mb-1">🛡️</div>
           <h6 className="fw-bold mb-1 small text-dark">0% Markup Certified</h6>
           <p className="text-muted small mb-0" style={{ fontSize: 11 }}>
@@ -111,26 +140,36 @@ const PartnerLayout = () => {
 
       {/* Mobile Offcanvas Sidebar Drawer */}
       {showMobileSidebar && (
-        <div 
+        <div
           className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-lg-none"
-          style={{ zIndex: 10050, backdropFilter: 'blur(3px)' }}
+          style={{ zIndex: 10050, backdropFilter: "blur(3px)" }}
           onClick={() => setShowMobileSidebar(false)}
         >
-          <div 
+          <div
             className="position-fixed top-0 start-0 h-100 bg-white shadow-lg p-3 d-flex flex-column"
-            style={{ width: 280, maxWidth: '85%', zIndex: 10060 }}
+            style={{ width: 280, maxWidth: "85%", zIndex: 10060 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div className="d-flex align-items-center gap-2">
-                <div className="rounded-3 d-flex align-items-center justify-content-center text-white" style={{ width: 34, height: 34, background: '#ff5c35', fontSize: 18 }}>
+                <div
+                  className="rounded-3 d-flex align-items-center justify-content-center text-white"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    background: "#ff5c35",
+                    fontSize: 18,
+                  }}
+                >
                   🍳
                 </div>
-                <div className="fw-extrabold fs-6" style={{ color: '#ff5c35' }}>FoodAnalytics</div>
+                <div className="fw-extrabold fs-6" style={{ color: "#ff5c35" }}>
+                  FoodAnalytics
+                </div>
               </div>
-              <button 
-                type="button" 
-                className="btn-close touch-target" 
+              <button
+                type="button"
+                className="btn-close touch-target"
                 onClick={() => setShowMobileSidebar(false)}
                 aria-label="Close sidebar"
               ></button>
@@ -139,7 +178,10 @@ const PartnerLayout = () => {
             <div className="border-top pt-3 mt-auto">
               <div className="small fw-bold text-dark">{restName}</div>
               <small className="text-muted d-block">{chefName}</small>
-              <button onClick={handleLogout} className="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill touch-target">
+              <button
+                onClick={handleLogout}
+                className="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill touch-target"
+              >
                 Sign Out
               </button>
             </div>
@@ -161,20 +203,30 @@ const PartnerLayout = () => {
             >
               <i className="bi bi-list fs-5"></i>
             </button>
-            <Link to="/" className="btn btn-sm btn-outline-secondary rounded-pill d-none d-sm-inline-flex align-items-center" title="Return to Consumer View">
+            <Link
+              to="/"
+              className="btn btn-sm btn-outline-secondary rounded-pill d-none d-sm-inline-flex align-items-center"
+              title="Return to Consumer View"
+            >
               <i className="bi bi-arrow-left me-1"></i>
               <span className="small">Customer View</span>
             </Link>
             <div>
-              <h5 className="fw-extrabold mb-0 text-dark fs-6 fs-md-5">{restName}</h5>
+              <h5 className="fw-extrabold mb-0 text-dark fs-6 fs-md-5">
+                {restName}
+              </h5>
               <small className="text-muted d-none d-sm-inline">
-                {restaurant?.fssaiLicense ? `${restaurant.fssaiLicense} • ` : ''}
-                {restaurant?.locality || 'Bengaluru Central'}
+                {restaurant?.fssaiLicense
+                  ? `${restaurant.fssaiLicense} • `
+                  : ""}
+                {restaurant?.locality || "Bengaluru Central"}
                 {restaurant && !restaurant.isOpen && (
                   <span className="badge bg-danger ms-2">STORE CLOSED</span>
                 )}
                 {restaurant?.isAutoThrottled && (
-                  <span className="badge bg-warning text-dark ms-2">THROTTLED</span>
+                  <span className="badge bg-warning text-dark ms-2">
+                    THROTTLED
+                  </span>
                 )}
               </small>
             </div>
@@ -194,36 +246,47 @@ const PartnerLayout = () => {
                   style={{ width: 38, height: 38 }}
                 />
                 <div className="d-none d-sm-block text-end lh-1">
-                  <strong className="d-block small text-dark">{chefName}</strong>
-                  <span className="badge bg-warning-subtle text-dark border small" style={{ fontSize: 10 }}>HEAD CHEF / OWNER</span>
+                  <strong className="d-block small text-dark">
+                    {chefName}
+                  </strong>
+                  <span
+                    className="badge bg-warning-subtle text-dark border small"
+                    style={{ fontSize: 10 }}
+                  >
+                    HEAD CHEF / OWNER
+                  </span>
                 </div>
                 <i className="bi bi-chevron-down text-muted small"></i>
               </button>
 
               {/* Dropdown Menu */}
               {showProfileMenu && (
-                <div 
+                <div
                   className="position-absolute end-0 mt-2 bg-white rounded-4 shadow-lg border p-2"
                   style={{ width: 250, zIndex: 1050 }}
                 >
                   <div className="p-2 border-bottom mb-1">
                     <div className="fw-bold text-dark small">{chefName}</div>
                     <small className="text-muted d-block">{restName}</small>
-                    <span className="badge bg-success-subtle text-success small mt-1">Verified Kitchen Partner</span>
+                    <span className="badge bg-success-subtle text-success small mt-1">
+                      Verified Kitchen Partner
+                    </span>
                   </div>
                   <Link
                     to="/partner/settings"
                     className="dropdown-item py-2 px-3 text-dark small rounded-3 d-flex align-items-center gap-2 hover-bg-light"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-person-circle text-danger"></i> Chef Profile & Photos
+                    <i className="bi bi-person-circle text-danger"></i> Chef
+                    Profile & Photos
                   </Link>
                   <Link
                     to="/partner/menu"
                     className="dropdown-item py-2 px-3 text-dark small rounded-3 d-flex align-items-center gap-2 hover-bg-light"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-egg-fried text-warning"></i> Manage Menu & Prices
+                    <i className="bi bi-egg-fried text-warning"></i> Manage Menu
+                    & Prices
                   </Link>
                   {restaurant?.id && (
                     <Link
@@ -232,7 +295,8 @@ const PartnerLayout = () => {
                       onClick={() => setShowProfileMenu(false)}
                       target="_blank"
                     >
-                      <i className="bi bi-box-arrow-up-right text-primary"></i> Live Consumer View ↗
+                      <i className="bi bi-box-arrow-up-right text-primary"></i>{" "}
+                      Live Consumer View ↗
                     </Link>
                   )}
                   <hr className="my-1" />
@@ -249,20 +313,61 @@ const PartnerLayout = () => {
         </header>
 
         {/* Mobile Navigation bar for tablets and phones */}
-        <div className="d-lg-none bg-white border-bottom px-3 py-2 d-flex gap-2 overflow-auto" style={{ scrollbarWidth: 'none' }}>
-          <Link to="/partner" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/partner' ? 'btn-danger' : 'btn-light'}`} style={location.pathname === '/partner' ? { background: '#ff5c35' } : {}}>
+        <div
+          className="d-lg-none bg-white border-bottom px-3 py-2 d-flex gap-2 overflow-auto"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <Link
+            to="/partner"
+            className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === "/partner" ? "btn-danger" : "btn-light"}`}
+            style={
+              location.pathname === "/partner" ? { background: "#ff5c35" } : {}
+            }
+          >
             Dashboard
           </Link>
-          <Link to="/partner/kanban" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/partner/kanban' ? 'btn-danger' : 'btn-light'}`} style={location.pathname === '/partner/kanban' ? { background: '#ff5c35' } : {}}>
+          <Link
+            to="/partner/kanban"
+            className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === "/partner/kanban" ? "btn-danger" : "btn-light"}`}
+            style={
+              location.pathname === "/partner/kanban"
+                ? { background: "#ff5c35" }
+                : {}
+            }
+          >
             Kanban
           </Link>
-          <Link to="/partner/menu" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/partner/menu' ? 'btn-danger' : 'btn-light'}`} style={location.pathname === '/partner/menu' ? { background: '#ff5c35' } : {}}>
+          <Link
+            to="/partner/menu"
+            className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === "/partner/menu" ? "btn-danger" : "btn-light"}`}
+            style={
+              location.pathname === "/partner/menu"
+                ? { background: "#ff5c35" }
+                : {}
+            }
+          >
             Menu
           </Link>
-          <Link to="/partner/orders" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/partner/orders' ? 'btn-danger' : 'btn-light'}`} style={location.pathname === '/partner/orders' ? { background: '#ff5c35' } : {}}>
+          <Link
+            to="/partner/orders"
+            className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === "/partner/orders" ? "btn-danger" : "btn-light"}`}
+            style={
+              location.pathname === "/partner/orders"
+                ? { background: "#ff5c35" }
+                : {}
+            }
+          >
             Orders
           </Link>
-          <Link to="/partner/settings" className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === '/partner/settings' ? 'btn-danger' : 'btn-light'}`} style={location.pathname === '/partner/settings' ? { background: '#ff5c35' } : {}}>
+          <Link
+            to="/partner/settings"
+            className={`btn btn-sm rounded-pill px-3 text-nowrap ${location.pathname === "/partner/settings" ? "btn-danger" : "btn-light"}`}
+            style={
+              location.pathname === "/partner/settings"
+                ? { background: "#ff5c35" }
+                : {}
+            }
+          >
             Settings
           </Link>
         </div>
@@ -272,15 +377,22 @@ const PartnerLayout = () => {
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-danger" role="status"></div>
-              <p className="text-muted small mt-2">Loading restaurant workspace...</p>
+              <p className="text-muted small mt-2">
+                Loading restaurant workspace...
+              </p>
             </div>
           ) : error && !restaurant ? (
             <div className="alert alert-danger rounded-4 p-4 shadow-sm">
               <h5>Restaurant Profile Not Found</h5>
-              <p className="mb-0">{error}. Please contact administrator to link your partner account to a restaurant.</p>
+              <p className="mb-0">
+                {error}. Please contact administrator to link your partner
+                account to a restaurant.
+              </p>
             </div>
           ) : (
-            <Outlet context={{ restaurant, refreshRestaurant: fetchProfile, loading }} />
+            <Outlet
+              context={{ restaurant, refreshRestaurant: fetchProfile, loading }}
+            />
           )}
         </main>
       </div>

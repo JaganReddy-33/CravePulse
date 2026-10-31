@@ -61,6 +61,10 @@ describe("CareersPage pagination failures", () => {
     fireEvent.click(nextPage);
 
     expect(await screen.findByRole("alert")).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current"))
+        .toBe("page"),
+    );
     expect(screen.getByText("First page role")).toBeTruthy();
     expect(screen.getByText("Open Positions (25)")).toBeTruthy();
     expect(screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent)

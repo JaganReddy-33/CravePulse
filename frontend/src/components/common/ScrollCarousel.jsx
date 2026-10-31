@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import './ScrollCarousel.css';
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import "./ScrollCarousel.css";
 
 /**
  * ScrollCarousel – reusable horizontal snap carousel.
@@ -15,10 +15,10 @@ import './ScrollCarousel.css';
 const ScrollCarousel = ({
   children,
   sectionHeader,
-  className = '',
-  trackClassName = '',
+  className = "",
+  trackClassName = "",
   gap,
-  ariaLabel = 'Scrollable content',
+  ariaLabel = "Scrollable content",
 }) => {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
@@ -37,14 +37,14 @@ const ScrollCarousel = ({
     const el = trackRef.current;
     if (!el) return;
     updateScrollState();
-    el.addEventListener('scroll', updateScrollState, { passive: true });
+    el.addEventListener("scroll", updateScrollState, { passive: true });
 
     // ResizeObserver keeps disabled state accurate on resize
     const ro = new ResizeObserver(updateScrollState);
     ro.observe(el);
 
     return () => {
-      el.removeEventListener('scroll', updateScrollState);
+      el.removeEventListener("scroll", updateScrollState);
       ro.disconnect();
     };
   }, [updateScrollState]);
@@ -54,26 +54,29 @@ const ScrollCarousel = ({
     if (!el) return;
     // Scroll by one "page" = visible width minus one card peek
     const page = el.clientWidth - 80;
-    el.scrollBy({ left: dir * page, behavior: 'smooth' });
+    el.scrollBy({ left: dir * page, behavior: "smooth" });
   }, []);
 
   // Keyboard navigation on the track
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      scrollBy(1);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      scrollBy(-1);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      trackRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      const el = trackRef.current;
-      if (el) el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
-    }
-  }, [scrollBy]);
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scrollBy(1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scrollBy(-1);
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        trackRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+      } else if (e.key === "End") {
+        e.preventDefault();
+        const el = trackRef.current;
+        if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+      }
+    },
+    [scrollBy],
+  );
 
   const prevBtn = (
     <button
@@ -126,8 +129,14 @@ const ScrollCarousel = ({
         <div className="d-none d-md-block">{prevBtn}</div>
 
         {/* Fade gradients */}
-        <div className={`scroll-carousel-fade-left${atStart ? ' hidden' : ''}`} aria-hidden="true" />
-        <div className={`scroll-carousel-fade-right${atEnd ? ' hidden' : ''}`} aria-hidden="true" />
+        <div
+          className={`scroll-carousel-fade-left${atStart ? " hidden" : ""}`}
+          aria-hidden="true"
+        />
+        <div
+          className={`scroll-carousel-fade-right${atEnd ? " hidden" : ""}`}
+          aria-hidden="true"
+        />
 
         {/* The scrollable track */}
         <div
@@ -149,4 +158,3 @@ const ScrollCarousel = ({
 };
 
 export default ScrollCarousel;
-

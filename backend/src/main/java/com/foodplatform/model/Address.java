@@ -1,5 +1,6 @@
 package com.foodplatform.model;
 
+import com.google.gson.annotations.SerializedName;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
@@ -14,6 +15,8 @@ public class Address {
     private String postalCode;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private String mapsUrl;
+    @SerializedName(value = "default", alternate = {"isDefault"})
     private boolean isDefault;
     private Timestamp createdAt;
 
@@ -49,6 +52,9 @@ public class Address {
 
     public BigDecimal getLongitude() { return longitude; }
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
+
+    public String getMapsUrl() { return mapsUrl; }
+    public void setMapsUrl(String mapsUrl) { this.mapsUrl = mapsUrl; }
 
     public boolean isDefault() { return isDefault; }
     public void setDefault(boolean aDefault) { isDefault = aDefault; }

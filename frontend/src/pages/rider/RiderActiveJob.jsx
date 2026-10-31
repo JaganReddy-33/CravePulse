@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import api from "../../services/api";
 import realtime from "../../services/websocket";
 import LiveMap from "../../components/LiveMap";
 import ModalPortal from "../../components/ModalPortal";
+import { getGoogleMapsNavigationUrl } from "../../utils/googleMaps";
 
 const RiderActiveJob = () => {
   const [profile, setProfile] = useState(null);
@@ -12,6 +13,8 @@ const RiderActiveJob = () => {
   const [activeJobOffer, setActiveJobOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
+  const [milestoneUpdating, setMilestoneUpdating] = useState(false);
+  const activeOrderIdRef = useRef(null);
 
   // Workflow state machine: 'ACCEPTED' | 'AT_KITCHEN' | 'PICKED_UP' | 'AT_DOORSTEP' | 'DELIVERED'
   const [currentStep, setCurrentStep] = useState("ACCEPTED");
@@ -27,8 +30,8 @@ const RiderActiveJob = () => {
   // Handover modal
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [deliveryOtp, setDeliveryOtp] = useState("");
-  const [deliveryProofPhoto, setDeliveryProofPhoto] = useState(null);
   const [deliveryComplete, setDeliveryComplete] = useState(false);
+  const [deliveryError, setDeliveryError] = useState("");
 
   // Rejection modal
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -38,18 +41,57 @@ const RiderActiveJob = () => {
   const fetchActiveJob = async () => {
     try {
       const pRes = await api.get("/rider/profile");
-      if (pRes.success) setProfile(pRes.data);
+      if (pRes.success) {
+        setProfile(pRes.data);
+        setIsOnline(Boolean(pRes.data?.online ?? pRes.data?.isOnline));
+      }
 
       const jobRes = await api
         .get("/rider/active-job")
         .catch(() => api.get("/rider/orders/active"));
       if (jobRes && jobRes.success && jobRes.data) {
-        setActiveJob(jobRes.data);
+        const job = {
+          ...jobRes.data,
+          deliveryAddress:
+            jobRes.data.customerAddress ?? jobRes.data.deliveryAddress,
+          deliveryLat: jobRes.data.customerLat ?? jobRes.data.deliveryLat,
+          deliveryLng: jobRes.data.customerLng ?? jobRes.data.deliveryLng,
+        };
+        const arrivedAtKitchen = Boolean(job.arrivedAtRestaurantAt);
+        const pickedUp = Boolean(job.pickedUpAt);
+        const arrivedAtCustomer = Boolean(job.arrivedAtCustomerAt);
+        setActiveJob(job);
+        setCurrentStep(
+          arrivedAtCustomer
+            ? "AT_DOORSTEP"
+            : pickedUp
+              ? "PICKED_UP"
+              : arrivedAtKitchen
+                ? "AT_KITCHEN"
+                : "ACCEPTED",
+        );
+        if (activeOrderIdRef.current !== job.orderId) {
+          const recordedWait = Number(job.waitTimeMinutes) || 0;
+          const arrivalTime = Date.parse(job.arrivedAtRestaurantAt);
+          const elapsedSinceArrival =
+            arrivedAtKitchen && !pickedUp && Number.isFinite(arrivalTime)
+              ? Math.max(0, Math.floor((Date.now() - arrivalTime) / 60000))
+              : 0;
+          setWaitingAtKitchen(
+            arrivedAtKitchen && !pickedUp && !job.waitCompensationClaimed,
+          );
+          setWaitTimerMinutes(Math.max(recordedWait, elapsedSinceArrival));
+          setClaimedWaitPay(Number(job.waitTimePay) || 0);
+          activeOrderIdRef.current = job.orderId;
+        }
       } else {
         setActiveJob(null);
+        setCurrentStep("ACCEPTED");
+        activeOrderIdRef.current = null;
       }
     } catch (e) {
       setActiveJob(null);
+      setDispatchError(e.message || "Unable to load your active delivery.");
     } finally {
       setLoading(false);
     }
@@ -119,19 +161,49 @@ const RiderActiveJob = () => {
   const allItemsVerified =
     activeJob?.items?.length > 0 &&
     activeJob.items.every((i) => verifiedItems[i.id]);
+  const deliveryNavigationUrl = getGoogleMapsNavigationUrl(
+    activeJob?.customerMapsUrl,
+    activeJob?.deliveryLat,
+    activeJob?.deliveryLng,
+  );
+  const restaurantNavigationUrl = getGoogleMapsNavigationUrl(
+    activeJob?.restaurantMapsUrl,
+    activeJob?.restaurantLat,
+    activeJob?.restaurantLng,
+  );
+  const customerPhone = activeJob?.customerPhone
+    ? String(activeJob.customerPhone).replace(/[^\d+]/g, "")
+    : "";
+  const hasCustomerPhone = customerPhone.replace(/\D/g, "").length >= 7;
+
+  const closeDeliveryModal = () => {
+    if (deliveryComplete) return;
+    setShowDeliveryModal(false);
+    setDeliveryOtp("");
+    setDeliveryError("");
+  };
 
   const handleArriveAtKitchen = async () => {
-    if (activeJob) {
-      try {
-        await api.post(`/rider/orders/${activeJob.orderId}/status`, {
-          status: "ARRIVED_AT_RESTAURANT",
-        });
-        setWaitingAtKitchen(true);
-        setWaitTimerMinutes(0);
-        setCurrentStep("AT_KITCHEN");
-      } catch (e) {
-        console.warn("Failed to record kitchen arrival milestone", e);
+    if (!activeJob) return;
+    setDispatchError("");
+    setMilestoneUpdating(true);
+    try {
+      const response = await api.post(
+        `/rider/orders/${activeJob.orderId}/status`,
+        { status: "ARRIVED_AT_RESTAURANT" },
+      );
+      if (!response.success) {
+        throw new Error(
+          response.message || "Could not record kitchen arrival.",
+        );
       }
+      setWaitingAtKitchen(true);
+      setWaitTimerMinutes(0);
+      setCurrentStep("AT_KITCHEN");
+    } catch (e) {
+      setDispatchError(e.message || "Could not record kitchen arrival.");
+    } finally {
+      setMilestoneUpdating(false);
     }
   };
 
@@ -148,10 +220,14 @@ const RiderActiveJob = () => {
         ) {
           setClaimedWaitPay(parseFloat(res.data.compensationCredited));
         } else {
-          window.alert("Wait compensation was not credited. Please retry.");
+          setDispatchError("Wait compensation was not credited. Please retry.");
+          return;
         }
       } catch (e) {
-        window.alert("Wait compensation was not credited. Please retry.");
+        setDispatchError(
+          e.message || "Wait compensation was not credited. Please retry.",
+        );
+        return;
       }
       setWaitingAtKitchen(false);
     } else {
@@ -160,65 +236,114 @@ const RiderActiveJob = () => {
   };
 
   const handleConfirmPickup = async () => {
-    if (activeJob) {
-      try {
-        await api.post(`/rider/orders/${activeJob.orderId}/status`, {
-          status: "PICKED_UP",
-        });
-        setCurrentStep("PICKED_UP");
-      } catch (e) {
-        console.warn("Failed to record pickup milestone", e);
+    if (!activeJob) return;
+    setDispatchError("");
+    setMilestoneUpdating(true);
+    try {
+      const response = await api.post(
+        `/rider/orders/${activeJob.orderId}/status`,
+        { status: "PICKED_UP" },
+      );
+      if (!response.success) {
+        throw new Error(response.message || "Could not record pickup.");
       }
+      setCurrentStep("PICKED_UP");
+    } catch (e) {
+      setDispatchError(e.message || "Could not record pickup.");
+    } finally {
+      setMilestoneUpdating(false);
+    }
+  };
+
+  const handleArriveAtCustomer = async () => {
+    if (!activeJob) return;
+    setDispatchError("");
+    setMilestoneUpdating(true);
+    try {
+      const response = await api.post(
+        `/rider/orders/${activeJob.orderId}/status`,
+        { status: "ARRIVED_AT_CUSTOMER" },
+      );
+      if (!response.success) {
+        throw new Error(
+          response.message || "Could not record customer arrival.",
+        );
+      }
+      setCurrentStep("AT_DOORSTEP");
+    } catch (e) {
+      setDispatchError(e.message || "Could not record customer arrival.");
+    } finally {
+      setMilestoneUpdating(false);
     }
   };
 
   const handleConfirmFinalDelivery = async () => {
+    if (!/^\d{4}$/.test(deliveryOtp)) {
+      setDeliveryError(
+        "Enter the customer's 4-digit delivery PIN to continue.",
+      );
+      return;
+    }
+    if (currentStep !== "AT_DOORSTEP") {
+      setDeliveryError(
+        "Record your arrival at the customer's address before handover.",
+      );
+      return;
+    }
+    setDeliveryError("");
+    setDispatchError("");
     try {
       const res = await api.post(`/rider/orders/${activeJob.orderId}/status`, {
         status: "DELIVERED",
         deliveryOtp,
-        proofPhoto: deliveryProofPhoto,
       });
       if (res.success) {
         setDeliveryComplete(true);
         setTimeout(() => {
           setShowDeliveryModal(false);
+          setDeliveryOtp("");
           setActiveJob(null);
         }, 2200);
       } else {
-        alert(res.message || "Delivery confirmation failed");
+        setDeliveryError(res.message || "Delivery confirmation failed.");
       }
     } catch (e) {
-      alert(
-        e.response?.data?.message ||
-          "Invalid delivery PIN or error completing delivery",
+      setDeliveryError(
+        e.message || "Invalid delivery PIN or error completing delivery.",
       );
     }
   };
 
-  const handleProofPhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setDeliveryProofPhoto(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleToggleOnline = async () => {
+    setDispatchError("");
     try {
       const next = !isOnline;
-      await api.post("/rider/profile/status", { online: next });
+      const response = await api.post("/rider/profile/status", {
+        online: next,
+      });
+      if (!response.success) {
+        throw new Error(response.message || "Unable to update online status.");
+      }
       setIsOnline(next);
     } catch (e) {
-      window.alert(e.message || "Unable to update online status");
+      setDispatchError(e.message || "Unable to update online status.");
     }
   };
 
   return (
     <div className="rider-cockpit-container position-relative">
+      {loading && (
+        <div
+          className="d-flex align-items-center gap-2 text-light py-4"
+          role="status"
+        >
+          <span
+            className="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          ></span>
+          Loading your active delivery…
+        </div>
+      )}
       {dispatchError && (
         <div className="alert alert-danger" role="alert">
           {dispatchError}
@@ -262,7 +387,6 @@ const RiderActiveJob = () => {
           </div>
         </div>
       )}
-
       {activeJob ? (
         <div className="row g-3 g-xl-4 align-items-start">
           {/* ====================================================================
@@ -368,19 +492,6 @@ const RiderActiveJob = () => {
                     </h5>
                   </div>
                 </div>
-
-                <a
-                  href="tel:+918047483333"
-                  className="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
-                  }}
-                  title="Call Kitchen via CravePulse Masked Proxy (+91 80 4748 3333)"
-                >
-                  <i className="bi bi-telephone-fill text-warning fs-6"></i>
-                </a>
               </div>
 
               <p className="text-secondary small mb-3 d-flex align-items-center gap-1.5">
@@ -389,22 +500,28 @@ const RiderActiveJob = () => {
               </p>
 
               {/* 48px Glove-Friendly Navigation Button */}
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${activeJob.restaurantLat},${activeJob.restaurantLng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn w-100 rounded-pill fw-bold text-dark d-flex align-items-center justify-content-center gap-2 mb-3 shadow-md transition hover-lift"
-                style={{
-                  minHeight: 50,
-                  background: "#00e676",
-                  fontSize: 15,
-                  border: "none",
-                  boxShadow: "0 4px 16px rgba(0, 230, 118, 0.35)",
-                }}
-              >
-                <i className="bi bi-geo-fill fs-5"></i>
-                <span>Open Kitchen in Google Maps ↗</span>
-              </a>
+              {restaurantNavigationUrl ? (
+                <a
+                  href={restaurantNavigationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn w-100 rounded-pill fw-bold text-dark d-flex align-items-center justify-content-center gap-2 mb-3 shadow-md transition hover-lift"
+                  style={{
+                    minHeight: 50,
+                    background: "#00e676",
+                    fontSize: 15,
+                    border: "none",
+                    boxShadow: "0 4px 16px rgba(0, 230, 118, 0.35)",
+                  }}
+                >
+                  <i className="bi bi-geo-fill fs-5"></i>
+                  <span>Open Kitchen in Google Maps ↗</span>
+                </a>
+              ) : (
+                <div className="alert alert-warning small mb-3" role="status">
+                  Kitchen map coordinates are unavailable for navigation.
+                </div>
+              )}
 
               {/* Modern Wait-Time Compensation Meter Widget */}
               <div
@@ -425,7 +542,7 @@ const RiderActiveJob = () => {
                         className="text-secondary"
                         style={{ fontSize: 10 }}
                       >
-                        ₹2/min credited if chef wait &gt; 8m
+                        Server-verified after 8 minutes; ₹2/min, up to ₹100
                       </small>
                     </div>
                   </div>
@@ -445,7 +562,7 @@ const RiderActiveJob = () => {
                   </span>
                 </div>
 
-                {!waitingAtKitchen ? (
+                {currentStep === "ACCEPTED" ? (
                   <button
                     type="button"
                     className="btn btn-outline-light w-100 rounded-pill fw-bold py-2.5 small transition"
@@ -454,19 +571,29 @@ const RiderActiveJob = () => {
                       borderColor: "rgba(255, 255, 255, 0.2)",
                     }}
                     onClick={handleArriveAtKitchen}
+                    disabled={milestoneUpdating}
                   >
-                    I Have Arrived at Kitchen 📍
+                    {milestoneUpdating
+                      ? "Recording arrival…"
+                      : "Mark arrival at kitchen"}
                   </button>
-                ) : (
+                ) : currentStep === "AT_KITCHEN" && waitingAtKitchen ? (
                   <button
                     type="button"
                     className="btn btn-warning w-100 rounded-pill fw-bold py-2.5 text-dark shadow-sm"
                     style={{ minHeight: 46 }}
                     onClick={handleClaimWaitCompensation}
                   >
-                    Claim ₹{Math.max(0, waitTimerMinutes - 8) * 2} Delay
-                    Compensation & Confirm Bag Handover
+                    Claim kitchen wait compensation
                   </button>
+                ) : currentStep === "AT_KITCHEN" ? (
+                  <p className="small text-secondary mb-0" role="status">
+                    Kitchen arrival recorded.
+                  </p>
+                ) : (
+                  <p className="small text-secondary mb-0" role="status">
+                    Kitchen pickup completed.
+                  </p>
                 )}
 
                 {claimedWaitPay > 0 && (
@@ -484,7 +611,7 @@ const RiderActiveJob = () => {
                     className="small fw-extrabold text-light text-uppercase tracking-wider"
                     style={{ fontSize: 11 }}
                   >
-                    Tamper-Evident Bag Verification
+                    Order item check
                   </span>
                   <span
                     className="badge rounded-pill fw-bold px-2.5 py-1"
@@ -505,11 +632,17 @@ const RiderActiveJob = () => {
                   {activeJob.items?.map((item) => {
                     const isChecked = !!verifiedItems[item.id];
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={item.id}
                         onClick={() => toggleItemVerified(item.id)}
+                        aria-pressed={isChecked}
+                        aria-label={`${isChecked ? "Uncheck" : "Check"} ${item.itemName}, quantity ${item.quantity}`}
                         className="p-3 rounded-3 d-flex align-items-center justify-content-between transition cursor-pointer"
                         style={{
+                          width: "100%",
+                          color: "inherit",
+                          textAlign: "left",
                           minHeight: 54,
                           background: isChecked
                             ? "rgba(0, 230, 118, 0.12)"
@@ -543,12 +676,6 @@ const RiderActiveJob = () => {
                             >
                               {item.itemName}
                             </div>
-                            <small
-                              className="text-secondary"
-                              style={{ fontSize: 10 }}
-                            >
-                              🔒 {item.sealType}
-                            </small>
                           </div>
                         </div>
 
@@ -564,7 +691,7 @@ const RiderActiveJob = () => {
                         >
                           x{item.quantity}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -577,9 +704,25 @@ const RiderActiveJob = () => {
                     borderColor: "rgba(255, 255, 255, 0.25)",
                   }}
                   onClick={handleConfirmPickup}
+                  disabled={
+                    milestoneUpdating ||
+                    currentStep !== "AT_KITCHEN" ||
+                    currentStep === "PICKED_UP" ||
+                    currentStep === "AT_DOORSTEP" ||
+                    !allItemsVerified
+                  }
                 >
                   <i className="bi bi-box-seam text-success fs-5"></i>
-                  <span>Confirm All Items Picked Up from Chef →</span>
+                  <span>
+                    {milestoneUpdating
+                      ? "Recording pickup…"
+                      : currentStep === "PICKED_UP" ||
+                          currentStep === "AT_DOORSTEP"
+                        ? "Pickup confirmed"
+                        : allItemsVerified
+                          ? "Confirm items picked up"
+                          : "Verify every item to confirm pickup"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -587,7 +730,7 @@ const RiderActiveJob = () => {
             {/* Step 02: Customer Doorstep Elevated Container */}
             <div
               className={`p-3 p-md-4 rounded-4 shadow-lg transition ${
-                currentStep === "PICKED_UP"
+                currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
                   ? "cockpit-step-active"
                   : "cockpit-step-pending"
               }`}
@@ -595,11 +738,11 @@ const RiderActiveJob = () => {
                 background: "rgba(15, 23, 42, 0.82)",
                 backdropFilter: "blur(16px)",
                 border:
-                  currentStep === "PICKED_UP"
+                  currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
                     ? "2px solid #38bdf8"
                     : "1px solid rgba(255, 255, 255, 0.08)",
                 boxShadow:
-                  currentStep === "PICKED_UP"
+                  currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
                     ? "0 0 25px rgba(56, 189, 248, 0.2)"
                     : "none",
               }}
@@ -612,11 +755,15 @@ const RiderActiveJob = () => {
                       width: 32,
                       height: 32,
                       background:
-                        currentStep === "PICKED_UP" ? "#0284c7" : "#1e293b",
+                        currentStep === "AT_DOORSTEP"
+                          ? "#00e676"
+                          : currentStep === "PICKED_UP"
+                            ? "#0284c7"
+                            : "#1e293b",
                       fontSize: 13,
                     }}
                   >
-                    02
+                    {currentStep === "AT_DOORSTEP" ? "✓" : "02"}
                   </div>
                   <div>
                     <span
@@ -631,18 +778,23 @@ const RiderActiveJob = () => {
                   </div>
                 </div>
 
-                <a
-                  href="tel:+918047483333"
-                  className="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
-                  }}
-                  title="Call Customer via CravePulse Masked Proxy (+91 80 4748 3333)"
-                >
-                  <i className="bi bi-telephone-fill text-info fs-6"></i>
-                </a>
+                {hasCustomerPhone && (
+                  <a
+                    href={`tel:${customerPhone}`}
+                    className="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center p-0"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderColor: "rgba(255, 255, 255, 0.2)",
+                    }}
+                    aria-label={`Call ${activeJob.customerName}`}
+                  >
+                    <i
+                      className="bi bi-telephone-fill text-info fs-6"
+                      aria-hidden="true"
+                    ></i>
+                  </a>
+                )}
               </div>
 
               <p className="text-secondary small mb-2 d-flex align-items-center gap-1.5">
@@ -666,39 +818,73 @@ const RiderActiveJob = () => {
               )}
 
               {/* 48px Glove-Friendly Navigation Button */}
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${activeJob.deliveryLat},${activeJob.deliveryLng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn w-100 rounded-pill fw-bold text-white d-flex align-items-center justify-content-center gap-2 mb-3 shadow-md transition hover-lift"
-                style={{
-                  minHeight: 50,
-                  background: "#0284c7",
-                  fontSize: 15,
-                  border: "none",
-                  boxShadow: "0 4px 16px rgba(2, 132, 199, 0.35)",
-                }}
-              >
-                <i className="bi bi-compass-fill fs-5"></i>
-                <span>Navigate to Customer Doorstep ↗</span>
-              </a>
+              {deliveryNavigationUrl ? (
+                <a
+                  href={deliveryNavigationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn w-100 rounded-pill fw-bold text-white d-flex align-items-center justify-content-center gap-2 mb-3 shadow-md transition hover-lift"
+                  style={{
+                    minHeight: 50,
+                    background: "#0284c7",
+                    fontSize: 15,
+                    border: "none",
+                    boxShadow: "0 4px 16px rgba(2, 132, 199, 0.35)",
+                  }}
+                >
+                  <i className="bi bi-compass-fill fs-5"></i>
+                  <span>Navigate to Customer Doorstep ↗</span>
+                </a>
+              ) : (
+                <div className="alert alert-warning small mb-3" role="status">
+                  Customer map coordinates are unavailable for navigation.
+                </div>
+              )}
 
-              {/* 52px Primary Handover Action Button */}
-              <button
-                type="button"
-                className="btn w-100 rounded-pill fw-extrabold text-dark shadow-xl d-flex align-items-center justify-content-center gap-2 transition hover-lift"
-                style={{
-                  minHeight: 54,
-                  background: "#00e676",
-                  fontSize: 16,
-                  border: "none",
-                  boxShadow: "0 0 25px rgba(0, 230, 118, 0.45)",
-                }}
-                onClick={() => setShowDeliveryModal(true)}
-              >
-                <i className="bi bi-shield-check fs-4"></i>
-                <span>I Am at Doorstep • Verify Customer Delivery PIN</span>
-              </button>
+              {currentStep === "PICKED_UP" ? (
+                <button
+                  type="button"
+                  className="btn w-100 rounded-pill fw-bold text-dark shadow d-flex align-items-center justify-content-center gap-2 transition"
+                  style={{
+                    minHeight: 52,
+                    background: "#7dd3fc",
+                    fontSize: 16,
+                    border: "none",
+                  }}
+                  onClick={handleArriveAtCustomer}
+                  disabled={milestoneUpdating}
+                >
+                  <i className="bi bi-geo-alt-fill fs-5" aria-hidden="true"></i>
+                  <span>
+                    {milestoneUpdating
+                      ? "Recording arrival…"
+                      : "Mark arrival at customer"}
+                  </span>
+                </button>
+              ) : currentStep === "AT_DOORSTEP" ? (
+                <button
+                  type="button"
+                  className="btn w-100 rounded-pill fw-extrabold text-dark shadow d-flex align-items-center justify-content-center gap-2 transition"
+                  style={{
+                    minHeight: 54,
+                    background: "#00e676",
+                    fontSize: 16,
+                    border: "none",
+                    boxShadow: "0 0 25px rgba(0, 230, 118, 0.32)",
+                  }}
+                  onClick={() => {
+                    setDeliveryError("");
+                    setShowDeliveryModal(true);
+                  }}
+                >
+                  <i className="bi bi-shield-check fs-4" aria-hidden="true"></i>
+                  <span>Verify customer delivery PIN</span>
+                </button>
+              ) : (
+                <p className="small text-secondary mb-0" role="status">
+                  Customer arrival can be recorded after pickup.
+                </p>
+              )}
             </div>
           </div>
 
@@ -714,7 +900,7 @@ const RiderActiveJob = () => {
                 border: "1px solid rgba(255, 255, 255, 0.12)",
               }}
             >
-              {/* Floating Floating Turn-by-Turn Instruction Banner */}
+              {/* Route details come from this dispatch; navigation guidance opens in Maps. */}
               <div
                 className="position-absolute d-flex align-items-center justify-content-between p-3 rounded-4 shadow-2xl"
                 style={{
@@ -745,21 +931,24 @@ const RiderActiveJob = () => {
                       className="d-block text-white small"
                       style={{ fontSize: 13 }}
                     >
-                      In 350m, Turn Right onto 100 Feet Rd
+                      {currentStep === "PICKED_UP" ||
+                      currentStep === "AT_DOORSTEP"
+                        ? "Customer delivery"
+                        : "Kitchen pickup"}
                     </strong>
                     <small className="text-secondary" style={{ fontSize: 10 }}>
-                      Indiranagar Corridor • Clear Road Ahead
+                      {currentStep === "PICKED_UP" ||
+                      currentStep === "AT_DOORSTEP"
+                        ? activeJob.deliveryAddress ||
+                          "Customer address unavailable"
+                        : activeJob.restaurantAddress ||
+                          "Kitchen address unavailable"}
                     </small>
                   </div>
                 </div>
 
                 <div className="text-end ps-2 flex-shrink-0">
-                  <span className="fs-5 fw-extrabold d-block lh-1 text-success">
-                    7 Mins
-                  </span>
-                  <small className="text-secondary" style={{ fontSize: 9 }}>
-                    1.8 KM LEFT
-                  </small>
+                  <small className="text-secondary">Open Maps</small>
                 </div>
               </div>
 
@@ -775,7 +964,7 @@ const RiderActiveJob = () => {
                     activeJob.deliveryLng,
                   ]}
                   riderCoords={gpsCoords}
-                  riderName={profile?.fullName || "Captain Prasad Rao"}
+                  riderName={profile?.riderName || ""}
                   darkMode={true}
                   height="420px"
                   interactive={true}
@@ -796,14 +985,15 @@ const RiderActiveJob = () => {
                     className="text-light fw-bold"
                     style={{ fontSize: 11 }}
                   >
-                    Ather EV GPS Telemetry: Streaming 28 km/h
+                    {gpsCoords
+                      ? `GPS position: ${gpsCoords[0].toFixed(5)}, ${gpsCoords[1].toFixed(5)}`
+                      : "Waiting for device GPS permission"}
                   </small>
                 </div>
                 <span
-                  className="badge rounded-pill bg-success-subtle text-success small"
-                  style={{ fontSize: 10 }}
+                  className={`badge rounded-pill ${gpsCoords ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary"} small`}
                 >
-                  GPS LOCK: 100%
+                  {gpsCoords ? "GPS active" : "GPS unavailable"}
                 </span>
               </div>
             </div>
@@ -819,11 +1009,11 @@ const RiderActiveJob = () => {
             >
               <h6 className="fw-extrabold small text-secondary text-uppercase mb-3 d-flex align-items-center gap-2">
                 <i className="bi bi-graph-up text-success"></i>
-                <span>Shift Metrics & SLA Radar</span>
+                <span>Rider profile</span>
               </h6>
 
               <div className="row g-2 text-center small mb-3">
-                <div className="col-4">
+                <div className="col-6">
                   <div
                     className="p-3 rounded-3"
                     style={{
@@ -835,12 +1025,14 @@ const RiderActiveJob = () => {
                       className="text-secondary d-block"
                       style={{ fontSize: 9 }}
                     >
-                      RUNS TODAY
+                      COMPLETED DELIVERIES
                     </span>
-                    <strong className="fs-5 text-white">6</strong>
+                    <strong className="fs-5 text-white">
+                      {profile?.totalDeliveries ?? "—"}
+                    </strong>
                   </div>
                 </div>
-                <div className="col-4">
+                <div className="col-6">
                   <div
                     className="p-3 rounded-3"
                     style={{
@@ -852,52 +1044,20 @@ const RiderActiveJob = () => {
                       className="text-secondary d-block"
                       style={{ fontSize: 9 }}
                     >
-                      ON-TIME SLA
+                      RIDER RATING
                     </span>
-                    <strong className="fs-5 text-success">98.4%</strong>
+                    <strong className="fs-5 text-success">
+                      {profile?.rating != null && Number(profile.rating) > 0
+                        ? `${Number(profile.rating).toFixed(1)} ★`
+                        : "Not rated"}
+                    </strong>
                   </div>
                 </div>
-                <div className="col-4">
-                  <div
-                    className="p-3 rounded-3"
-                    style={{
-                      background: "#0a0f1d",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <span
-                      className="text-secondary d-block"
-                      style={{ fontSize: 9 }}
-                    >
-                      RATING
-                    </span>
-                    <strong className="fs-5 text-warning">4.98 ★</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="p-2.5 rounded-3 d-flex align-items-center justify-content-between"
-                style={{
-                  background: "rgba(0, 230, 118, 0.08)",
-                  border: "1px solid rgba(0, 230, 118, 0.2)",
-                }}
-              >
-                <div className="d-flex align-items-center gap-2 small text-success">
-                  <i className="bi bi-shield-check fs-5"></i>
-                  <strong>Zero Arbitrary Penalty Guarantee</strong>
-                </div>
-                <span
-                  className="badge rounded-pill bg-success text-dark small"
-                  style={{ fontSize: 10 }}
-                >
-                  PROTECTED
-                </span>
               </div>
             </div>
           </div>
         </div>
-      ) : (
+      ) : !loading ? (
         /* Standby Radar State */
         <div
           className="p-5 rounded-4 shadow-2xl text-center text-white mx-auto my-5"
@@ -909,61 +1069,14 @@ const RiderActiveJob = () => {
           }}
         >
           <div className="fs-1 mb-3">📡</div>
-          <h3 className="fw-extrabold text-white mb-2">Captain Radar Online</h3>
+          <h3 className="fw-extrabold text-white mb-2">No active delivery</h3>
           <p className="text-secondary small mb-4">
-            Waiting for delivery offers in your service area.
+            {isOnline
+              ? "Waiting for a delivery offer."
+              : "Go online when you're ready to receive delivery offers."}
           </p>
         </div>
-      )}
-
-      {/* ====================================================================
-          PERSISTENT SAFETY & QUICK-ACTION FLOATING DOCK
-          ==================================================================== */}
-      {/* <div
-        className="position-fixed d-flex align-items-center justify-content-between p-2.5 px-3 rounded-pill shadow-2xl"
-        style={{
-          bottom: 16,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "92%",
-          maxWidth: 620,
-          background: "rgba(10, 15, 26, 0.95)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          border: "1px solid rgba(239, 68, 68, 0.4)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
-          zIndex: 1030,
-        }}
-      >
-        <div className="d-flex align-items-center gap-2">
-          <div
-            className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
-            style={{ width: 34, height: 34, background: "#ef4444" }}
-          >
-            <i className="bi bi-shield-fill-exclamation fs-6"></i>
-          </div>
-          <div className="lh-1">
-            <strong
-              className="text-white small d-block"
-              style={{ fontSize: 12 }}
-            >
-              24x7 Safety Emergency SOS
-            </strong>
-            <small className="text-secondary" style={{ fontSize: 10 }}>
-              Roadside Medical & Vehicle Breakdown Assistance
-            </small>
-          </div>
-        </div>
-
-        <a
-          href="tel:18001234567"
-          className="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold text-nowrap d-flex align-items-center gap-1.5 shadow"
-          style={{ minHeight: 38, fontSize: 12 }}
-        >
-          <i className="bi bi-telephone-fill"></i>
-          <span>Dial Hotline</span>
-        </a>
-      </div> */}
+      ) : null}
 
       {/* ====================================================================
           DELIVERY HANDOVER VERIFICATION MODAL
@@ -974,7 +1087,7 @@ const RiderActiveJob = () => {
             className="cravepulse-modal-overlay"
             onClick={(e) => {
               if (e.target === e.currentTarget && !deliveryComplete)
-                setShowDeliveryModal(false);
+                closeDeliveryModal();
             }}
           >
             <div className="cravepulse-modal-dialog" style={{ maxWidth: 480 }}>
@@ -992,8 +1105,8 @@ const RiderActiveJob = () => {
                       Handover Verified!
                     </h3>
                     <p className="text-secondary small mb-3">
-                      ₹{activeJob?.totalEarning.toFixed(2)} has been deposited
-                      into your CravePulse Captain Wallet.
+                      ₹{Number(activeJob?.totalEarning || 0).toFixed(2)} has
+                      been deposited into your CravePulse Captain Wallet.
                     </p>
                     <span className="badge rounded-pill bg-success text-dark px-3 py-1.5 fw-bold">
                       Payout Credited ✓
@@ -1011,7 +1124,8 @@ const RiderActiveJob = () => {
                       <button
                         type="button"
                         className="btn-close btn-close-white"
-                        onClick={() => setShowDeliveryModal(false)}
+                        aria-label="Close delivery PIN dialog"
+                        onClick={closeDeliveryModal}
                       ></button>
                     </div>
 
@@ -1025,11 +1139,18 @@ const RiderActiveJob = () => {
 
                     {/* 4-Digit OTP PIN Input */}
                     <div className="mb-3">
-                      <label className="form-label small fw-bold text-light">
+                      <label
+                        htmlFor="delivery-pin"
+                        className="form-label small fw-bold text-light"
+                      >
                         Customer 4-Digit Handover PIN *
                       </label>
                       <input
+                        id="delivery-pin"
                         type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{4}"
                         maxLength="4"
                         className="form-control text-center fw-extrabold rounded-3 font-monospace shadow-none"
                         style={{
@@ -1042,57 +1163,35 @@ const RiderActiveJob = () => {
                         }}
                         placeholder="••••"
                         value={deliveryOtp}
-                        onChange={(e) => setDeliveryOtp(e.target.value)}
+                        onChange={(e) => {
+                          setDeliveryOtp(
+                            e.target.value.replace(/\D/g, "").slice(0, 4),
+                          );
+                          setDeliveryError("");
+                        }}
+                        aria-describedby="delivery-pin-help"
                       />
                       <small
+                        id="delivery-pin-help"
                         className="text-secondary d-block mt-1 text-center"
                         style={{ fontSize: 11 }}
                       >
-                        (Demo Hint: Customer PIN is{" "}
-                        <strong className="text-success">4829</strong>)
+                        Enter the PIN provided by the customer.
                       </small>
                     </div>
 
-                    {/* Contactless Photo Proof */}
-                    <div className="mb-4">
-                      <label className="form-label small fw-bold text-light">
-                        Contactless Photo Proof (Optional)
-                      </label>
-                      <div className="d-flex align-items-center gap-3 p-2.5 rounded-3 bg-dark border border-secondary border-opacity-25">
-                        {deliveryProofPhoto ? (
-                          <img
-                            src={deliveryProofPhoto}
-                            alt="Proof"
-                            className="rounded-3 border border-success"
-                            style={{
-                              width: 48,
-                              height: 48,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <div className="rounded-3 p-2 bg-secondary bg-opacity-25 text-white">
-                            📷
-                          </div>
-                        )}
-                        <label className="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold cursor-pointer mb-0">
-                          Take Doorstep Photo
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="d-none"
-                            onChange={handleProofPhotoUpload}
-                          />
-                        </label>
+                    {deliveryError && (
+                      <div className="alert alert-danger" role="alert">
+                        {deliveryError}
                       </div>
-                    </div>
+                    )}
 
                     <div className="d-flex justify-content-end gap-2">
                       <button
                         type="button"
                         className="btn btn-outline-secondary rounded-pill px-4"
                         style={{ minHeight: 46 }}
-                        onClick={() => setShowDeliveryModal(false)}
+                        onClick={closeDeliveryModal}
                       >
                         Cancel
                       </button>
@@ -1105,6 +1204,7 @@ const RiderActiveJob = () => {
                           border: "none",
                         }}
                         onClick={handleConfirmFinalDelivery}
+                        disabled={deliveryOtp.length !== 4}
                       >
                         Confirm Handover & Payout →
                       </button>

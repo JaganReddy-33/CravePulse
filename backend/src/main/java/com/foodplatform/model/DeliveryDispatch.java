@@ -35,6 +35,7 @@ public class DeliveryDispatch {
     private String customerAddress;
     private Double customerLat;
     private Double customerLng;
+    private String customerMapsUrl;
     private BigDecimal orderTotal;
     private String paymentMode;
 
@@ -112,6 +113,9 @@ public class DeliveryDispatch {
 
     public Double getCustomerLng() { return customerLng; }
     public void setCustomerLng(Double customerLng) { this.customerLng = customerLng; }
+
+    public String getCustomerMapsUrl() { return customerMapsUrl; }
+    public void setCustomerMapsUrl(String customerMapsUrl) { this.customerMapsUrl = customerMapsUrl; }
 
     public BigDecimal getOrderTotal() { return orderTotal; }
     public void setOrderTotal(BigDecimal orderTotal) { this.orderTotal = orderTotal; }

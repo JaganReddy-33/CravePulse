@@ -1,65 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-import AuthBackground from '../../components/AuthBackground';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
+import AuthBackground from "../../components/AuthBackground";
 
-const PartnerAuth = ({ initialMode = 'login' }) => {
-  const [isRegister, setIsRegister] = useState(initialMode === 'register');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [restaurantName, setRestaurantName] = useState('');
-  const [fssaiLicense, setFssaiLicense] = useState('');
-  const [cuisineTypes, setCuisineTypes] = useState('');
-  const [address, setAddress] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [phone, setPhone] = useState('');
+const PartnerAuth = ({ initialMode = "login" }) => {
+  const [isRegister, setIsRegister] = useState(initialMode === "register");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [fssaiLicense, setFssaiLicense] = useState("");
+  const [cuisineTypes, setCuisineTypes] = useState("");
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from = searchParams.get('redirect') || location.state?.from?.pathname || '/partner';
+  const from =
+    searchParams.get("redirect") ||
+    location.state?.from?.pathname ||
+    "/partner";
 
   // If already logged in as restaurant partner, go directly to kitchen console
   useEffect(() => {
-    if (user && user.role === 'RESTAURANT_OWNER') {
+    if (user && user.role === "RESTAURANT_OWNER") {
       navigate(from, { replace: true });
     }
   }, [user, from, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccessMsg('');
+    setError("");
+    setSuccessMsg("");
     setLoading(true);
 
     try {
       if (isRegister) {
-        if (!restaurantName.trim() || !fssaiLicense.trim() || !email.trim() || !password.trim()) {
-          throw new Error('Please enter all required restaurant and contact fields');
+        if (
+          !restaurantName.trim() ||
+          !fssaiLicense.trim() ||
+          !email.trim() ||
+          !password.trim()
+        ) {
+          throw new Error(
+            "Please enter all required restaurant and contact fields",
+          );
         }
-        await api.post('/partner/apply', {
-          fullName: fullName.trim() || 'Restaurant Partner',
+        await api.post("/partner/apply", {
+          fullName: fullName.trim() || "Restaurant Partner",
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
           password,
           restaurantName: restaurantName.trim(),
-          address: address.trim(), latitude: Number(latitude), longitude: Number(longitude),
+          address: address.trim(),
+          latitude: Number(latitude),
+          longitude: Number(longitude),
           fssaiLicense: fssaiLicense.trim(),
-          cuisineTypes: cuisineTypes.trim() || 'Multi-Cuisine'
+          cuisineTypes: cuisineTypes.trim() || "Multi-Cuisine",
         });
-        setSuccessMsg('Partner onboarding application submitted! Your account is in PENDING_KYC status pending admin review.');
+        setSuccessMsg(
+          "Partner onboarding application submitted! Your account is in PENDING_KYC status pending admin review.",
+        );
       } else {
         if (!email.trim() || !password.trim()) {
-          throw new Error('Please enter both partner email and password');
+          throw new Error("Please enter both partner email and password");
         }
         await login(email, password);
         setTimeout(() => {
@@ -67,70 +81,90 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
         }, 500);
       }
     } catch (err) {
-      setError(err.message || 'Restaurant partner authentication failed.');
+      setError(err.message || "Restaurant partner authentication failed.");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative" style={{ background: '#120d08' }}>
+    <div
+      className="min-vh-100 d-flex align-items-center justify-content-center p-3 position-relative"
+      style={{ background: "#120d08" }}
+    >
       {/* Continuous Looping Ambient Chef Wok Flame Video Background */}
       <AuthBackground role="PARTNER" />
 
       {/* Main Glassmorphism Form Card */}
-      <div 
-        className="w-100 position-relative" 
-        style={{ 
-          maxWidth: 520, 
+      <div
+        className="w-100 position-relative"
+        style={{
+          maxWidth: 520,
           zIndex: 10,
-          '--auth-focus-color': '#f59e0b',
-          '--auth-focus-glow': 'rgba(245, 158, 11, 0.35)'
+          "--auth-focus-color": "#f59e0b",
+          "--auth-focus-glow": "rgba(245, 158, 11, 0.35)",
         }}
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
-            <div 
+          <Link
+            to="/"
+            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
+          >
+            <div
               className="rounded-4 text-white fw-bold d-flex align-items-center justify-content-center shadow-lg"
-              style={{ width: 48, height: 48, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', fontSize: 24 }}
+              style={{
+                width: 48,
+                height: 48,
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                fontSize: 24,
+              }}
             >
               🍳
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Kitchen</h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
+              CravePulse Kitchen
+            </h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
-            {isRegister ? 'List your culinary brand with 0% predatory commission' : 'Log in to your live kitchen terminal & order dispatch kanban'}
+            {isRegister
+              ? "List your culinary brand with 0% predatory commission"
+              : "Log in to your live kitchen terminal & order dispatch kanban"}
           </p>
         </div>
 
         {/* Auth Glass Card */}
-        <div 
+        <div
           className="card border-0 rounded-4 shadow-2xl p-4 p-md-5 text-white"
           style={{
-            background: 'rgba(24, 18, 12, 0.88)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(245, 158, 11, 0.25)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+            background: "rgba(24, 18, 12, 0.88)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(245, 158, 11, 0.25)",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
           }}
         >
           {/* Toggle Pills */}
           <div className="d-flex p-1 bg-dark bg-opacity-75 rounded-pill mb-4 border border-secondary border-opacity-50">
             <button
               type="button"
-              className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${!isRegister ? 'text-dark shadow-sm' : 'text-light text-opacity-75 border-0'}`}
-              style={!isRegister ? { background: '#f59e0b' } : {}}
-              onClick={() => { setIsRegister(false); setError(''); }}
+              className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${!isRegister ? "text-dark shadow-sm" : "text-light text-opacity-75 border-0"}`}
+              style={!isRegister ? { background: "#f59e0b" } : {}}
+              onClick={() => {
+                setIsRegister(false);
+                setError("");
+              }}
             >
               Partner Sign In
             </button>
             <button
               type="button"
-              className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${isRegister ? 'text-dark shadow-sm' : 'text-light text-opacity-75 border-0'}`}
-              style={isRegister ? { background: '#f59e0b' } : {}}
-              onClick={() => { setIsRegister(true); setError(''); }}
+              className={`btn btn-sm flex-grow-1 rounded-pill fw-bold transition ${isRegister ? "text-dark shadow-sm" : "text-light text-opacity-75 border-0"}`}
+              style={isRegister ? { background: "#f59e0b" } : {}}
+              onClick={() => {
+                setIsRegister(true);
+                setError("");
+              }}
             >
               Register Kitchen
             </button>
@@ -151,17 +185,64 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {isRegister && <div className="row g-2 mb-3">
-              <div className="col-12"><label className="form-label" htmlFor="partner-address">Kitchen address</label><input id="partner-address" required className="form-control" value={address} onChange={e => setAddress(e.target.value)} /></div>
-              <div className="col-6"><label className="form-label" htmlFor="partner-lat">Latitude</label><input id="partner-lat" required className="form-control" type="number" step="any" min="-90" max="90" value={latitude} onChange={e => setLatitude(e.target.value)} /></div>
-              <div className="col-6"><label className="form-label" htmlFor="partner-lng">Longitude</label><input id="partner-lng" required className="form-control" type="number" step="any" min="-180" max="180" value={longitude} onChange={e => setLongitude(e.target.value)} /></div>
-            </div>}
+            {isRegister && (
+              <div className="row g-2 mb-3">
+                <div className="col-12">
+                  <label className="form-label" htmlFor="partner-address">
+                    Kitchen address
+                  </label>
+                  <input
+                    id="partner-address"
+                    required
+                    className="form-control"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label" htmlFor="partner-lat">
+                    Latitude
+                  </label>
+                  <input
+                    id="partner-lat"
+                    required
+                    className="form-control"
+                    type="number"
+                    step="any"
+                    min="-90"
+                    max="90"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label" htmlFor="partner-lng">
+                    Longitude
+                  </label>
+                  <input
+                    id="partner-lng"
+                    required
+                    className="form-control"
+                    type="number"
+                    step="any"
+                    min="-180"
+                    max="180"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
             {isRegister && (
               <>
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold text-light text-opacity-90">Restaurant / Kitchen Brand *</label>
+                  <label className="form-label small fw-semibold text-light text-opacity-90">
+                    Restaurant / Kitchen Brand *
+                  </label>
                   <div className="auth-unified-input-group">
-                    <span className="auth-icon"><i className="bi bi-shop"></i></span>
+                    <span className="auth-icon">
+                      <i className="bi bi-shop"></i>
+                    </span>
                     <input
                       type="text"
                       className="auth-input"
@@ -175,9 +256,13 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
 
                 <div className="row g-2 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label small fw-semibold text-light text-opacity-90">FSSAI License *</label>
+                    <label className="form-label small fw-semibold text-light text-opacity-90">
+                      FSSAI License *
+                    </label>
                     <div className="auth-unified-input-group">
-                      <span className="auth-icon"><i className="bi bi-patch-check"></i></span>
+                      <span className="auth-icon">
+                        <i className="bi bi-patch-check"></i>
+                      </span>
                       <input
                         type="text"
                         className="auth-input font-monospace"
@@ -189,9 +274,13 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label small fw-semibold text-light text-opacity-90">Cuisine Specials</label>
+                    <label className="form-label small fw-semibold text-light text-opacity-90">
+                      Cuisine Specials
+                    </label>
                     <div className="auth-unified-input-group">
-                      <span className="auth-icon"><i className="bi bi-tag"></i></span>
+                      <span className="auth-icon">
+                        <i className="bi bi-tag"></i>
+                      </span>
                       <input
                         type="text"
                         className="auth-input"
@@ -206,9 +295,13 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             )}
 
             <div className="mb-3">
-              <label className="form-label small fw-semibold text-light text-opacity-90">Head Chef / Owner Name</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90">
+                Head Chef / Owner Name
+              </label>
               <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-person-badge"></i></span>
+                <span className="auth-icon">
+                  <i className="bi bi-person-badge"></i>
+                </span>
                 <input
                   type="text"
                   className="auth-input"
@@ -220,9 +313,13 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label small fw-semibold text-light text-opacity-90">Registered Kitchen Email *</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90">
+                Registered Kitchen Email *
+              </label>
               <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-envelope"></i></span>
+                <span className="auth-icon">
+                  <i className="bi bi-envelope"></i>
+                </span>
                 <input
                   type="email"
                   className="auth-input"
@@ -235,11 +332,15 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             </div>
 
             <div className="mb-4">
-              <label className="form-label small fw-semibold text-light text-opacity-90 mb-1">Security Password *</label>
+              <label className="form-label small fw-semibold text-light text-opacity-90 mb-1">
+                Security Password *
+              </label>
               <div className="auth-unified-input-group">
-                <span className="auth-icon"><i className="bi bi-lock"></i></span>
+                <span className="auth-icon">
+                  <i className="bi bi-lock"></i>
+                </span>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   className="auth-input"
                   placeholder="Enter kitchen security password"
                   value={password}
@@ -252,7 +353,9 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                  <i
+                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
+                  ></i>
                 </button>
               </div>
             </div>
@@ -260,20 +363,37 @@ const PartnerAuth = ({ initialMode = 'login' }) => {
             <button
               type="submit"
               className="btn w-100 py-3 rounded-pill fw-bold text-dark shadow-lg mb-3 border-0 transition hover-lift"
-              style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)' }}
+              style={{
+                background: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)",
+              }}
               disabled={loading}
             >
-              {loading ? <span className="spinner-border spinner-border-sm me-2" role="status"></span> : null}
-              {isRegister ? 'Submit Partner Application' : 'Open Kitchen Terminal →'}
+              {loading ? (
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+              ) : null}
+              {isRegister
+                ? "Submit Partner Application"
+                : "Open Kitchen Terminal →"}
             </button>
           </form>
 
-
-
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
-            <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">← Back to Customer App</Link>
+            <Link
+              to="/"
+              className="text-secondary text-decoration-none me-2 hover-underline"
+            >
+              ← Back to Customer App
+            </Link>
             <span>•</span>
-            <Link to="/rider/login" className="text-success text-decoration-none ms-2 hover-underline">Rider Fleet Login →</Link>
+            <Link
+              to="/rider/login"
+              className="text-success text-decoration-none ms-2 hover-underline"
+            >
+              Rider Fleet Login →
+            </Link>
           </div>
         </div>
       </div>

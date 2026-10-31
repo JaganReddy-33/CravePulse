@@ -1,6 +1,6 @@
-import api from '../../services/api';
-import React, { useState, useEffect } from 'react';
-import ModalPortal from '../ModalPortal';
+import api from "../../services/api";
+import React, { useState, useEffect } from "react";
+import ModalPortal from "../ModalPortal";
 
 /**
  * CheckoutCouponDrawer: Coupon discovery modal with dynamic eligibility checks.
@@ -12,11 +12,16 @@ const CheckoutCouponDrawer = ({
   setCouponCode,
   subtotal,
 }) => {
-  const [inputCoupon, setInputCoupon] = useState('');
+  const [inputCoupon, setInputCoupon] = useState("");
 
   const [coupons, setCoupons] = useState([]);
-  useEffect(() => { if (show) api.get('/catalog/offers').then(res => setCoupons(res.data || [])).catch(() => setCoupons([])); }, [show]);
-
+  useEffect(() => {
+    if (show)
+      api
+        .get("/catalog/offers")
+        .then((res) => setCoupons(res.data || []))
+        .catch(() => setCoupons([]));
+  }, [show]);
 
   if (!show) return null;
 
@@ -30,24 +35,32 @@ const CheckoutCouponDrawer = ({
 
   return (
     <ModalPortal isOpen={show}>
-      <div 
+      <div
         className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
-        style={{ zIndex: 10050, backdropFilter: 'blur(4px)' }}
+        style={{ zIndex: 10050, backdropFilter: "blur(4px)" }}
         onClick={onClose}
       >
-        <div 
+        <div
           className="bg-white rounded-4 shadow-2xl p-4 w-100 animate-slide-left"
-          style={{ maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}
+          style={{ maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="coupon-drawer-title"
         >
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-extrabold text-dark mb-0" id="coupon-drawer-title">
+            <h5
+              className="fw-extrabold text-dark mb-0"
+              id="coupon-drawer-title"
+            >
               Available Promo Coupons
             </h5>
-            <button type="button" className="btn-close touch-target" onClick={onClose} aria-label="Close dialog"></button>
+            <button
+              type="button"
+              className="btn-close touch-target"
+              onClick={onClose}
+              aria-label="Close dialog"
+            ></button>
           </div>
 
           {/* Manual Code Input Form */}
@@ -63,7 +76,10 @@ const CheckoutCouponDrawer = ({
               <button
                 type="submit"
                 className="btn btn-primary px-4 fw-bold touch-target text-white"
-                style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+                style={{
+                  background: "var(--c-primary)",
+                  borderColor: "var(--c-primary)",
+                }}
               >
                 Apply
               </button>
@@ -81,14 +97,16 @@ const CheckoutCouponDrawer = ({
                   key={c.code}
                   className={`p-3 rounded-4 border ${
                     isCurrent
-                      ? 'border-success bg-success-subtle'
+                      ? "border-success bg-success-subtle"
                       : isEligible
-                      ? 'border-light bg-light'
-                      : 'border-light bg-light opacity-75'
+                        ? "border-light bg-light"
+                        : "border-light bg-light opacity-75"
                   }`}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="badge bg-danger fw-bold fs-6">{c.code}</span>
+                    <span className="badge bg-danger fw-bold fs-6">
+                      {c.code}
+                    </span>
                     {isCurrent ? (
                       <span className="badge bg-success small">✓ Applied</span>
                     ) : isEligible ? (
@@ -103,13 +121,20 @@ const CheckoutCouponDrawer = ({
                         Apply
                       </button>
                     ) : (
-                      <small className="text-danger fw-bold" style={{ fontSize: 11 }}>
-                        Add items worth ₹{(c.minOrder - subtotal).toFixed(2)} more
+                      <small
+                        className="text-danger fw-bold"
+                        style={{ fontSize: 11 }}
+                      >
+                        Add items worth ₹{(c.minOrder - subtotal).toFixed(2)}{" "}
+                        more
                       </small>
                     )}
                   </div>
                   <strong className="d-block text-dark small">{c.title}</strong>
-                  <small className="text-muted d-block" style={{ fontSize: 11 }}>
+                  <small
+                    className="text-muted d-block"
+                    style={{ fontSize: 11 }}
+                  >
                     {c.description} • Minimum order ₹{c.minOrder}
                   </small>
                 </div>

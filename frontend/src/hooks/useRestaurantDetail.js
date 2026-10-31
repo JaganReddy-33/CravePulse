@@ -24,17 +24,30 @@ export function useRestaurantDetail(restaurantId) {
     const fetchRestaurantData = async () => {
       setLoading(true);
       setError(null);
+      setRestaurant(null);
+      setCategories([]);
+      setItems([]);
 
       try {
+        if (!restaurantId || !/^\d+$/.test(String(restaurantId))) {
+          setLoading(false);
+          return;
+        }
+
         // Fetch details from backend API
         const restRes = await api.get(`/restaurants/${restaurantId}`);
         if (!isCancelled && restRes.success && restRes.data) {
           setRestaurant(restRes.data);
+        } else {
+          throw new Error(restRes.message || "Restaurant not found.");
         }
 
         // Fetch menu items from backend API
         const menuRes = await api.get(`/menu/restaurant/${restaurantId}`);
-        if (!isCancelled && menuRes.success && menuRes.data) {
+        if (!menuRes.success || !menuRes.data) {
+          throw new Error(menuRes.message || "Menu is temporarily unavailable.");
+        }
+        if (!isCancelled) {
           const menuItems = Array.isArray(menuRes.data) ? menuRes.data : menuRes.data.items || [];
           setItems(menuItems);
 
@@ -52,7 +65,6 @@ export function useRestaurantDetail(restaurantId) {
         }
       } catch (err) {
         if (!isCancelled) {
-          console.warn('API error fetching restaurant, applying fallback:', err);
           setError(err.message || 'Failed to load restaurant');
         }
       } finally {
@@ -62,9 +74,7 @@ export function useRestaurantDetail(restaurantId) {
       }
     };
 
-    if (restaurantId) {
-      fetchRestaurantData();
-    }
+    fetchRestaurantData();
 
     return () => {
       isCancelled = true;

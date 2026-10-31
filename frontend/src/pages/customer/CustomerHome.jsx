@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -19,8 +14,59 @@ const RESTAURANT_PAGE_SIZE = 20;
 const ALL_CATEGORY = {
   id: "all",
   name: "All",
-  imageUrl:
-    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=240&h=240&fit=crop",
+};
+
+const RestaurantCardImage = ({ src, name, closed, offer }) => {
+  const [failed, setFailed] = useState(!src);
+
+  return (
+    <div
+      className="restaurant-card-img-wrap"
+      style={{ minHeight: 150, background: "#f3eee8" }}
+    >
+      {src && !failed ? (
+        <img
+          src={src}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+          style={closed ? { filter: "grayscale(70%)" } : undefined}
+        />
+      ) : (
+        <div
+          className="h-100 d-flex flex-column align-items-center justify-content-center gap-2 text-secondary"
+          role="img"
+          aria-label={`${name}: restaurant image unavailable`}
+        >
+          <i className="bi bi-shop-window fs-2" aria-hidden="true"></i>
+          <span className="small">Image unavailable</span>
+        </div>
+      )}
+      {!closed && offer && (
+        <div
+          className="restaurant-card-offer-overlay"
+          aria-label={`Offer: ${offer}`}
+        >
+          <span aria-hidden="true">🏷️</span>
+          <span>{offer}</span>
+        </div>
+      )}
+      {closed && (
+        <div
+          className="position-absolute top-0 start-0 w-100 d-flex align-items-center justify-content-center p-2"
+          style={{
+            zIndex: 3,
+            background: "rgba(25, 30, 35, 0.78)",
+            color: "#fff",
+            letterSpacing: ".06em",
+          }}
+        >
+          <span className="small fw-bold">CLOSED</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const CustomerHome = () => {
@@ -196,11 +242,13 @@ const CustomerHome = () => {
       if (res.success && Array.isArray(res.data)) {
         setRestaurants(res.data);
         setTotalRestaurantCount(
-          Number(res.pagination?.totalCount ?? (params.offset + res.data.length)),
+          Number(res.pagination?.totalCount ?? params.offset + res.data.length),
         );
         setFetchError(null);
       } else {
-        setFetchError(res.message || "Unable to load restaurants. Please try again.");
+        setFetchError(
+          res.message || "Unable to load restaurants. Please try again.",
+        );
       }
     } catch (e) {
       if (requestId !== restaurantRequestId.current) return;
@@ -232,7 +280,10 @@ const CustomerHome = () => {
   const filteredAndSortedRestaurants = restaurants;
 
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(totalRestaurantCount / RESTAURANT_PAGE_SIZE));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(totalRestaurantCount / RESTAURANT_PAGE_SIZE),
+    );
     if (!loading && currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, loading, totalRestaurantCount]);
 
@@ -261,6 +312,10 @@ const CustomerHome = () => {
     setLoading(true);
     setCurrentPage(page);
   };
+
+  const featuredRestaurant = restaurants.find(
+    (restaurant) => restaurant.bannerImage,
+  );
 
   return (
     <div className="container-fluid px-3 px-md-4 py-3 customer-content-container">
@@ -430,15 +485,24 @@ const CustomerHome = () => {
                     aria-label={`Select ${cat.name} cuisine`}
                     aria-pressed={isActive}
                   >
-                    <img
-                      className="cuisine-filter-image"
-                      src={cat.imageUrl}
-                      alt=""
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget.hidden = true;
-                      }}
-                    />
+                    {cat.imageUrl ? (
+                      <img
+                        className="cuisine-filter-image"
+                        src={cat.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true;
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="cuisine-filter-image d-flex align-items-center justify-content-center"
+                        aria-hidden="true"
+                      >
+                        <i className="bi bi-grid"></i>
+                      </span>
+                    )}
                     <span className="fw-semibold small text-dark w-100 text-truncate">
                       {cat.name}
                     </span>
@@ -488,7 +552,7 @@ const CustomerHome = () => {
                   type="button"
                   className={`btn btn-sm rounded-pill px-3 py-1 fw-semibold border ${maxDeliveryTime === 30 ? "btn-info text-dark fw-bold" : "btn-light text-secondary"}`}
                   onClick={() => {
-                    setMaxDeliveryTime(maxDeliveryTime === 30 ? null : 30)
+                    setMaxDeliveryTime(maxDeliveryTime === 30 ? null : 30);
                     setCurrentPage(1);
                   }}
                 >
@@ -633,189 +697,206 @@ const CustomerHome = () => {
                   <RestaurantCardSkeleton key={n} />
                 ))}
               </div>
-            ) : fetchError && filteredAndSortedRestaurants.length === 0 ? null : (
-              filteredAndSortedRestaurants.length === 0 ? (
-                <EmptyState
-                  icon="🔍"
-                  title="No restaurants match your filters"
-                  description="Try loosening your dietary filters, price tiers, or search term."
-                  actionText="Reset All Filters"
-                  onAction={handleResetFilters}
-                />
-              ) : (
-                <div className="restaurant-card-grid">
-                  {filteredAndSortedRestaurants.map((rest) => {
-                  const citySlug = (
-                    currentHub?.cityName ||
-                    currentHub?.city?.name ||
-                    currentHub?.city ||
-                    "bangalore"
-                  )
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, "-");
-                  const restSlug = (rest.slug || rest.name || "restaurant")
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, "-");
-                  const localitySlug = (
-                    currentHub?.area ||
-                    currentHub?.name ||
-                    "indiranagar"
-                  )
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, "-");
+            ) : fetchError &&
+              filteredAndSortedRestaurants.length ===
+                0 ? null : filteredAndSortedRestaurants.length === 0 ? (
+              <EmptyState
+                icon="🔍"
+                title="No restaurants match your filters"
+                description="Try loosening your dietary filters, price tiers, or search term."
+                actionText="Reset All Filters"
+                onAction={handleResetFilters}
+              />
+            ) : (
+              <div className="restaurant-card-grid">
+                {filteredAndSortedRestaurants.map((rest) => {
                   const queryParam = search.trim()
                     ? `&query=${encodeURIComponent(search.trim())}`
                     : "";
-                  const swiggyUrl = `/city/${citySlug}/${restSlug}-${localitySlug}-rest${rest.id}?restaurant_id=${rest.id}&source=collection${queryParam}`;
+                  const restaurantUrl = `/restaurant/${encodeURIComponent(rest.id)}?source=collection${queryParam}`;
 
                   const isFav = favorites.includes(rest.id);
                   const isClosed = rest.isOpen === false;
-                  const discountOffer = rest.discountTag || "";
+                  const discountOffer =
+                    typeof rest.discountTag === "string"
+                      ? rest.discountTag.trim()
+                      : "";
+                  const reviewCount = Number(rest.totalReviews);
+                  const rating = Number(rest.rating);
+                  const hasRating =
+                    reviewCount > 0 &&
+                    rest.rating != null &&
+                    rest.rating !== "" &&
+                    Number.isFinite(rating);
+                  const prepMin = Number(rest.prepTimeMin);
+                  const prepMax = Number(rest.prepTimeMax);
+                  const hasPrepMin =
+                    rest.prepTimeMin != null &&
+                    rest.prepTimeMin !== "" &&
+                    Number.isFinite(prepMin) &&
+                    prepMin > 0;
+                  const hasPrepMax =
+                    rest.prepTimeMax != null &&
+                    rest.prepTimeMax !== "" &&
+                    Number.isFinite(prepMax) &&
+                    prepMax > 0;
+                  const prepLabel = hasPrepMin
+                    ? `Prep ${prepMin}${hasPrepMax && prepMax >= prepMin ? `–${prepMax}` : ""} min`
+                    : null;
+                  const costForTwo =
+                    rest.costForTwo != null &&
+                    rest.costForTwo !== "" &&
+                    Number.isFinite(Number(rest.costForTwo))
+                      ? Number(rest.costForTwo)
+                      : null;
+                  const locationLabel =
+                    rest.locality ||
+                    rest.street ||
+                    (typeof rest.address === "string"
+                      ? rest.address.split(",")[0].trim()
+                      : "");
+                  const deliveryFee =
+                    rest.deliveryFee != null &&
+                    rest.deliveryFee !== "" &&
+                    Number.isFinite(Number(rest.deliveryFee))
+                      ? Number(rest.deliveryFee)
+                      : null;
+                  const cuisines = Array.isArray(rest.cuisineTypes)
+                    ? rest.cuisineTypes.join(" · ")
+                    : rest.cuisineTypes;
+                  const distanceKm =
+                    rest.distanceKm != null &&
+                    rest.distanceKm !== "" &&
+                    Number.isFinite(Number(rest.distanceKm))
+                      ? Number(rest.distanceKm)
+                      : null;
 
                   return (
                     <div
                       key={rest.id}
                       className="restaurant-card position-relative"
                     >
-                      <Link to={swiggyUrl} className="text-decoration-none">
+                      <Link
+                        to={restaurantUrl}
+                        className="text-decoration-none d-block h-100"
+                        aria-label={`View ${rest.name} menu`}
+                      >
                         <div
                           className={`card border-0 rounded-4 shadow-sm overflow-hidden h-100 bg-white transition hover-lift ${isClosed ? "opacity-75" : ""}`}
                         >
-                          {/* Image Container with 16:10 Aspect Ratio */}
-                          <div className="restaurant-card-img-wrap">
-                            <img
-                              src={rest.bannerImage || "/food-placeholder.svg"}
-                              alt={rest.name}
-                              loading="lazy"
-                              decoding="async"
-                              style={
-                                isClosed ? { filter: "grayscale(70%)" } : {}
-                              }
-                            />
+                          <RestaurantCardImage
+                            src={rest.bannerImage}
+                            name={rest.name}
+                            closed={isClosed}
+                            offer={discountOffer}
+                          />
 
-                            {/* Offer Banner Gradient Overlay (Swiggy / Zomato Signature) */}
-                            {!isClosed && discountOffer && (
-                              <div className="restaurant-card-offer-overlay">
-                                <span>🏷️</span>
-                                <span>{discountOffer}</span>
-                              </div>
-                            )}
-
-                            {/* Closed Overlay */}
-                            {isClosed && (
-                              <div
-                                className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-60 d-flex flex-column align-items-center justify-content-center text-white p-2 text-center"
-                                style={{ zIndex: 3 }}
-                              >
-                                <span className="badge bg-danger fs-6 px-3 py-1 rounded-pill mb-1 shadow">
-                                  CLOSED
-                                </span>
-                                <small className="fw-semibold text-light">
-                                  Currently unavailable
-                                </small>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Card Content Body */}
-                          <div className="card-body p-3 d-flex flex-column justify-content-between">
-                            <div>
-                              {/* 1. Restaurant Name & Rating */}
-                              <div className="d-flex justify-content-between align-items-start gap-2 mb-1">
+                          <div className="card-body p-3 d-flex flex-column gap-2">
+                            <div className="d-flex justify-content-between align-items-start gap-2">
+                              <div className="min-w-0">
                                 <h6
-                                  className="fw-bold text-dark mb-0 text-truncate"
-                                  title={rest.name}
+                                  className="fw-bold text-dark mb-1"
+                                  style={{
+                                    fontSize: "clamp(1rem, 1.7vw, 1.125rem)",
+                                    lineHeight: 1.25,
+                                    overflowWrap: "anywhere",
+                                  }}
                                 >
                                   {rest.name}
                                 </h6>
-                                <span className="rating-pill-green flex-shrink-0">
-                                  ★{" "}
-                                  {rest.totalReviews > 0 ? rest.rating : "New"}
-                                </span>
+                                {cuisines && (
+                                  <p
+                                    className="text-secondary small mb-0"
+                                    style={{
+                                      display: "-webkit-box",
+                                      WebkitBoxOrient: "vertical",
+                                      WebkitLineClamp: 2,
+                                      overflow: "hidden",
+                                      minHeight: "2.5em",
+                                    }}
+                                  >
+                                    {cuisines}
+                                  </p>
+                                )}
                               </div>
-
-                              {/* 2. ETA • Distance • Cost for Two (Zomato Pattern) */}
-                              <div
-                                className="d-flex align-items-center gap-1 text-muted small mb-1"
-                                style={{ fontSize: 12 }}
-                              >
-                                <span className="fw-semibold text-dark">
-                                  {rest.prepTimeMin
-                                    ? `${rest.prepTimeMin}-${rest.prepTimeMax || rest.prepTimeMin + 10} mins`
-                                    : "Prep time unavailable"}
-                                </span>
-                                <span>•</span>
-                                <span>
-                                  {rest.distanceKm != null
-                                    ? `${Number(rest.distanceKm).toFixed(1)} km`
-                                    : "Choose location"}
-                                </span>
-                                <span>•</span>
-                                <span>
-                                  {rest.costForTwo != null
-                                    ? `INR ${rest.costForTwo} for two`
-                                    : "Cost not provided"}
-                                </span>
-                              </div>
-
-                              {/* 3. Cuisines */}
-                              <p
-                                className="text-secondary small text-truncate mb-2"
-                                style={{ fontSize: 12 }}
-                              >
-                                {rest.cuisineTypes || ""}
-                              </p>
-
-                              {/* 4. Chips Strip: 0% Markup Parity, Veg, Auto-throttled */}
-                              <div className="d-flex align-items-center gap-1 flex-wrap mb-2">
+                              {hasRating ? (
                                 <span
-                                  className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-0 px-2"
-                                  style={{ fontSize: 10 }}
+                                  className="rating-pill-green flex-shrink-0"
+                                  aria-label={`${rating.toFixed(1)} out of 5 from ${reviewCount} reviews`}
                                 >
-                                  ✓ 0% Markup Parity
+                                  <span aria-hidden="true">★</span>{" "}
+                                  {rating.toFixed(1)}{" "}
+                                  <small className="fw-normal">
+                                    ({reviewCount})
+                                  </small>
                                 </span>
-                                {rest.pureVeg && (
-                                  <span
-                                    className="badge bg-success text-white rounded-pill py-0 px-2"
-                                    style={{ fontSize: 10 }}
-                                  >
-                                    🟢 Pure Veg
-                                  </span>
-                                )}
-                                {rest.isAutoThrottled && (
-                                  <span
-                                    className="badge bg-warning text-dark rounded-pill py-0 px-2"
-                                    style={{ fontSize: 10 }}
-                                  >
-                                    ⏳ Busy Kitchen
-                                  </span>
-                                )}
-                              </div>
+                              ) : (
+                                <span className="small text-muted flex-shrink-0">
+                                  No reviews yet
+                                </span>
+                              )}
                             </div>
 
-                            {/* 5. Locality & Free Delivery tag */}
                             <div
-                              className="d-flex justify-content-between align-items-center text-muted small pt-2 border-top"
-                              style={{ fontSize: 11 }}
+                              className="d-flex flex-wrap align-items-center gap-x-3 gap-y-1 text-secondary small"
+                              aria-label="Restaurant details"
+                              style={{
+                                minHeight: "1.5rem",
+                                gap: ".4rem .8rem",
+                              }}
                             >
-                              <span
-                                className="text-truncate"
-                                style={{ maxWidth: "65%" }}
-                              >
-                                <i className="bi bi-geo-alt me-1 text-danger"></i>
-                                {rest.locality ||
-                                  rest.street ||
-                                  (rest.address
-                                    ? rest.address.split(",")[0]
-                                    : `${currentHub.name}, ${currentHub.cityName}`)}
-                              </span>
-                              <span className="text-success fw-bold">
-                                {rest.deliveryFee == null
-                                  ? "Calculated at checkout"
-                                  : rest.deliveryFee === 0
+                              {prepLabel && (
+                                <span className="d-inline-flex align-items-center gap-1">
+                                  <i
+                                    className="bi bi-clock"
+                                    aria-hidden="true"
+                                  ></i>
+                                  {prepLabel}
+                                </span>
+                              )}
+                              {distanceKm != null && (
+                                <span className="d-inline-flex align-items-center gap-1">
+                                  <i
+                                    className="bi bi-geo-alt"
+                                    aria-hidden="true"
+                                  ></i>
+                                  {distanceKm.toFixed(1)} km
+                                </span>
+                              )}
+                              {costForTwo != null && (
+                                <span>
+                                  ₹{costForTwo.toLocaleString("en-IN")} for two
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="d-flex align-items-center gap-2 flex-wrap mt-auto pt-2 border-top">
+                              {locationLabel && (
+                                <span className="text-secondary small d-inline-flex align-items-center gap-1">
+                                  <i
+                                    className="bi bi-geo-alt"
+                                    aria-hidden="true"
+                                  ></i>
+                                  {locationLabel}
+                                </span>
+                              )}
+                              {rest.pureVeg === true && (
+                                <span className="badge bg-success-subtle text-success border border-success-subtle">
+                                  Pure vegetarian
+                                </span>
+                              )}
+                              {rest.isAutoThrottled === true && (
+                                <span className="badge bg-warning-subtle text-dark border border-warning-subtle">
+                                  Busy
+                                </span>
+                              )}
+                              {deliveryFee != null && (
+                                <span className="small fw-semibold ms-auto">
+                                  {deliveryFee === 0
                                     ? "Free delivery"
-                                    : `INR ${rest.deliveryFee} delivery`}
-                              </span>
+                                    : `₹${deliveryFee.toLocaleString("en-IN")} delivery`}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -838,16 +919,17 @@ const CustomerHome = () => {
                       </button>
                     </div>
                   );
-                  })}
-                </div>
-              )
+                })}
+              </div>
             )}
             {totalRestaurantCount > 0 && (
               <Pagination
                 currentPage={currentPage}
                 pageSize={RESTAURANT_PAGE_SIZE}
                 totalCount={totalRestaurantCount}
-                itemLabel={totalRestaurantCount === 1 ? "restaurant" : "restaurants"}
+                itemLabel={
+                  totalRestaurantCount === 1 ? "restaurant" : "restaurants"
+                }
                 onPageChange={handleRestaurantPageChange}
                 isLoading={loading}
               />

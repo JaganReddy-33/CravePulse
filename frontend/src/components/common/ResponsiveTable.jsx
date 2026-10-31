@@ -1,5 +1,5 @@
-import React from 'react';
-import './ResponsiveTable.css';
+import React from "react";
+import "./ResponsiveTable.css";
 
 /**
  * ResponsiveTable:
@@ -18,15 +18,17 @@ const ResponsiveTable = ({
   columns = [],
   data = [],
   keyExtractor = (row, i) => row.id || i,
-  emptyMessage = 'No records found.',
+  emptyMessage = "No records found.",
   darkMode = false,
-  className = '',
+  className = "",
 }) => {
   if (!data || data.length === 0) {
     return (
       <div
         className={`p-4 text-center rounded-4 border ${
-          darkMode ? 'bg-dark text-secondary border-secondary border-opacity-25' : 'bg-light text-muted'
+          darkMode
+            ? "bg-dark text-secondary border-secondary border-opacity-25"
+            : "bg-light text-muted"
         }`}
       >
         <p className="mb-0 small">{emptyMessage}</p>
@@ -37,11 +39,13 @@ const ResponsiveTable = ({
   return (
     <div className={`responsive-table-wrapper ${className}`}>
       {/* Desktop view (>= 768px) */}
-      <table className={`responsive-table responsive-table-desktop ${darkMode ? 'responsive-table--dark' : ''}`}>
+      <table
+        className={`responsive-table responsive-table-desktop ${darkMode ? "responsive-table--dark" : ""}`}
+      >
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key || col.label} className={col.className || ''}>
+              <th key={col.key || col.label} className={col.className || ""}>
                 {col.label}
               </th>
             ))}
@@ -51,8 +55,10 @@ const ResponsiveTable = ({
           {data.map((row, idx) => (
             <tr key={keyExtractor(row, idx)}>
               {columns.map((col) => (
-                <td key={col.key || col.label} className={col.className || ''}>
-                  {col.render ? col.render(row[col.key], row, idx) : row[col.key]}
+                <td key={col.key || col.label} className={col.className || ""}>
+                  {col.render
+                    ? col.render(row[col.key], row, idx)
+                    : row[col.key]}
                 </td>
               ))}
             </tr>
@@ -65,13 +71,18 @@ const ResponsiveTable = ({
         {data.map((row, idx) => (
           <div
             key={keyExtractor(row, idx)}
-            className={`responsive-table-card ${darkMode ? 'responsive-table-card--dark' : ''}`}
+            className={`responsive-table-card ${darkMode ? "responsive-table-card--dark" : ""}`}
           >
             {columns.map((col) => (
-              <div key={col.key || col.label} className="responsive-table-card-row">
+              <div
+                key={col.key || col.label}
+                className="responsive-table-card-row"
+              >
                 <span className="responsive-table-card-label">{col.label}</span>
                 <span className="responsive-table-card-value">
-                  {col.render ? col.render(row[col.key], row, idx) : row[col.key]}
+                  {col.render
+                    ? col.render(row[col.key], row, idx)
+                    : row[col.key]}
                 </span>
               </div>
             ))}
@@ -83,4 +94,3 @@ const ResponsiveTable = ({
 };
 
 export default ResponsiveTable;
-

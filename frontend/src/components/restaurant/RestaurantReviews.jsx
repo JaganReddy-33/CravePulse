@@ -1,21 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import api from '../../services/api';
-import ScrollCarousel from '../common/ScrollCarousel';
+import React, { useState, useEffect, useCallback } from "react";
+import api from "../../services/api";
+import ScrollCarousel from "../common/ScrollCarousel";
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
 /** Returns initials (up to 2 chars) from a full name. */
-const getInitials = (name = '') =>
+const getInitials = (name = "") =>
   name
-    .split(' ')
+    .split(" ")
     .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() || '')
-    .join('');
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("");
 
 /** Deterministic hue from a string for avatar background. */
-const nameHue = (name = '') => {
+const nameHue = (name = "") => {
   let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < name.length; i++)
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return Math.abs(hash) % 360;
 };
 
@@ -23,11 +24,17 @@ const nameHue = (name = '') => {
 const StarRow = ({ rating, size = 14 }) => {
   const stars = [];
   for (let i = 1; i <= 5; i++) {
-    const icon = i <= Math.round(rating) ? '★' : '☆';
+    const icon = i <= Math.round(rating) ? "★" : "☆";
     stars.push(
-      <span key={i} style={{ color: i <= Math.round(rating) ? '#ffa733' : '#d1d5db', fontSize: size }}>
+      <span
+        key={i}
+        style={{
+          color: i <= Math.round(rating) ? "#ffa733" : "#d1d5db",
+          fontSize: size,
+        }}
+      >
         {icon}
-      </span>
+      </span>,
     );
   }
   return <span aria-label={`${rating} out of 5 stars`}>{stars}</span>;
@@ -37,16 +44,31 @@ const StarRow = ({ rating, size = 14 }) => {
 const RatingBar = ({ label, count, total }) => {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: 12 }}>
-      <span className="text-muted" style={{ width: 14, textAlign: 'right' }}>{label}</span>
-      <span style={{ color: '#ffa733', fontSize: 10 }}>★</span>
-      <div className="flex-grow-1 bg-light rounded-pill overflow-hidden" style={{ height: 6 }}>
+    <div
+      className="d-flex align-items-center gap-2 mb-1"
+      style={{ fontSize: 12 }}
+    >
+      <span className="text-muted" style={{ width: 14, textAlign: "right" }}>
+        {label}
+      </span>
+      <span style={{ color: "#ffa733", fontSize: 10 }}>★</span>
+      <div
+        className="flex-grow-1 bg-light rounded-pill overflow-hidden"
+        style={{ height: 6 }}
+      >
         <div
           className="rounded-pill"
-          style={{ height: '100%', width: `${pct}%`, background: '#48c479', transition: 'width 0.4s ease' }}
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            background: "#48c479",
+            transition: "width 0.4s ease",
+          }}
         />
       </div>
-      <span className="text-muted" style={{ width: 28 }}>{count}</span>
+      <span className="text-muted" style={{ width: 28 }}>
+        {count}
+      </span>
     </div>
   );
 };
@@ -55,38 +77,61 @@ const RatingBar = ({ label, count, total }) => {
 const ReviewSkeleton = () => (
   <div
     className="review-card card border-0 rounded-4 p-3 shadow-sm"
-    style={{ width: 'min(86vw, 320px)', minHeight: 160, background: '#f8f9fa', flexShrink: 0 }}
+    style={{
+      width: "min(86vw, 320px)",
+      minHeight: 160,
+      background: "#f8f9fa",
+      flexShrink: 0,
+    }}
     aria-hidden="true"
   >
     <div className="d-flex align-items-center gap-2 mb-3">
-      <div className="rounded-circle bg-secondary bg-opacity-25" style={{ width: 36, height: 36, flexShrink: 0 }} />
+      <div
+        className="rounded-circle bg-secondary bg-opacity-25"
+        style={{ width: 36, height: 36, flexShrink: 0 }}
+      />
       <div style={{ flex: 1 }}>
-        <div className="rounded-pill bg-secondary bg-opacity-25 mb-1" style={{ height: 10, width: '60%' }} />
-        <div className="rounded-pill bg-secondary bg-opacity-25" style={{ height: 8, width: '40%' }} />
+        <div
+          className="rounded-pill bg-secondary bg-opacity-25 mb-1"
+          style={{ height: 10, width: "60%" }}
+        />
+        <div
+          className="rounded-pill bg-secondary bg-opacity-25"
+          style={{ height: 8, width: "40%" }}
+        />
       </div>
     </div>
-    <div className="rounded-pill bg-secondary bg-opacity-25 mb-2" style={{ height: 8, width: '80%' }} />
-    <div className="rounded-pill bg-secondary bg-opacity-25 mb-2" style={{ height: 8, width: '100%' }} />
-    <div className="rounded-pill bg-secondary bg-opacity-25" style={{ height: 8, width: '65%' }} />
+    <div
+      className="rounded-pill bg-secondary bg-opacity-25 mb-2"
+      style={{ height: 8, width: "80%" }}
+    />
+    <div
+      className="rounded-pill bg-secondary bg-opacity-25 mb-2"
+      style={{ height: 8, width: "100%" }}
+    />
+    <div
+      className="rounded-pill bg-secondary bg-opacity-25"
+      style={{ height: 8, width: "65%" }}
+    />
   </div>
 );
 
 /* ── Review card ─────────────────────────────────────────────────────────── */
 const ReviewCard = ({ rev }) => {
   const [expanded, setExpanded] = useState(false);
-  const hue = nameHue(rev.customerName || rev.userName || 'User');
-  const initials = getInitials(rev.customerName || rev.userName || '?');
-  const comment = rev.comment || rev.reviewText || '';
+  const hue = nameHue(rev.customerName || rev.userName || "User");
+  const initials = getInitials(rev.customerName || rev.userName || "?");
+  const comment = rev.comment || rev.reviewText || "";
   const isLong = comment.length > 160;
 
   return (
     <div
       className="review-card card border-0 rounded-4 p-3 shadow-sm bg-white"
       style={{
-        width: 'min(86vw, 320px)',
+        width: "min(86vw, 320px)",
         flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
       }}
       role="article"
       aria-label={`Review by ${rev.customerName || rev.userName}`}
@@ -106,17 +151,25 @@ const ReviewCard = ({ rev }) => {
           {initials}
         </div>
         <div className="flex-grow-1 min-w-0">
-          <div className="fw-semibold text-dark text-truncate" style={{ fontSize: 14 }}>
-            {rev.customerName || rev.userName || 'Anonymous'}
+          <div
+            className="fw-semibold text-dark text-truncate"
+            style={{ fontSize: 14 }}
+          >
+            {rev.customerName || rev.userName || "Anonymous"}
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <span className="text-muted" style={{ fontSize: 11 }}>
-              {rev.date || rev.createdAt || ''}
+              {rev.date || rev.createdAt || ""}
             </span>
             {(rev.verifiedOrder || rev.verified) && (
               <span
                 className="badge rounded-pill px-2 py-0"
-                style={{ fontSize: 10, background: '#e6f9f0', color: '#059669', border: '1px solid #a7f3d0' }}
+                style={{
+                  fontSize: 10,
+                  background: "#e6f9f0",
+                  color: "#059669",
+                  border: "1px solid #a7f3d0",
+                }}
               >
                 ✓ Verified order
               </span>
@@ -135,10 +188,10 @@ const ReviewCard = ({ rev }) => {
         style={{
           fontSize: 13,
           lineHeight: 1.55,
-          display: '-webkit-box',
-          WebkitBoxOrient: 'vertical',
-          WebkitLineClamp: expanded ? 'unset' : 4,
-          overflow: 'hidden',
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: expanded ? "unset" : 4,
+          overflow: "hidden",
         }}
       >
         {comment}
@@ -150,7 +203,7 @@ const ReviewCard = ({ rev }) => {
           onClick={() => setExpanded((x) => !x)}
           aria-expanded={expanded}
         >
-          {expanded ? 'Show less' : 'Read more'}
+          {expanded ? "Show less" : "Read more"}
         </button>
       )}
 
@@ -158,9 +211,18 @@ const ReviewCard = ({ rev }) => {
       {rev.reply && (
         <div
           className="mt-2 p-2 rounded-3"
-          style={{ background: '#f8f9fa', borderLeft: '3px solid var(--c-primary)', fontSize: 12 }}
+          style={{
+            background: "#f8f9fa",
+            borderLeft: "3px solid var(--c-primary)",
+            fontSize: 12,
+          }}
         >
-          <strong className="d-block mb-1" style={{ fontSize: 11, color: 'var(--c-primary)' }}>Restaurant replied:</strong>
+          <strong
+            className="d-block mb-1"
+            style={{ fontSize: 11, color: "var(--c-primary)" }}
+          >
+            Restaurant replied:
+          </strong>
           <span className="text-secondary">{rev.reply}</span>
         </div>
       )}
@@ -175,11 +237,15 @@ const ReviewCard = ({ rev }) => {
  *   rating        – fallback display rating (from restaurant object)
  *   totalReviews  – fallback count
  */
-const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: propTotal }) => {
+const RestaurantReviews = ({
+  restaurantId,
+  rating: propRating,
+  totalReviews: propTotal,
+}) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sort, setSort] = useState('recent');
+  const [sort, setSort] = useState("recent");
 
   const fetchReviews = useCallback(async () => {
     if (!restaurantId) {
@@ -189,7 +255,9 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/reviews/restaurant/${restaurantId}`, { params: { limit: 50 } });
+      const res = await api.get(`/reviews/restaurant/${restaurantId}`, {
+        params: { limit: 50 },
+      });
       if (res.success && Array.isArray(res.data)) {
         setReviews(res.data);
       } else {
@@ -197,8 +265,8 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
         setReviews([]);
       }
     } catch (e) {
-      console.error('Failed to load reviews', e);
-      setError('Could not load reviews. Please try again.');
+      console.error("Failed to load reviews", e);
+      setError("Could not load reviews. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -211,8 +279,10 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
   /* ── Computed values ── */
   const avgRating =
     reviews.length > 0
-      ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
-      : propRating || '—';
+      ? (
+          reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length
+        ).toFixed(1)
+      : propRating || "—";
 
   const totalCount = reviews.length > 0 ? reviews.length : propTotal || 0;
 
@@ -224,8 +294,8 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
 
   // Sort
   const sortedReviews = [...reviews].sort((a, b) => {
-    if (sort === 'highest') return b.rating - a.rating;
-    if (sort === 'lowest') return a.rating - b.rating;
+    if (sort === "highest") return b.rating - a.rating;
+    if (sort === "lowest") return a.rating - b.rating;
     // most recent by id or createdAt
     return (b.id || 0) - (a.id || 0);
   });
@@ -236,22 +306,30 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
       {/* Section header */}
       <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
         <div>
-          <h4 className="fw-extrabold text-dark mb-1" style={{ fontSize: 'clamp(1.1rem,2vw,1.35rem)' }}>
+          <h4
+            className="fw-extrabold text-dark mb-1"
+            style={{ fontSize: "clamp(1.1rem,2vw,1.35rem)" }}
+          >
             Customer Reviews &amp; Ratings
           </h4>
           {reviews.length > 0 ? (
             <div className="d-flex align-items-center gap-2 flex-wrap">
               <span
                 className="badge px-2 py-1 rounded-pill fw-bold"
-                style={{ background: '#48c479', color: '#fff', fontSize: 13 }}
+                style={{ background: "#48c479", color: "#fff", fontSize: 13 }}
               >
                 ★ {avgRating}
               </span>
-              <span className="text-muted small">{totalCount} verified reviews</span>
+              <span className="text-muted small">
+                {totalCount} verified reviews
+              </span>
             </div>
           ) : (
-            !loading && !error && (
-              <span className="text-muted small">Be the first to review after your order!</span>
+            !loading &&
+            !error && (
+              <span className="text-muted small">
+                Be the first to review after your order!
+              </span>
             )
           )}
         </div>
@@ -259,7 +337,10 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
         {/* Sort control */}
         {reviews.length > 1 && (
           <div className="d-flex align-items-center gap-2">
-            <label htmlFor="reviewSortSelect" className="small text-muted fw-semibold text-nowrap">
+            <label
+              htmlFor="reviewSortSelect"
+              className="small text-muted fw-semibold text-nowrap"
+            >
               Sort:
             </label>
             <select
@@ -282,7 +363,10 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
         <div className="row g-4 mb-5 align-items-center">
           {/* Big average */}
           <div className="col-auto text-center">
-            <div className="fw-extrabold" style={{ fontSize: 52, lineHeight: 1, color: '#0f172a' }}>
+            <div
+              className="fw-extrabold"
+              style={{ fontSize: 52, lineHeight: 1, color: "#0f172a" }}
+            >
               {avgRating}
             </div>
             <StarRow rating={Number(avgRating)} size={18} />
@@ -291,7 +375,12 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
           {/* Bars */}
           <div className="col">
             {distribution.map(({ star, count }) => (
-              <RatingBar key={star} label={star} count={count} total={reviews.length} />
+              <RatingBar
+                key={star}
+                label={star}
+                count={count}
+                total={reviews.length}
+              />
             ))}
           </div>
         </div>
@@ -323,11 +412,13 @@ const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: pro
       {!loading && !error && reviews.length === 0 && (
         <div
           className="text-center py-5 rounded-4"
-          style={{ background: '#f8f9fa', border: '1px dashed #dee2e6' }}
+          style={{ background: "#f8f9fa", border: "1px dashed #dee2e6" }}
         >
           <div className="fs-2 mb-2">💬</div>
           <h6 className="fw-bold text-dark mb-1">No reviews yet</h6>
-          <p className="text-muted small mb-0">Be the first to share your experience after your order!</p>
+          <p className="text-muted small mb-0">
+            Be the first to share your experience after your order!
+          </p>
         </div>
       )}
 

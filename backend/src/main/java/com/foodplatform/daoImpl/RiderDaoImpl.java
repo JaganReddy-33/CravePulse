@@ -286,7 +286,7 @@ public class RiderDaoImpl implements RiderDao {
                 "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
                 "u.full_name AS cust_name, u.phone AS cust_phone, " +
                 "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
                 "FROM delivery_dispatches d " +
                 "JOIN orders o ON d.order_id = o.id " +
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
@@ -362,7 +362,7 @@ public class RiderDaoImpl implements RiderDao {
                 "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
                 "u.full_name AS cust_name, u.phone AS cust_phone, " +
                 "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
                 "FROM delivery_dispatches d " +
                 "JOIN orders o ON d.order_id = o.id " +
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
@@ -393,7 +393,7 @@ public class RiderDaoImpl implements RiderDao {
                 "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
                 "u.full_name AS cust_name, u.phone AS cust_phone, " +
                 "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
                 "FROM delivery_dispatches d " +
                 "JOIN orders o ON d.order_id = o.id " +
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
@@ -582,7 +582,7 @@ public class RiderDaoImpl implements RiderDao {
                 "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
                 "u.full_name AS cust_name, u.phone AS cust_phone, " +
                 "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng " +
+                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
                 "FROM delivery_dispatches d " +
                 "JOIN orders o ON d.order_id = o.id " +
                 "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
@@ -646,6 +646,7 @@ public class RiderDaoImpl implements RiderDao {
             d.setCustomerAddress(rs.getString("cust_addr"));
             d.setCustomerLat(rs.getDouble("cust_lat"));
             d.setCustomerLng(rs.getDouble("cust_lng"));
+            d.setCustomerMapsUrl(rs.getString("cust_maps_url"));
         } catch (SQLException ignored) {}
 
         return d;

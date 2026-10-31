@@ -38,7 +38,7 @@ const RiderLayout = () => {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false); 
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [shiftDuration, setShiftDuration] = useState("?");
   const location = useLocation();
   const navigate = useNavigate();
@@ -246,7 +246,6 @@ const RiderLayout = () => {
               </div>
             </div> */}
 
-
             {/* Captain Avatar Menu */}
             <div className="position-relative">
               <button
@@ -406,5 +405,3 @@ const RiderLayout = () => {
 };
 
 export default RiderLayout;
-
-

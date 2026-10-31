@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
-import CheckoutAddressSection from '../../components/checkout/CheckoutAddressSection';
-import CheckoutOrderSummary from '../../components/checkout/CheckoutOrderSummary';
-import CheckoutTipSelector from '../../components/checkout/CheckoutTipSelector';
-import CheckoutBillDetails from '../../components/checkout/CheckoutBillDetails';
-import CheckoutPaymentMethods from '../../components/checkout/CheckoutPaymentMethods';
-import CheckoutCouponDrawer from '../../components/checkout/CheckoutCouponDrawer';
-import PriceBreakdownModal from '../../components/PriceBreakdownModal';
-import useCheckout from '../../hooks/useCheckout';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import CheckoutAddressSection from "../../components/checkout/CheckoutAddressSection";
+import CheckoutOrderSummary from "../../components/checkout/CheckoutOrderSummary";
+import CheckoutTipSelector from "../../components/checkout/CheckoutTipSelector";
+import CheckoutBillDetails from "../../components/checkout/CheckoutBillDetails";
+import CheckoutPaymentMethods from "../../components/checkout/CheckoutPaymentMethods";
+import CheckoutCouponDrawer from "../../components/checkout/CheckoutCouponDrawer";
+import PriceBreakdownModal from "../../components/PriceBreakdownModal";
+import useCheckout from "../../hooks/useCheckout";
 
 /**
  * CheckoutPage: Focused, mobile-first checkout container responsive down to 360px viewport.
@@ -18,6 +18,8 @@ const CheckoutPage = () => {
   const {
     cart,
     billDetails,
+    calculating,
+    couponError,
     couponCode,
     setCouponCode,
     riderTip,
@@ -34,8 +36,11 @@ const CheckoutPage = () => {
 
   const {
     addresses,
+    addressesLoading,
     selectedAddressId,
     setSelectedAddressId,
+    selectedAddress,
+    hasValidQuote,
     handleSaveAddress,
     paymentMode,
     setPaymentMode,
@@ -47,7 +52,15 @@ const CheckoutPage = () => {
     codMaxLimit,
     onlineAvailable,
     handlePlaceOrder,
-  } = useCheckout({ cart, billDetails, couponCode, riderTip, clearCart, user, setDeliveryCoordinates });
+  } = useCheckout({
+    cart,
+    billDetails,
+    couponCode,
+    riderTip,
+    clearCart,
+    user,
+    setDeliveryCoordinates,
+  });
 
   // Empty cart fallback
   if (!cart.restaurantId || cart.items.length === 0) {
@@ -56,12 +69,16 @@ const CheckoutPage = () => {
         <div className="fs-1 mb-3">🛒</div>
         <h3 className="fw-extrabold text-dark">Your Bag is Empty</h3>
         <p className="text-muted small mb-4">
-          Explore our gourmet kitchen menus and add delicious dishes before checking out.
+          Explore our gourmet kitchen menus and add delicious dishes before
+          checking out.
         </p>
         <Link
           to="/"
           className="btn btn-primary rounded-pill px-4 py-2 fw-bold touch-target shadow hover-lift"
-          style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+          style={{
+            background: "var(--c-primary)",
+            borderColor: "var(--c-primary)",
+          }}
         >
           Browse Restaurants
         </Link>
@@ -70,12 +87,18 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="container py-4 customer-content-container" style={{ maxWidth: 1040 }}>
+    <div
+      className="container py-4 customer-content-container"
+      style={{ maxWidth: 1040 }}
+    >
       {/* Checkout Page Header */}
       <div className="mb-4">
-        <h2 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">Secure Checkout</h2>
+        <h2 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">
+          Secure Checkout
+        </h2>
         <p className="text-muted small mb-0">
-          Radical price parity: dine-in physical menu prices guaranteed, 0% markup.
+          Radical price parity: dine-in physical menu prices guaranteed, 0%
+          markup.
         </p>
       </div>
 
@@ -96,6 +119,24 @@ const CheckoutPage = () => {
             onSelectAddress={setSelectedAddressId}
             onSaveAddress={handleSaveAddress}
           />
+          {addressesLoading && (
+            <p className="small text-muted" role="status">
+              Loading your saved delivery addresses…
+            </p>
+          )}
+          {couponError && (
+            <div
+              className="alert alert-warning rounded-3 py-2 small"
+              role="status"
+            >
+              {couponError}
+            </div>
+          )}
+          {calculating && (
+            <p className="small text-muted" role="status">
+              Calculating a fresh delivery fee and order total…
+            </p>
+          )}
 
           {/* 2. Order Items Review with Steppers */}
           <CheckoutOrderSummary
@@ -136,11 +177,22 @@ const CheckoutPage = () => {
             <button
               type="button"
               className="btn btn-primary w-100 py-3 rounded-pill fw-bold fs-5 shadow-lg d-flex justify-content-between align-items-center px-4 touch-target hover-lift transition mb-3 text-white"
-              style={{ background: 'var(--c-primary)', borderColor: 'var(--c-primary)' }}
+              style={{
+                background: "var(--c-primary)",
+                borderColor: "var(--c-primary)",
+              }}
               onClick={handlePlaceOrder}
-              disabled={submitting || !billDetails || !selectedAddressId}
+              disabled={
+                submitting ||
+                addressesLoading ||
+                calculating ||
+                !selectedAddress ||
+                !hasValidQuote
+              }
             >
-              <span>{submitting ? 'Confirming Order...' : 'Place Secure Order'}</span>
+              <span>
+                {submitting ? "Confirming Order..." : "Place Secure Order"}
+              </span>
               <span className="fs-5">₹{billDetails?.totalAmount || 0} →</span>
             </button>
 
@@ -151,7 +203,8 @@ const CheckoutPage = () => {
                 CravePulse Fair Dining Guarantee
               </div>
               <small className="text-muted d-block" style={{ fontSize: 11 }}>
-                Zero inflated prices • 100% tip pass-through • Live GPS captain radar
+                Zero inflated prices • 100% tip pass-through • Live GPS captain
+                radar
               </small>
             </div>
           </div>

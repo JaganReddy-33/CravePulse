@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
 const ParticleBackground = () => {
   const canvasRef = useRef(null);
@@ -6,7 +6,7 @@ const ParticleBackground = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     let animationFrameId;
 
     let width = (canvas.width = window.innerWidth);
@@ -16,9 +16,9 @@ const ParticleBackground = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
-    const emojis = ['🍕', '🍔', '🍣', '🥑', '🥟', '🍜', '🍩', '🌮', '🥗'];
+    const emojis = ["🍕", "🍔", "🍣", "🥑", "🥟", "🍜", "🍩", "🌮", "🥗"];
     const particles = Array.from({ length: 18 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -49,8 +49,8 @@ const ParticleBackground = () => {
         ctx.rotate(p.rotation);
         ctx.globalAlpha = p.opacity;
         ctx.font = `${p.size}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(p.emoji, 0, 0);
         ctx.restore();
       });
@@ -61,7 +61,7 @@ const ParticleBackground = () => {
     render();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -70,12 +70,12 @@ const ParticleBackground = () => {
     <canvas
       ref={canvasRef}
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
         zIndex: 0,
       }}
     />
