@@ -365,6 +365,10 @@ public class OrderServlet extends BaseServlet {
             try {
                 Order updated = stateMachine.transition(orderId, targetStatus, userId, role, deliveryOtp, reason, lat, lng);
 
+                if ("READY".equals(targetStatus)) {
+                    dispatchService.scheduleDispatch(orderId, 0);
+                }
+
                 // Auto-refund trigger on cancellation or rejection
                 if ("CANCELLED".equals(targetStatus) || "REJECTED".equals(targetStatus)) {
                     try {

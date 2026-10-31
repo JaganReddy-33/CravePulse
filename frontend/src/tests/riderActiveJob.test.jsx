@@ -2,13 +2,25 @@ import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import api from "../services/api";
+import realtime from "../services/websocket";
 import RiderActiveJob from "../pages/rider/RiderActiveJob";
+
+const { realtimeHandlers } = vi.hoisted(() => ({
+  realtimeHandlers: new Map(),
+}));
 
 vi.mock("../services/api", () => ({
   default: { get: vi.fn(), post: vi.fn() },
 }));
 vi.mock("../services/websocket", () => ({
-  default: { on: () => () => {} },
+  default: {
+    on: vi.fn((event, callback) => {
+      realtimeHandlers.set(event, callback);
+      return () => realtimeHandlers.delete(event);
+    }),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+  },
 }));
 vi.mock("../components/LiveMap", () => ({
   default: () => <div data-testid="live-map" />,
@@ -24,7 +36,7 @@ describe("rider active delivery workflow", () => {
       if (url === "/rider/profile") {
         return Promise.resolve({
           success: true,
-          data: { online: true, riderName: "Rider", totalDeliveries: 12 },
+          data: { id: 12, online: true, riderName: "Rider", totalDeliveries: 12 },
         });
       }
       if (url === "/rider/active-job") {
@@ -104,5 +116,44 @@ describe("rider active delivery workflow", () => {
       status: "DELIVERED",
       deliveryOtp: "1234",
     });
+  });
+
+  it("subscribes to the rider channel and displays an incoming offer without the empty state", async () => {
+    api.get.mockImplementation((url) => {
+      if (url === "/rider/profile") {
+        return Promise.resolve({ success: true, data: { id: 12, online: true } });
+      }
+      if (url === "/rider/active-job") {
+        return Promise.resolve({ success: true, data: null });
+      }
+      if (url === "/rider/offers") {
+        return Promise.resolve({ success: true, data: [] });
+      }
+      return Promise.resolve({ success: true, data: {} });
+    });
+
+    render(<RiderActiveJob />);
+
+    await waitFor(() => expect(realtime.subscribe).toHaveBeenCalledWith("rider:12"));
+    await waitFor(() => expect(realtimeHandlers.has("rider_job_offer")).toBe(true));
+    realtimeHandlers.get("rider_job_offer")({
+      dispatchId: 91,
+      orderId: 71,
+      orderNumber: "CP-71",
+      restaurantName: "Kitchen",
+      restaurantLat: 12.9,
+      restaurantLng: 77.6,
+      customerLat: 12.91,
+      customerLng: 77.61,
+      totalEarning: 85,
+    });
+
+    expect(await screen.findByText(/New delivery offer/)).toBeTruthy();
+    expect(screen.getByText(/CP-71/)).toBeTruthy();
+    expect(screen.queryByText("No active delivery")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Accept delivery" }));
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith("/rider/91/accept", {}),
+    );
   });
 });

@@ -11,6 +11,7 @@ const RiderActiveJob = () => {
   const [gpsCoords, setGpsCoords] = useState(null);
   const [dispatchError, setDispatchError] = useState("");
   const [activeJobOffer, setActiveJobOffer] = useState(null);
+  const [riderProfileId, setRiderProfileId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(false);
   const [milestoneUpdating, setMilestoneUpdating] = useState(false);
@@ -43,6 +44,7 @@ const RiderActiveJob = () => {
       const pRes = await api.get("/rider/profile");
       if (pRes.success) {
         setProfile(pRes.data);
+        setRiderProfileId(pRes.data?.id ?? null);
         setIsOnline(Boolean(pRes.data?.online ?? pRes.data?.isOnline));
       }
 
@@ -102,6 +104,10 @@ const RiderActiveJob = () => {
   }, []);
 
   useEffect(() => {
+    if (!riderProfileId) return undefined;
+
+    const channel = `rider:${riderProfileId}`;
+    realtime.subscribe(channel);
     const loadOffers = () =>
       api
         .get("/rider/offers")
@@ -109,17 +115,27 @@ const RiderActiveJob = () => {
           if (res.success) setActiveJobOffer(res.data?.[0] || null);
         })
         .catch((err) => setDispatchError(err.message));
+    const onJobOffer = (offer) => {
+      if (offer && (offer.dispatchId != null || offer.id != null)) {
+        setActiveJobOffer({
+          ...offer,
+          id: offer.id ?? offer.dispatchId,
+        });
+      }
+    };
+
     loadOffers();
-    const off = realtime.on("rider_job_offer", loadOffers);
+    const off = realtime.on("rider_job_offer", onJobOffer);
     const timer = setInterval(() => {
       loadOffers();
       fetchActiveJob();
     }, 15000);
     return () => {
       off();
+      realtime.unsubscribe(channel);
       clearInterval(timer);
     };
-  }, []);
+  }, [riderProfileId]);
 
   // Wait time counter
   useEffect(() => {
@@ -353,7 +369,7 @@ const RiderActiveJob = () => {
         <div className="card p-4 mb-4">
           <h2 className="h5">New delivery offer</h2>
           <p>
-            {activeJobOffer.orderNumber || `Order ${activeJobOffer.orderId}`} ?
+            {activeJobOffer.orderNumber || `Order ${activeJobOffer.orderId}`} ·
             Earning: {Number(activeJobOffer.totalEarning || 0).toFixed(2)} INR
           </p>
           <div className="d-flex flex-wrap gap-2">
@@ -1057,7 +1073,7 @@ const RiderActiveJob = () => {
             </div>
           </div>
         </div>
-      ) : !loading ? (
+      ) : !loading && !activeJobOffer ? (
         /* Standby Radar State */
         <div
           className="p-5 rounded-4 shadow-2xl text-center text-white mx-auto my-5"

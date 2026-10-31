@@ -112,7 +112,7 @@ public class DispatchService {
         }
     }
 
-        public void scheduleDispatch(long orderId, long delayMillis) {
+    public void scheduleDispatch(long orderId, long delayMillis) {
         dispatchScheduler.schedule(() -> {
             try {
                 dispatchOrder(orderId);
@@ -216,12 +216,17 @@ public class DispatchService {
 
                 // 4. Real-Time alert to rider
                 Map<String, Object> offerPayload = new java.util.HashMap<>();
+                offerPayload.put("id", dispatchId);
                 offerPayload.put("dispatchId", dispatchId);
                 offerPayload.put("orderId", orderId);
                 offerPayload.put("orderNumber", order.getOrderNumber());
                 offerPayload.put("restaurantName", restaurant.getName());
                 offerPayload.put("restaurantAddress", restaurant.getAddress());
+                offerPayload.put("restaurantLat", restaurant.getLatitude());
+                offerPayload.put("restaurantLng", restaurant.getLongitude());
                 offerPayload.put("customerAddress", order.getDeliveryAddressText() != null ? order.getDeliveryAddressText() : "");
+                offerPayload.put("customerLat", order.getDeliveryLat());
+                offerPayload.put("customerLng", order.getDeliveryLng());
                 offerPayload.put("distanceKm", Math.round(deliveryDistance * 10.0) / 10.0);
                 offerPayload.put("basePay", basePay);
                 offerPayload.put("distancePay", distancePay);
