@@ -193,7 +193,8 @@ try {
 ```
 
 ### 4.3 Unique Constraints & Single Assignment Guarantees
-- A unique constraint on `delivery_dispatches(order_id, status)` prevents multiple active assignments for the same delivery task.
+- Order-row locking serializes dispatch attempts; the dispatcher checks for an existing `OFFERED` row before creating another, so only one rider receives an order offer at a time. Rider availability is reserved in the same transaction and released after rejection or timeout.
+- Offers go to the nearest eligible rider. A rejection triggers the next candidate immediately; an unanswered offer is marked `TIMED_OUT` after the configured accept window and then retried. Search radius expands progressively up to the configured maximum. Previously tried riders are skipped while other candidates are available and may be reconsidered after a five-minute cooldown if the eligible pool is exhausted.
 - A unique index on `payments(idempotency_key)` guarantees that duplicate webhook callbacks from payment gateways never trigger multiple order creations or double refunds.
 
 ### 4.4 Atomic Balance Deltas

@@ -189,7 +189,7 @@ CravePulse/
 | **Rider Portal** | Fair-Pay Dispatch Protocol | Upfront transparent earning breakdown before accepting a job |
 | **Rider Portal** | Wait-Time Compensation | ₹2/min credited for restaurant delays > 8 minutes |
 | **Rider Portal** | COD Cash Settlement Ledger | Running cash-in-hand tracking and platform deposit records |
-| **Rider Portal** | Progressive Radius Dispatch | 3.5 km → 6.5 km → 10 km → 15 km retry expansion |
+| **Rider Portal** | Sequential Rider Dispatch | Nearest eligible rider first; timeout/rejection advances the offer, with progressive radius expansion |
 | **Admin Console** | Live Fleet & Order Radar | Real-time GPS map of all online riders and active dispatches |
 | **Admin Console** | User Directory & Suspension | Account moderation + fraud risk escalation counters |
 | **Admin Console** | Rule-Based Dispute Engine | Auto-refund caps, 2-hour window rule, fraud flag evaluation |

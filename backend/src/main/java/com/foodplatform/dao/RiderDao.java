@@ -20,7 +20,17 @@ public interface RiderDao {
 
     List<Long> getExcludedRiderIdsForOrder(long orderId);
 
+    List<Long> getRidersOnDispatchCooldown(long orderId);
+
     List<DeliveryDispatch> getTimedOutOffers(int timeoutSeconds);
+
+    boolean hasActiveOfferForOrder(Connection conn, long orderId) throws SQLException;
+
+    boolean expireDispatchOffer(Connection conn, long dispatchId, int timeoutSeconds, String reason) throws SQLException;
+
+    boolean reserveRiderForDispatch(Connection conn, long riderId) throws SQLException;
+
+    void releaseRiderDispatchReservation(Connection conn, long riderId) throws SQLException;
 
     List<DeliveryDispatch> getActiveOffersForRider(long riderId);
 

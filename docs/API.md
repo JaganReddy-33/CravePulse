@@ -549,7 +549,7 @@ Broadcasted to `restaurant:{restaurantId}`.
 ```
 
 #### 5. `rider_job_offer`
-Broadcasted to `rider:{riderId}` during automated dispatch search sweeps.
+Broadcasted to `rider:{riderId}` when that rider is selected for an order. Only one rider is offered an order at a time. A rejection advances to the next eligible rider immediately; an unanswered offer is retried after the configured acceptance window. Candidates are selected by distance within a progressively expanded search radius.
 ```json
 {
   "event": "rider_job_offer",
@@ -564,7 +564,17 @@ Broadcasted to `rider:{riderId}` during automated dispatch search sweeps.
 }
 ```
 
-#### 6. `notification`
+#### 6. `rider_offer_timed_out`
+Broadcasted to the rider whose offer expired. The backend then retries the order with the next eligible rider.
+```json
+{
+  "event": "rider_offer_timed_out",
+  "dispatchId": 108,
+  "orderId": 501
+}
+```
+
+#### 7. `notification`
 Broadcasted to `user:{userId}` for announcements, refunds, and milestones.
 ```json
 {

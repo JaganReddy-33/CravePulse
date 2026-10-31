@@ -89,12 +89,32 @@ public class DispatchService {
         int timeoutSeconds = AppProperties.getRiderAcceptTimeoutSeconds();
         List<DeliveryDispatch> timedOut = riderDao.getTimedOutOffers(timeoutSeconds);
         for (DeliveryDispatch d : timedOut) {
+            boolean expired = false;
             try (Connection conn = DatabaseConfig.getConnection()) {
-                riderDao.updateDispatchStatus(conn, d.getId(), "TIMED_OUT", "Rider accept SLA window expired (" + timeoutSeconds + "s)");
-                logger.info("Offer {} for order {} timed out after {}s", d.getId(), d.getOrderId(), timeoutSeconds);
+                conn.setAutoCommit(false);
+                try {
+                    boolean transitioned = riderDao.expireDispatchOffer(conn, d.getId(), timeoutSeconds,
+                            "Rider accept SLA window expired (" + timeoutSeconds + "s)");
+                    if (transitioned) {
+                        riderDao.releaseRiderDispatchReservation(conn, d.getRiderId());
+                        conn.commit();
+                        expired = true;
+                    } else {
+                        conn.rollback();
+                    }
+                } catch (SQLException | RuntimeException e) {
+                    conn.rollback();
+                    throw e;
+                } finally {
+                    conn.setAutoCommit(true);
+                }
             } catch (SQLException e) {
                 logger.error("Error timing out dispatch offer {}", d.getId(), e);
             }
+            if (!expired) {
+                continue;
+            }
+            logger.info("Offer {} for order {} timed out after {}s", d.getId(), d.getOrderId(), timeoutSeconds);
             if (registry != null) {
                 registry.broadcastToRider(d.getRiderId(), "rider_offer_timed_out", Map.of(
                         "dispatchId", d.getId(),
@@ -140,7 +160,7 @@ public class DispatchService {
         double restLat = restaurant.getLatitude().doubleValue();
         double restLng = restaurant.getLongitude().doubleValue();
 
-        // 1. Skip riders who already declined or timed out for this order
+        // Skip riders who already declined or timed out for this order.
         List<Long> excludedRiders = riderDao.getExcludedRiderIdsForOrder(orderId);
         int attempts = excludedRiders.size();
 
@@ -164,6 +184,13 @@ public class DispatchService {
             candidates = riderDao.findNearestAvailableRidersExcluding(restLat, restLng, maxRadius, 5, excludedRiders);
         }
 
+        if (candidates.isEmpty() && !excludedRiders.isEmpty()) {
+            List<Long> coolingDownRiders = riderDao.getRidersOnDispatchCooldown(orderId);
+            candidates = riderDao.findNearestAvailableRidersExcluding(
+                    restLat, restLng, maxRadius, 5, coolingDownRiders);
+            searchRadius = maxRadius;
+        }
+
         if (candidates.isEmpty()) {
             logger.warn("No available riders found for order {} within {} km (attempt #{})", orderId, searchRadius, attempts + 1);
             if (attempts >= 3) {
@@ -184,9 +211,6 @@ public class DispatchService {
             return false;
         }
 
-        // Pick top candidate
-        RiderProfile chosenRider = candidates.get(0);
-
         // 3. Upfront Fair-Pay calculation with 100% tip pass-through
         double deliveryDistance = order.getDeliveryLat() != null && order.getRestaurantLat() != null ?
                 PricingService.calculateHaversineDistance(order.getRestaurantLat(), order.getRestaurantLng(), order.getDeliveryLat(), order.getDeliveryLng()) : 2.5;
@@ -199,19 +223,45 @@ public class DispatchService {
         BigDecimal tip = order.getTipAmount() != null ? order.getTipAmount() : BigDecimal.ZERO;
         BigDecimal totalEarning = basePay.add(distancePay).add(surgePay).add(tip);
 
-        DeliveryDispatch dispatch = new DeliveryDispatch();
-        dispatch.setOrderId(orderId);
-        dispatch.setRiderId(chosenRider.getId());
-        dispatch.setBasePay(basePay);
-        dispatch.setDistancePay(distancePay);
-        dispatch.setSurgePay(surgePay);
-        dispatch.setTipAmount(tip);
-        dispatch.setTotalEarning(totalEarning);
-
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                Order lockedOrder = orderDao.findWithLock(conn, orderId);
+                if (lockedOrder == null || lockedOrder.getRiderId() != null
+                        || "CANCELLED".equals(lockedOrder.getStatus())
+                        || "DELIVERED".equals(lockedOrder.getStatus())
+                        || "REJECTED".equals(lockedOrder.getStatus())
+                        || riderDao.hasActiveOfferForOrder(conn, orderId)) {
+                    conn.rollback();
+                    return false;
+                }
+                order = lockedOrder;
+
+                RiderProfile chosenRider = null;
+                for (RiderProfile candidate : candidates) {
+                    if (riderDao.reserveRiderForDispatch(conn, candidate.getId())) {
+                        chosenRider = candidate;
+                        break;
+                    }
+                }
+                if (chosenRider == null) {
+                    conn.rollback();
+                    return false;
+                }
+
+                DeliveryDispatch dispatch = new DeliveryDispatch();
+                dispatch.setOrderId(orderId);
+                dispatch.setRiderId(chosenRider.getId());
+                dispatch.setBasePay(basePay);
+                dispatch.setDistancePay(distancePay);
+                dispatch.setSurgePay(surgePay);
+                dispatch.setTipAmount(tip);
+                dispatch.setTotalEarning(totalEarning);
+
                 Long dispatchId = riderDao.createDispatchOffer(conn, dispatch);
+                if (dispatchId == null) {
+                    throw new SQLException("Dispatch offer insert did not return an ID");
+                }
                 conn.commit();
 
                 // 4. Real-Time alert to rider
@@ -267,6 +317,7 @@ public class DispatchService {
                 Order order = orderDao.findWithLock(conn, dispatch.getOrderId());
                 if (order == null || order.getRiderId() != null) {
                     riderDao.updateDispatchStatus(conn, dispatchId, "TIMED_OUT", "Order already assigned to another partner");
+                    riderDao.releaseRiderDispatchReservation(conn, riderId);
                     conn.commit();
                     return false;
                 }
@@ -315,13 +366,15 @@ public class DispatchService {
             conn.setAutoCommit(false);
             try {
                 DeliveryDispatch dispatch = riderDao.findDispatchOfferWithLock(conn, dispatchId);
-                if (dispatch == null || !dispatch.getRiderId().equals(riderId)) {
+                if (dispatch == null || !dispatch.getRiderId().equals(riderId)
+                        || !"OFFERED".equals(dispatch.getDispatchStatus())) {
                     conn.rollback();
                     return false;
                 }
 
                 // Fair-Pay Protocol: Zero penalty for rejection!
                 riderDao.updateDispatchStatus(conn, dispatchId, "REJECTED", reason != null ? reason : "Personal Emergency / Distance");
+                riderDao.releaseRiderDispatchReservation(conn, riderId);
                 conn.commit();
 
                 // Immediately trigger re-dispatch to next candidate

@@ -18,6 +18,7 @@ import java.util.Map;
 public class RiderDaoImpl implements RiderDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RiderDaoImpl.class);
+    private static final int DISPATCH_RETRY_COOLDOWN_MINUTES = 5;
 
     @Override
     public RiderProfile findByUserId(long userId) {
@@ -70,6 +71,7 @@ public class RiderDaoImpl implements RiderDao {
                 "JOIN users u ON rp.user_id = u.id " +
                 "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
                 "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
                 "HAVING distance_km <= ? " +
                 "ORDER BY distance_km ASC LIMIT ?";
 
@@ -112,6 +114,7 @@ public class RiderDaoImpl implements RiderDao {
                 "JOIN users u ON rp.user_id = u.id " +
                 "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
                 "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
                 "AND rp.id NOT IN (" + inClause + ") " +
                 "HAVING distance_km <= ? " +
                 "ORDER BY distance_km ASC LIMIT ?";
@@ -316,7 +319,8 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<Long> getExcludedRiderIdsForOrder(long orderId) {
         List<Long> ids = new ArrayList<>();
-        String sql = "SELECT rider_id FROM delivery_dispatches WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT')";
+        String sql = "SELECT DISTINCT rider_id FROM delivery_dispatches " +
+                "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT')";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, orderId);
@@ -330,6 +334,80 @@ public class RiderDaoImpl implements RiderDao {
             throw new IllegalStateException("Database operation failed", e);
         }
         return ids;
+    }
+
+    @Override
+    public List<Long> getRidersOnDispatchCooldown(long orderId) {
+        List<Long> ids = new ArrayList<>();
+        String sql = "SELECT DISTINCT rider_id FROM delivery_dispatches " +
+                "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT') " +
+                "AND responded_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? MINUTE)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, orderId);
+            ps.setInt(2, DISPATCH_RETRY_COOLDOWN_MINUTES);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getLong("rider_id"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting riders on dispatch cooldown for order: {}", orderId, e);
+            throw new IllegalStateException("Database operation failed", e);
+        }
+        return ids;
+    }
+
+    @Override
+    public boolean hasActiveOfferForOrder(Connection conn, long orderId) throws SQLException {
+        String sql = "SELECT 1 FROM delivery_dispatches " +
+                "WHERE order_id = ? AND dispatch_status = 'OFFERED' LIMIT 1 FOR UPDATE";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    @Override
+    public boolean expireDispatchOffer(Connection conn, long dispatchId, int timeoutSeconds, String reason) throws SQLException {
+        String sql = "UPDATE delivery_dispatches SET dispatch_status = 'TIMED_OUT', " +
+                "responded_at = CURRENT_TIMESTAMP, rejection_reason = ? " +
+                "WHERE id = ? AND dispatch_status = 'OFFERED' " +
+                "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reason);
+            ps.setLong(2, dispatchId);
+            ps.setInt(3, timeoutSeconds);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    @Override
+    public boolean reserveRiderForDispatch(Connection conn, long riderId) throws SQLException {
+        String sql = "UPDATE rider_profiles SET is_available = FALSE " +
+                "WHERE id = ? AND is_online = TRUE AND is_available = TRUE " +
+                "AND is_kyc_approved = TRUE AND active_order_id IS NULL " +
+                "AND last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
+                "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    @Override
+    public void releaseRiderDispatchReservation(Connection conn, long riderId) throws SQLException {
+        String sql = "UPDATE rider_profiles SET is_available = TRUE " +
+                "WHERE id = ? AND is_online = TRUE AND active_order_id IS NULL " +
+                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
+                "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, riderId);
+            ps.executeUpdate();
+        }
     }
 
     @Override
