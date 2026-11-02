@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class User {
+
     private Long id;
     private String fullName;
     private String email;
@@ -20,53 +21,122 @@ public class User {
 
     private int fraudFlagCount;
 
-    public User() {
+    public User() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public int getFailedAttempts() { return failedAttempts; }
-    public void setFailedAttempts(int failedAttempts) { this.failedAttempts = failedAttempts; }
+    public String getPasswordHash() {
+        return passwordHash;
+    }
 
-    public Timestamp getLockedUntil() { return lockedUntil; }
-    public void setLockedUntil(Timestamp lockedUntil) { this.lockedUntil = lockedUntil; }
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getRole() {
+        return role;
+    }
 
-    public BigDecimal getWalletBalance() { return walletBalance; }
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public Timestamp getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(Timestamp lockedUntil) {
+        this.lockedUntil = lockedUntil;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public BigDecimal getWalletBalance() {
+        return walletBalance;
+    }
+
     public void setWalletBalance(BigDecimal walletBalance) {
         if (walletBalance != null && walletBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("walletBalance cannot be negative: " + walletBalance);
+            throw new IllegalArgumentException(
+                "walletBalance cannot be negative: " + walletBalance
+            );
         }
         this.walletBalance = walletBalance;
     }
 
-    public int getFraudFlagCount() { return fraudFlagCount; }
-    public void setFraudFlagCount(int fraudFlagCount) { this.fraudFlagCount = fraudFlagCount; }
+    public int getFraudFlagCount() {
+        return fraudFlagCount;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public void setFraudFlagCount(int fraudFlagCount) {
+        this.fraudFlagCount = fraudFlagCount;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class RiderProfile {
+
     private Long id;
     private Long userId;
     private String vehicleType;
@@ -30,86 +31,203 @@ public class RiderProfile {
     private String riderEmail;
     private String avatarUrl;
 
-    public RiderProfile() {
+    public RiderProfile() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public Long getUserId() {
+        return userId;
+    }
 
-    public String getVehicleType() { return vehicleType; }
-    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-    public String getVehicleNumber() { return vehicleNumber; }
-    public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
+    public String getVehicleType() {
+        return vehicleType;
+    }
 
-    public String getDrivingLicense() { return drivingLicense; }
-    public void setDrivingLicense(String drivingLicense) { this.drivingLicense = drivingLicense; }
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
 
-    public boolean isKycApproved() { return isKycApproved; }
-    public void setKycApproved(boolean kycApproved) { isKycApproved = kycApproved; }
+    public String getVehicleNumber() {
+        return vehicleNumber;
+    }
 
-    public boolean isOnline() { return isOnline; }
-    public void setOnline(boolean online) { isOnline = online; }
+    public void setVehicleNumber(String vehicleNumber) {
+        this.vehicleNumber = vehicleNumber;
+    }
 
-    public boolean isAvailable() { return isAvailable; }
-    public void setAvailable(boolean available) { isAvailable = available; }
+    public String getDrivingLicense() {
+        return drivingLicense;
+    }
 
-    public BigDecimal getCurrentLatitude() { return currentLatitude; }
-    public void setCurrentLatitude(BigDecimal currentLatitude) { this.currentLatitude = currentLatitude; }
+    public void setDrivingLicense(String drivingLicense) {
+        this.drivingLicense = drivingLicense;
+    }
 
-    public BigDecimal getCurrentLongitude() { return currentLongitude; }
-    public void setCurrentLongitude(BigDecimal currentLongitude) { this.currentLongitude = currentLongitude; }
+    public boolean isKycApproved() {
+        return isKycApproved;
+    }
 
-    public Timestamp getLastPingTime() { return lastPingTime; }
-    public void setLastPingTime(Timestamp lastPingTime) { this.lastPingTime = lastPingTime; }
+    public void setKycApproved(boolean kycApproved) {
+        isKycApproved = kycApproved;
+    }
 
-    public int totalDeliveries() { return totalDeliveries; }
-    public int getTotalDeliveries() { return totalDeliveries; }
-    public void setTotalDeliveries(int totalDeliveries) { this.totalDeliveries = totalDeliveries; }
+    public boolean isOnline() {
+        return isOnline;
+    }
 
-    public BigDecimal getRating() { return rating; }
-    public void setRating(BigDecimal rating) { this.rating = rating; }
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
 
-    public Long getActiveOrderId() { return activeOrderId; }
-    public void setActiveOrderId(Long activeOrderId) { this.activeOrderId = activeOrderId; }
+    public boolean isAvailable() {
+        return isAvailable;
+    }
 
-    public BigDecimal getWalletBalance() { return walletBalance; }
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
+
+    public BigDecimal getCurrentLatitude() {
+        return currentLatitude;
+    }
+
+    public void setCurrentLatitude(BigDecimal currentLatitude) {
+        this.currentLatitude = currentLatitude;
+    }
+
+    public BigDecimal getCurrentLongitude() {
+        return currentLongitude;
+    }
+
+    public void setCurrentLongitude(BigDecimal currentLongitude) {
+        this.currentLongitude = currentLongitude;
+    }
+
+    public Timestamp getLastPingTime() {
+        return lastPingTime;
+    }
+
+    public void setLastPingTime(Timestamp lastPingTime) {
+        this.lastPingTime = lastPingTime;
+    }
+
+    public int totalDeliveries() {
+        return totalDeliveries;
+    }
+
+    public int getTotalDeliveries() {
+        return totalDeliveries;
+    }
+
+    public void setTotalDeliveries(int totalDeliveries) {
+        this.totalDeliveries = totalDeliveries;
+    }
+
+    public BigDecimal getRating() {
+        return rating;
+    }
+
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
+    public Long getActiveOrderId() {
+        return activeOrderId;
+    }
+
+    public void setActiveOrderId(Long activeOrderId) {
+        this.activeOrderId = activeOrderId;
+    }
+
+    public BigDecimal getWalletBalance() {
+        return walletBalance;
+    }
+
     public void setWalletBalance(BigDecimal walletBalance) {
         if (walletBalance != null && walletBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Rider walletBalance cannot be negative: " + walletBalance);
+            throw new IllegalArgumentException(
+                "Rider walletBalance cannot be negative: " + walletBalance
+            );
         }
         this.walletBalance = walletBalance;
     }
 
-    public BigDecimal getCashInHand() { return cashInHand != null ? cashInHand : BigDecimal.ZERO; }
+    public BigDecimal getCashInHand() {
+        return cashInHand != null ? cashInHand : BigDecimal.ZERO;
+    }
+
     public void setCashInHand(BigDecimal cashInHand) {
         if (cashInHand != null && cashInHand.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Rider cashInHand cannot be negative: " + cashInHand);
+            throw new IllegalArgumentException(
+                "Rider cashInHand cannot be negative: " + cashInHand
+            );
         }
         this.cashInHand = cashInHand;
     }
 
-    public BigDecimal getMaxCashLimit() { return maxCashLimit != null ? maxCashLimit : BigDecimal.valueOf(5000.00); }
-    public void setMaxCashLimit(BigDecimal maxCashLimit) { this.maxCashLimit = maxCashLimit; }
+    public BigDecimal getMaxCashLimit() {
+        return maxCashLimit != null ? maxCashLimit : BigDecimal.valueOf(5000.00);
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public void setMaxCashLimit(BigDecimal maxCashLimit) {
+        this.maxCashLimit = maxCashLimit;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
 
-    public String getRiderName() { return riderName; }
-    public void setRiderName(String riderName) { this.riderName = riderName; }
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public String getRiderPhone() { return riderPhone; }
-    public void setRiderPhone(String riderPhone) { this.riderPhone = riderPhone; }
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public String getRiderEmail() { return riderEmail; }
-    public void setRiderEmail(String riderEmail) { this.riderEmail = riderEmail; }
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getRiderName() {
+        return riderName;
+    }
+
+    public void setRiderName(String riderName) {
+        this.riderName = riderName;
+    }
+
+    public String getRiderPhone() {
+        return riderPhone;
+    }
+
+    public void setRiderPhone(String riderPhone) {
+        this.riderPhone = riderPhone;
+    }
+
+    public String getRiderEmail() {
+        return riderEmail;
+    }
+
+    public void setRiderEmail(String riderEmail) {
+        this.riderEmail = riderEmail;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 }

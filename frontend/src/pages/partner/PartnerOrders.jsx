@@ -31,8 +31,7 @@ const PartnerOrders = () => {
     fetchOrders();
   }, [restId]);
 
-  const filteredOrders =
-    filter === "ALL" ? orders : orders.filter((o) => o.status === filter);
+  const filteredOrders = filter === "ALL" ? orders : orders.filter((o) => o.status === filter);
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
@@ -40,11 +39,7 @@ const PartnerOrders = () => {
         status: newStatus,
       });
       if (res.success) {
-        setOrders(
-          orders.map((o) =>
-            o.id === orderId ? { ...o, status: newStatus } : o,
-          ),
-        );
+        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
       }
     } catch (e) {
       alert(e.message || "Could not update status");
@@ -57,30 +52,23 @@ const PartnerOrders = () => {
         <div>
           <h4 className="fw-extrabold mb-1 text-dark">Kitchen Orders Ledger</h4>
           <p className="text-muted small mb-0">
-            Live audit of customer tickets, prep timers, and completion state
-            for {restaurant?.name}
+            Live audit of customer tickets, prep timers, and completion state for {restaurant?.name}
           </p>
         </div>
 
         <div className="d-flex flex-wrap gap-2">
-          {[
-            "ALL",
-            "PLACED",
-            "ACCEPTED",
-            "PREPARING",
-            "READY",
-            "DELIVERED",
-            "CANCELLED",
-          ].map((st) => (
-            <button
-              key={st}
-              className={`btn btn-sm rounded-pill px-3 fw-bold ${filter === st ? "btn-danger" : "btn-light border"}`}
-              style={filter === st ? { background: "#ff5c35" } : {}}
-              onClick={() => setFilter(st)}
-            >
-              {st}
-            </button>
-          ))}
+          {["ALL", "PLACED", "ACCEPTED", "PREPARING", "READY", "DELIVERED", "CANCELLED"].map(
+            (st) => (
+              <button
+                key={st}
+                className={`btn btn-sm rounded-pill px-3 fw-bold ${filter === st ? "btn-danger" : "btn-light border"}`}
+                style={filter === st ? { background: "#ff5c35" } : {}}
+                onClick={() => setFilter(st)}
+              >
+                {st}
+              </button>
+            ),
+          )}
         </div>
       </div>
 
@@ -94,12 +82,9 @@ const PartnerOrders = () => {
           {filteredOrders.length === 0 ? (
             <div className="col-12 text-center py-5 bg-white rounded-4 shadow-sm border p-4">
               <div className="fs-1 mb-2">📋</div>
-              <h5 className="fw-bold text-dark">
-                No Orders in Kitchen Pipeline
-              </h5>
+              <h5 className="fw-bold text-dark">No Orders in Kitchen Pipeline</h5>
               <p className="text-muted small mb-0">
-                Incoming customer orders from CravePulse will appear here in
-                real-time.
+                Incoming customer orders from CravePulse will appear here in real-time.
               </p>
             </div>
           ) : (
@@ -108,9 +93,7 @@ const PartnerOrders = () => {
                 <div className="card border-0 rounded-4 shadow-sm p-4 bg-white">
                   <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 pb-2 border-bottom">
                     <div className="d-flex align-items-center gap-2">
-                      <h6 className="fw-extrabold text-dark mb-0">
-                        {ord.orderNumber}
-                      </h6>
+                      <h6 className="fw-extrabold text-dark mb-0">{ord.orderNumber}</h6>
                       <span
                         className={`badge ${ord.status === "PLACED" ? "bg-danger" : ord.status === "ACCEPTED" ? "bg-warning text-dark" : ord.status === "PREPARING" ? "bg-primary" : ord.status === "READY" ? "bg-info text-dark" : ord.status === "DELIVERED" ? "bg-success" : "bg-secondary"} rounded-pill px-3`}
                       >
@@ -118,19 +101,13 @@ const PartnerOrders = () => {
                       </span>
                       <span className="text-muted small">
                         •{" "}
-                        {ord.createdAt
-                          ? new Date(ord.createdAt).toLocaleString("en-IN")
-                          : "Recent"}
+                        {ord.createdAt ? new Date(ord.createdAt).toLocaleString("en-IN") : "Recent"}
                       </span>
                     </div>
 
                     <div className="d-flex align-items-center gap-3">
-                      <span className="fw-bold fs-6 text-dark">
-                        ₹{ord.totalAmount}
-                      </span>
-                      <span className="badge bg-light text-dark border">
-                        {ord.paymentMode}
-                      </span>
+                      <span className="fw-bold fs-6 text-dark">₹{ord.totalAmount}</span>
+                      <span className="badge bg-light text-dark border">{ord.paymentMode}</span>
                     </div>
                   </div>
 
@@ -145,10 +122,7 @@ const PartnerOrders = () => {
                       </div>
                       <div className="d-flex flex-wrap gap-2">
                         {ord.items?.map((it, idx) => (
-                          <span
-                            key={idx}
-                            className="badge bg-light text-dark border p-2"
-                          >
+                          <span key={idx} className="badge bg-light text-dark border p-2">
                             {it.itemName} × {it.quantity} (₹{it.unitPrice})
                           </span>
                         ))}
@@ -167,9 +141,7 @@ const PartnerOrders = () => {
                       {ord.status === "ACCEPTED" && (
                         <button
                           className="btn btn-primary rounded-pill px-3 btn-sm fw-bold"
-                          onClick={() =>
-                            handleUpdateStatus(ord.id, "PREPARING")
-                          }
+                          onClick={() => handleUpdateStatus(ord.id, "PREPARING")}
                         >
                           Start Prep 🔥
                         </button>

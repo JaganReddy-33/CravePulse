@@ -3,11 +3,7 @@ import React from "react";
 /**
  * CheckoutBillDetails: Complete fee breakdown with radical price parity explainer modal trigger.
  */
-const CheckoutBillDetails = ({
-  billDetails,
-  riderTip,
-  onOpenPriceExplainer,
-}) => {
+const CheckoutBillDetails = ({ billDetails, riderTip, onOpenPriceExplainer }) => {
   if (!billDetails) return null;
 
   return (
@@ -30,15 +26,12 @@ const CheckoutBillDetails = ({
 
       {/* Bill items */}
       <div className="d-flex flex-column gap-2 small text-muted mb-3">
-        {billDetails.distanceKm != null &&
-          Number.isFinite(Number(billDetails.distanceKm)) && (
-            <div className="d-flex justify-content-between align-items-center">
-              <span>Distance</span>
-              <span className="text-dark">
-                {Number(billDetails.distanceKm).toFixed(1)} km
-              </span>
-            </div>
-          )}
+        {billDetails.distanceKm != null && Number.isFinite(Number(billDetails.distanceKm)) && (
+          <div className="d-flex justify-content-between align-items-center">
+            <span>Distance</span>
+            <span className="text-dark">{Number(billDetails.distanceKm).toFixed(1)} km</span>
+          </div>
+        )}
         <div className="d-flex justify-content-between align-items-center">
           <span>Items subtotal</span>
           <span className="text-dark fw-semibold">₹{billDetails.subtotal}</span>
@@ -81,9 +74,7 @@ const CheckoutBillDetails = ({
             Inclusive of all taxes & fees
           </small>
         </div>
-        <span className="fs-3 fw-extrabold text-danger">
-          ₹{billDetails.totalAmount}
-        </span>
+        <span className="fs-3 fw-extrabold text-danger">₹{billDetails.totalAmount}</span>
       </div>
     </div>
   );

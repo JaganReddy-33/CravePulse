@@ -3,6 +3,7 @@ package com.foodplatform.model;
 import java.math.BigDecimal;
 
 public class OrderItem {
+
     private Long id;
     private Long orderId;
     private Long menuItemId;
@@ -14,36 +15,85 @@ public class OrderItem {
     private String addonNames;
     private BigDecimal addonTotal;
 
-    public OrderItem() {
+    public OrderItem() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
+    public Long getOrderId() {
+        return orderId;
+    }
 
-    public Long getMenuItemId() { return menuItemId; }
-    public void setMenuItemId(Long menuItemId) { this.menuItemId = menuItemId; }
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
 
-    public String getItemName() { return itemName; }
-    public void setItemName(String itemName) { this.itemName = itemName; }
+    public Long getMenuItemId() {
+        return menuItemId;
+    }
 
-    public String getVariantName() { return variantName; }
-    public void setVariantName(String variantName) { this.variantName = variantName; }
+    public void setMenuItemId(Long menuItemId) {
+        this.menuItemId = menuItemId;
+    }
 
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    public String getItemName() {
+        return itemName;
+    }
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
 
-    public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+    public String getVariantName() {
+        return variantName;
+    }
 
-    public String getAddonNames() { return addonNames; }
-    public void setAddonNames(String addonNames) { this.addonNames = addonNames; }
+    public void setVariantName(String variantName) {
+        this.variantName = variantName;
+    }
 
-    public BigDecimal getAddonTotal() { return addonTotal; }
-    public void setAddonTotal(BigDecimal addonTotal) { this.addonTotal = addonTotal; }
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public String getAddonNames() {
+        return addonNames;
+    }
+
+    public void setAddonNames(String addonNames) {
+        this.addonNames = addonNames;
+    }
+
+    public BigDecimal getAddonTotal() {
+        return addonTotal;
+    }
+
+    public void setAddonTotal(BigDecimal addonTotal) {
+        this.addonTotal = addonTotal;
+    }
 }

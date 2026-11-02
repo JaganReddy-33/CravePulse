@@ -116,9 +116,7 @@ const JobDetailPage = () => {
       }
     } catch (err) {
       console.error("Application submit error:", err);
-      setSubmitError(
-        err.response?.data?.message || "An error occurred. Please try again.",
-      );
+      setSubmitError(err.response?.data?.message || "An error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -173,10 +171,7 @@ const JobDetailPage = () => {
               {job.department}
             </Link>
           </li>
-          <li
-            className="breadcrumb-item active text-dark fw-bold"
-            aria-current="page"
-          >
+          <li className="breadcrumb-item active text-dark fw-bold" aria-current="page">
             {job.title}
           </li>
         </ol>
@@ -222,10 +217,7 @@ const JobDetailPage = () => {
               </span>
             </div>
 
-            <p
-              className="text-secondary lead small mb-0"
-              style={{ maxWidth: 680 }}
-            >
+            <p className="text-secondary lead small mb-0" style={{ maxWidth: 680 }}>
               {job.description}
             </p>
 
@@ -248,8 +240,7 @@ const JobDetailPage = () => {
               href="#apply-form"
               className="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm"
               style={{
-                background:
-                  "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
+                background: "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
                 borderColor: "var(--c-primary)",
               }}
             >
@@ -264,13 +255,8 @@ const JobDetailPage = () => {
         <div className="col-lg-7">
           {responsibilities.length > 0 && (
             <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
-              <h5 className="fw-bold text-dark mb-3">
-                Key Responsibilities & Missions
-              </h5>
-              <ul
-                className="text-secondary small ps-3 mb-0"
-                style={{ lineHeight: 1.8 }}
-              >
+              <h5 className="fw-bold text-dark mb-3">Key Responsibilities & Missions</h5>
+              <ul className="text-secondary small ps-3 mb-0" style={{ lineHeight: 1.8 }}>
                 {responsibilities.map((resp, idx) => (
                   <li key={idx} className="mb-2">
                     {resp}
@@ -283,10 +269,7 @@ const JobDetailPage = () => {
           {requirements.length > 0 && (
             <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
               <h5 className="fw-bold text-dark mb-3">What We're Looking For</h5>
-              <ul
-                className="text-secondary small ps-3 mb-0"
-                style={{ lineHeight: 1.8 }}
-              >
+              <ul className="text-secondary small ps-3 mb-0" style={{ lineHeight: 1.8 }}>
                 {requirements.map((req, idx) => (
                   <li key={idx} className="mb-2">
                     {req}
@@ -298,9 +281,7 @@ const JobDetailPage = () => {
 
           {benefits.length > 0 && (
             <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
-              <h5 className="fw-bold text-dark mb-3">
-                CravePulse Benefits & Compensation
-              </h5>
+              <h5 className="fw-bold text-dark mb-3">CravePulse Benefits & Compensation</h5>
               <div className="row g-3">
                 {benefits.map((perk, i) => (
                   <div
@@ -330,18 +311,14 @@ const JobDetailPage = () => {
             {submitted ? (
               <div className="text-center py-4">
                 <div className="fs-1 mb-2">🎉</div>
-                <h4 className="fw-bold text-success mb-2">
-                  Application Received!
-                </h4>
+                <h4 className="fw-bold text-success mb-2">Application Received!</h4>
                 <p className="text-muted small mb-3">
-                  Thank you, {applicantName}. Your profile and resume (
-                  <strong>{resumeUrl}</strong>) have been entered into our
-                  recruitment pipeline.
+                  Thank you, {applicantName}. Your profile and resume (<strong>{resumeUrl}</strong>)
+                  have been entered into our recruitment pipeline.
                 </p>
                 <div className="p-3 bg-light rounded-3 small text-muted mb-4">
-                  Our talent acquisition team will review your credentials and
-                  get back to you at <strong>{applicantEmail}</strong> within 48
-                  business hours.
+                  Our talent acquisition team will review your credentials and get back to you at{" "}
+                  <strong>{applicantEmail}</strong> within 48 business hours.
                 </div>
                 <Link
                   to="/careers"
@@ -353,15 +330,11 @@ const JobDetailPage = () => {
             ) : (
               <form onSubmit={handleSubmitApplication}>
                 {submitError && (
-                  <div className="alert alert-danger small py-2 mb-3">
-                    {submitError}
-                  </div>
+                  <div className="alert alert-danger small py-2 mb-3">{submitError}</div>
                 )}
 
                 <div className="mb-3">
-                  <label className="form-label small fw-bold text-dark">
-                    Full Name *
-                  </label>
+                  <label className="form-label small fw-bold text-dark">Full Name *</label>
                   <input
                     type="text"
                     className="form-control"
@@ -373,9 +346,7 @@ const JobDetailPage = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label small fw-bold text-dark">
-                    Email Address *
-                  </label>
+                  <label className="form-label small fw-bold text-dark">Email Address *</label>
                   <input
                     type="email"
                     className="form-control"
@@ -388,9 +359,7 @@ const JobDetailPage = () => {
 
                 <div className="row g-3 mb-3">
                   <div className="col-6">
-                    <label className="form-label small fw-bold text-dark">
-                      Phone Number *
-                    </label>
+                    <label className="form-label small fw-bold text-dark">Phone Number *</label>
                     <input
                       type="tel"
                       className="form-control"
@@ -401,9 +370,7 @@ const JobDetailPage = () => {
                     />
                   </div>
                   <div className="col-6">
-                    <label className="form-label small fw-bold text-dark">
-                      Experience (Years)
-                    </label>
+                    <label className="form-label small fw-bold text-dark">Experience (Years)</label>
                     <input
                       type="text"
                       className="form-control"
@@ -455,8 +422,7 @@ const JobDetailPage = () => {
                     placeholder="https://.../resume.pdf"
                   />
                   <small className="text-muted">
-                    Share a read-only HTTPS resume link accessible to the
-                    recruitment team.
+                    Share a read-only HTTPS resume link accessible to the recruitment team.
                   </small>
                 </div>
 
@@ -483,9 +449,7 @@ const JobDetailPage = () => {
                     borderColor: "var(--c-primary)",
                   }}
                 >
-                  {submitting
-                    ? "Submitting Application..."
-                    : "Submit Application →"}
+                  {submitting ? "Submitting Application..." : "Submit Application →"}
                 </button>
               </form>
             )}

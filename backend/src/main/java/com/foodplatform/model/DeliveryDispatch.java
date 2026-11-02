@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class DeliveryDispatch {
+
     private Long id;
     private Long orderId;
     private Long riderId;
@@ -39,108 +40,275 @@ public class DeliveryDispatch {
     private BigDecimal orderTotal;
     private String paymentMode;
 
-    public DeliveryDispatch() {
+    public DeliveryDispatch() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
+    public Long getOrderId() {
+        return orderId;
+    }
 
-    public Long getRiderId() { return riderId; }
-    public void setRiderId(Long riderId) { this.riderId = riderId; }
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
 
-    public String getDispatchStatus() { return dispatchStatus; }
-    public void setDispatchStatus(String dispatchStatus) { this.dispatchStatus = dispatchStatus; }
+    public Long getRiderId() {
+        return riderId;
+    }
 
-    public Timestamp getOfferedAt() { return offeredAt; }
-    public void setOfferedAt(Timestamp offeredAt) { this.offeredAt = offeredAt; }
+    public void setRiderId(Long riderId) {
+        this.riderId = riderId;
+    }
 
-    public Timestamp getRespondedAt() { return respondedAt; }
-    public void setRespondedAt(Timestamp respondedAt) { this.respondedAt = respondedAt; }
+    public String getDispatchStatus() {
+        return dispatchStatus;
+    }
 
-    public BigDecimal getBasePay() { return basePay; }
-    public void setBasePay(BigDecimal basePay) { this.basePay = basePay; }
+    public void setDispatchStatus(String dispatchStatus) {
+        this.dispatchStatus = dispatchStatus;
+    }
 
-    public BigDecimal getDistancePay() { return distancePay; }
-    public void setDistancePay(BigDecimal distancePay) { this.distancePay = distancePay; }
+    public Timestamp getOfferedAt() {
+        return offeredAt;
+    }
 
-    public BigDecimal getSurgePay() { return surgePay; }
-    public void setSurgePay(BigDecimal surgePay) { this.surgePay = surgePay; }
+    public void setOfferedAt(Timestamp offeredAt) {
+        this.offeredAt = offeredAt;
+    }
 
-    public BigDecimal getTipAmount() { return tipAmount; }
-    public void setTipAmount(BigDecimal tipAmount) { this.tipAmount = tipAmount; }
+    public Timestamp getRespondedAt() {
+        return respondedAt;
+    }
 
-    public BigDecimal getTotalEarning() { return totalEarning; }
-    public void setTotalEarning(BigDecimal totalEarning) { this.totalEarning = totalEarning; }
+    public void setRespondedAt(Timestamp respondedAt) {
+        this.respondedAt = respondedAt;
+    }
 
-    public int getWaitTimeMinutes() { return waitTimeMinutes; }
-    public void setWaitTimeMinutes(int waitTimeMinutes) { this.waitTimeMinutes = waitTimeMinutes; }
+    public BigDecimal getBasePay() {
+        return basePay;
+    }
 
-    public BigDecimal getWaitTimePay() { return waitTimePay; }
-    public void setWaitTimePay(BigDecimal waitTimePay) { this.waitTimePay = waitTimePay; }
+    public void setBasePay(BigDecimal basePay) {
+        this.basePay = basePay;
+    }
 
-    public String getRejectionReason() { return rejectionReason; }
-    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public BigDecimal getDistancePay() {
+        return distancePay;
+    }
 
-    public String getOrderNumber() { return orderNumber; }
-    public void setOrderNumber(String orderNumber) { this.orderNumber = orderNumber; }
+    public void setDistancePay(BigDecimal distancePay) {
+        this.distancePay = distancePay;
+    }
 
-    public String getRestaurantName() { return restaurantName; }
-    public void setRestaurantName(String restaurantName) { this.restaurantName = restaurantName; }
+    public BigDecimal getSurgePay() {
+        return surgePay;
+    }
 
-    public String getRestaurantAddress() { return restaurantAddress; }
-    public void setRestaurantAddress(String restaurantAddress) { this.restaurantAddress = restaurantAddress; }
+    public void setSurgePay(BigDecimal surgePay) {
+        this.surgePay = surgePay;
+    }
 
-    public Double getRestaurantLat() { return restaurantLat; }
-    public void setRestaurantLat(Double restaurantLat) { this.restaurantLat = restaurantLat; }
+    public BigDecimal getTipAmount() {
+        return tipAmount;
+    }
 
-    public Double getRestaurantLng() { return restaurantLng; }
-    public void setRestaurantLng(Double restaurantLng) { this.restaurantLng = restaurantLng; }
+    public void setTipAmount(BigDecimal tipAmount) {
+        this.tipAmount = tipAmount;
+    }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public BigDecimal getTotalEarning() {
+        return totalEarning;
+    }
 
-    public String getCustomerPhone() { return customerPhone; }
-    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
+    public void setTotalEarning(BigDecimal totalEarning) {
+        this.totalEarning = totalEarning;
+    }
 
-    public String getCustomerAddress() { return customerAddress; }
-    public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
+    public int getWaitTimeMinutes() {
+        return waitTimeMinutes;
+    }
 
-    public Double getCustomerLat() { return customerLat; }
-    public void setCustomerLat(Double customerLat) { this.customerLat = customerLat; }
+    public void setWaitTimeMinutes(int waitTimeMinutes) {
+        this.waitTimeMinutes = waitTimeMinutes;
+    }
 
-    public Double getCustomerLng() { return customerLng; }
-    public void setCustomerLng(Double customerLng) { this.customerLng = customerLng; }
+    public BigDecimal getWaitTimePay() {
+        return waitTimePay;
+    }
 
-    public String getCustomerMapsUrl() { return customerMapsUrl; }
-    public void setCustomerMapsUrl(String customerMapsUrl) { this.customerMapsUrl = customerMapsUrl; }
+    public void setWaitTimePay(BigDecimal waitTimePay) {
+        this.waitTimePay = waitTimePay;
+    }
 
-    public BigDecimal getOrderTotal() { return orderTotal; }
-    public void setOrderTotal(BigDecimal orderTotal) { this.orderTotal = orderTotal; }
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
 
-    public String getPaymentMode() { return paymentMode; }
-    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
 
-    public Timestamp getArrivedAtRestaurantAt() { return arrivedAtRestaurantAt; }
-    public void setArrivedAtRestaurantAt(Timestamp arrivedAtRestaurantAt) { this.arrivedAtRestaurantAt = arrivedAtRestaurantAt; }
+    public String getOrderNumber() {
+        return orderNumber;
+    }
 
-    public Timestamp getPickedUpAt() { return pickedUpAt; }
-    public void setPickedUpAt(Timestamp pickedUpAt) { this.pickedUpAt = pickedUpAt; }
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
 
-    public Timestamp getArrivedAtCustomerAt() { return arrivedAtCustomerAt; }
-    public void setArrivedAtCustomerAt(Timestamp arrivedAtCustomerAt) { this.arrivedAtCustomerAt = arrivedAtCustomerAt; }
+    public String getRestaurantName() {
+        return restaurantName;
+    }
 
-    public Timestamp getDeliveredAt() { return deliveredAt; }
-    public void setDeliveredAt(Timestamp deliveredAt) { this.deliveredAt = deliveredAt; }
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
+    }
+
+    public String getRestaurantAddress() {
+        return restaurantAddress;
+    }
+
+    public void setRestaurantAddress(String restaurantAddress) {
+        this.restaurantAddress = restaurantAddress;
+    }
+
+    public Double getRestaurantLat() {
+        return restaurantLat;
+    }
+
+    public void setRestaurantLat(Double restaurantLat) {
+        this.restaurantLat = restaurantLat;
+    }
+
+    public Double getRestaurantLng() {
+        return restaurantLng;
+    }
+
+    public void setRestaurantLng(Double restaurantLng) {
+        this.restaurantLng = restaurantLng;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getCustomerAddress() {
+        return customerAddress;
+    }
+
+    public void setCustomerAddress(String customerAddress) {
+        this.customerAddress = customerAddress;
+    }
+
+    public Double getCustomerLat() {
+        return customerLat;
+    }
+
+    public void setCustomerLat(Double customerLat) {
+        this.customerLat = customerLat;
+    }
+
+    public Double getCustomerLng() {
+        return customerLng;
+    }
+
+    public void setCustomerLng(Double customerLng) {
+        this.customerLng = customerLng;
+    }
+
+    public String getCustomerMapsUrl() {
+        return customerMapsUrl;
+    }
+
+    public void setCustomerMapsUrl(String customerMapsUrl) {
+        this.customerMapsUrl = customerMapsUrl;
+    }
+
+    public BigDecimal getOrderTotal() {
+        return orderTotal;
+    }
+
+    public void setOrderTotal(BigDecimal orderTotal) {
+        this.orderTotal = orderTotal;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
+    public Timestamp getArrivedAtRestaurantAt() {
+        return arrivedAtRestaurantAt;
+    }
+
+    public void setArrivedAtRestaurantAt(Timestamp arrivedAtRestaurantAt) {
+        this.arrivedAtRestaurantAt = arrivedAtRestaurantAt;
+    }
+
+    public Timestamp getPickedUpAt() {
+        return pickedUpAt;
+    }
+
+    public void setPickedUpAt(Timestamp pickedUpAt) {
+        this.pickedUpAt = pickedUpAt;
+    }
+
+    public Timestamp getArrivedAtCustomerAt() {
+        return arrivedAtCustomerAt;
+    }
+
+    public void setArrivedAtCustomerAt(Timestamp arrivedAtCustomerAt) {
+        this.arrivedAtCustomerAt = arrivedAtCustomerAt;
+    }
+
+    public Timestamp getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(Timestamp deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
 
     private java.util.List<OrderItem> items;
 
-    public java.util.List<OrderItem> getItems() { return items; }
-    public void setItems(java.util.List<OrderItem> items) { this.items = items; }
+    public java.util.List<OrderItem> getItems() {
+        return items;
+    }
 
-    public boolean isWaitCompensationClaimed() { return waitCompensationClaimed; }
-    public Boolean getWaitCompensationClaimed() { return waitCompensationClaimed; }
-    public void setWaitCompensationClaimed(boolean waitCompensationClaimed) { this.waitCompensationClaimed = waitCompensationClaimed; }
+    public void setItems(java.util.List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public boolean isWaitCompensationClaimed() {
+        return waitCompensationClaimed;
+    }
+
+    public Boolean getWaitCompensationClaimed() {
+        return waitCompensationClaimed;
+    }
+
+    public void setWaitCompensationClaimed(boolean waitCompensationClaimed) {
+        this.waitCompensationClaimed = waitCompensationClaimed;
+    }
 }

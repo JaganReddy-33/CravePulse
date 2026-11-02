@@ -50,10 +50,7 @@ const NavLocationModal = ({
           aria-labelledby="location-dialog-title"
         >
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5
-              className="fw-extrabold mb-0 text-dark"
-              id="location-dialog-title"
-            >
+            <h5 className="fw-extrabold mb-0 text-dark" id="location-dialog-title">
               Select Delivery Location
             </h5>
             <button
@@ -73,10 +70,7 @@ const NavLocationModal = ({
           >
             {detectingGps ? (
               <>
-                <span
-                  className="spinner-border spinner-border-sm"
-                  role="status"
-                ></span>
+                <span className="spinner-border spinner-border-sm" role="status"></span>
                 <span>Locking High-Accuracy GPS...</span>
               </>
             ) : (
@@ -110,10 +104,7 @@ const NavLocationModal = ({
             >
               Major Metros & Hubs
             </small>
-            <div
-              className="d-flex gap-2 overflow-auto pb-1"
-              style={{ scrollbarWidth: "none" }}
-            >
+            <div className="d-flex gap-2 overflow-auto pb-1" style={{ scrollbarWidth: "none" }}>
               {PAN_INDIA_CITIES.map((city) => (
                 <button
                   key={city.id}
@@ -137,10 +128,7 @@ const NavLocationModal = ({
           </div>
 
           {/* Locality list */}
-          <div
-            className="d-flex flex-column gap-2"
-            style={{ maxHeight: 260, overflowY: "auto" }}
-          >
+          <div className="d-flex flex-column gap-2" style={{ maxHeight: 260, overflowY: "auto" }}>
             {allFilteredHubs.slice(0, 15).map((hub) => (
               <button
                 key={`${hub.city.id}-${hub.id}`}

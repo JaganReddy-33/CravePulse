@@ -4,12 +4,11 @@ import com.foodplatform.dao.WalletDao;
 import com.foodplatform.daoImpl.WalletDaoImpl;
 import com.foodplatform.model.Notification;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NotificationService {
 
@@ -27,7 +26,13 @@ public class NotificationService {
         this.registry = registry;
     }
 
-    public void sendNotification(long userId, String title, String message, String type, String referenceId) {
+    public void sendNotification(
+        long userId,
+        String title,
+        String message,
+        String type,
+        String referenceId
+    ) {
         try {
             Notification n = new Notification();
             n.setUserId(userId);

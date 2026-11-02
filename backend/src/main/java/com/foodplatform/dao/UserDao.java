@@ -2,7 +2,6 @@ package com.foodplatform.dao;
 
 import com.foodplatform.model.Address;
 import com.foodplatform.model.User;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,7 +9,6 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface UserDao {
-
     User findByEmail(String email);
 
     User findByPhone(String phone);
@@ -33,7 +31,8 @@ public interface UserDao {
 
     void revokeAllUserTokens(long userId);
 
-    void updateWalletBalance(Connection conn, long userId, BigDecimal newBalance) throws SQLException;
+    void updateWalletBalance(Connection conn, long userId, BigDecimal newBalance)
+        throws SQLException;
 
     List<Address> getUserAddresses(long userId);
 

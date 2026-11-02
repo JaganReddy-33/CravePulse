@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Dispute {
+
     private Long id;
     private Long orderId;
     private Long customerId;
@@ -23,54 +24,133 @@ public class Dispute {
     private String orderNumber;
     private String restaurantName;
 
-    public Dispute() {
+    public Dispute() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
+    public Long getOrderId() {
+        return orderId;
+    }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
 
-    public String getIssueType() { return issueType; }
-    public void setIssueType(String issueType) { this.issueType = issueType; }
+    public Long getCustomerId() {
+        return customerId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
 
-    public String getPhotoEvidenceUrl() { return photoEvidenceUrl; }
-    public void setPhotoEvidenceUrl(String photoEvidenceUrl) { this.photoEvidenceUrl = photoEvidenceUrl; }
+    public String getIssueType() {
+        return issueType;
+    }
 
-    public BigDecimal getRequestedRefundAmount() { return requestedRefundAmount; }
-    public void setRequestedRefundAmount(BigDecimal requestedRefundAmount) { this.requestedRefundAmount = requestedRefundAmount; }
+    public void setIssueType(String issueType) {
+        this.issueType = issueType;
+    }
 
-    public boolean isAutoRefundApproved() { return autoRefundApproved; }
-    public void setAutoRefundApproved(boolean autoRefundApproved) { this.autoRefundApproved = autoRefundApproved; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getAdminStatus() { return adminStatus; }
-    public void setAdminStatus(String adminStatus) { this.adminStatus = adminStatus; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public String getResolutionNotes() { return resolutionNotes; }
-    public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+    public String getPhotoEvidenceUrl() {
+        return photoEvidenceUrl;
+    }
 
-    public Long getResolvedByUserId() { return resolvedByUserId; }
-    public void setResolvedByUserId(Long resolvedByUserId) { this.resolvedByUserId = resolvedByUserId; }
+    public void setPhotoEvidenceUrl(String photoEvidenceUrl) {
+        this.photoEvidenceUrl = photoEvidenceUrl;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public BigDecimal getRequestedRefundAmount() {
+        return requestedRefundAmount;
+    }
 
-    public Timestamp getResolvedAt() { return resolvedAt; }
-    public void setResolvedAt(Timestamp resolvedAt) { this.resolvedAt = resolvedAt; }
+    public void setRequestedRefundAmount(BigDecimal requestedRefundAmount) {
+        this.requestedRefundAmount = requestedRefundAmount;
+    }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public boolean isAutoRefundApproved() {
+        return autoRefundApproved;
+    }
 
-    public String getOrderNumber() { return orderNumber; }
-    public void setOrderNumber(String orderNumber) { this.orderNumber = orderNumber; }
+    public void setAutoRefundApproved(boolean autoRefundApproved) {
+        this.autoRefundApproved = autoRefundApproved;
+    }
 
-    public String getRestaurantName() { return restaurantName; }
-    public void setRestaurantName(String restaurantName) { this.restaurantName = restaurantName; }
+    public String getAdminStatus() {
+        return adminStatus;
+    }
+
+    public void setAdminStatus(String adminStatus) {
+        this.adminStatus = adminStatus;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public Long getResolvedByUserId() {
+        return resolvedByUserId;
+    }
+
+    public void setResolvedByUserId(Long resolvedByUserId) {
+        this.resolvedByUserId = resolvedByUserId;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public void setResolvedAt(Timestamp resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
+    }
 }

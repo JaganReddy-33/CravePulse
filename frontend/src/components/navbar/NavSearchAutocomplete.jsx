@@ -13,9 +13,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
     dishes: [],
   });
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [recentSearches, setRecentSearches] = useState(
-    () => getPreference("recentSearches") || [],
-  );
+  const [recentSearches, setRecentSearches] = useState(() => getPreference("recentSearches") || []);
   useEffect(() => {
     const sync = () => setRecentSearches(getPreference("recentSearches") || []);
     window.addEventListener("preferences-changed", sync);
@@ -29,9 +27,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
     if (!term || !term.trim()) return;
     const clean = term.trim();
     setRecentSearches((prev) => {
-      const filtered = prev.filter(
-        (t) => t.toLowerCase() !== clean.toLowerCase(),
-      );
+      const filtered = prev.filter((t) => t.toLowerCase() !== clean.toLowerCase());
       const updated = [clean, ...filtered].slice(0, 5);
       queueMicrotask(() => setPreference("recentSearches", updated));
       return updated;
@@ -160,10 +156,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
           {!searchQuery.trim() && recentSearches.length > 0 && (
             <div className="p-2">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <span
-                  className="fw-bold small text-muted text-uppercase"
-                  style={{ fontSize: 10 }}
-                >
+                <span className="fw-bold small text-muted text-uppercase" style={{ fontSize: 10 }}>
                   Recent Searches
                 </span>
                 <button
@@ -227,9 +220,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
                         </small>
                       </div>
                     </div>
-                    <span className="fw-bold small text-primary ms-2">
-                      ₹{dish.price}
-                    </span>
+                    <span className="fw-bold small text-primary ms-2">₹{dish.price}</span>
                   </button>
                 ))}
               </div>
@@ -264,12 +255,9 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
                       style={{ width: 36, height: 36 }}
                     />
                     <div className="text-truncate">
-                      <strong className="d-block small text-dark text-truncate">
-                        {rest.name}
-                      </strong>
+                      <strong className="d-block small text-dark text-truncate">{rest.name}</strong>
                       <small className="text-muted" style={{ fontSize: 11 }}>
-                        ⭐ {rest.rating || "4.5"} •{" "}
-                        {rest.cuisine || rest.locality || "Gourmet"}
+                        ⭐ {rest.rating || "4.5"} • {rest.cuisine || rest.locality || "Gourmet"}
                       </small>
                     </div>
                   </button>
@@ -282,8 +270,7 @@ const NavSearchAutocomplete = ({ selectedHub, className = "" }) => {
             suggestionData.dishes?.length === 0 &&
             suggestionData.restaurants?.length === 0 && (
               <div className="p-3 text-center text-muted small">
-                No direct matches for "{searchQuery}". Press Enter to view all
-                results.
+                No direct matches for "{searchQuery}". Press Enter to view all results.
               </div>
             )}
         </div>

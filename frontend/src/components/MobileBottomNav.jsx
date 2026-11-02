@@ -14,11 +14,9 @@ const MobileBottomNav = ({ onOpenCart }) => {
 
   const isHomeActive = location.pathname === "/";
   const isOrdersActive =
-    location.pathname.startsWith("/orders") ||
-    location.pathname.startsWith("/account/orders");
+    location.pathname.startsWith("/orders") || location.pathname.startsWith("/account/orders");
   const isProfileActive =
-    location.pathname.startsWith("/profile") ||
-    location.pathname.startsWith("/account/profile");
+    location.pathname.startsWith("/profile") || location.pathname.startsWith("/account/profile");
   const isOffersActive = location.pathname.startsWith("/offers");
 
   return (
@@ -44,9 +42,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           }}
           aria-label="Explore Restaurants"
         >
-          <i
-            className={`bi bi-${isHomeActive ? "house-door-fill" : "house-door"} fs-5 mb-1`}
-          ></i>
+          <i className={`bi bi-${isHomeActive ? "house-door-fill" : "house-door"} fs-5 mb-1`}></i>
           <span style={{ fontSize: 11 }}>Explore</span>
         </NavLink>
 
@@ -62,9 +58,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           }}
           aria-label="Active Offers and Deals"
         >
-          <i
-            className={`bi bi-${isOffersActive ? "tag-fill" : "tag"} fs-5 mb-1`}
-          ></i>
+          <i className={`bi bi-${isOffersActive ? "tag-fill" : "tag"} fs-5 mb-1`}></i>
           <span style={{ fontSize: 11 }}>Offers</span>
         </NavLink>
 
@@ -90,11 +84,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
               </span>
             )}
           </div>
-          <span
-            style={{ fontSize: 11, fontWeight: totalItemCount > 0 ? 700 : 500 }}
-          >
-            Bag
-          </span>
+          <span style={{ fontSize: 11, fontWeight: totalItemCount > 0 ? 700 : 500 }}>Bag</span>
         </button>
 
         {/* 4. Orders History */}
@@ -109,9 +99,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           }}
           aria-label="My Orders History"
         >
-          <i
-            className={`bi bi-${isOrdersActive ? "receipt-cutoff" : "receipt"} fs-5 mb-1`}
-          ></i>
+          <i className={`bi bi-${isOrdersActive ? "receipt-cutoff" : "receipt"} fs-5 mb-1`}></i>
           <span style={{ fontSize: 11 }}>Orders</span>
         </NavLink>
 
@@ -127,9 +115,7 @@ const MobileBottomNav = ({ onOpenCart }) => {
           }}
           aria-label="Account Settings"
         >
-          <i
-            className={`bi bi-${isProfileActive ? "person-circle" : "person"} fs-5 mb-1`}
-          ></i>
+          <i className={`bi bi-${isProfileActive ? "person-circle" : "person"} fs-5 mb-1`}></i>
           <span style={{ fontSize: 11 }}>{user ? "Account" : "Sign In"}</span>
         </NavLink>
       </div>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useState, useEffect } from "react";
+import api from "../services/api";
 
 /**
  * Custom hook managing restaurant catalog data, menu filtering, and customizer modal state.
@@ -12,7 +12,7 @@ export function useRestaurantDetail(restaurantId) {
   const [error, setError] = useState(null);
 
   const [activeCategory, setActiveCategory] = useState(null);
-  const [searchFilter, setSearchFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
 
   const [customizingDish, setCustomizingDish] = useState(null);
@@ -61,11 +61,15 @@ export function useRestaurantDetail(restaurantId) {
               });
             }
           });
-          setCategories(Array.isArray(menuRes.data.categories) ? menuRes.data.categories : Array.from(catMap.values()));
+          setCategories(
+            Array.isArray(menuRes.data.categories)
+              ? menuRes.data.categories
+              : Array.from(catMap.values()),
+          );
         }
       } catch (err) {
         if (!isCancelled) {
-          setError(err.message || 'Failed to load restaurant');
+          setError(err.message || "Failed to load restaurant");
         }
       } finally {
         if (!isCancelled) {

@@ -106,9 +106,7 @@ describe("rider active delivery workflow", () => {
         status: "ARRIVED_AT_CUSTOMER",
       }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Verify customer delivery PIN" }),
-    );
+    fireEvent.click(await screen.findByRole("button", { name: "Verify customer delivery PIN" }));
 
     const pinInput = screen.getByLabelText("Customer 4-Digit Handover PIN *");
     fireEvent.change(pinInput, { target: { value: "1234" } });
@@ -159,9 +157,7 @@ describe("rider active delivery workflow", () => {
     expect(screen.getByText(/CP-71/)).toBeTruthy();
     expect(screen.queryByText("No active delivery")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Accept delivery" }));
-    await waitFor(() =>
-      expect(api.post).toHaveBeenCalledWith("/rider/91/accept", {}),
-    );
+    await waitFor(() => expect(api.post).toHaveBeenCalledWith("/rider/91/accept", {}));
   });
 
   it("sends live location while online with no active delivery", async () => {
@@ -179,10 +175,7 @@ describe("rider active delivery workflow", () => {
       }),
       clearWatch: vi.fn(),
     };
-    vi.stubGlobal(
-      "navigator",
-      Object.assign(Object.create(originalNavigator), { geolocation }),
-    );
+    vi.stubGlobal("navigator", Object.assign(Object.create(originalNavigator), { geolocation }));
     api.get.mockImplementation((url) => {
       if (url === "/rider/profile") {
         return Promise.resolve({ success: true, data: { id: 12, online: true } });

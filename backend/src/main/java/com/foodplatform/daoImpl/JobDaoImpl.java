@@ -4,13 +4,12 @@ import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.JobDao;
 import com.foodplatform.model.JobApplication;
 import com.foodplatform.model.JobPosting;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobDaoImpl implements JobDao {
 
@@ -20,15 +19,21 @@ public class JobDaoImpl implements JobDao {
 
     @Override
     public Long createJobPosting(JobPosting job) {
-        String sql = "INSERT INTO job_postings (title, department, location, employment_type, experience_level, " +
-                "salary_min, salary_max, salary_display, description, responsibilities, requirements, benefits, " +
-                "tags, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO job_postings (title, department, location, employment_type, experience_level, " +
+            "salary_min, salary_max, salary_display, description, responsibilities, requirements, benefits, " +
+            "tags, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setString(1, job.getTitle());
             ps.setString(2, job.getDepartment());
             ps.setString(3, job.getLocation());
-            ps.setString(4, job.getEmploymentType() != null ? job.getEmploymentType() : "Full-time");
+            ps.setString(
+                4,
+                job.getEmploymentType() != null ? job.getEmploymentType() : "Full-time"
+            );
             ps.setString(5, job.getExperienceLevel());
             setBigDecimalOrNull(ps, 6, job.getSalaryMin());
             setBigDecimalOrNull(ps, 7, job.getSalaryMax());
@@ -54,10 +59,13 @@ public class JobDaoImpl implements JobDao {
 
     @Override
     public JobPosting findJobById(long id) {
-        String sql = "SELECT jp.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = jp.id) AS applicants_count " +
-                "FROM job_postings jp WHERE jp.id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT jp.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = jp.id) AS applicants_count " +
+            "FROM job_postings jp WHERE jp.id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapJobPosting(rs);
@@ -70,10 +78,16 @@ public class JobDaoImpl implements JobDao {
     }
 
     @Override
-    public List<JobPosting> listJobPostings(String status, String department, int limit, int offset) {
+    public List<JobPosting> listJobPostings(
+        String status,
+        String department,
+        int limit,
+        int offset
+    ) {
         StringBuilder sql = new StringBuilder(
-                "SELECT jp.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = jp.id) AS applicants_count " +
-                "FROM job_postings jp WHERE 1=1");
+            "SELECT jp.*, (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = jp.id) AS applicants_count " +
+                "FROM job_postings jp WHERE 1=1"
+        );
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
             sql.append(" AND jp.status = ?");
@@ -88,8 +102,10 @@ public class JobDaoImpl implements JobDao {
         params.add(offset);
 
         List<JobPosting> list = new ArrayList<>();
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 Object p = params.get(i);
                 if (p instanceof String) ps.setString(i + 1, (String) p);
@@ -118,8 +134,10 @@ public class JobDaoImpl implements JobDao {
             params.add(department);
         }
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setString(i + 1, (String) params.get(i));
             }
@@ -134,11 +152,14 @@ public class JobDaoImpl implements JobDao {
 
     @Override
     public void updateJobPosting(JobPosting job) {
-        String sql = "UPDATE job_postings SET title=?, department=?, location=?, employment_type=?, " +
-                "experience_level=?, salary_min=?, salary_max=?, salary_display=?, description=?, " +
-                "responsibilities=?, requirements=?, benefits=?, tags=?, status=? WHERE id=?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "UPDATE job_postings SET title=?, department=?, location=?, employment_type=?, " +
+            "experience_level=?, salary_min=?, salary_max=?, salary_display=?, description=?, " +
+            "responsibilities=?, requirements=?, benefits=?, tags=?, status=? WHERE id=?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, job.getTitle());
             ps.setString(2, job.getDepartment());
             ps.setString(3, job.getLocation());
@@ -164,8 +185,10 @@ public class JobDaoImpl implements JobDao {
     @Override
     public void updateJobStatus(long jobId, String status) {
         String sql = "UPDATE job_postings SET status = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, status);
             ps.setLong(2, jobId);
             ps.executeUpdate();
@@ -178,8 +201,10 @@ public class JobDaoImpl implements JobDao {
     @Override
     public void deleteJobPosting(long jobId) {
         String sql = "DELETE FROM job_postings WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, jobId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -192,9 +217,11 @@ public class JobDaoImpl implements JobDao {
     public List<String> listDepartments() {
         String sql = "SELECT DISTINCT department FROM job_postings ORDER BY department";
         List<String> departments = new ArrayList<>();
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()
+        ) {
             while (rs.next()) departments.add(rs.getString("department"));
         } catch (SQLException e) {
             logger.error("Error listing departments", e);
@@ -207,11 +234,14 @@ public class JobDaoImpl implements JobDao {
 
     @Override
     public Long createApplication(JobApplication app) {
-        String sql = "INSERT INTO job_applications (job_id, applicant_name, email, phone, portfolio_url, " +
-                "resume_filename, cover_note, experience_years, current_company, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO job_applications (job_id, applicant_name, email, phone, portfolio_url, " +
+            "resume_filename, cover_note, experience_years, current_company, status) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, app.getJobId());
             ps.setString(2, app.getApplicantName());
             ps.setString(3, app.getEmail());
@@ -235,10 +265,13 @@ public class JobDaoImpl implements JobDao {
 
     @Override
     public JobApplication findApplicationById(long id) {
-        String sql = "SELECT ja.*, jp.title AS job_title, jp.department AS job_department " +
-                "FROM job_applications ja JOIN job_postings jp ON ja.job_id = jp.id WHERE ja.id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT ja.*, jp.title AS job_title, jp.department AS job_department " +
+            "FROM job_applications ja JOIN job_postings jp ON ja.job_id = jp.id WHERE ja.id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapApplication(rs);
@@ -253,8 +286,9 @@ public class JobDaoImpl implements JobDao {
     @Override
     public List<JobApplication> listApplications(Long jobId, String status, int limit, int offset) {
         StringBuilder sql = new StringBuilder(
-                "SELECT ja.*, jp.title AS job_title, jp.department AS job_department " +
-                "FROM job_applications ja JOIN job_postings jp ON ja.job_id = jp.id WHERE 1=1");
+            "SELECT ja.*, jp.title AS job_title, jp.department AS job_department " +
+                "FROM job_applications ja JOIN job_postings jp ON ja.job_id = jp.id WHERE 1=1"
+        );
         List<Object> params = new ArrayList<>();
         if (jobId != null) {
             sql.append(" AND ja.job_id = ?");
@@ -269,8 +303,10 @@ public class JobDaoImpl implements JobDao {
         params.add(offset);
 
         List<JobApplication> list = new ArrayList<>();
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 Object p = params.get(i);
                 if (p instanceof String) ps.setString(i + 1, (String) p);
@@ -288,10 +324,18 @@ public class JobDaoImpl implements JobDao {
     }
 
     @Override
-    public void updateApplicationStatus(long applicationId, String status, Long reviewedBy, String adminNotes) {
-        String sql = "UPDATE job_applications SET status=?, reviewed_at=CURRENT_TIMESTAMP, reviewed_by=?, admin_notes=? WHERE id=?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public void updateApplicationStatus(
+        long applicationId,
+        String status,
+        Long reviewedBy,
+        String adminNotes
+    ) {
+        String sql =
+            "UPDATE job_applications SET status=?, reviewed_at=CURRENT_TIMESTAMP, reviewed_by=?, admin_notes=? WHERE id=?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, status);
             if (reviewedBy != null) ps.setLong(2, reviewedBy);
             else ps.setNull(2, Types.BIGINT);
@@ -307,8 +351,10 @@ public class JobDaoImpl implements JobDao {
     @Override
     public int countApplicationsByJob(long jobId) {
         String sql = "SELECT COUNT(*) FROM job_applications WHERE job_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, jobId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
@@ -376,7 +422,8 @@ public class JobDaoImpl implements JobDao {
         return a;
     }
 
-    private void setBigDecimalOrNull(PreparedStatement ps, int index, BigDecimal value) throws SQLException {
+    private void setBigDecimalOrNull(PreparedStatement ps, int index, BigDecimal value)
+        throws SQLException {
         if (value != null) ps.setBigDecimal(index, value);
         else ps.setNull(index, Types.DECIMAL);
     }

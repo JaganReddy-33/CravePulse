@@ -1,13 +1,4 @@
-/* ==============================================================================
-   CRAVEPULSE DESIGN TOKENS & RESPONSIVE DESIGN SYSTEM
-   Standardized tokens for Colors, Typography, Spacing, Radius, Elevation & Insets
-   ============================================================================== */
-
 :root {
-  /* --------------------------------------------------------------------------
-     1. Brand & Multi-Portal Color Tokens (AA Contrast Compliant)
-     -------------------------------------------------------------------------- */
-  /* Customer Theme (Warm Appetising Food - Swiggy/Zomato Palette) */
   --c-primary: #b94016;
   --c-primary-hover: #94300f;
   --c-primary-light: #fff0e7;
@@ -16,18 +7,16 @@
   --c-bg: #faf8f3;
   --c-surface: #ffffff;
   --c-surface-card: rgba(255, 255, 255, 0.95);
-  --c-text-main: #252821;       /* 12.8:1 contrast on white */
-  --c-text-muted: #60665a;      /* 4.9:1 contrast on white (AA compliant) */
+  --c-text-main: #252821; /* 12.8:1 contrast on white */
+  --c-text-muted: #60665a; /* 4.9:1 contrast on white (AA compliant) */
   --c-text-light: #64748b;
   --c-border: #e6e5dc;
   --c-border-subtle: #f1f5f9;
 
-  /* Zomato/Swiggy Rating & Offer Accents */
   --c-rating-green: #248232;
   --c-rating-green-bg: #e5f7ee;
   --c-offer-orange: #b94016;
 
-  /* Partner Theme (Restaurant Operations) */
   --p-primary: #ff5c35;
   --p-primary-hover: #e04b25;
   --p-bg: #f5f6fa;
@@ -37,7 +26,6 @@
   --p-border: #eaedf2;
   --p-success: #00b894;
 
-  /* Rider Theme (OLED High Contrast Dark Mode) */
   --r-bg: #0b0f19;
   --r-surface: #111827;
   --r-surface-card: #1f2937;
@@ -47,7 +35,6 @@
   --r-text-muted: #94a3b8;
   --r-border: #1e293b;
 
-  /* Admin Theme (Dense Ops Control Tower) */
   --a-bg: #090d16;
   --a-surface: #111827;
   --a-surface-card: #1a2234;
@@ -56,23 +43,17 @@
   --a-text-muted: #94a3b8;
   --a-border: #1f293d;
 
-  /* --------------------------------------------------------------------------
-     2. Spacing Scale Tokens
-     -------------------------------------------------------------------------- */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
 
-  /* --------------------------------------------------------------------------
-     3. Radius Tokens
-     -------------------------------------------------------------------------- */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -81,18 +62,12 @@
   --radius-2xl: 32px;
   --radius-pill: 9999px;
 
-  /* --------------------------------------------------------------------------
-     4. Shadow Tokens
-     -------------------------------------------------------------------------- */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 20px 48px rgba(15, 23, 42, 0.16);
 
-  /* --------------------------------------------------------------------------
-     5. Accessibility & Mobile Touch Target Tokens
-     -------------------------------------------------------------------------- */
   --touch-target-min: 44px;
   --focus-ring-color: #b94016;
   --focus-ring: 0 0 0 3px rgba(185, 64, 22, 0.2);
@@ -111,14 +86,17 @@
 }
 
 /* Base Body & Layout Safeguards */
-html, body {
+html,
+body {
   width: 100%;
   min-height: 100%;
   padding-bottom: 0;
   box-sizing: border-box;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
@@ -164,10 +142,6 @@ html, body {
     padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--safe-bottom) + 16px) !important;
   }
 }
-
-/* --------------------------------------------------------------------------
-   Swiggy / Zomato Modern Food Card & Layout Primitives
-   -------------------------------------------------------------------------- */
 
 /* Three-column desktop restaurant cards, collapsing cleanly on smaller screens. */
 .restaurant-card-grid {
@@ -312,7 +286,12 @@ html, body {
   left: 0;
   height: 3px;
   content: "";
-  background: linear-gradient(90deg, var(--c-primary) 0 24%, var(--c-secondary) 24% 38%, transparent 72%);
+  background: linear-gradient(
+    90deg,
+    var(--c-primary) 0 24%,
+    var(--c-secondary) 24% 38%,
+    transparent 72%
+  );
   opacity: 0.9;
   pointer-events: none;
 }
@@ -338,7 +317,7 @@ html, body {
   left: 0;
   right: 0;
   padding: 26px 12px 6px;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.82) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.82) 100%);
   color: #ffffff;
   font-size: 0.82rem;
   font-weight: 800;
@@ -373,7 +352,10 @@ html, body {
   border: 2px solid transparent;
   object-fit: cover;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cuisine-filter-button:hover .cuisine-filter-image {
@@ -408,8 +390,10 @@ html, body {
   color: #64748b;
   cursor: pointer;
   z-index: 4;
-  transition: transform 0.15s ease, color 0.15s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .restaurant-fav-btn:hover {
@@ -434,12 +418,10 @@ html, body {
   line-height: 1.2;
 }
 
-/* --------------------------------------------------------------------------
-   Responsive Viewport Specific Verifications (360px, 390px, 768px, 1024px, 1440px)
-   -------------------------------------------------------------------------- */
 /* Extra small phones (360px down to small screens) */
 @media (max-width: 389.98px) {
-  .container, .container-fluid {
+  .container,
+  .container-fluid {
     padding-left: 10px !important;
     padding-right: 10px !important;
   }
@@ -488,7 +470,9 @@ html, body {
 
 /* Reduced Motion Preference Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

@@ -120,12 +120,12 @@ Real-time bidirectional synchronization is powered by Jakarta WebSocket (`@Serve
 
 Clients subscribe to structured channel topics upon connection or on demand:
 
-| Channel Pattern | Intended Consumer | Broadcast Events |
-|---|---|---|
-| `order:{orderId}` | Customer, Restaurant, Assigned Rider | `ORDER_UPDATED`, `STATUS_CHANGED`, `RIDER_LOCATION`, `RIDER_ASSIGNED` |
-| `restaurant:{restaurantId}` | Restaurant Kitchen Staff | `NEW_ORDER` (with chime tone payload), `ORDER_CANCELLED` |
-| `rider:{riderId}` | Delivery Partner | `NEW_JOB_OFFER` (with upfront pay breakdown), `JOB_CANCELLED` |
-| `admin:ops` | Platform Operations Team | `DISPUTE_FIRED`, `SLA_BREACH`, `EMERGENCY_ALERT`, `NEW_PARTNER_PENDING` |
+| Channel Pattern             | Intended Consumer                    | Broadcast Events                                                        |
+| --------------------------- | ------------------------------------ | ----------------------------------------------------------------------- |
+| `order:{orderId}`           | Customer, Restaurant, Assigned Rider | `ORDER_UPDATED`, `STATUS_CHANGED`, `RIDER_LOCATION`, `RIDER_ASSIGNED`   |
+| `restaurant:{restaurantId}` | Restaurant Kitchen Staff             | `NEW_ORDER` (with chime tone payload), `ORDER_CANCELLED`                |
+| `rider:{riderId}`           | Delivery Partner                     | `NEW_JOB_OFFER` (with upfront pay breakdown), `JOB_CANCELLED`           |
+| `admin:ops`                 | Platform Operations Team             | `DISPUTE_FIRED`, `SLA_BREACH`, `EMERGENCY_ALERT`, `NEW_PARTNER_PENDING` |
 
 ### 3.2 WebSocket Lifecycle
 
@@ -166,42 +166,69 @@ sequenceDiagram
 To withstand real-world production conditions without data corruption, ghost allocations, or balance leaks, the application adheres to strict concurrency invariants:
 
 ### 4.1 Strict Row-Level Locking (`SELECT ... FOR UPDATE`)
+
 Order updates and rider job acceptances must acquire pessimistic write locks at the database level:
+
 ```sql
-SELECT * FROM orders WHERE id = ? FOR UPDATE;
-SELECT * FROM delivery_dispatches WHERE id = ? FOR UPDATE;
+SELECT
+  *
+FROM
+  orders
+WHERE
+  id = ? FOR
+UPDATE;
+
+SELECT
+  *
+FROM
+  delivery_dispatches
+WHERE
+  id = ? FOR
+UPDATE;
 ```
+
 This guarantees that if two delivery riders attempt to tap "Accept Order" simultaneously, the second transaction is forced to wait until the first commits, at which point the dispatch status is already `ACCEPTED` and the second request is safely rejected with HTTP 409 Conflict.
 
 ### 4.2 Explicit Transaction Management
+
 No DAO method relies on auto-commit. Multi-table modifications are wrapped in explicit database transactions:
+
 ```java
 Connection conn = DatabaseConfig.getConnection();
+
 try {
-    conn.setAutoCommit(false);
-    // 1. Lock and update order status
-    // 2. Insert into order_events audit trail
-    // 3. Update restaurant balance or issue wallet credit
-    conn.commit();
+  conn.setAutoCommit(false);
+  // 1. Lock and update order status
+  // 2. Insert into order_events audit trail
+  // 3. Update restaurant balance or issue wallet credit
+  conn.commit();
 } catch (Exception e) {
-    conn.rollback();
-    throw e;
+  conn.rollback();
+  throw e;
 } finally {
-    conn.setAutoCommit(true);
-    conn.close();
+  conn.setAutoCommit(true);
+  conn.close();
 }
 ```
 
 ### 4.3 Unique Constraints & Single Assignment Guarantees
+
 - Order-row locking serializes dispatch attempts; the dispatcher checks for an existing `OFFERED` row before creating another, so only one rider receives an order offer at a time. Rider availability is reserved in the same transaction and released after rejection or timeout.
 - Offers go to the nearest eligible rider. A rejection triggers the next candidate immediately; an unanswered offer is marked `TIMED_OUT` after the configured accept window and then retried. Search radius expands progressively up to the configured maximum. Previously tried riders are skipped while other candidates are available and may be reconsidered after a five-minute cooldown if the eligible pool is exhausted.
 - A unique index on `payments(idempotency_key)` guarantees that duplicate webhook callbacks from payment gateways never trigger multiple order creations or double refunds.
 
 ### 4.4 Atomic Balance Deltas
+
 Customer and rider digital wallets are updated through atomic delta operations:
+
 ```sql
-UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?;
+UPDATE users
+SET
+  wallet_balance = wallet_balance + ?
+WHERE
+  id = ?;
 ```
+
 Combined with a database constraint `CHECK (wallet_balance >= 0)`, this prevents race-condition double spends.
 
 ---
@@ -365,7 +392,7 @@ The order lifecycle is strictly enforced by `OrderStateMachineService.java`. Dir
 ```mermaid
 stateDiagram-v2
     [*] --> PLACED: Customer Checkout (Payment Authorized / COD)
-    
+
     PLACED --> ACCEPTED: Restaurant Accepts Order
     PLACED --> REJECTED: Restaurant Saturation / Item Stockout
     PLACED --> CANCELLED: Customer Cancels (Only within 60s)
@@ -374,15 +401,15 @@ stateDiagram-v2
     ACCEPTED --> CANCELLED: Emergency Kitchen Failure (Full Refund)
 
     PREPARING --> READY: Food Boxed & Sealed (Auto-Dispatch Rider)
-    
+
     READY --> PICKED_UP: Rider Arrives & Scans OTP / Verifies Token
-    
+
     PICKED_UP --> DELIVERED: Rider Reaches Delivery Address & Confirms OTP
-    
+
     DELIVERED --> REFUNDED: Dispute Auto-Approved / Admin Credit
     REJECTED --> REFUNDED: Auto-Refund to Wallet/Source
     CANCELLED --> REFUNDED: Auto-Refund to Wallet/Source
-    
+
     DELIVERED --> [*]
     REFUNDED --> [*]
 
@@ -407,47 +434,53 @@ stateDiagram-v2
 
 Access permissions are enforced programmatically in `JwtAuthFilter` and verified inside individual Servlets:
 
-| Endpoint Resource | Customer | Restaurant Partner | Delivery Rider | Platform Admin | Unauthenticated |
-|---|:---:|:---:|:---:|:---:|:---:|
-| `POST /api/auth/register` | ✅ | ✅ | ✅ | ❌ | ✅ |
-| `POST /api/auth/login` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `GET /api/restaurants` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `POST /api/cart/price` | ✅ | ❌ | ❌ | ❌ | ❌ |
-| `POST /api/orders` | ✅ | ❌ | ❌ | ❌ | ❌ |
-| `GET /api/orders/{id}` | ✅ (Own) | ✅ (Own Rest.) | ✅ (Assigned) | ✅ (All) | ❌ |
-| `POST /api/orders/{id}/status` | ❌ | ✅ (`ACCEPTED`, `PREPARING`, `READY`) | ✅ (`PICKED_UP`, `DELIVERED`) | ✅ (Any) | ❌ |
-| `POST /api/disputes` | ✅ (Own) | ❌ | ❌ | ❌ | ❌ |
-| `POST /api/disputes/{id}/resolve`| ❌ | ❌ | ❌ | ✅ | ❌ |
-| `GET /api/rider/offers` | ❌ | ❌ | ✅ | ✅ | ❌ |
-| `POST /api/rider/telemetry` | ❌ | ❌ | ✅ | ✅ | ❌ |
-| `GET /api/admin/metrics` | ❌ | ❌ | ❌ | ✅ | ❌ |
-| `POST /api/admin/restaurant/{id}/kyc` | ❌ | ❌ | ❌ | ✅ | ❌ |
-| `GET /api/invoices/{id}` | ✅ (Own) | ✅ (Own Rest.) | ❌ | ✅ | ❌ |
+| Endpoint Resource                     | Customer |          Restaurant Partner           |        Delivery Rider         | Platform Admin | Unauthenticated |
+| ------------------------------------- | :------: | :-----------------------------------: | :---------------------------: | :------------: | :-------------: |
+| `POST /api/auth/register`             |    ✅    |                  ✅                   |              ✅               |       ❌       |       ✅        |
+| `POST /api/auth/login`                |    ✅    |                  ✅                   |              ✅               |       ✅       |       ✅        |
+| `GET /api/restaurants`                |    ✅    |                  ✅                   |              ✅               |       ✅       |       ✅        |
+| `POST /api/cart/price`                |    ✅    |                  ❌                   |              ❌               |       ❌       |       ❌        |
+| `POST /api/orders`                    |    ✅    |                  ❌                   |              ❌               |       ❌       |       ❌        |
+| `GET /api/orders/{id}`                | ✅ (Own) |            ✅ (Own Rest.)             |         ✅ (Assigned)         |    ✅ (All)    |       ❌        |
+| `POST /api/orders/{id}/status`        |    ❌    | ✅ (`ACCEPTED`, `PREPARING`, `READY`) | ✅ (`PICKED_UP`, `DELIVERED`) |    ✅ (Any)    |       ❌        |
+| `POST /api/disputes`                  | ✅ (Own) |                  ❌                   |              ❌               |       ❌       |       ❌        |
+| `POST /api/disputes/{id}/resolve`     |    ❌    |                  ❌                   |              ❌               |       ✅       |       ❌        |
+| `GET /api/rider/offers`               |    ❌    |                  ❌                   |              ✅               |       ✅       |       ❌        |
+| `POST /api/rider/telemetry`           |    ❌    |                  ❌                   |              ✅               |       ✅       |       ❌        |
+| `GET /api/admin/metrics`              |    ❌    |                  ❌                   |              ❌               |       ✅       |       ❌        |
+| `POST /api/admin/restaurant/{id}/kyc` |    ❌    |                  ❌                   |              ❌               |       ✅       |       ❌        |
+| `GET /api/invoices/{id}`              | ✅ (Own) |            ✅ (Own Rest.)             |              ❌               |       ✅       |       ❌        |
 
 ---
 
 ## 8. Threat Model & Security Posture
 
 ### 8.1 SQL Injection Hardening
+
 - **Vulnerability:** Unsanitized user inputs in queries could allow unauthorized read/write access.
 - **Mitigation:** Strict ban on SQL string concatenation. All SQL execution is mediated exclusively through `java.sql.PreparedStatement` with typed binding (`setInt`, `setString`, `setBigDecimal`). Codebase undergoes zero-dynamic-query verification.
 
 ### 8.2 Cross-Site Scripting (XSS)
+
 - **Vulnerability:** Malicious script injection in customer reviews, delivery instructions, or dish descriptions.
 - **Mitigation:** All frontend inputs are rendered through React’s automated string-escaping virtual DOM. Response headers include `X-Content-Type-Options: nosniff` and `Content-Type: application/json; charset=UTF-8`.
 
 ### 8.3 Cross-Site Request Forgery (CSRF) & CORS Policy
+
 - **Vulnerability:** Unauthorized cross-origin requests made on behalf of an authenticated user.
 - **Mitigation:** Token-based stateless authentication (`Authorization: Bearer <JWT>`) stored in client memory/secure storage, immune to ambient cookie-based CSRF attacks. Explicit CORS filter restricts `Access-Control-Allow-Origin` to trusted frontend domains and rejects wildcard origins on authenticated endpoints.
 
 ### 8.4 JWT Authentication & Refresh Token Rotation
+
 - **Access Tokens:** Signed using HMAC-SHA256 with a 256-bit cryptographically random secret; short 1-hour time-to-live (TTL).
 - **Refresh Tokens:** High-entropy random tokens stored in the `user_tokens` table with SHA-256 hash, valid for 7 days.
 - **Rotation:** Upon refresh token usage, the token is revoked and a new pair is issued immediately. If an already-revoked refresh token is re-presented, all sessions for that user ID are invalidated immediately (token family theft detection).
 
 ### 8.5 Denial of Service & Rate Limiting
+
 - **Implementation:** In-memory sliding token-bucket rate limiter (`RateLimitFilter`) permits up to 100 requests per minute per IP address. Exceeded limits trigger an immediate `429 Too Many Requests` status with a `Retry-After` header.
 
 ### 8.6 Cryptographic Storage of Passwords
+
 - **Algorithm:** OpenBSD BCrypt algorithm (`jBCrypt`) with work factor (cost) 10 and cryptographically secure pseudorandom salt.
 - Plaintext passwords never cross the service layer boundary and are excluded from all logging and serialization outputs.

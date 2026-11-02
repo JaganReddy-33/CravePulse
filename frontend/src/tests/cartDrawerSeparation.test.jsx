@@ -57,12 +57,8 @@ describe("cart drawer checkout separation", () => {
 
     expect(screen.getByText("Lemon rice")).toBeTruthy();
     expect(screen.getByText("SAVE10")).toBeTruthy();
-    expect(
-      screen.getAllByRole("link", { name: /proceed to checkout/i }),
-    ).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: /proceed to checkout/i })).toHaveLength(1);
     expect(screen.queryByText(/item subtotal|coupon discount|to pay/i)).toBeNull();
-    expect(
-      screen.queryByText(/delivery fee|taxes, packaging|audit bill|distance/i),
-    ).toBeNull();
+    expect(screen.queryByText(/delivery fee|taxes, packaging|audit bill|distance/i)).toBeNull();
   });
 });

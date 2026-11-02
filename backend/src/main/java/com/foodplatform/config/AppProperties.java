@@ -1,10 +1,9 @@
 package com.foodplatform.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class AppProperties {
 
@@ -12,12 +11,18 @@ public final class AppProperties {
     private static final Properties props = new Properties();
 
     static {
-        try (InputStream is = AppProperties.class.getClassLoader().getResourceAsStream("application.properties")) {
+        try (
+            InputStream is = AppProperties.class
+                .getClassLoader()
+                .getResourceAsStream("application.properties")
+        ) {
             if (is != null) {
                 props.load(is);
                 logger.info("Loaded configuration from application.properties");
             } else {
-                logger.warn("application.properties not found on classpath, relying on environment variables");
+                logger.warn(
+                    "application.properties not found on classpath, relying on environment variables"
+                );
             }
         } catch (Exception e) {
             logger.warn("Could not load application.properties: {}", e.getMessage());
@@ -26,8 +31,7 @@ public final class AppProperties {
 
     private static final AppProperties INSTANCE = new AppProperties();
 
-    private AppProperties() {
-    }
+    private AppProperties() {}
 
     public static AppProperties getInstance() {
         return INSTANCE;
@@ -46,8 +50,11 @@ public final class AppProperties {
     }
 
     public static String getDbUrl() {
-        return getProperty("db.url", "DB_URL",
-                "jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8");
+        return getProperty(
+            "db.url",
+            "DB_URL",
+            "jdbc:mysql://localhost:3306/food_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8"
+        );
     }
 
     public static String getDbUser() {
@@ -59,13 +66,19 @@ public final class AppProperties {
         if (pass == null || pass.isBlank()) {
             pass = props.getProperty("db.password");
         }
-        return (pass != null) ? pass : "";
+        return pass != null ? pass : "";
     }
 
     public static String getJwtSecret() {
         String secret = getProperty("jwt.secret", "JWT_SECRET", "");
-        if (secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32 || secret.contains("YourSuper") || secret.contains("ProductionSecretKey")) {
-            throw new IllegalStateException("Set JWT_SECRET to a unique random secret of at least 32 bytes");
+        if (
+            secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32 ||
+            secret.contains("YourSuper") ||
+            secret.contains("ProductionSecretKey")
+        ) {
+            throw new IllegalStateException(
+                "Set JWT_SECRET to a unique random secret of at least 32 bytes"
+            );
         }
         return secret.trim();
     }
@@ -80,7 +93,11 @@ public final class AppProperties {
     }
 
     public static long getRefreshTokenExpirationMillis() {
-        String val = getProperty("jwt.refreshTokenExpirationMillis", "JWT_REFRESH_EXPIRATION_MILLIS", "604800000");
+        String val = getProperty(
+            "jwt.refreshTokenExpirationMillis",
+            "JWT_REFRESH_EXPIRATION_MILLIS",
+            "604800000"
+        );
         try {
             return Long.parseLong(val);
         } catch (NumberFormatException e) {
@@ -98,13 +115,18 @@ public final class AppProperties {
     }
 
     public static String getCorsAllowedOrigins() {
-        return getProperty("cors.allowedOrigins", "CORS_ORIGINS",
-                "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174");
+        return getProperty(
+            "cors.allowedOrigins",
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174"
+        );
     }
 
     public static String getRazorpayKeyId() {
         String value = getProperty("razorpay.keyId", "RAZORPAY_KEY_ID", "");
-        return value.contains("demo") || value.contains("placeholder") || value.contains("your_key") ? "" : value;
+        return value.contains("demo") || value.contains("placeholder") || value.contains("your_key")
+            ? ""
+            : value;
     }
 
     public static String getRazorpayKeySecret() {
@@ -113,6 +135,18 @@ public final class AppProperties {
 
     public static String getRazorpayWebhookSecret() {
         return getProperty("razorpay.webhookSecret", "RAZORPAY_WEBHOOK_SECRET", "");
+    }
+
+    public static String getCloudinaryCloudName() {
+        return System.getenv("CLOUDINARY_CLOUD_NAME");
+    }
+
+    public static String getCloudinaryApiKey() {
+        return System.getenv("CLOUDINARY_API_KEY");
+    }
+
+    public static String getCloudinaryApiSecret() {
+        return System.getenv("CLOUDINARY_API_SECRET");
     }
 
     public static java.math.BigDecimal getCodMaxLimit() {
@@ -125,7 +159,11 @@ public final class AppProperties {
     }
 
     public static int getRiderAcceptTimeoutSeconds() {
-        String val = getProperty("dispatch.riderAcceptTimeoutSeconds", "DISPATCH_RIDER_ACCEPT_TIMEOUT_SECONDS", "30");
+        String val = getProperty(
+            "dispatch.riderAcceptTimeoutSeconds",
+            "DISPATCH_RIDER_ACCEPT_TIMEOUT_SECONDS",
+            "30"
+        );
         try {
             return Integer.parseInt(val.trim());
         } catch (Exception e) {
@@ -134,7 +172,11 @@ public final class AppProperties {
     }
 
     public static double getDispatchMaxSearchRadiusKm() {
-        String val = getProperty("dispatch.maxSearchRadiusKm", "DISPATCH_MAX_SEARCH_RADIUS_KM", "15.0");
+        String val = getProperty(
+            "dispatch.maxSearchRadiusKm",
+            "DISPATCH_MAX_SEARCH_RADIUS_KM",
+            "15.0"
+        );
         try {
             return Double.parseDouble(val.trim());
         } catch (Exception e) {
@@ -143,7 +185,11 @@ public final class AppProperties {
     }
 
     public static java.math.BigDecimal getFairPayBaseFare() {
-        String val = getProperty("dispatch.fairPayBaseFare", "DISPATCH_FAIR_PAY_BASE_FARE", "35.00");
+        String val = getProperty(
+            "dispatch.fairPayBaseFare",
+            "DISPATCH_FAIR_PAY_BASE_FARE",
+            "35.00"
+        );
         try {
             return new java.math.BigDecimal(val.trim());
         } catch (Exception e) {
@@ -152,7 +198,11 @@ public final class AppProperties {
     }
 
     public static java.math.BigDecimal getFairPayPerKmRate() {
-        String val = getProperty("dispatch.fairPayPerKmRate", "DISPATCH_FAIR_PAY_PER_KM_RATE", "12.00");
+        String val = getProperty(
+            "dispatch.fairPayPerKmRate",
+            "DISPATCH_FAIR_PAY_PER_KM_RATE",
+            "12.00"
+        );
         try {
             return new java.math.BigDecimal(val.trim());
         } catch (Exception e) {

@@ -21,11 +21,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error(
-      "ErrorBoundary caught an unhandled application exception:",
-      error,
-      errorInfo,
-    );
+    console.error("ErrorBoundary caught an unhandled application exception:", error, errorInfo);
   }
 
   handleReload = () => {
@@ -49,13 +45,10 @@ class ErrorBoundary extends React.Component {
             <div className="fs-1 mb-3" aria-hidden="true">
               🍲💥
             </div>
-            <h3 className="fw-extrabold text-dark mb-2">
-              Something went unexpected
-            </h3>
+            <h3 className="fw-extrabold text-dark mb-2">Something went unexpected</h3>
             <p className="text-muted small mb-4">
-              We encountered a glitch while loading this section of CravePulse.
-              Don't worry, your orders and account data remain completely
-              secure.
+              We encountered a glitch while loading this section of CravePulse. Don't worry, your
+              orders and account data remain completely secure.
             </p>
 
             <div className="d-flex flex-column flex-sm-row justify-content-center gap-2 mb-4">
@@ -85,15 +78,11 @@ class ErrorBoundary extends React.Component {
             <div className="border-top pt-3 text-start">
               <button
                 type="button"
-                onClick={() =>
-                  this.setState((prev) => ({ showDetails: !prev.showDetails }))
-                }
+                onClick={() => this.setState((prev) => ({ showDetails: !prev.showDetails }))}
                 className="btn btn-link p-0 text-muted small text-decoration-none d-flex align-items-center justify-content-between w-100"
               >
                 <span>Technical Diagnostics</span>
-                <i
-                  className={`bi bi-chevron-${this.state.showDetails ? "up" : "down"}`}
-                ></i>
+                <i className={`bi bi-chevron-${this.state.showDetails ? "up" : "down"}`}></i>
               </button>
               {this.state.showDetails && (
                 <div
@@ -101,10 +90,7 @@ class ErrorBoundary extends React.Component {
                   style={{ maxHeight: 180, fontSize: 11 }}
                 >
                   <strong>{this.state.error?.toString()}</strong>
-                  <pre
-                    className="mb-0 mt-1 text-muted"
-                    style={{ fontSize: 10 }}
-                  >
+                  <pre className="mb-0 mt-1 text-muted" style={{ fontSize: 10 }}>
                     {this.state.errorInfo?.componentStack}
                   </pre>
                 </div>

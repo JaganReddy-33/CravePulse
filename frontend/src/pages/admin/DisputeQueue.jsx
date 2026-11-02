@@ -79,14 +79,11 @@ const DisputeQueue = () => {
             Instant Dispute Resolution & Refund Queue
           </h4>
           <p className="text-muted small mb-0">
-            Audit photo evidence for missing/spoiled food, approve wallet
-            compensation, and inspect resolution audit logs.
+            Audit photo evidence for missing/spoiled food, approve wallet compensation, and inspect
+            resolution audit logs.
           </p>
         </div>
-        <button
-          className="btn btn-outline-info rounded-pill px-3 btn-sm"
-          onClick={fetchDisputes}
-        >
+        <button className="btn btn-outline-info rounded-pill px-3 btn-sm" onClick={fetchDisputes}>
           <i className="bi bi-arrow-clockwise me-1"></i> Refresh Queue
         </button>
       </div>
@@ -191,9 +188,7 @@ const DisputeQueue = () => {
                       </small>
                     </div>
                     <div className="text-end">
-                      <span className="small text-muted d-block">
-                        Requested Refund
-                      </span>
+                      <span className="small text-muted d-block">Requested Refund</span>
                       <span className="fs-5 fw-extrabold text-warning">
                         ₹{Number(disp.requestedRefundAmount).toFixed(2)}
                       </span>
@@ -208,9 +203,7 @@ const DisputeQueue = () => {
                     }}
                   >
                     <strong className="text-light">Customer Statement:</strong>
-                    <p className="mb-0 text-secondary mt-1">
-                      {disp.description}
-                    </p>
+                    <p className="mb-0 text-secondary mt-1">{disp.description}</p>
                   </div>
 
                   {/* Photo Evidence with Lightbox */}
@@ -237,8 +230,7 @@ const DisputeQueue = () => {
                           style={{ cursor: "pointer" }}
                           onClick={() => setPreviewPhoto(disp.photoEvidenceUrl)}
                         >
-                          <i className="bi bi-zoom-in me-1"></i> Click to
-                          inspect high-res image
+                          <i className="bi bi-zoom-in me-1"></i> Click to inspect high-res image
                         </small>
                       </div>
                     </div>
@@ -253,16 +245,12 @@ const DisputeQueue = () => {
                         border: "1px solid #19324d",
                       }}
                     >
-                      <strong className="text-info">
-                        Compliance Audit Notes:
-                      </strong>
-                      <p className="mb-0 text-white-50 mt-1">
-                        {disp.resolutionNotes}
-                      </p>
+                      <strong className="text-info">Compliance Audit Notes:</strong>
+                      <p className="mb-0 text-white-50 mt-1">{disp.resolutionNotes}</p>
                       {disp.resolvedAt && (
                         <small className="text-muted d-block mt-2">
-                          <i className="bi bi-clock-history me-1"></i> Resolved
-                          on {new Date(disp.resolvedAt).toLocaleString()}
+                          <i className="bi bi-clock-history me-1"></i> Resolved on{" "}
+                          {new Date(disp.resolvedAt).toLocaleString()}
                         </small>
                       )}
                     </div>
@@ -321,11 +309,7 @@ const DisputeQueue = () => {
 
       {/* Resolution Confirmation Modal */}
       {selectedDispute && (
-        <div
-          className="modal show d-block"
-          tabIndex="-1"
-          style={{ background: "rgba(0,0,0,0.8)" }}
-        >
+        <div className="modal show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.8)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div
               className="modal-content border-0 rounded-4 p-3 text-white"
@@ -333,9 +317,7 @@ const DisputeQueue = () => {
             >
               <div className="modal-header border-0 pb-0">
                 <h5 className="modal-title fw-bold">
-                  {isApproveAction
-                    ? "✅ Approve Customer Refund"
-                    : "❌ Reject Dispute Claim"}
+                  {isApproveAction ? "✅ Approve Customer Refund" : "❌ Reject Dispute Claim"}
                 </h5>
                 <button
                   type="button"
@@ -352,9 +334,7 @@ const DisputeQueue = () => {
                 </p>
 
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">
-                    Compliance Resolution Note *
-                  </label>
+                  <label className="form-label small fw-bold">Compliance Resolution Note *</label>
                   <textarea
                     className="form-control bg-dark border-secondary text-white"
                     rows="3"
@@ -374,12 +354,8 @@ const DisputeQueue = () => {
                       checked={flagFraud}
                       onChange={(e) => setFlagFraud(e.target.checked)}
                     />
-                    <label
-                      className="form-check-label small text-warning"
-                      htmlFor="flagFraudCheck"
-                    >
-                      Increment user fraud-flag counter (suspicious claim /
-                      high-risk activity)
+                    <label className="form-check-label small text-warning" htmlFor="flagFraudCheck">
+                      Increment user fraud-flag counter (suspicious claim / high-risk activity)
                     </label>
                   </div>
                 )}

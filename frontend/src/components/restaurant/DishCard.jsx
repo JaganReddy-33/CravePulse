@@ -8,21 +8,13 @@ const DishCard = ({ dish, restaurantName, onCustomize, isStoreClosed }) => {
   const cartItem = cart.items.find((item) => item.id === dish.id);
   const quantity = cartItem?.quantity || 0;
   const hasCustomizations =
-    (dish.variants && dish.variants.length > 0) ||
-    (dish.addons && dish.addons.length > 0);
+    (dish.variants && dish.variants.length > 0) || (dish.addons && dish.addons.length > 0);
   const price = dish.platformPrice ?? dish.dineInPrice ?? dish.price;
   const hasPrice =
-    price !== null &&
-    price !== undefined &&
-    price !== "" &&
-    Number.isFinite(Number(price));
+    price !== null && price !== undefined && price !== "" && Number.isFinite(Number(price));
   const isUnavailable = dish.isAvailable === false || dish.available === false;
   const isVegetarian =
-    typeof dish.veg === "boolean"
-      ? dish.veg
-      : typeof dish.isVeg === "boolean"
-        ? dish.isVeg
-        : null;
+    typeof dish.veg === "boolean" ? dish.veg : typeof dish.isVeg === "boolean" ? dish.isVeg : null;
 
   const handleAddClick = () => {
     if (isStoreClosed || isUnavailable || !hasPrice) return;
@@ -120,29 +112,17 @@ const DishCard = ({ dish, restaurantName, onCustomize, isStoreClosed }) => {
           {dish.calorieCount != null &&
             dish.calorieCount !== "" &&
             Number.isFinite(Number(dish.calorieCount)) && (
-              <small className="text-secondary mb-2">
-                {dish.calorieCount} kcal
-              </small>
+              <small className="text-secondary mb-2">{dish.calorieCount} kcal</small>
             )}
 
           <div className="d-flex justify-content-between align-items-end gap-2 mt-auto pt-2 border-top">
-            <div className="small text-secondary">
-              {hasCustomizations && "Customizable"}
-            </div>
+            <div className="small text-secondary">{hasCustomizations && "Customizable"}</div>
             {isStoreClosed ? (
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary rounded-pill px-3"
-                disabled
-              >
+              <button type="button" className="btn btn-sm btn-secondary rounded-pill px-3" disabled>
                 Closed
               </button>
             ) : isUnavailable ? (
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary rounded-pill px-3"
-                disabled
-              >
+              <button type="button" className="btn btn-sm btn-secondary rounded-pill px-3" disabled>
                 Unavailable
               </button>
             ) : quantity > 0 && !hasCustomizations ? (

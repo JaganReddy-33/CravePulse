@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
 // Cart Action types and Reducer implementation for unit validation
 const initialCartState = {
@@ -8,15 +8,15 @@ const initialCartState = {
 
 function cartReducer(state, action) {
   switch (action.type) {
-    case 'ADD_ITEM': {
+    case "ADD_ITEM": {
       const { item, restaurantId } = action.payload;
       // Single restaurant cart constraint
       if (state.restaurantId && state.restaurantId !== restaurantId && state.items.length > 0) {
-        throw new Error('RESTAURANT_CONFLICT');
+        throw new Error("RESTAURANT_CONFLICT");
       }
 
       const existingIndex = state.items.findIndex(
-        (i) => i.id === item.id && i.variantId === item.variantId
+        (i) => i.id === item.id && i.variantId === item.variantId,
       );
 
       let newItems;
@@ -36,7 +36,7 @@ function cartReducer(state, action) {
       };
     }
 
-    case 'REMOVE_ITEM': {
+    case "REMOVE_ITEM": {
       const { id, variantId } = action.payload;
       const newItems = state.items
         .map((i) => {
@@ -53,7 +53,7 @@ function cartReducer(state, action) {
       };
     }
 
-    case 'CLEAR_CART':
+    case "CLEAR_CART":
       return initialCartState;
 
     default:
@@ -61,11 +61,11 @@ function cartReducer(state, action) {
   }
 }
 
-describe('Cart Reducer Tests', () => {
-  it('adds item to empty cart and sets restaurantId', () => {
-    const item = { id: 101, name: 'Paneer Butter Masala', platformPrice: 280, variantId: null };
+describe("Cart Reducer Tests", () => {
+  it("adds item to empty cart and sets restaurantId", () => {
+    const item = { id: 101, name: "Paneer Butter Masala", platformPrice: 280, variantId: null };
     const state = cartReducer(initialCartState, {
-      type: 'ADD_ITEM',
+      type: "ADD_ITEM",
       payload: { item, restaurantId: 1 },
     });
 
@@ -74,14 +74,14 @@ describe('Cart Reducer Tests', () => {
     expect(state.items[0].quantity).toBe(1);
   });
 
-  it('increments quantity when adding same item and variant', () => {
-    const item = { id: 101, name: 'Paneer Butter Masala', platformPrice: 280, variantId: null };
+  it("increments quantity when adding same item and variant", () => {
+    const item = { id: 101, name: "Paneer Butter Masala", platformPrice: 280, variantId: null };
     let state = cartReducer(initialCartState, {
-      type: 'ADD_ITEM',
+      type: "ADD_ITEM",
       payload: { item, restaurantId: 1 },
     });
     state = cartReducer(state, {
-      type: 'ADD_ITEM',
+      type: "ADD_ITEM",
       payload: { item, restaurantId: 1 },
     });
 
@@ -89,32 +89,32 @@ describe('Cart Reducer Tests', () => {
     expect(state.items[0].quantity).toBe(2);
   });
 
-  it('throws RESTAURANT_CONFLICT when adding item from a different restaurant', () => {
-    const item1 = { id: 101, name: 'Biryani', platformPrice: 340 };
-    const item2 = { id: 201, name: 'Pizza', platformPrice: 450 };
+  it("throws RESTAURANT_CONFLICT when adding item from a different restaurant", () => {
+    const item1 = { id: 101, name: "Biryani", platformPrice: 340 };
+    const item2 = { id: 201, name: "Pizza", platformPrice: 450 };
 
     const state = cartReducer(initialCartState, {
-      type: 'ADD_ITEM',
+      type: "ADD_ITEM",
       payload: { item: item1, restaurantId: 1 },
     });
 
     expect(() => {
       cartReducer(state, {
-        type: 'ADD_ITEM',
+        type: "ADD_ITEM",
         payload: { item: item2, restaurantId: 2 },
       });
-    }).toThrow('RESTAURANT_CONFLICT');
+    }).toThrow("RESTAURANT_CONFLICT");
   });
 
-  it('decrements item quantity and clears restaurantId when cart becomes empty', () => {
-    const item = { id: 101, name: 'Biryani', platformPrice: 340, variantId: null };
+  it("decrements item quantity and clears restaurantId when cart becomes empty", () => {
+    const item = { id: 101, name: "Biryani", platformPrice: 340, variantId: null };
     let state = cartReducer(initialCartState, {
-      type: 'ADD_ITEM',
+      type: "ADD_ITEM",
       payload: { item, restaurantId: 1 },
     });
 
     state = cartReducer(state, {
-      type: 'REMOVE_ITEM',
+      type: "REMOVE_ITEM",
       payload: { id: 101, variantId: null },
     });
 

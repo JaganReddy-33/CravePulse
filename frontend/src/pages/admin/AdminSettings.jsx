@@ -41,9 +41,7 @@ const AdminSettings = () => {
       });
       if (res.success) {
         setSettings((prev) =>
-          prev.map((s) =>
-            s.configKey === key ? { ...s, configValue: editValues[key] } : s,
-          ),
+          prev.map((s) => (s.configKey === key ? { ...s, configValue: editValues[key] } : s)),
         );
       }
     } catch (e) {
@@ -90,18 +88,13 @@ const AdminSettings = () => {
     <div>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <h4 className="fw-extrabold mb-1 text-white">
-            Platform Operational Configuration
-          </h4>
+          <h4 className="fw-extrabold mb-1 text-white">Platform Operational Configuration</h4>
           <p className="text-muted small mb-0">
-            Fine-tune dynamic fee structures, delivery zones, GST taxes, surge
-            pricing, and refund safety bounds.
+            Fine-tune dynamic fee structures, delivery zones, GST taxes, surge pricing, and refund
+            safety bounds.
           </p>
         </div>
-        <button
-          className="btn btn-outline-info rounded-pill px-3 btn-sm"
-          onClick={fetchSettings}
-        >
+        <button className="btn btn-outline-info rounded-pill px-3 btn-sm" onClick={fetchSettings}>
           <i className="bi bi-arrow-clockwise me-1"></i> Refresh Settings
         </button>
       </div>
@@ -113,9 +106,7 @@ const AdminSettings = () => {
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-info" role="status"></div>
-            <p className="text-muted small mt-2">
-              Loading platform settings...
-            </p>
+            <p className="text-muted small mt-2">Loading platform settings...</p>
           </div>
         ) : (
           <div className="row g-4">
@@ -129,12 +120,8 @@ const AdminSettings = () => {
                     <label className="form-label small fw-bold text-white mb-1">
                       {getSettingLabel(s.configKey)}
                     </label>
-                    <p
-                      className="text-muted small mb-3"
-                      style={{ minHeight: 38 }}
-                    >
-                      {s.description ||
-                        "Configurable operational threshold parameter."}
+                    <p className="text-muted small mb-3" style={{ minHeight: 38 }}>
+                      {s.description || "Configurable operational threshold parameter."}
                     </p>
                   </div>
 
@@ -153,18 +140,12 @@ const AdminSettings = () => {
                     <button
                       className="btn btn-sm btn-info text-dark fw-bold rounded-pill px-3 text-nowrap"
                       disabled={
-                        savingKey === s.configKey ||
-                        editValues[s.configKey] === s.configValue
+                        savingKey === s.configKey || editValues[s.configKey] === s.configValue
                       }
-                      onClick={() =>
-                        handleSaveSetting(s.configKey, s.description)
-                      }
+                      onClick={() => handleSaveSetting(s.configKey, s.description)}
                     >
                       {savingKey === s.configKey ? (
-                        <span
-                          className="spinner-border spinner-border-sm"
-                          role="status"
-                        ></span>
+                        <span className="spinner-border spinner-border-sm" role="status"></span>
                       ) : (
                         "Save"
                       )}

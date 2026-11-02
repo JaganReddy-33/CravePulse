@@ -2,6 +2,7 @@ import ChangePassword from "../../components/ChangePassword";
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import ImageUploadField from "../../components/common/ImageUploadField";
 
 export default function RiderProfile() {
   const { user, refreshProfile } = useAuth();
@@ -9,6 +10,7 @@ export default function RiderProfile() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     api
@@ -47,9 +49,7 @@ export default function RiderProfile() {
       await refreshProfile();
       setSaved(true);
     } catch (err) {
-      setError(
-        err.message || "Unable to save profile. Some fields may need retrying.",
-      );
+      setError(err.message || "Unable to save profile. Some fields may need retrying.");
     } finally {
       setSaving(false);
     }
@@ -64,7 +64,7 @@ export default function RiderProfile() {
         type={type}
         className="form-control"
         required={required}
-        maxLength={key === "avatarUrl" ? 500 : 100}
+        maxLength={100}
         value={form[key]}
         onChange={(e) => {
           setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -76,9 +76,7 @@ export default function RiderProfile() {
   return (
     <section className="container py-4" style={{ maxWidth: 960 }}>
       <h1 className="h3 fw-bold">Your rider profile</h1>
-      <p className="text-secondary">
-        Keep your contact and delivery details up to date.
-      </p>
+      <p className="text-secondary">Keep your contact and delivery details up to date.</p>
       {error && (
         <div role="alert" className="alert alert-danger">
           {error}
@@ -103,14 +101,23 @@ export default function RiderProfile() {
           <div className="row g-3">
             {field("fullName", "Full name")}
             {field("phone", "Phone", "tel")}
-            {field("avatarUrl", "Profile image URL (optional)", "url", false)}
+            <div className="col-12 col-md-6">
+              <ImageUploadField
+                id="rider-avatar"
+                label="Profile photo"
+                purpose="avatar"
+                value={form.avatarUrl}
+                onChange={(avatarUrl) => setForm((prev) => ({ ...prev, avatarUrl }))}
+                onUploadingChange={setUploadingImage}
+              />
+            </div>
             {field("vehicleType", "Vehicle type")}
             {field("vehicleNumber", "Vehicle registration")}
             {field("drivingLicense", "Driving licence")}
           </div>
           <div className="mt-4">
-            <button className="btn btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save profile"}
+            <button className="btn btn-primary" disabled={saving || uploadingImage}>
+              {uploadingImage ? "Uploading image..." : saving ? "Saving..." : "Save profile"}
             </button>
           </div>
         </form>

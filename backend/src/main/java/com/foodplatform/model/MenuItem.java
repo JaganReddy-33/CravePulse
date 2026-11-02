@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MenuItem {
+
     private Long id;
     private Long restaurantId;
     private Long categoryId;
@@ -36,28 +37,60 @@ public class MenuItem {
     private List<MenuItemVariant> variants = new ArrayList<>();
     private List<MenuItemAddon> addons = new ArrayList<>();
 
-    public MenuItem() {
+    public MenuItem() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getRestaurantId() { return restaurantId; }
-    public void setRestaurantId(Long restaurantId) { this.restaurantId = restaurantId; }
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
 
-    public Long getCategoryId() { return categoryId; }
-    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Long getCategoryId() {
+        return categoryId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public String getName() {
+        return name;
+    }
 
-    public BigDecimal getDineInPrice() { return dineInPrice; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public BigDecimal getDineInPrice() {
+        return dineInPrice;
+    }
+
     public void setDineInPrice(BigDecimal dineInPrice) {
         if (dineInPrice != null && dineInPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("dineInPrice cannot be negative: " + dineInPrice);
@@ -65,74 +98,184 @@ public class MenuItem {
         this.dineInPrice = dineInPrice;
     }
 
-    public BigDecimal getPlatformPrice() { return platformPrice; }
+    public BigDecimal getPlatformPrice() {
+        return platformPrice;
+    }
+
     public void setPlatformPrice(BigDecimal platformPrice) {
         if (platformPrice != null && platformPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("platformPrice cannot be negative: " + platformPrice);
+            throw new IllegalArgumentException(
+                "platformPrice cannot be negative: " + platformPrice
+            );
         }
         this.platformPrice = platformPrice;
     }
 
-    public boolean isVeg() { return isVeg; }
-    public void setVeg(boolean veg) { isVeg = veg; }
+    public boolean isVeg() {
+        return isVeg;
+    }
 
-    public boolean isAvailable() { return isAvailable; }
-    public void setAvailable(boolean available) { isAvailable = available; }
+    public void setVeg(boolean veg) {
+        isVeg = veg;
+    }
 
-    public Integer getPrepTimeMinutes() { return prepTimeMinutes; }
-    public void setPrepTimeMinutes(Integer prepTimeMinutes) { this.prepTimeMinutes = prepTimeMinutes; }
+    public boolean isAvailable() {
+        return isAvailable;
+    }
 
-    public Integer getCalorieCount() { return calorieCount; }
-    public void setCalorieCount(Integer calorieCount) { this.calorieCount = calorieCount; }
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
 
-    public BigDecimal getRating() { return rating; }
-    public void setRating(BigDecimal rating) { this.rating = rating; }
+    public Integer getPrepTimeMinutes() {
+        return prepTimeMinutes;
+    }
 
-    public int getTotalOrders() { return totalOrders; }
-    public void setTotalOrders(int totalOrders) { this.totalOrders = totalOrders; }
+    public void setPrepTimeMinutes(Integer prepTimeMinutes) {
+        this.prepTimeMinutes = prepTimeMinutes;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public Integer getCalorieCount() {
+        return calorieCount;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public void setCalorieCount(Integer calorieCount) {
+        this.calorieCount = calorieCount;
+    }
 
-    public List<MenuItemVariant> getVariants() { return variants; }
-    public void setVariants(List<MenuItemVariant> variants) { this.variants = variants; }
+    public BigDecimal getRating() {
+        return rating;
+    }
 
-    public List<MenuItemAddon> getAddons() { return addons; }
-    public void setAddons(List<MenuItemAddon> addons) { this.addons = addons; }
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
 
-    public String getSlug() { return slug; }
-    public void setSlug(String slug) { this.slug = slug; }
+    public int getTotalOrders() {
+        return totalOrders;
+    }
 
-    public String getFoodType() { return foodType; }
-    public void setFoodType(String foodType) { this.foodType = foodType; }
+    public void setTotalOrders(int totalOrders) {
+        this.totalOrders = totalOrders;
+    }
 
-    public String getSpiceLevel() { return spiceLevel; }
-    public void setSpiceLevel(String spiceLevel) { this.spiceLevel = spiceLevel; }
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
 
-    public BigDecimal getPackagingCharge() { return packagingCharge; }
-    public void setPackagingCharge(BigDecimal packagingCharge) { this.packagingCharge = packagingCharge; }
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public boolean isBestseller() { return isBestseller; }
-    public void setBestseller(boolean bestseller) { isBestseller = bestseller; }
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public boolean isChefSpecial() { return isChefSpecial; }
-    public void setChefSpecial(boolean chefSpecial) { isChefSpecial = chefSpecial; }
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-    public String getAllergenInfo() { return allergenInfo; }
-    public void setAllergenInfo(String allergenInfo) { this.allergenInfo = allergenInfo; }
+    public List<MenuItemVariant> getVariants() {
+        return variants;
+    }
 
-    public boolean isDeleted() { return isDeleted; }
-    public void setDeleted(boolean deleted) { isDeleted = deleted; }
+    public void setVariants(List<MenuItemVariant> variants) {
+        this.variants = variants;
+    }
 
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+    public List<MenuItemAddon> getAddons() {
+        return addons;
+    }
 
-    public String getAvailableFrom() { return availableFrom; }
-    public void setAvailableFrom(String availableFrom) { this.availableFrom = availableFrom; }
+    public void setAddons(List<MenuItemAddon> addons) {
+        this.addons = addons;
+    }
 
-    public String getAvailableTo() { return availableTo; }
-    public void setAvailableTo(String availableTo) { this.availableTo = availableTo; }
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public String getFoodType() {
+        return foodType;
+    }
+
+    public void setFoodType(String foodType) {
+        this.foodType = foodType;
+    }
+
+    public String getSpiceLevel() {
+        return spiceLevel;
+    }
+
+    public void setSpiceLevel(String spiceLevel) {
+        this.spiceLevel = spiceLevel;
+    }
+
+    public BigDecimal getPackagingCharge() {
+        return packagingCharge;
+    }
+
+    public void setPackagingCharge(BigDecimal packagingCharge) {
+        this.packagingCharge = packagingCharge;
+    }
+
+    public boolean isBestseller() {
+        return isBestseller;
+    }
+
+    public void setBestseller(boolean bestseller) {
+        isBestseller = bestseller;
+    }
+
+    public boolean isChefSpecial() {
+        return isChefSpecial;
+    }
+
+    public void setChefSpecial(boolean chefSpecial) {
+        isChefSpecial = chefSpecial;
+    }
+
+    public String getAllergenInfo() {
+        return allergenInfo;
+    }
+
+    public void setAllergenInfo(String allergenInfo) {
+        this.allergenInfo = allergenInfo;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public int getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public String getAvailableFrom() {
+        return availableFrom;
+    }
+
+    public void setAvailableFrom(String availableFrom) {
+        this.availableFrom = availableFrom;
+    }
+
+    public String getAvailableTo() {
+        return availableTo;
+    }
+
+    public void setAvailableTo(String availableTo) {
+        this.availableTo = availableTo;
+    }
 }

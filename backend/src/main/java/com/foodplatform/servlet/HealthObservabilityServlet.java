@@ -7,17 +7,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@WebServlet(urlPatterns = {"/health", "/ready", "/metrics", "/api/health", "/api/ready", "/api/metrics"})
+@WebServlet(
+    urlPatterns = { "/health", "/ready", "/metrics", "/api/health", "/api/ready", "/api/metrics" }
+)
 public class HealthObservabilityServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -64,9 +65,11 @@ public class HealthObservabilityServlet extends HttpServlet {
         long dbLatencyMs = -1;
         long start = System.currentTimeMillis();
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT 1")) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT 1")
+        ) {
             if (rs.next()) {
                 isDbHealthy = true;
                 dbLatencyMs = System.currentTimeMillis() - start;

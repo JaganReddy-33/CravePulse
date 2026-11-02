@@ -68,9 +68,7 @@ const AdminCoupons = () => {
       minOrderAmount: c.minOrderAmount,
       maxDiscountAmount: c.maxDiscountAmount,
       usageLimit: c.usageLimit,
-      validUntil: c.validUntil
-        ? c.validUntil.replace(" ", "T").substring(0, 16)
-        : "",
+      validUntil: c.validUntil ? c.validUntil.replace(" ", "T").substring(0, 16) : "",
       isActive: c.isActive,
       firstOrderOnly: c.firstOrderOnly || false,
     });
@@ -95,10 +93,7 @@ const AdminCoupons = () => {
       };
 
       if (editingCoupon) {
-        const res = await api.post(
-          `/admin/coupons/${editingCoupon.id}/update`,
-          payload,
-        );
+        const res = await api.post(`/admin/coupons/${editingCoupon.id}/update`, payload);
         if (res.success) {
           setShowModal(false);
           fetchCoupons();
@@ -124,9 +119,7 @@ const AdminCoupons = () => {
       });
       if (res.success) {
         setCoupons((prev) =>
-          prev.map((c) =>
-            c.id === couponId ? { ...c, isActive: !currentStatus } : c,
-          ),
+          prev.map((c) => (c.id === couponId ? { ...c, isActive: !currentStatus } : c)),
         );
       }
     } catch (err) {
@@ -150,19 +143,13 @@ const AdminCoupons = () => {
     <div>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <h4 className="fw-extrabold mb-1 text-white">
-            Promotional Coupon Management
-          </h4>
+          <h4 className="fw-extrabold mb-1 text-white">Promotional Coupon Management</h4>
           <p className="text-muted small mb-0">
-            Create, configure, and monitor customer promo codes, discount
-            limits, and campaigns.
+            Create, configure, and monitor customer promo codes, discount limits, and campaigns.
           </p>
         </div>
         <div className="d-flex gap-2">
-          <button
-            className="btn btn-outline-info rounded-pill px-3 btn-sm"
-            onClick={fetchCoupons}
-          >
+          <button className="btn btn-outline-info rounded-pill px-3 btn-sm" onClick={fetchCoupons}>
             <i className="bi bi-arrow-clockwise me-1"></i> Refresh
           </button>
           <button
@@ -219,9 +206,7 @@ const AdminCoupons = () => {
                         {c.code}
                       </code>
                       {c.firstOrderOnly && (
-                        <span className="badge bg-primary-subtle text-primary ms-2">
-                          New Users
-                        </span>
+                        <span className="badge bg-primary-subtle text-primary ms-2">New Users</span>
                       )}
                     </td>
                     <td className="text-secondary" style={{ maxWidth: 260 }}>
@@ -242,9 +227,7 @@ const AdminCoupons = () => {
                       </span>
                     </td>
                     <td>
-                      <span
-                        className={`badge ${c.isActive ? "bg-success" : "bg-secondary"}`}
-                      >
+                      <span className={`badge ${c.isActive ? "bg-success" : "bg-secondary"}`}>
                         {c.isActive ? "ACTIVE" : "DISABLED"}
                       </span>
                     </td>
@@ -260,13 +243,9 @@ const AdminCoupons = () => {
                         <button
                           className={`btn btn-sm rounded-pill px-2 py-1 ${c.isActive ? "btn-outline-warning" : "btn-outline-success"}`}
                           onClick={() => handleToggleStatus(c.id, c.isActive)}
-                          title={
-                            c.isActive ? "Deactivate Coupon" : "Activate Coupon"
-                          }
+                          title={c.isActive ? "Deactivate Coupon" : "Activate Coupon"}
                         >
-                          <i
-                            className={`bi ${c.isActive ? "bi-pause-fill" : "bi-play-fill"}`}
-                          ></i>
+                          <i className={`bi ${c.isActive ? "bi-pause-fill" : "bi-play-fill"}`}></i>
                         </button>
                         <button
                           className="btn btn-sm btn-outline-danger rounded-pill px-2 py-1"
@@ -313,9 +292,7 @@ const AdminCoupons = () => {
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label small fw-bold">
-                      Coupon Code *
-                    </label>
+                    <label className="form-label small fw-bold">Coupon Code *</label>
                     <input
                       type="text"
                       className="form-control bg-dark border-secondary text-white text-uppercase fw-bold"
@@ -333,9 +310,7 @@ const AdminCoupons = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label small fw-bold">
-                      Description *
-                    </label>
+                    <label className="form-label small fw-bold">Description *</label>
                     <input
                       type="text"
                       className="form-control bg-dark border-secondary text-white"
@@ -353,9 +328,7 @@ const AdminCoupons = () => {
 
                   <div className="row g-3 mb-3">
                     <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Discount Type
-                      </label>
+                      <label className="form-label small fw-bold">Discount Type</label>
                       <select
                         className="form-select bg-dark border-secondary text-white"
                         value={formData.discountType}
@@ -372,9 +345,7 @@ const AdminCoupons = () => {
                     </div>
 
                     <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Discount Value *
-                      </label>
+                      <label className="form-label small fw-bold">Discount Value *</label>
                       <input
                         type="number"
                         step="0.01"
@@ -394,9 +365,7 @@ const AdminCoupons = () => {
 
                   <div className="row g-3 mb-3">
                     <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Min Order (₹)
-                      </label>
+                      <label className="form-label small fw-bold">Min Order (₹)</label>
                       <input
                         type="number"
                         className="form-control bg-dark border-secondary text-white"
@@ -412,9 +381,7 @@ const AdminCoupons = () => {
                     </div>
 
                     <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Max Cap (₹)
-                      </label>
+                      <label className="form-label small fw-bold">Max Cap (₹)</label>
                       <input
                         type="number"
                         className="form-control bg-dark border-secondary text-white"
@@ -432,9 +399,7 @@ const AdminCoupons = () => {
 
                   <div className="row g-3 mb-3">
                     <div className="col-6">
-                      <label className="form-label small fw-bold">
-                        Usage Limit
-                      </label>
+                      <label className="form-label small fw-bold">Usage Limit</label>
                       <input
                         type="number"
                         className="form-control bg-dark border-secondary text-white"
@@ -463,10 +428,7 @@ const AdminCoupons = () => {
                             })
                           }
                         />
-                        <label
-                          className="form-check-label small"
-                          htmlFor="firstOrderOnly"
-                        >
+                        <label className="form-check-label small" htmlFor="firstOrderOnly">
                           First Order Only
                         </label>
                       </div>
@@ -487,11 +449,7 @@ const AdminCoupons = () => {
                     className="btn btn-success text-dark fw-bold rounded-pill px-4"
                     disabled={submitting}
                   >
-                    {submitting
-                      ? "Saving..."
-                      : editingCoupon
-                        ? "Update Coupon"
-                        : "Create Coupon ✓"}
+                    {submitting ? "Saving..." : editingCoupon ? "Update Coupon" : "Create Coupon ✓"}
                   </button>
                 </div>
               </form>

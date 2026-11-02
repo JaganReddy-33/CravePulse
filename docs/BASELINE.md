@@ -9,6 +9,7 @@
 ## 1. Initial Build & Test State
 
 ### Backend (`backend/`)
+
 - **Framework & Runtime:** Java 17, Jakarta Servlets 6.0, Embedded Tomcat 10.1.24, HikariCP, MySQL Connector/J 8.3.0.
 - **Packaging:** `war` (via `maven-war-plugin`), with `exec-maven-plugin` executing `com.foodplatform.ServerMain`.
 - **Compile Status:** `mvn compile` succeeds with 72 source files compiled cleanly.
@@ -20,6 +21,7 @@
     - Cause: `assertEquals(BigDecimal.valueOf(5.00), result.platformFee)` evaluates `BigDecimal.valueOf(double)` with scale 1 (`5.0`) against a scale 2 `BigDecimal` (`5.00`). In Java, `BigDecimal.equals` requires identical scale and numerical value.
 
 ### Frontend (`frontend/`)
+
 - **Framework & Runtime:** React 18.3.1, Vite 5.4.2, React Router 6.26.2, Axios, Bootstrap 5.3.3, Leaflet 1.9.4.
 - **Build Status (`npm run build`):** Succeeded.
   - Output: 153 modules transformed into `dist/`.
@@ -31,6 +33,7 @@
 ## 2. Docker & Infrastructure Audit
 
 ### `docker-compose.yml` Issues
+
 1. **Invalid MySQL Environment Config:**
    - Line 11: `MYSQL_USER: ${DB_USER:-root}`. Official `mysql:8.0` images fail or emit warnings when `MYSQL_USER` is set to `root` (root user is controlled solely by `MYSQL_ROOT_PASSWORD`).
 2. **Port Inconsistencies:**
@@ -38,6 +41,7 @@
    - Frontend Docker service mapped `5173:80` with depends-on backend, but lacked standardized environment variable injection.
 
 ### `backend/Dockerfile` Issues
+
 1. **Broken Artifact Packaging & CMD:**
    - Line 12 copies `/app/target/food-delivery-backend-1.0.0.war` into `./app.war`. However, `pom.xml` configured `<finalName>api</finalName>`, producing `target/api.war`.
    - Line 17 runs `CMD ["java", "-cp", "app.war", "com.foodplatform.ServerMain"]`. Since WAR archives package classes in `WEB-INF/classes`, `java -cp` cannot locate `com.foodplatform.ServerMain` directly without extracting or creating a self-contained fat JAR (via Maven Shade Plugin or Maven Assembly Plugin).
@@ -47,6 +51,7 @@
 ## 3. Repository Hygiene & Git Cleanliness Audit
 
 ### Unwanted Artifacts Present in Clean Working Tree:
+
 - `.metadata/` (Eclipse IDE workspace metadata directory)
 - `Servers/` (Eclipse Server adapters and Tomcat server runtimes)
 - `backend/bin/` (Eclipse IDE class output directory)
@@ -54,6 +59,7 @@
 - `.classpath`, `.project`, `.settings/` (Eclipse metadata scattered in `backend/`)
 
 ### `.gitignore` Status:
+
 - Root `.gitignore` was severely incomplete (contained only 1 line: `/.metadata/`).
 - Needs comprehensive rules covering Maven `target/`, Node `node_modules/`, `dist/`, `.env`, Eclipse (`.metadata`, `.settings`, `.project`, `.classpath`, `Servers`), and Tomcat scratch directories (`tomcat.*`).
 

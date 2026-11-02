@@ -1,11 +1,10 @@
-/* ==============================================================================
-   PORTAL-SPECIFIC PERSONALITY & ANIMATIONS
-   ============================================================================== */
-
-/* Shimmer Skeleton Animation */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .shimmer-skeleton {
@@ -15,16 +14,26 @@
   border-radius: 8px;
 }
 
-/* Float & Keyframes */
 @keyframes floatParticle {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(4deg); }
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(4deg);
+  }
 }
 
 @keyframes pulseBorder {
-  0% { box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.4); }
-  70% { box-shadow: 0 0 0 14px rgba(255, 87, 34, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 87, 34, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(255, 87, 34, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+  }
 }
 
 .pulse-active {
@@ -32,8 +41,14 @@
 }
 
 @keyframes liveRadar {
-  0% { transform: scale(0.9); opacity: 0.8; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 .radar-ring {
@@ -43,7 +58,6 @@
   animation: liveRadar 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }
 
-/* Glassmorphism Classes */
 .glass-panel {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
@@ -65,7 +79,8 @@
   background-color: var(--c-bg);
 }
 
-.cravepulse-sidebar, .foodora-sidebar {
+.cravepulse-sidebar,
+.foodora-sidebar {
   width: 240px;
   background: #ffffff;
   border-right: 1px solid var(--c-border);
@@ -74,7 +89,8 @@
   flex-direction: column;
 }
 
-.cravepulse-nav-item, .foodora-nav-item {
+.cravepulse-nav-item,
+.foodora-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -87,13 +103,14 @@
   margin-bottom: 4px;
 }
 
-.cravepulse-nav-item:hover, .cravepulse-nav-item.active,
-.foodora-nav-item:hover, .foodora-nav-item.active {
+.cravepulse-nav-item:hover,
+.cravepulse-nav-item.active,
+.foodora-nav-item:hover,
+.foodora-nav-item.active {
   background: var(--c-primary-light);
   color: var(--c-primary);
 }
 
-/* Restaurant Partner Dashboard (Image 2 - FoodAnalytics) */
 .partner-portal {
   background-color: var(--p-bg);
   min-height: 100vh;
@@ -108,14 +125,15 @@
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--p-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .partner-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
-/* Rider Portal Dark One-Hand */
 .rider-portal {
   background-color: var(--r-bg);
   color: var(--r-text-main);
@@ -138,7 +156,6 @@
   border-radius: 14px;
 }
 
-/* Admin Ops Portal */
 .admin-portal {
   background-color: var(--a-bg);
   color: var(--a-text-main);
@@ -163,7 +180,6 @@
   padding: 20px;
 }
 
-/* Scrollbar styles */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -179,9 +195,6 @@
   background: rgba(100, 116, 139, 0.4);
 }
 
-/* ==============================================================================
-   PORTAL INPUT READABILITY & FOCUS GLOW (RIDER, PARTNER, ADMIN)
-   ============================================================================== */
 .rider-portal input.form-control,
 .rider-portal select.form-select,
 .rider-portal textarea.form-control {
@@ -274,10 +287,6 @@
   outline-offset: 3px;
 }
 
-/* ==============================================================================
-   RIDER COCKPIT (CRAVEPULSE FLEET) DARK MAP & ERGONOMIC GLOVE TOKENS
-   ============================================================================== */
-
 /* Invert & Darken OSM tiles seamlessly for high-contrast dark radar mode without API key watermark */
 .leaflet-dark-mode-tiles .leaflet-tile,
 .leaflet-tile.leaflet-dark-mode-tiles,
@@ -285,18 +294,22 @@
   filter: brightness(0.65) invert(1) contrast(2.6) hue-rotate(200deg) saturate(0.35) brightness(0.8) !important;
 }
 
-/* Radar & Pulse Animations */
 @keyframes cockpitGlowPulse {
-  0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
-  70% { box-shadow: 0 0 0 12px rgba(0, 230, 118, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 230, 118, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 230, 118, 0);
+  }
 }
 
 .cockpit-glow-active {
   animation: cockpitGlowPulse 2.4s infinite;
 }
 
-/* Glove-friendly touch targets */
 .glove-touch-btn {
   min-height: 48px;
   display: inline-flex;
@@ -310,10 +323,15 @@
   transform: scale(0.97);
 }
 
-/* Turn HUD Banner animations */
 @keyframes slideDownHUD {
-  from { transform: translateY(-12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .turn-hud-banner {

@@ -3,16 +3,16 @@ package com.foodplatform.servlet;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.OrderDao;
+import com.foodplatform.dao.OrderMessageDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.UserDao;
 import com.foodplatform.dao.WalletDao;
 import com.foodplatform.daoImpl.MenuDaoImpl;
 import com.foodplatform.daoImpl.OrderDaoImpl;
+import com.foodplatform.daoImpl.OrderMessageDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.daoImpl.UserDaoImpl;
 import com.foodplatform.daoImpl.WalletDaoImpl;
-import com.foodplatform.dao.OrderMessageDao;
-import com.foodplatform.daoImpl.OrderMessageDaoImpl;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.OrderItem;
@@ -32,9 +32,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
@@ -48,6 +45,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @WebServlet("/api/orders/*")
 public class OrderServlet extends BaseServlet {
@@ -103,7 +102,10 @@ public class OrderServlet extends BaseServlet {
                 itemMap.put("menuItemId", oi.getMenuItemId());
                 itemMap.put("name", oi.getItemName());
                 itemMap.put("quantity", oi.getQuantity());
-                itemMap.put("unitPrice", currentItem != null ? currentItem.getPlatformPrice() : oi.getUnitPrice());
+                itemMap.put(
+                    "unitPrice",
+                    currentItem != null ? currentItem.getPlatformPrice() : oi.getUnitPrice()
+                );
                 itemMap.put("isAvailable", currentItem != null && currentItem.isAvailable());
                 itemMap.put("variantName", oi.getVariantName());
                 itemMap.put("addonNames", oi.getAddonNames());
@@ -125,23 +127,39 @@ public class OrderServlet extends BaseServlet {
 
             try {
                 JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-                if (body == null || !body.has("restaurantId") || !body.has("items") || !body.has("deliveryAddressId")) {
-                    JsonUtil.sendError(res, 400, "restaurantId, items, and deliveryAddressId are required");
+                if (
+                    body == null ||
+                    !body.has("restaurantId") ||
+                    !body.has("items") ||
+                    !body.has("deliveryAddressId")
+                ) {
+                    JsonUtil.sendError(
+                        res,
+                        400,
+                        "restaurantId, items, and deliveryAddressId are required"
+                    );
                     return;
                 }
 
                 long restaurantId = body.get("restaurantId").getAsLong();
                 long addressId = body.get("deliveryAddressId").getAsLong();
-                String paymentMode = body.has("paymentMode") ? body.get("paymentMode").getAsString() : "COD";
-                String instructions = body.has("specialInstructions") && !body.get("specialInstructions").isJsonNull() ?
-                        body.get("specialInstructions").getAsString() : null;
+                String paymentMode = body.has("paymentMode")
+                    ? body.get("paymentMode").getAsString()
+                    : "COD";
+                String instructions =
+                    body.has("specialInstructions") && !body.get("specialInstructions").isJsonNull()
+                        ? body.get("specialInstructions").getAsString()
+                        : null;
 
                 // Idempotency check: return existing order on duplicate requests
                 String idempotencyKey = req.getHeader("X-Idempotency-Key");
                 if (idempotencyKey != null && !idempotencyKey.isBlank()) {
                     Order existing = orderDao.findByIdempotencyKey(idempotencyKey.trim());
                     if (existing != null) {
-                        if (!customerId.equals(existing.getCustomerId())) { JsonUtil.sendError(res,403,"Order key is not owned by this account"); return; }
+                        if (!customerId.equals(existing.getCustomerId())) {
+                            JsonUtil.sendError(res, 403, "Order key is not owned by this account");
+                            return;
+                        }
                         Map<String, Object> resp = new HashMap<>();
                         resp.put("id", existing.getId());
                         resp.put("orderId", existing.getId());
@@ -152,7 +170,12 @@ public class OrderServlet extends BaseServlet {
                         resp.put("totalAmount", existing.getTotalAmount());
                         resp.put("deliveryOtp", existing.getDeliveryOtp());
                         resp.put("order", existing);
-                        JsonUtil.sendSuccess(res, 200, "Order retrieved from idempotency key", resp);
+                        JsonUtil.sendSuccess(
+                            res,
+                            200,
+                            "Order retrieved from idempotency key",
+                            resp
+                        );
                         return;
                     }
                 } else {
@@ -162,11 +185,17 @@ public class OrderServlet extends BaseServlet {
                 // Verify address ownership and retrieve coordinates
                 com.foodplatform.model.Address addr = userDao.getAddressById(addressId);
                 if (addr == null || !addr.getUserId().equals(customerId)) {
-                    JsonUtil.sendError(res, 400, "Invalid delivery address: Address does not belong to the authenticated user");
+                    JsonUtil.sendError(
+                        res,
+                        400,
+                        "Invalid delivery address: Address does not belong to the authenticated user"
+                    );
                     return;
                 }
-                Double userLat = addr.getLatitude() != null ? addr.getLatitude().doubleValue() : null;
-                Double userLng = addr.getLongitude() != null ? addr.getLongitude().doubleValue() : null;
+                Double userLat =
+                    addr.getLatitude() != null ? addr.getLatitude().doubleValue() : null;
+                Double userLng =
+                    addr.getLongitude() != null ? addr.getLongitude().doubleValue() : null;
 
                 // Check restaurant status and Overload Protection
                 Restaurant restaurant = restaurantDao.findById(restaurantId);
@@ -175,7 +204,11 @@ public class OrderServlet extends BaseServlet {
                     return;
                 }
                 if (restaurant.isAutoThrottled()) {
-                    JsonUtil.sendError(res, 429, "Kitchen Overload Protection: Kitchen is at maximum capacity right now to maintain high quality. Please retry in 5 minutes.");
+                    JsonUtil.sendError(
+                        res,
+                        429,
+                        "Kitchen Overload Protection: Kitchen is at maximum capacity right now to maintain high quality. Please retry in 5 minutes."
+                    );
                     return;
                 }
 
@@ -199,8 +232,18 @@ public class OrderServlet extends BaseServlet {
                 }
 
                 // Calculate server-side authoritative bill with customerId for coupon checks
-                String couponCode = body.has("couponCode") && !body.get("couponCode").isJsonNull() ? body.get("couponCode").getAsString() : null;
-                PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, inputItems, userLat, userLng, couponCode, customerId);
+                String couponCode =
+                    body.has("couponCode") && !body.get("couponCode").isJsonNull()
+                        ? body.get("couponCode").getAsString()
+                        : null;
+                PricingService.PriceCalculationResult calc = pricingService.calculateBill(
+                    restaurantId,
+                    inputItems,
+                    userLat,
+                    userLng,
+                    couponCode,
+                    customerId
+                );
 
                 // Enforce COD rules
                 if ("COD".equalsIgnoreCase(paymentMode)) {
@@ -208,8 +251,14 @@ public class OrderServlet extends BaseServlet {
                 }
 
                 // Collision-safe order number: date + 6-char UUID fragment
-                String dateStr = DateTimeFormatter.ofPattern("yyyyMMdd").format(java.time.LocalDate.now());
-                String orderNumber = "CP-" + dateStr + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                String dateStr = DateTimeFormatter.ofPattern("yyyyMMdd").format(
+                    java.time.LocalDate.now()
+                );
+                String orderNumber =
+                    "CP-" +
+                    dateStr +
+                    "-" +
+                    UUID.randomUUID().toString().substring(0, 6).toUpperCase();
                 String deliveryOtp = String.format("%04d", 1000 + OTP_RANDOM.nextInt(9000));
 
                 Order order = new Order();
@@ -244,7 +293,9 @@ public class OrderServlet extends BaseServlet {
                 order.setIdempotencyKey(idempotencyKey);
                 order.setEtaMinMinutes(calc.etaMinMinutes);
                 order.setEtaMaxMinutes(calc.etaMaxMinutes);
-                order.setEstimatedDeliveryAt(Timestamp.from(Instant.now().plusSeconds(calc.etaMaxMinutes * 60L)));
+                order.setEstimatedDeliveryAt(
+                    Timestamp.from(Instant.now().plusSeconds(calc.etaMaxMinutes * 60L))
+                );
                 order.setSpecialInstructions(instructions);
                 order.setDeliveryOtp(deliveryOtp);
 
@@ -278,7 +329,8 @@ public class OrderServlet extends BaseServlet {
                         }
 
                         // Audit event
-                        com.foodplatform.model.OrderEvent ev = new com.foodplatform.model.OrderEvent();
+                        com.foodplatform.model.OrderEvent ev =
+                            new com.foodplatform.model.OrderEvent();
                         ev.setOrderId(orderId);
                         ev.setNewStatus("PLACED");
                         ev.setTriggeredByUserId(customerId);
@@ -300,14 +352,23 @@ public class OrderServlet extends BaseServlet {
                 if ("WALLET".equalsIgnoreCase(paymentMode)) {
                     paymentService.processWalletPayment(orderId, customerId);
                 } else if ("RAZORPAY".equalsIgnoreCase(paymentMode)) {
-                    paymentSession = paymentService.createRazorpayOrder(orderId, customerId, idempotencyKey);
+                    paymentSession = paymentService.createRazorpayOrder(
+                        orderId,
+                        customerId,
+                        idempotencyKey
+                    );
                 }
 
                 Order created = orderDao.findById(orderId);
 
                 // Server-side persistent notification & real-time broadcasts
-                notificationService.sendNotification(customerId, "Order Placed",
-                        "Your order #" + created.getOrderNumber() + " has been placed successfully.", "ORDER", String.valueOf(created.getId()));
+                notificationService.sendNotification(
+                    customerId,
+                    "Order Placed",
+                    "Your order #" + created.getOrderNumber() + " has been placed successfully.",
+                    "ORDER",
+                    String.valueOf(created.getId())
+                );
                 String customerDeliveryOtp = created.getDeliveryOtp();
                 created.setDeliveryOtp(null);
                 registry.broadcastToRestaurant(restaurantId, "new_order_placed", created);
@@ -357,13 +418,34 @@ public class OrderServlet extends BaseServlet {
             }
 
             String targetStatus = body.get("status").getAsString().toUpperCase().trim();
-            String reason = body.has("reason") && !body.get("reason").isJsonNull() ? body.get("reason").getAsString() : null;
-            String deliveryOtp = body.has("deliveryOtp") && !body.get("deliveryOtp").isJsonNull() ? body.get("deliveryOtp").getAsString() : null;
-            Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : null;
-            Double lng = body.has("longitude") && !body.get("longitude").isJsonNull() ? body.get("longitude").getAsDouble() : null;
+            String reason =
+                body.has("reason") && !body.get("reason").isJsonNull()
+                    ? body.get("reason").getAsString()
+                    : null;
+            String deliveryOtp =
+                body.has("deliveryOtp") && !body.get("deliveryOtp").isJsonNull()
+                    ? body.get("deliveryOtp").getAsString()
+                    : null;
+            Double lat =
+                body.has("latitude") && !body.get("latitude").isJsonNull()
+                    ? body.get("latitude").getAsDouble()
+                    : null;
+            Double lng =
+                body.has("longitude") && !body.get("longitude").isJsonNull()
+                    ? body.get("longitude").getAsDouble()
+                    : null;
 
             try {
-                Order updated = stateMachine.transition(orderId, targetStatus, userId, role, deliveryOtp, reason, lat, lng);
+                Order updated = stateMachine.transition(
+                    orderId,
+                    targetStatus,
+                    userId,
+                    role,
+                    deliveryOtp,
+                    reason,
+                    lat,
+                    lng
+                );
 
                 if ("READY".equals(targetStatus)) {
                     dispatchService.scheduleDispatch(orderId, 0);
@@ -372,9 +454,16 @@ public class OrderServlet extends BaseServlet {
                 // Auto-refund trigger on cancellation or rejection
                 if ("CANCELLED".equals(targetStatus) || "REJECTED".equals(targetStatus)) {
                     try {
-                        paymentService.processRefund(orderId, reason != null ? reason : "Order " + targetStatus);
+                        paymentService.processRefund(
+                            orderId,
+                            reason != null ? reason : "Order " + targetStatus
+                        );
                     } catch (Exception re) {
-                        logger.warn("Automatic refund trigger notice for order {}: {}", orderId, re.getMessage());
+                        logger.warn(
+                            "Automatic refund trigger notice for order {}: {}",
+                            orderId,
+                            re.getMessage()
+                        );
                     }
                 }
 
@@ -384,7 +473,11 @@ public class OrderServlet extends BaseServlet {
                 JsonUtil.sendError(res, 400, e.getMessage());
             } catch (Exception e) {
                 logger.error("Order transition error", e);
-                JsonUtil.sendError(res, 500, "An internal server error occurred while updating order status.");
+                JsonUtil.sendError(
+                    res,
+                    500,
+                    "An internal server error occurred while updating order status."
+                );
             }
             return;
         }
@@ -396,12 +489,20 @@ public class OrderServlet extends BaseServlet {
             String role = getAuthenticatedRole(req);
 
             if (!orderMessageDao.isUserAllowedInOrderChat(orderId, userId, role)) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access denied to order communication channel");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Access denied to order communication channel"
+                );
                 return;
             }
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            if (body == null || !body.has("messageText") || body.get("messageText").getAsString().trim().isEmpty()) {
+            if (
+                body == null ||
+                !body.has("messageText") ||
+                body.get("messageText").getAsString().trim().isEmpty()
+            ) {
                 JsonUtil.sendError(res, 400, "Message text is required");
                 return;
             }
@@ -412,7 +513,9 @@ public class OrderServlet extends BaseServlet {
                 return;
             }
 
-            String recipientRole = body.has("recipientRole") ? body.get("recipientRole").getAsString().trim().toUpperCase() : "ALL";
+            String recipientRole = body.has("recipientRole")
+                ? body.get("recipientRole").getAsString().trim().toUpperCase()
+                : "ALL";
 
             User sender = userDao.findById(userId);
             OrderMessage msg = new OrderMessage();
@@ -491,9 +594,15 @@ public class OrderServlet extends BaseServlet {
             if (!requireAuthenticated(req, res)) return;
             Long customerId = getAuthenticatedUserId(req);
             List<Order> list = orderDao.listCustomerOrders(customerId, 5, 0);
-            Order active = list.stream()
-                .filter(o -> !"DELIVERED".equalsIgnoreCase(o.getStatus()) && !"CANCELLED".equalsIgnoreCase(o.getStatus()))
-                .findFirst().orElse(null);
+            Order active = list
+                .stream()
+                .filter(
+                    o ->
+                        !"DELIVERED".equalsIgnoreCase(o.getStatus()) &&
+                        !"CANCELLED".equalsIgnoreCase(o.getStatus())
+                )
+                .findFirst()
+                .orElse(null);
             JsonUtil.sendSuccess(res, 200, "Active customer order", active);
             return;
         }
@@ -505,7 +614,11 @@ public class OrderServlet extends BaseServlet {
             String role = getAuthenticatedRole(req);
 
             if (!orderMessageDao.isUserAllowedInOrderChat(orderId, userId, role)) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access denied to order communication channel");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Access denied to order communication channel"
+                );
                 return;
             }
 
@@ -542,8 +655,7 @@ public class OrderServlet extends BaseServlet {
         if (s != null && !s.isBlank()) {
             try {
                 return Integer.parseInt(s);
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException ignored) {}
         }
         return defVal;
     }

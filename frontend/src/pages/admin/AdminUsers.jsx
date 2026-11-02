@@ -47,9 +47,7 @@ const AdminUsers = () => {
     setSelectedUser(user);
     setStatusToSet(newStatus);
     setActionReason(
-      newStatus === "SUSPENDED"
-        ? "Terms of service violation"
-        : "Account reviewed and restored",
+      newStatus === "SUSPENDED" ? "Terms of service violation" : "Account reviewed and restored",
     );
     setShowStatusModal(true);
   };
@@ -64,9 +62,7 @@ const AdminUsers = () => {
       });
       if (res.success) {
         setUsers((prev) =>
-          prev.map((u) =>
-            u.id === selectedUser.id ? { ...u, status: statusToSet } : u,
-          ),
+          prev.map((u) => (u.id === selectedUser.id ? { ...u, status: statusToSet } : u)),
         );
         setShowStatusModal(false);
         setSelectedUser(null);
@@ -92,9 +88,7 @@ const AdminUsers = () => {
       if (res.success) {
         setUsers((prev) =>
           prev.map((u) =>
-            u.id === userId
-              ? { ...u, fraudFlagCount: res.data.fraudFlagCount }
-              : u,
+            u.id === userId ? { ...u, fraudFlagCount: res.data.fraudFlagCount } : u,
           ),
         );
       }
@@ -107,18 +101,12 @@ const AdminUsers = () => {
     <div>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <h4 className="fw-extrabold mb-1 text-white">
-            Platform User Directory
-          </h4>
+          <h4 className="fw-extrabold mb-1 text-white">Platform User Directory</h4>
           <p className="text-muted small mb-0">
-            Manage customer accounts, partner merchants, riders, and account
-            moderation.
+            Manage customer accounts, partner merchants, riders, and account moderation.
           </p>
         </div>
-        <button
-          className="btn btn-outline-info rounded-pill px-3 btn-sm"
-          onClick={fetchUsers}
-        >
+        <button className="btn btn-outline-info rounded-pill px-3 btn-sm" onClick={fetchUsers}>
           <i className="bi bi-arrow-clockwise me-1"></i> Refresh Directory
         </button>
       </div>
@@ -180,9 +168,7 @@ const AdminUsers = () => {
           </div>
 
           <div className="col-12 col-md-1 text-end">
-            <span className="badge bg-secondary rounded-pill px-3 py-2">
-              {users.length} Users
-            </span>
+            <span className="badge bg-secondary rounded-pill px-3 py-2">{users.length} Users</span>
           </div>
         </div>
       </div>
@@ -203,9 +189,7 @@ const AdminUsers = () => {
               <i className="bi bi-people"></i>
             </div>
             <h6 className="fw-bold">No Users Found</h6>
-            <p className="text-muted small">
-              No accounts match the current search filters.
-            </p>
+            <p className="text-muted small">No accounts match the current search filters.</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -276,14 +260,11 @@ const AdminUsers = () => {
                         {u.status}
                       </span>
                     </td>
-                    <td className="fw-bold">
-                      ₹{Number(u.walletBalance || 0).toFixed(2)}
-                    </td>
+                    <td className="fw-bold">₹{Number(u.walletBalance || 0).toFixed(2)}</td>
                     <td>
                       {u.fraudFlagCount > 0 ? (
                         <span className="badge bg-danger rounded-pill px-2">
-                          <i className="bi bi-shield-exclamation me-1"></i>{" "}
-                          {u.fraudFlagCount} flags
+                          <i className="bi bi-shield-exclamation me-1"></i> {u.fraudFlagCount} flags
                         </span>
                       ) : (
                         <span className="badge bg-secondary-subtle text-secondary rounded-pill px-2">
@@ -310,9 +291,7 @@ const AdminUsers = () => {
                         ) : (
                           <button
                             className="btn btn-sm btn-outline-danger rounded-pill px-3"
-                            onClick={() =>
-                              handleOpenStatusModal(u, "SUSPENDED")
-                            }
+                            onClick={() => handleOpenStatusModal(u, "SUSPENDED")}
                           >
                             Suspend
                           </button>
@@ -353,17 +332,14 @@ const AdminUsers = () => {
               </div>
               <div className="modal-body">
                 <p className="text-muted small">
-                  You are about to set account status to{" "}
-                  <strong>{statusToSet}</strong> for{" "}
+                  You are about to set account status to <strong>{statusToSet}</strong> for{" "}
                   <strong>{selectedUser.fullName}</strong> ({selectedUser.email}
                   ).
                   {statusToSet === "SUSPENDED" &&
                     " The user will immediately be locked out from signing in or placing orders."}
                 </p>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">
-                    Audit Reason / Justification
-                  </label>
+                  <label className="form-label small fw-bold">Audit Reason / Justification</label>
                   <textarea
                     className="form-control bg-dark border-secondary text-white"
                     rows="3"

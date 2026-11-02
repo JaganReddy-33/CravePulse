@@ -62,17 +62,19 @@ describe("CareersPage pagination failures", () => {
 
     expect(await screen.findByRole("alert")).toBeTruthy();
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current"))
-        .toBe("page"),
+      expect(screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current")).toBe(
+        "page",
+      ),
     );
     expect(screen.getByText("First page role")).toBeTruthy();
     expect(screen.getByText("Open Positions (25)")).toBeTruthy();
-    expect(screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent)
-      .toContain("Showing 1–12 of 25 positions");
-    expect(screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current"))
-      .toBe("page");
-    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current"))
-      .toBeNull();
+    expect(
+      screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent,
+    ).toContain("Showing 1–12 of 25 positions");
+    expect(screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current")).toBe(
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current")).toBeNull();
     expect(screen.getByRole("button", { name: "Next page" })).toBe(nextPage);
     expect(document.activeElement).toBe(nextPage);
 
@@ -82,10 +84,12 @@ describe("CareersPage pagination failures", () => {
     expect(await screen.findByText("Second page role")).toBeTruthy();
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
     expect(screen.getByText("Open Positions (25)")).toBeTruthy();
-    expect(screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent)
-      .toContain("Showing 13–24 of 25 positions");
-    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current"))
-      .toBe("page");
+    expect(
+      screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent,
+    ).toContain("Showing 13–24 of 25 positions");
+    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current")).toBe(
+      "page",
+    );
     expect(pageTwoAttempts).toBe(2);
   });
 });

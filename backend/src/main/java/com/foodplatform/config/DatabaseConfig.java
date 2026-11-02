@@ -2,20 +2,18 @@ package com.foodplatform.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class DatabaseConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConfig.class);
     private static volatile HikariDataSource dataSource;
 
-    private DatabaseConfig() {
-    }
+    private DatabaseConfig() {}
 
     public static DataSource getDataSource() {
         if (dataSource == null) {
@@ -26,12 +24,21 @@ public final class DatabaseConfig {
                         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
                         boolean test = Boolean.getBoolean("cravepulse.testMode");
                         String url = test ? System.getenv("TEST_DB_URL") : AppProperties.getDbUrl();
-                        if (test && (url == null || !url.matches("(?i).*[/]cravepulse_test(?:[?].*)?$"))) {
-                            throw new IllegalStateException("Tests require a disposable cravepulse_test database via TEST_DB_URL, TEST_DB_USER and TEST_DB_PASSWORD");
+                        if (
+                            test &&
+                            (url == null || !url.matches("(?i).*[/]cravepulse_test(?:[?].*)?$"))
+                        ) {
+                            throw new IllegalStateException(
+                                "Tests require a disposable cravepulse_test database via TEST_DB_URL, TEST_DB_USER and TEST_DB_PASSWORD"
+                            );
                         }
                         config.setJdbcUrl(url);
-                        config.setUsername(test ? System.getenv("TEST_DB_USER") : AppProperties.getDbUser());
-                        config.setPassword(test ? System.getenv("TEST_DB_PASSWORD") : AppProperties.getDbPassword());
+                        config.setUsername(
+                            test ? System.getenv("TEST_DB_USER") : AppProperties.getDbUser()
+                        );
+                        config.setPassword(
+                            test ? System.getenv("TEST_DB_PASSWORD") : AppProperties.getDbPassword()
+                        );
 
                         // Connection pool performance tuning
                         config.setMaximumPoolSize(20);
@@ -55,7 +62,10 @@ public final class DatabaseConfig {
                         config.addDataSourceProperty("maintainTimeStats", "false");
 
                         dataSource = new HikariDataSource(config);
-                        logger.info("HikariCP DataSource initialized successfully for: {}", AppProperties.getDbUrl());
+                        logger.info(
+                            "HikariCP DataSource initialized successfully for: {}",
+                            AppProperties.getDbUrl()
+                        );
                     } catch (Exception e) {
                         logger.error("Failed to initialize HikariCP connection pool", e);
                         throw new RuntimeException("Database pool initialization failed", e);

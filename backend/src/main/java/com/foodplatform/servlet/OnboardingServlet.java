@@ -1,18 +1,18 @@
 package com.foodplatform.servlet;
 
 import com.foodplatform.service.AuthService;
+import com.foodplatform.util.GoogleMapsUrlParser;
 import com.foodplatform.util.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@WebServlet({"/api/partner/apply", "/api/rider/apply"})
+@WebServlet({ "/api/partner/apply", "/api/rider/apply" })
 public class OnboardingServlet extends BaseServlet {
 
     private static final long serialVersionUID = 1L;
@@ -33,49 +33,112 @@ public class OnboardingServlet extends BaseServlet {
             }
 
             if (uri.contains("/partner/apply")) {
-                if (!body.has("fullName") || !body.has("email") || !body.has("password") ||
-                        !body.has("restaurantName") || !body.has("fssaiLicense")) {
-                    JsonUtil.sendError(res, 400, "Missing required partner fields (fullName, email, password, restaurantName, fssaiLicense)");
+                if (
+                    !body.has("fullName") ||
+                    !body.has("email") ||
+                    !body.has("password") ||
+                    !body.has("restaurantName") ||
+                    !body.has("fssaiLicense")
+                ) {
+                    JsonUtil.sendError(
+                        res,
+                        400,
+                        "Missing required partner fields (fullName, email, password, restaurantName, fssaiLicense)"
+                    );
                     return;
                 }
 
                 String fullName = body.get("fullName").getAsString();
                 String email = body.get("email").getAsString();
-                String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : "";
+                String phone =
+                    body.has("phone") && !body.get("phone").isJsonNull()
+                        ? body.get("phone").getAsString()
+                        : "";
                 String password = body.get("password").getAsString();
                 String restaurantName = body.get("restaurantName").getAsString();
-                String address = body.has("address") && !body.get("address").isJsonNull() ? body.get("address").getAsString() : null;
-                Double lat = body.has("latitude") && !body.get("latitude").isJsonNull() ? body.get("latitude").getAsDouble() : null;
-                Double lng = body.has("longitude") && !body.get("longitude").isJsonNull() ? body.get("longitude").getAsDouble() : null;
-                String cuisineTypes = body.has("cuisineTypes") && !body.get("cuisineTypes").isJsonNull() ? body.get("cuisineTypes").getAsString() : "Multi-Cuisine";
+                String address =
+                    body.has("address") && !body.get("address").isJsonNull()
+                        ? body.get("address").getAsString()
+                        : null;
+                String mapsUrl =
+                    body.has("mapsUrl") && !body.get("mapsUrl").isJsonNull()
+                        ? body.get("mapsUrl").getAsString()
+                        : null;
+                GoogleMapsUrlParser.Coordinates coordinates = GoogleMapsUrlParser.parseAndResolve(
+                    mapsUrl
+                );
+                String cuisineTypes =
+                    body.has("cuisineTypes") && !body.get("cuisineTypes").isJsonNull()
+                        ? body.get("cuisineTypes").getAsString()
+                        : "Multi-Cuisine";
                 String fssaiLicense = body.get("fssaiLicense").getAsString();
 
                 Map<String, Object> resp = authService.applyPartner(
-                        fullName, email, phone, password, restaurantName, address, lat, lng, cuisineTypes, fssaiLicense
+                    fullName,
+                    email,
+                    phone,
+                    password,
+                    restaurantName,
+                    address,
+                    coordinates.latitude().doubleValue(),
+                    coordinates.longitude().doubleValue(),
+                    cuisineTypes,
+                    fssaiLicense
                 );
-                JsonUtil.sendSuccess(res, 201, "Partner application submitted successfully. Pending admin approval.", resp);
+                JsonUtil.sendSuccess(
+                    res,
+                    201,
+                    "Partner application submitted successfully. Pending admin approval.",
+                    resp
+                );
                 return;
             }
 
             if (uri.contains("/rider/apply")) {
-                if (!body.has("fullName") || !body.has("email") || !body.has("password") ||
-                        !body.has("vehicleNumber") || !body.has("drivingLicense")) {
-                    JsonUtil.sendError(res, 400, "Missing required rider fields (fullName, email, password, vehicleNumber, drivingLicense)");
+                if (
+                    !body.has("fullName") ||
+                    !body.has("email") ||
+                    !body.has("password") ||
+                    !body.has("vehicleNumber") ||
+                    !body.has("drivingLicense")
+                ) {
+                    JsonUtil.sendError(
+                        res,
+                        400,
+                        "Missing required rider fields (fullName, email, password, vehicleNumber, drivingLicense)"
+                    );
                     return;
                 }
 
                 String fullName = body.get("fullName").getAsString();
                 String email = body.get("email").getAsString();
-                String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : "";
+                String phone =
+                    body.has("phone") && !body.get("phone").isJsonNull()
+                        ? body.get("phone").getAsString()
+                        : "";
                 String password = body.get("password").getAsString();
-                String vehicleType = body.has("vehicleType") && !body.get("vehicleType").isJsonNull() ? body.get("vehicleType").getAsString() : "Electric Scooter";
+                String vehicleType =
+                    body.has("vehicleType") && !body.get("vehicleType").isJsonNull()
+                        ? body.get("vehicleType").getAsString()
+                        : "Electric Scooter";
                 String vehicleNumber = body.get("vehicleNumber").getAsString();
                 String drivingLicense = body.get("drivingLicense").getAsString();
 
                 Map<String, Object> resp = authService.applyRider(
-                        fullName, email, phone, password, vehicleType, vehicleNumber, drivingLicense
+                    fullName,
+                    email,
+                    phone,
+                    password,
+                    vehicleType,
+                    vehicleNumber,
+                    drivingLicense
                 );
-                JsonUtil.sendSuccess(res, 201, "Rider application submitted successfully. Pending admin approval.", resp);
+                JsonUtil.sendSuccess(
+                    res,
+                    201,
+                    "Rider application submitted successfully. Pending admin approval.",
+                    resp
+                );
                 return;
             }
 
@@ -84,7 +147,11 @@ public class OnboardingServlet extends BaseServlet {
             JsonUtil.sendError(res, 400, e.getMessage());
         } catch (Exception e) {
             logger.error("Error submitting onboarding application", e);
-            JsonUtil.sendError(res, 500, "An error occurred while submitting your onboarding application. Please try again later.");
+            JsonUtil.sendError(
+                res,
+                500,
+                "An error occurred while submitting your onboarding application. Please try again later."
+            );
         }
     }
 }

@@ -34,11 +34,7 @@ const TrackingTimeline = ({ order }) => {
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
           <span className="badge bg-danger-subtle text-danger fw-bold text-uppercase px-2 py-1 small mb-1 d-inline-block">
-            {isCancelled
-              ? "CANCELLED"
-              : order.status === "DELIVERED"
-                ? "DELIVERED"
-                : "LIVE STATUS"}
+            {isCancelled ? "CANCELLED" : order.status === "DELIVERED" ? "DELIVERED" : "LIVE STATUS"}
           </span>
           <h4 className="fw-extrabold text-dark mb-0">
             {isCancelled
@@ -52,9 +48,7 @@ const TrackingTimeline = ({ order }) => {
           <small className="text-muted d-block" style={{ fontSize: 11 }}>
             Order Reference
           </small>
-          <strong className="text-dark small">
-            #{order.orderNumber || order.id}
-          </strong>
+          <strong className="text-dark small">#{order.orderNumber || order.id}</strong>
         </div>
       </div>
 
@@ -80,10 +74,7 @@ const TrackingTimeline = ({ order }) => {
           </div>
 
           {/* Stepper Dots & Labels */}
-          <div
-            className="d-flex justify-content-between position-relative"
-            style={{ zIndex: 2 }}
-          >
+          <div className="d-flex justify-content-between position-relative" style={{ zIndex: 2 }}>
             {STAGES.map((st, idx) => {
               const isPast = idx < activeIdx;
               const isCurrent = idx === activeIdx;
@@ -102,9 +93,7 @@ const TrackingTimeline = ({ order }) => {
                       width: 32,
                       height: 32,
                       fontSize: 14,
-                      outline: isCurrent
-                        ? "4px solid rgba(255, 87, 34, 0.2)"
-                        : "none",
+                      outline: isCurrent ? "4px solid rgba(255, 87, 34, 0.2)" : "none",
                     }}
                   >
                     <i className={`bi ${st.icon}`}></i>
@@ -123,11 +112,10 @@ const TrackingTimeline = ({ order }) => {
       ) : (
         <div className="alert alert-danger rounded-4 p-3 mb-0 small">
           <strong>Cancellation Notice:</strong>{" "}
-          {order.cancellationReason ||
-            "Order was cancelled per customer or kitchen request."}
+          {order.cancellationReason || "Order was cancelled per customer or kitchen request."}
           <div className="mt-1 text-muted" style={{ fontSize: 11 }}>
-            Any paid amount will be automatically refunded to your original
-            payment method within 2-4 business hours.
+            Any paid amount will be automatically refunded to your original payment method within
+            2-4 business hours.
           </div>
         </div>
       )}

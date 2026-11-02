@@ -6,10 +6,7 @@ import React from "react";
 const unitPrice = (item) =>
   Number(item.platformPrice || 0) +
   Number(item.selectedVariant?.priceAdjustment || 0) +
-  (item.selectedAddons || []).reduce(
-    (sum, addon) => sum + Number(addon.price || 0),
-    0,
-  );
+  (item.selectedAddons || []).reduce((sum, addon) => sum + Number(addon.price || 0), 0);
 const CheckoutOrderSummary = ({
   cart,
   onAddItem,
@@ -42,14 +39,10 @@ const CheckoutOrderSummary = ({
                 style={{ width: 8, height: 8 }}
               ></span>
               <div className="text-truncate">
-                <strong className="d-block small text-dark text-truncate">
-                  {item.name}
-                </strong>
+                <strong className="d-block small text-dark text-truncate">{item.name}</strong>
                 <small className="text-muted" style={{ fontSize: 11 }}>
                   ₹{unitPrice(item)} each
-                  {item.selectedVariant
-                    ? ` • ${item.selectedVariant.variantName}`
-                    : ""}
+                  {item.selectedVariant ? ` • ${item.selectedVariant.variantName}` : ""}
                 </small>
               </div>
             </div>
@@ -88,10 +81,7 @@ const CheckoutOrderSummary = ({
                   +
                 </button>
               </div>
-              <strong
-                className="small text-dark"
-                style={{ minWidth: 60, textAlign: "right" }}
-              >
+              <strong className="small text-dark" style={{ minWidth: 60, textAlign: "right" }}>
                 ₹{(unitPrice(item) * item.quantity).toFixed(2)}
               </strong>
             </div>
@@ -105,8 +95,7 @@ const CheckoutOrderSummary = ({
           htmlFor="deliveryInstructionsInput"
           className="form-label small fw-bold text-muted mb-1"
         >
-          <i className="bi bi-chat-left-dots me-1"></i> Delivery Partner
-          Instructions
+          <i className="bi bi-chat-left-dots me-1"></i> Delivery Partner Instructions
         </label>
         <input
           id="deliveryInstructionsInput"

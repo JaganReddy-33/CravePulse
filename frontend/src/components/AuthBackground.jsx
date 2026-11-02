@@ -10,34 +10,26 @@ const AuthBackground = ({ role = "CUSTOMER" }) => {
   const videoConfig = {
     CUSTOMER: {
       url: "https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-gourmet-dish-being-prepared-42525-large.mp4",
-      poster:
-        "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1600&q=80",
-      gradient:
-        "linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 27, 75, 0.85) 100%)",
+      poster: "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1600&q=80",
+      gradient: "linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 27, 75, 0.85) 100%)",
       accentColor: "var(--c-primary)",
     },
     PARTNER: {
       url: "https://assets.mixkit.co/videos/preview/mixkit-chef-stirring-food-in-a-pan-with-flames-43093-large.mp4",
-      poster:
-        "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&q=80",
-      gradient:
-        "linear-gradient(135deg, rgba(20, 16, 12, 0.85) 0%, rgba(38, 20, 8, 0.88) 100%)",
+      poster: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&q=80",
+      gradient: "linear-gradient(135deg, rgba(20, 16, 12, 0.85) 0%, rgba(38, 20, 8, 0.88) 100%)",
       accentColor: "#f59e0b",
     },
     RIDER: {
       url: "https://assets.mixkit.co/videos/preview/mixkit-night-traffic-in-a-modern-city-43187-large.mp4",
-      poster:
-        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1600&q=80",
-      gradient:
-        "linear-gradient(135deg, rgba(10, 15, 29, 0.86) 0%, rgba(6, 44, 30, 0.88) 100%)",
+      poster: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1600&q=80",
+      gradient: "linear-gradient(135deg, rgba(10, 15, 29, 0.86) 0%, rgba(6, 44, 30, 0.88) 100%)",
       accentColor: "#00e676",
     },
     ADMIN: {
       url: "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-data-31911-large.mp4",
-      poster:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80",
-      gradient:
-        "linear-gradient(135deg, rgba(9, 13, 22, 0.88) 0%, rgba(15, 23, 42, 0.92) 100%)",
+      poster: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80",
+      gradient: "linear-gradient(135deg, rgba(9, 13, 22, 0.88) 0%, rgba(15, 23, 42, 0.92) 100%)",
       accentColor: "#38bdf8",
     },
   };

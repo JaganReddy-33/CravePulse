@@ -1,13 +1,12 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.daoImpl.OrderDaoImpl;
 import com.foodplatform.model.Order;
 import com.foodplatform.service.MetricsService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,19 +15,23 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 public class ConcurrencyAndIdempotencyDepthTest {
 
     @Test
-    @DisplayName("Concurrency: Simultaneous acceptance of same dispatch offer by two riders (Exactly one succeeds)")
+    @DisplayName(
+        "Concurrency: Simultaneous acceptance of same dispatch offer by two riders (Exactly one succeeds)"
+    )
     void testConcurrentDispatchAcceptance() throws Exception {
         long riderId = 1L;
         long orderId = 1L;
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement()) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            Statement stmt = conn.createStatement()
+        ) {
             try (ResultSet rs = stmt.executeQuery("SELECT id FROM rider_profiles LIMIT 1")) {
                 if (rs.next()) riderId = rs.getLong(1);
             }
@@ -40,10 +43,13 @@ public class ConcurrencyAndIdempotencyDepthTest {
         long dispatchTestId = 88888L;
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement ps = conn.prepareStatement(
+            try (
+                PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO delivery_dispatches (id, order_id, rider_id, dispatch_status, base_pay, distance_pay, total_earning) " +
-                            "VALUES (?, ?, ?, 'OFFERED', 35.00, 15.00, 50.00) " +
-                            "ON DUPLICATE KEY UPDATE dispatch_status = 'OFFERED'")) {
+                        "VALUES (?, ?, ?, 'OFFERED', 35.00, 15.00, 50.00) " +
+                        "ON DUPLICATE KEY UPDATE dispatch_status = 'OFFERED'"
+                )
+            ) {
                 ps.setLong(1, dispatchTestId);
                 ps.setLong(2, orderId);
                 ps.setLong(3, riderId);
@@ -62,13 +68,17 @@ public class ConcurrencyAndIdempotencyDepthTest {
             barrier.await(); // ensure both threads execute concurrently
             try (Connection conn = DatabaseConfig.getConnection()) {
                 conn.setAutoCommit(false);
-                String selectLock = "SELECT id, dispatch_status FROM delivery_dispatches WHERE id = ? FOR UPDATE";
+                String selectLock =
+                    "SELECT id, dispatch_status FROM delivery_dispatches WHERE id = ? FOR UPDATE";
                 try (PreparedStatement psLock = conn.prepareStatement(selectLock)) {
                     psLock.setLong(1, finalDispatchId);
                     try (ResultSet rs = psLock.executeQuery()) {
                         if (rs.next() && "OFFERED".equals(rs.getString("dispatch_status"))) {
-                            try (PreparedStatement psUpd = conn.prepareStatement(
-                                    "UPDATE delivery_dispatches SET dispatch_status = 'ACCEPTED', responded_at = CURRENT_TIMESTAMP WHERE id = ?")) {
+                            try (
+                                PreparedStatement psUpd = conn.prepareStatement(
+                                    "UPDATE delivery_dispatches SET dispatch_status = 'ACCEPTED', responded_at = CURRENT_TIMESTAMP WHERE id = ?"
+                                )
+                            ) {
                                 psUpd.setLong(1, finalDispatchId);
                                 psUpd.executeUpdate();
                             }
@@ -96,20 +106,36 @@ public class ConcurrencyAndIdempotencyDepthTest {
         executor.shutdown();
 
         // Exactly one rider wins the dispatch!
-        assertEquals(1, successCount.get(), "Exactly one rider must successfully accept the dispatch");
-        assertEquals(1, conflictCount.get(), "The competing rider must encounter a conflict or already accepted status");
+        assertEquals(
+            1,
+            successCount.get(),
+            "Exactly one rider must successfully accept the dispatch"
+        );
+        assertEquals(
+            1,
+            conflictCount.get(),
+            "The competing rider must encounter a conflict or already accepted status"
+        );
     }
 
     @Test
-    @DisplayName("Idempotency: Double-submit order creation with duplicate idempotency_key is rejected")
+    @DisplayName(
+        "Idempotency: Double-submit order creation with duplicate idempotency_key is rejected"
+    )
     void testOrderCreationIdempotency() throws SQLException {
         long customerId = 1L;
         long restaurantId = 1L;
         long addressId = 1L;
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT id FROM users WHERE role = 'CUSTOMER' LIMIT 1")) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            Statement stmt = conn.createStatement()
+        ) {
+            try (
+                ResultSet rs = stmt.executeQuery(
+                    "SELECT id FROM users WHERE role = 'CUSTOMER' LIMIT 1"
+                )
+            ) {
                 if (rs.next()) customerId = rs.getLong(1);
             }
             try (ResultSet rs = stmt.executeQuery("SELECT id FROM restaurant_profiles LIMIT 1")) {
@@ -157,8 +183,11 @@ public class ConcurrencyAndIdempotencyDepthTest {
             Connection conn2 = DatabaseConfig.getConnection();
             conn2.setAutoCommit(false);
             try {
-                assertThrows(SQLException.class, () -> orderDao.createOrder(conn2, order2),
-                        "Duplicate idempotency key must violate unique constraint and throw SQLException");
+                assertThrows(
+                    SQLException.class,
+                    () -> orderDao.createOrder(conn2, order2),
+                    "Duplicate idempotency key must violate unique constraint and throw SQLException"
+                );
             } finally {
                 conn2.rollback();
                 conn2.close();
@@ -167,7 +196,9 @@ public class ConcurrencyAndIdempotencyDepthTest {
     }
 
     @Test
-    @DisplayName("Observability: MetricsService snapshot reflects orders per minute and counter increments")
+    @DisplayName(
+        "Observability: MetricsService snapshot reflects orders per minute and counter increments"
+    )
     void testMetricsServiceObservability() {
         MetricsService metrics = MetricsService.getInstance();
         metrics.incrementOrdersPlaced();

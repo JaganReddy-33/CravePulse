@@ -36,10 +36,9 @@ describe("customer dispute modal", () => {
     );
 
     expect(screen.getByText("Instant Dispute Resolution")).toBeTruthy();
-    fireEvent.change(
-      screen.getByPlaceholderText(/Garlic Naan was missing/),
-      { target: { value: "One item was missing from my order." } },
-    );
+    fireEvent.change(screen.getByPlaceholderText(/Garlic Naan was missing/), {
+      target: { value: "One item was missing from my order." },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Submit Dispute Claim/ }));
 
     await waitFor(() =>

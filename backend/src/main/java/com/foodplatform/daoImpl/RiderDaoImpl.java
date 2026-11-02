@@ -5,15 +5,14 @@ import com.foodplatform.dao.RiderDao;
 import com.foodplatform.model.DeliveryDispatch;
 import com.foodplatform.model.RiderCodSettlement;
 import com.foodplatform.model.RiderProfile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RiderDaoImpl implements RiderDao {
 
@@ -22,12 +21,15 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public RiderProfile findByUserId(long userId) {
-        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
-                "FROM rider_profiles rp " +
-                "JOIN users u ON rp.user_id = u.id " +
-                "WHERE rp.user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
+            "FROM rider_profiles rp " +
+            "JOIN users u ON rp.user_id = u.id " +
+            "WHERE rp.user_id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -43,12 +45,15 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public RiderProfile findById(long riderId) {
-        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
-                "FROM rider_profiles rp " +
-                "JOIN users u ON rp.user_id = u.id " +
-                "WHERE rp.id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
+            "FROM rider_profiles rp " +
+            "JOIN users u ON rp.user_id = u.id " +
+            "WHERE rp.id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -63,20 +68,28 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public List<RiderProfile> findNearestAvailableRiders(double restLat, double restLng, double maxDistanceKm, int limit) {
+    public List<RiderProfile> findNearestAvailableRiders(
+        double restLat,
+        double restLng,
+        double maxDistanceKm,
+        int limit
+    ) {
         List<RiderProfile> list = new ArrayList<>();
-        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url, " +
-                "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(rp.current_latitude)) * COS(RADIANS(rp.current_longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(rp.current_latitude))))) AS distance_km " +
-                "FROM rider_profiles rp " +
-                "JOIN users u ON rp.user_id = u.id " +
-                "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
-                "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
-                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
-                "HAVING distance_km <= ? " +
-                "ORDER BY distance_km ASC LIMIT ?";
+        String sql =
+            "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url, " +
+            "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(rp.current_latitude)) * COS(RADIANS(rp.current_longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(rp.current_latitude))))) AS distance_km " +
+            "FROM rider_profiles rp " +
+            "JOIN users u ON rp.user_id = u.id " +
+            "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
+            "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+            "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
+            "HAVING distance_km <= ? " +
+            "ORDER BY distance_km ASC LIMIT ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setDouble(1, restLat);
             ps.setDouble(2, restLng);
             ps.setDouble(3, restLat);
@@ -96,7 +109,13 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public List<RiderProfile> findNearestAvailableRidersExcluding(double restLat, double restLng, double maxDistanceKm, int limit, List<Long> excludedRiderIds) {
+    public List<RiderProfile> findNearestAvailableRidersExcluding(
+        double restLat,
+        double restLng,
+        double maxDistanceKm,
+        int limit,
+        List<Long> excludedRiderIds
+    ) {
         if (excludedRiderIds == null || excludedRiderIds.isEmpty()) {
             return findNearestAvailableRiders(restLat, restLng, maxDistanceKm, limit);
         }
@@ -108,19 +127,24 @@ public class RiderDaoImpl implements RiderDao {
             inClause.append("?");
         }
 
-        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url, " +
-                "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(rp.current_latitude)) * COS(RADIANS(rp.current_longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(rp.current_latitude))))) AS distance_km " +
-                "FROM rider_profiles rp " +
-                "JOIN users u ON rp.user_id = u.id " +
-                "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
-                "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
-                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
-                "AND rp.id NOT IN (" + inClause + ") " +
-                "HAVING distance_km <= ? " +
-                "ORDER BY distance_km ASC LIMIT ?";
+        String sql =
+            "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url, " +
+            "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(rp.current_latitude)) * COS(RADIANS(rp.current_longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(rp.current_latitude))))) AS distance_km " +
+            "FROM rider_profiles rp " +
+            "JOIN users u ON rp.user_id = u.id " +
+            "WHERE rp.is_online = TRUE AND rp.is_available = TRUE AND rp.is_kyc_approved = TRUE " +
+            "AND rp.last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+            "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d WHERE d.rider_id = rp.id AND d.dispatch_status = 'OFFERED') " +
+            "AND rp.id NOT IN (" +
+            inClause +
+            ") " +
+            "HAVING distance_km <= ? " +
+            "ORDER BY distance_km ASC LIMIT ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             int idx = 1;
             ps.setDouble(idx++, restLat);
             ps.setDouble(idx++, restLng);
@@ -146,8 +170,10 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public void updateOnlineStatus(long riderId, boolean isOnline) {
         String sql = "UPDATE rider_profiles SET is_online = ?, is_available = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBoolean(1, isOnline);
             ps.setBoolean(2, isOnline);
             ps.setLong(3, riderId);
@@ -159,9 +185,18 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void updateRiderLocation(long riderId, double lat, double lng, double speed, double heading, Long orderId) {
-        String updateRider = "UPDATE rider_profiles SET current_latitude = ?, current_longitude = ?, last_ping_time = CURRENT_TIMESTAMP WHERE id = ?";
-        String insertLog = "INSERT INTO rider_location_logs (rider_id, order_id, latitude, longitude, speed, heading) VALUES (?, ?, ?, ?, ?, ?)";
+    public void updateRiderLocation(
+        long riderId,
+        double lat,
+        double lng,
+        double speed,
+        double heading,
+        Long orderId
+    ) {
+        String updateRider =
+            "UPDATE rider_profiles SET current_latitude = ?, current_longitude = ?, last_ping_time = CURRENT_TIMESTAMP WHERE id = ?";
+        String insertLog =
+            "INSERT INTO rider_location_logs (rider_id, order_id, latitude, longitude, speed, heading) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
@@ -198,7 +233,12 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void updateRiderAvailability(Connection conn, long riderId, boolean isAvailable, Long activeOrderId) throws SQLException {
+    public void updateRiderAvailability(
+        Connection conn,
+        long riderId,
+        boolean isAvailable,
+        Long activeOrderId
+    ) throws SQLException {
         String sql = "UPDATE rider_profiles SET is_available = ?, active_order_id = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBoolean(1, isAvailable);
@@ -210,9 +250,11 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public Long createDispatchOffer(Connection conn, DeliveryDispatch dispatch) throws SQLException {
-        String sql = "INSERT INTO delivery_dispatches (order_id, rider_id, dispatch_status, base_pay, distance_pay, surge_pay, tip_amount, total_earning) " +
-                "VALUES (?, ?, 'OFFERED', ?, ?, ?, ?, ?)";
+    public Long createDispatchOffer(Connection conn, DeliveryDispatch dispatch)
+        throws SQLException {
+        String sql =
+            "INSERT INTO delivery_dispatches (order_id, rider_id, dispatch_status, base_pay, distance_pay, surge_pay, tip_amount, total_earning) " +
+            "VALUES (?, ?, 'OFFERED', ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, dispatch.getOrderId());
             ps.setLong(2, dispatch.getRiderId());
@@ -234,7 +276,8 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public DeliveryDispatch findDispatchOfferWithLock(Connection conn, long dispatchId) throws SQLException {
+    public DeliveryDispatch findDispatchOfferWithLock(Connection conn, long dispatchId)
+        throws SQLException {
         String sql = "SELECT * FROM delivery_dispatches WHERE id = ? FOR UPDATE";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, dispatchId);
@@ -263,8 +306,10 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void updateDispatchStatus(Connection conn, long dispatchId, String status, String reason) throws SQLException {
-        String sql = "UPDATE delivery_dispatches SET dispatch_status = ?, responded_at = CURRENT_TIMESTAMP, rejection_reason = ? WHERE id = ?";
+    public void updateDispatchStatus(Connection conn, long dispatchId, String status, String reason)
+        throws SQLException {
+        String sql =
+            "UPDATE delivery_dispatches SET dispatch_status = ?, responded_at = CURRENT_TIMESTAMP, rejection_reason = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setString(2, reason);
@@ -274,8 +319,14 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void updateWaitTimeCompensation(Connection conn, long dispatchId, int minutes, BigDecimal pay) throws SQLException {
-        String sql = "UPDATE delivery_dispatches SET wait_time_minutes = ?, wait_time_pay = ?, total_earning = total_earning + ? WHERE id = ?";
+    public void updateWaitTimeCompensation(
+        Connection conn,
+        long dispatchId,
+        int minutes,
+        BigDecimal pay
+    ) throws SQLException {
+        String sql =
+            "UPDATE delivery_dispatches SET wait_time_minutes = ?, wait_time_pay = ?, total_earning = total_earning + ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, minutes);
             ps.setBigDecimal(2, pay);
@@ -287,22 +338,25 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public DeliveryDispatch getRiderActiveDispatch(long riderId) {
-        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
-                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
-                "FROM delivery_dispatches d " +
-                "JOIN orders o ON d.order_id = o.id " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED' " +
-                "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
-                "ORDER BY d.id DESC LIMIT 1";
+        String sql =
+            "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+            "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+            "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
+            "FROM delivery_dispatches d " +
+            "JOIN orders o ON d.order_id = o.id " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "WHERE d.rider_id = ? AND d.dispatch_status = 'ACCEPTED' " +
+            "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
+            "ORDER BY d.id DESC LIMIT 1";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -319,10 +373,13 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<Long> getExcludedRiderIdsForOrder(long orderId) {
         List<Long> ids = new ArrayList<>();
-        String sql = "SELECT DISTINCT rider_id FROM delivery_dispatches " +
-                "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT')";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT DISTINCT rider_id FROM delivery_dispatches " +
+            "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT')";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -339,11 +396,14 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<Long> getRidersOnDispatchCooldown(long orderId) {
         List<Long> ids = new ArrayList<>();
-        String sql = "SELECT DISTINCT rider_id FROM delivery_dispatches " +
-                "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT') " +
-                "AND responded_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? MINUTE)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT DISTINCT rider_id FROM delivery_dispatches " +
+            "WHERE order_id = ? AND dispatch_status IN ('REJECTED', 'TIMED_OUT') " +
+            "AND responded_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? MINUTE)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             ps.setInt(2, DISPATCH_RETRY_COOLDOWN_MINUTES);
             try (ResultSet rs = ps.executeQuery()) {
@@ -360,8 +420,9 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public boolean hasActiveOfferForOrder(Connection conn, long orderId) throws SQLException {
-        String sql = "SELECT 1 FROM delivery_dispatches " +
-                "WHERE order_id = ? AND dispatch_status = 'OFFERED' LIMIT 1 FOR UPDATE";
+        String sql =
+            "SELECT 1 FROM delivery_dispatches " +
+            "WHERE order_id = ? AND dispatch_status = 'OFFERED' LIMIT 1 FOR UPDATE";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -371,11 +432,17 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public boolean expireDispatchOffer(Connection conn, long dispatchId, int timeoutSeconds, String reason) throws SQLException {
-        String sql = "UPDATE delivery_dispatches SET dispatch_status = 'TIMED_OUT', " +
-                "responded_at = CURRENT_TIMESTAMP, rejection_reason = ? " +
-                "WHERE id = ? AND dispatch_status = 'OFFERED' " +
-                "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
+    public boolean expireDispatchOffer(
+        Connection conn,
+        long dispatchId,
+        int timeoutSeconds,
+        String reason
+    ) throws SQLException {
+        String sql =
+            "UPDATE delivery_dispatches SET dispatch_status = 'TIMED_OUT', " +
+            "responded_at = CURRENT_TIMESTAMP, rejection_reason = ? " +
+            "WHERE id = ? AND dispatch_status = 'OFFERED' " +
+            "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, reason);
             ps.setLong(2, dispatchId);
@@ -386,12 +453,13 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public boolean reserveRiderForDispatch(Connection conn, long riderId) throws SQLException {
-        String sql = "UPDATE rider_profiles SET is_available = FALSE " +
-                "WHERE id = ? AND is_online = TRUE AND is_available = TRUE " +
-                "AND is_kyc_approved = TRUE AND active_order_id IS NULL " +
-                "AND last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
-                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
-                "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
+        String sql =
+            "UPDATE rider_profiles SET is_available = FALSE " +
+            "WHERE id = ? AND is_online = TRUE AND is_available = TRUE " +
+            "AND is_kyc_approved = TRUE AND active_order_id IS NULL " +
+            "AND last_ping_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 MINUTE) " +
+            "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
+            "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, riderId);
             return ps.executeUpdate() == 1;
@@ -400,10 +468,11 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public void releaseRiderDispatchReservation(Connection conn, long riderId) throws SQLException {
-        String sql = "UPDATE rider_profiles SET is_available = TRUE " +
-                "WHERE id = ? AND is_online = TRUE AND active_order_id IS NULL " +
-                "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
-                "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
+        String sql =
+            "UPDATE rider_profiles SET is_available = TRUE " +
+            "WHERE id = ? AND is_online = TRUE AND active_order_id IS NULL " +
+            "AND NOT EXISTS (SELECT 1 FROM delivery_dispatches d " +
+            "WHERE d.rider_id = rider_profiles.id AND d.dispatch_status = 'OFFERED')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, riderId);
             ps.executeUpdate();
@@ -413,10 +482,13 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<DeliveryDispatch> getTimedOutOffers(int timeoutSeconds) {
         List<DeliveryDispatch> list = new ArrayList<>();
-        String sql = "SELECT * FROM delivery_dispatches WHERE dispatch_status = 'OFFERED' " +
-                "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM delivery_dispatches WHERE dispatch_status = 'OFFERED' " +
+            "AND offered_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ? SECOND)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, timeoutSeconds);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -438,22 +510,25 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<DeliveryDispatch> getActiveOffersForRider(long riderId) {
         List<DeliveryDispatch> list = new ArrayList<>();
-        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
-                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
-                "FROM delivery_dispatches d " +
-                "JOIN orders o ON d.order_id = o.id " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.rider_id = ? AND d.dispatch_status = 'OFFERED' " +
-                "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
-                "ORDER BY d.id DESC";
+        String sql =
+            "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+            "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+            "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
+            "FROM delivery_dispatches d " +
+            "JOIN orders o ON d.order_id = o.id " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "WHERE d.rider_id = ? AND d.dispatch_status = 'OFFERED' " +
+            "AND o.status NOT IN ('DELIVERED', 'CANCELLED', 'REJECTED') " +
+            "ORDER BY d.id DESC";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -469,21 +544,24 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public DeliveryDispatch findDispatchByOrderId(long orderId) {
-        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
-                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
-                "FROM delivery_dispatches d " +
-                "JOIN orders o ON d.order_id = o.id " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.order_id = ? AND d.dispatch_status = 'ACCEPTED' " +
-                "ORDER BY d.id DESC LIMIT 1";
+        String sql =
+            "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+            "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+            "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
+            "FROM delivery_dispatches d " +
+            "JOIN orders o ON d.order_id = o.id " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "WHERE d.order_id = ? AND d.dispatch_status = 'ACCEPTED' " +
+            "ORDER BY d.id DESC LIMIT 1";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -498,11 +576,24 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void recordRiderMilestoneTimestamp(Connection conn, long dispatchId, String milestoneColumn) throws SQLException {
-        if (!milestoneColumn.matches("^(arrived_at_restaurant_at|picked_up_at|arrived_at_customer_at|delivered_at)$")) {
+    public void recordRiderMilestoneTimestamp(
+        Connection conn,
+        long dispatchId,
+        String milestoneColumn
+    ) throws SQLException {
+        if (
+            !milestoneColumn.matches(
+                "^(arrived_at_restaurant_at|picked_up_at|arrived_at_customer_at|delivered_at)$"
+            )
+        ) {
             throw new IllegalArgumentException("Invalid milestone column: " + milestoneColumn);
         }
-        String sql = "UPDATE delivery_dispatches SET " + milestoneColumn + " = CURRENT_TIMESTAMP WHERE id = ? AND " + milestoneColumn + " IS NULL";
+        String sql =
+            "UPDATE delivery_dispatches SET " +
+            milestoneColumn +
+            " = CURRENT_TIMESTAMP WHERE id = ? AND " +
+            milestoneColumn +
+            " IS NULL";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, dispatchId);
             ps.executeUpdate();
@@ -510,11 +601,19 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void updateRiderProfileDetails(long riderId, String vehicleType, String vehicleNumber, String drivingLicense) {
-        String sql = "UPDATE rider_profiles SET vehicle_type = COALESCE(?, vehicle_type), " +
-                "vehicle_number = COALESCE(?, vehicle_number), driving_license = COALESCE(?, driving_license) WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public void updateRiderProfileDetails(
+        long riderId,
+        String vehicleType,
+        String vehicleNumber,
+        String drivingLicense
+    ) {
+        String sql =
+            "UPDATE rider_profiles SET vehicle_type = COALESCE(?, vehicle_type), " +
+            "vehicle_number = COALESCE(?, vehicle_number), driving_license = COALESCE(?, driving_license) WHERE id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, vehicleType);
             ps.setString(2, vehicleNumber);
             ps.setString(3, drivingLicense);
@@ -527,16 +626,19 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public void recordCodCollection(Connection conn, long riderId, long orderId, BigDecimal amount) throws SQLException {
-        String updateCashSql = "UPDATE rider_profiles SET cash_in_hand = cash_in_hand + ? WHERE id = ?";
+    public void recordCodCollection(Connection conn, long riderId, long orderId, BigDecimal amount)
+        throws SQLException {
+        String updateCashSql =
+            "UPDATE rider_profiles SET cash_in_hand = cash_in_hand + ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(updateCashSql)) {
             ps.setBigDecimal(1, amount);
             ps.setLong(2, riderId);
             ps.executeUpdate();
         }
 
-        String ledgerSql = "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, notes) " +
-                "VALUES (?, ?, ?, 'COLLECTED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), 'Cash collected on delivery')";
+        String ledgerSql =
+            "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, notes) " +
+            "VALUES (?, ?, ?, 'COLLECTED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), 'Cash collected on delivery')";
         try (PreparedStatement ps = conn.prepareStatement(ledgerSql)) {
             ps.setLong(1, riderId);
             ps.setLong(2, orderId);
@@ -547,19 +649,26 @@ public class RiderDaoImpl implements RiderDao {
     }
 
     @Override
-    public BigDecimal recordCodDeposit(long riderId, BigDecimal amount, String referenceNumber, String notes) {
+    public BigDecimal recordCodDeposit(
+        long riderId,
+        BigDecimal amount,
+        String referenceNumber,
+        String notes
+    ) {
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                String updateSql = "UPDATE rider_profiles SET cash_in_hand = GREATEST(0.00, cash_in_hand - ?) WHERE id = ?";
+                String updateSql =
+                    "UPDATE rider_profiles SET cash_in_hand = GREATEST(0.00, cash_in_hand - ?) WHERE id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                     ps.setBigDecimal(1, amount);
                     ps.setLong(2, riderId);
                     ps.executeUpdate();
                 }
 
-                String ledgerSql = "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, reference_number, notes) " +
-                        "VALUES (?, NULL, ?, 'DEPOSITED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), ?, ?)";
+                String ledgerSql =
+                    "INSERT INTO rider_cod_settlements (rider_id, order_id, amount, transaction_type, running_cash_in_hand, reference_number, notes) " +
+                    "VALUES (?, NULL, ?, 'DEPOSITED', (SELECT cash_in_hand FROM rider_profiles WHERE id = ?), ?, ?)";
                 try (PreparedStatement ps = conn.prepareStatement(ledgerSql)) {
                     ps.setLong(1, riderId);
                     ps.setBigDecimal(2, amount);
@@ -596,9 +705,12 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<RiderCodSettlement> getCodSettlements(long riderId, int limit, int offset) {
         List<RiderCodSettlement> list = new ArrayList<>();
-        String sql = "SELECT * FROM rider_cod_settlements WHERE rider_id = ? ORDER BY id DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM rider_cod_settlements WHERE rider_id = ? ORDER BY id DESC LIMIT ? OFFSET ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             ps.setInt(2, limit);
             ps.setInt(3, offset);
@@ -628,16 +740,19 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public Map<String, Object> getRiderEarningsSummary(long riderId) {
         Map<String, Object> map = new HashMap<>();
-        String sql = "SELECT " +
-                "COALESCE(SUM(CASE WHEN DATE(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE)) = DATE(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE)) THEN d.total_earning ELSE 0 END), 0) AS today_earned, " +
-                "COALESCE(SUM(CASE WHEN YEARWEEK(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE), 1) = YEARWEEK(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE), 1) THEN d.total_earning ELSE 0 END), 0) AS week_earned, " +
-                "COALESCE(SUM(d.tip_amount), 0) AS total_tips, " +
-                "COALESCE(SUM(d.wait_time_pay), 0) AS total_wait_pay, " +
-                "COUNT(CASE WHEN d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL THEN 1 END) AS runs_completed " +
-                "FROM delivery_dispatches d WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL";
+        String sql =
+            "SELECT " +
+            "COALESCE(SUM(CASE WHEN DATE(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE)) = DATE(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE)) THEN d.total_earning ELSE 0 END), 0) AS today_earned, " +
+            "COALESCE(SUM(CASE WHEN YEARWEEK(DATE_ADD(d.delivered_at, INTERVAL 330 MINUTE), 1) = YEARWEEK(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 330 MINUTE), 1) THEN d.total_earning ELSE 0 END), 0) AS week_earned, " +
+            "COALESCE(SUM(d.tip_amount), 0) AS total_tips, " +
+            "COALESCE(SUM(d.wait_time_pay), 0) AS total_wait_pay, " +
+            "COUNT(CASE WHEN d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL THEN 1 END) AS runs_completed " +
+            "FROM delivery_dispatches d WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') AND d.delivered_at IS NOT NULL";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -658,21 +773,24 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<DeliveryDispatch> getRiderCompletedTrips(long riderId, int limit, int offset) {
         List<DeliveryDispatch> list = new ArrayList<>();
-        String sql = "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
-                "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
-                "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
-                "FROM delivery_dispatches d " +
-                "JOIN orders o ON d.order_id = o.id " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') " +
-                "ORDER BY d.id DESC LIMIT ? OFFSET ?";
+        String sql =
+            "SELECT d.*, o.order_number, o.total_amount, o.payment_mode, " +
+            "r.name AS rest_name, r.address AS rest_addr, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS cust_addr, " +
+            "a.latitude AS cust_lat, a.longitude AS cust_lng, a.maps_url AS cust_maps_url " +
+            "FROM delivery_dispatches d " +
+            "JOIN orders o ON d.order_id = o.id " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "WHERE d.rider_id = ? AND d.dispatch_status IN ('ACCEPTED','DELIVERED') " +
+            "ORDER BY d.id DESC LIMIT ? OFFSET ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, riderId);
             ps.setInt(2, limit);
             ps.setInt(3, offset);
@@ -734,21 +852,33 @@ public class RiderDaoImpl implements RiderDao {
 
     @Override
     public Long createRiderProfile(RiderProfile rp) {
-        String sql = "INSERT INTO rider_profiles (user_id, vehicle_type, vehicle_number, driving_license, is_kyc_approved, " +
-                "is_online, is_available, current_latitude, current_longitude, wallet_balance) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO rider_profiles (user_id, vehicle_type, vehicle_number, driving_license, is_kyc_approved, " +
+            "is_online, is_available, current_latitude, current_longitude, wallet_balance) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(
+                sql,
+                java.sql.Statement.RETURN_GENERATED_KEYS
+            )
+        ) {
             ps.setLong(1, rp.getUserId());
             ps.setString(2, rp.getVehicleType() != null ? rp.getVehicleType() : "Motorcycle");
             ps.setString(3, rp.getVehicleNumber() != null ? rp.getVehicleNumber() : "NEW-REG");
-            ps.setString(4, rp.getDrivingLicense() != null ? rp.getDrivingLicense() : "PENDING-VERIFY");
+            ps.setString(
+                4,
+                rp.getDrivingLicense() != null ? rp.getDrivingLicense() : "PENDING-VERIFY"
+            );
             ps.setBoolean(5, rp.isKycApproved());
             ps.setBoolean(6, rp.isOnline());
             ps.setBoolean(7, rp.isAvailable());
             ps.setBigDecimal(8, rp.getCurrentLatitude());
             ps.setBigDecimal(9, rp.getCurrentLongitude());
-            ps.setBigDecimal(10, rp.getWalletBalance() != null ? rp.getWalletBalance() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                10,
+                rp.getWalletBalance() != null ? rp.getWalletBalance() : BigDecimal.ZERO
+            );
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -773,23 +903,38 @@ public class RiderDaoImpl implements RiderDao {
             conn.setAutoCommit(false);
             try {
                 long userId;
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE rider_profiles SET is_kyc_approved = ? WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE rider_profiles SET is_kyc_approved = ? WHERE id = ?"
+                    )
+                ) {
                     ps.setBoolean(1, approved);
                     ps.setLong(2, riderId);
-                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Rider not found");
+                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException(
+                        "Rider not found"
+                    );
                 }
-                try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM rider_profiles WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "SELECT user_id FROM rider_profiles WHERE id = ?"
+                    )
+                ) {
                     ps.setLong(1, riderId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) throw new IllegalArgumentException("Rider not found");
                         userId = rs.getLong("user_id");
                     }
                 }
-                try (PreparedStatement ps = conn.prepareStatement("UPDATE users SET status = ? WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE users SET status = ? WHERE id = ?"
+                    )
+                ) {
                     ps.setString(1, approved ? "ACTIVE" : "SUSPENDED");
                     ps.setLong(2, userId);
-                    if (ps.executeUpdate() == 0) throw new IllegalStateException("Rider account not found");
+                    if (ps.executeUpdate() == 0) throw new IllegalStateException(
+                        "Rider account not found"
+                    );
                 }
                 conn.commit();
             } catch (SQLException | RuntimeException e) {
@@ -807,12 +952,15 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public List<RiderProfile> listAllRiders(int limit, int offset) {
         List<RiderProfile> list = new ArrayList<>();
-        String sql = "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
-                "FROM rider_profiles rp " +
-                "JOIN users u ON rp.user_id = u.id " +
-                "ORDER BY rp.id DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT rp.*, u.full_name AS rd_name, u.phone AS rd_phone, u.email AS rd_email, u.avatar_url " +
+            "FROM rider_profiles rp " +
+            "JOIN users u ON rp.user_id = u.id " +
+            "ORDER BY rp.id DESC LIMIT ? OFFSET ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, limit);
             ps.setInt(2, offset);
             try (ResultSet rs = ps.executeQuery()) {
@@ -858,14 +1006,24 @@ public class RiderDaoImpl implements RiderDao {
     @Override
     public int purgeOldLocationLogs(int retentionDays) {
         String sql = "DELETE FROM rider_location_logs WHERE logged_at < NOW() - INTERVAL ? DAY";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, Math.max(1, retentionDays));
             int deleted = ps.executeUpdate();
-            logger.info("Purged {} expired rider location logs older than {} days", deleted, retentionDays);
+            logger.info(
+                "Purged {} expired rider location logs older than {} days",
+                deleted,
+                retentionDays
+            );
             return deleted;
         } catch (SQLException e) {
-            logger.error("Error purging old rider location logs with retention days {}", retentionDays, e);
+            logger.error(
+                "Error purging old rider location logs with retention days {}",
+                retentionDays,
+                e
+            );
             return 0;
         }
     }

@@ -58,8 +58,7 @@ const TrackingChatModal = ({
                 style={{
                   width: 34,
                   height: 34,
-                  background:
-                    chatTarget === "RIDER" ? "#10b981" : "var(--c-primary)",
+                  background: chatTarget === "RIDER" ? "#10b981" : "var(--c-primary)",
                 }}
               >
                 {chatTarget === "RIDER" ? "🛵" : "🍳"}
@@ -120,13 +119,11 @@ const TrackingChatModal = ({
             {chatMessages.length === 0 ? (
               <div className="text-center my-auto text-muted small p-4">
                 <i className="bi bi-chat-text fs-1 d-block mb-2 opacity-25"></i>
-                Send a quick message to coordinate delivery directions or
-                special requests.
+                Send a quick message to coordinate delivery directions or special requests.
               </div>
             ) : (
               chatMessages.map((msg, idx) => {
-                const isMe =
-                  msg.sender === "ME" || msg.senderRole === "CUSTOMER";
+                const isMe = msg.sender === "ME" || msg.senderRole === "CUSTOMER";
                 return (
                   <div
                     key={idx}
@@ -134,9 +131,7 @@ const TrackingChatModal = ({
                   >
                     <div
                       className={`p-3 rounded-4 small ${
-                        isMe
-                          ? "bg-primary text-white"
-                          : "bg-white text-dark shadow-xs border"
+                        isMe ? "bg-primary text-white" : "bg-white text-dark shadow-xs border"
                       }`}
                       style={{
                         maxWidth: "80%",
@@ -145,10 +140,7 @@ const TrackingChatModal = ({
                     >
                       {msg.text}
                     </div>
-                    <small
-                      className="text-muted mt-1 px-1"
-                      style={{ fontSize: 10 }}
-                    >
+                    <small className="text-muted mt-1 px-1" style={{ fontSize: 10 }}>
                       {msg.time || "Just now"}
                     </small>
                   </div>
@@ -158,10 +150,7 @@ const TrackingChatModal = ({
           </div>
 
           {/* Chat Input Bar */}
-          <form
-            onSubmit={handleSend}
-            className="p-2 border-top bg-white d-flex gap-2"
-          >
+          <form onSubmit={handleSend} className="p-2 border-top bg-white d-flex gap-2">
             <input
               type="text"
               className="form-control rounded-pill border py-2 ps-3"

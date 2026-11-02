@@ -1,6 +1,6 @@
 package com.foodplatform.service;
-import com.foodplatform.config.AppProperties;
 
+import com.foodplatform.config.AppProperties;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.RiderDao;
 import com.foodplatform.dao.UserDao;
@@ -12,22 +12,25 @@ import com.foodplatform.model.RiderProfile;
 import com.foodplatform.model.User;
 import com.foodplatform.util.JwtUtil;
 import com.foodplatform.util.PasswordUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
-    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
+    );
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile(
+        "^(?=.*[A-Za-z])(?=.*\\d).{8,}$"
+    );
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(\\+91)?[6-9]\\d{9}$");
 
     private final UserDao userDao = new UserDaoImpl();
@@ -36,17 +39,29 @@ public class AuthService {
 
     public void validateCredentials(String email, String password, String phone) {
         if (email == null || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
-            throw new IllegalArgumentException("Invalid email format. Please provide a valid email address.");
+            throw new IllegalArgumentException(
+                "Invalid email format. Please provide a valid email address."
+            );
         }
         if (password == null || !PASSWORD_PATTERN.matcher(password).matches()) {
-            throw new IllegalArgumentException("Password does not meet security policy: minimum 8 characters with at least one letter and one number.");
+            throw new IllegalArgumentException(
+                "Password does not meet security policy: minimum 8 characters with at least one letter and one number."
+            );
         }
         if (phone != null && !phone.isBlank() && !PHONE_PATTERN.matcher(phone.trim()).matches()) {
-            throw new IllegalArgumentException("Invalid phone number format. Must be a valid 10-digit Indian mobile number (+91 optional).");
+            throw new IllegalArgumentException(
+                "Invalid phone number format. Must be a valid 10-digit Indian mobile number (+91 optional)."
+            );
         }
     }
 
-    public Map<String, Object> register(String fullName, String email, String phone, String password, String role) {
+    public Map<String, Object> register(
+        String fullName,
+        String email,
+        String phone,
+        String password,
+        String role
+    ) {
         if (fullName == null || fullName.trim().length() < 2) {
             throw new IllegalArgumentException("Full name must be at least 2 characters long.");
         }
@@ -55,7 +70,9 @@ public class AuthService {
 
         // Reject role escalation attempts: public signup creates CUSTOMER only
         if (role != null && !role.isBlank() && !"CUSTOMER".equalsIgnoreCase(role.trim())) {
-            throw new IllegalArgumentException("Public registration creates CUSTOMER accounts only. For partner or rider onboarding, please submit an application.");
+            throw new IllegalArgumentException(
+                "Public registration creates CUSTOMER accounts only. For partner or rider onboarding, please submit an application."
+            );
         }
 
         validateCredentials(cleanEmail, password, cleanPhone);
@@ -85,9 +102,18 @@ public class AuthService {
         return generateAuthResponse(user);
     }
 
-    public Map<String, Object> applyPartner(String fullName, String email, String phone, String password,
-                                           String restaurantName, String address, Double latitude, Double longitude,
-                                           String cuisineTypes, String fssaiLicense) {
+    public Map<String, Object> applyPartner(
+        String fullName,
+        String email,
+        String phone,
+        String password,
+        String restaurantName,
+        String address,
+        Double latitude,
+        Double longitude,
+        String cuisineTypes,
+        String fssaiLicense
+    ) {
         if (fullName == null || fullName.trim().length() < 2) {
             throw new IllegalArgumentException("Owner full name is required.");
         }
@@ -95,7 +121,9 @@ public class AuthService {
             throw new IllegalArgumentException("Restaurant name is required.");
         }
         if (fssaiLicense == null || fssaiLicense.trim().length() < 5) {
-            throw new IllegalArgumentException("Valid FSSAI license number is required for food partner onboarding.");
+            throw new IllegalArgumentException(
+                "Valid FSSAI license number is required for food partner onboarding."
+            );
         }
 
         String cleanEmail = email != null ? email.trim().toLowerCase() : "";
@@ -109,7 +137,20 @@ public class AuthService {
             throw new IllegalArgumentException("An account with this phone number already exists.");
         }
 
-        if (latitude == null || longitude == null || !Double.isFinite(latitude) || !Double.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180 || address==null || address.isBlank()) throw new IllegalArgumentException("Kitchen address and valid coordinates are required");
+        if (
+            latitude == null ||
+            longitude == null ||
+            !Double.isFinite(latitude) ||
+            !Double.isFinite(longitude) ||
+            Math.abs(latitude) > 90 ||
+            Math.abs(longitude) > 180 ||
+            address == null ||
+            address.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                "Kitchen address and valid coordinates are required"
+            );
+        }
         User user = new User();
         user.setFullName(fullName.trim());
         user.setEmail(cleanEmail);
@@ -125,7 +166,10 @@ public class AuthService {
         }
         user.setId(userId);
 
-        String slug = restaurantName.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-" + (int) (1000 + Math.random() * 9000);
+        String slug =
+            restaurantName.toLowerCase().replaceAll("[^a-z0-9]+", "-") +
+            "-" +
+            (int) (1000 + Math.random() * 9000);
         Restaurant rest = new Restaurant();
         rest.setUserId(userId);
         rest.setName(restaurantName.trim());
@@ -135,7 +179,9 @@ public class AuthService {
         rest.setLogoImage(null);
         rest.setPhone(cleanPhone);
         rest.setEmail(cleanEmail);
-        rest.setCuisineTypes(cuisineTypes != null && !cuisineTypes.isBlank() ? cuisineTypes.trim() : "Multi-Cuisine");
+        rest.setCuisineTypes(
+            cuisineTypes != null && !cuisineTypes.isBlank() ? cuisineTypes.trim() : "Multi-Cuisine"
+        );
         rest.setLatitude(BigDecimal.valueOf(latitude));
         rest.setLongitude(BigDecimal.valueOf(longitude));
         rest.setAddress(address.trim());
@@ -145,19 +191,33 @@ public class AuthService {
         rest.setKycApproved(false); // Unapproved until admin reviews
 
         Long restId = restaurantDao.createRestaurant(rest);
-        if (restId == null) throw new IllegalStateException("Kitchen profile could not be created; contact support to complete onboarding");
+        if (restId == null) {
+            throw new IllegalStateException(
+                "Kitchen profile could not be created; contact support to complete onboarding"
+            );
+        }
         rest.setId(restId);
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("userId", userId);
         resp.put("restaurantId", restId);
         resp.put("status", "PENDING_KYC");
-        resp.put("message", "Restaurant partner application submitted successfully. Pending admin KYC approval.");
+        resp.put(
+            "message",
+            "Restaurant partner application submitted successfully. Pending admin KYC approval."
+        );
         return resp;
     }
 
-    public Map<String, Object> applyRider(String fullName, String email, String phone, String password,
-                                         String vehicleType, String vehicleNumber, String drivingLicense) {
+    public Map<String, Object> applyRider(
+        String fullName,
+        String email,
+        String phone,
+        String password,
+        String vehicleType,
+        String vehicleNumber,
+        String drivingLicense
+    ) {
         if (fullName == null || fullName.trim().length() < 2) {
             throw new IllegalArgumentException("Rider full name is required.");
         }
@@ -165,7 +225,9 @@ public class AuthService {
             throw new IllegalArgumentException("Valid vehicle registration number is required.");
         }
         if (drivingLicense == null || drivingLicense.trim().length() < 5) {
-            throw new IllegalArgumentException("Valid driving license number is required for delivery fleet onboarding.");
+            throw new IllegalArgumentException(
+                "Valid driving license number is required for delivery fleet onboarding."
+            );
         }
 
         String cleanEmail = email != null ? email.trim().toLowerCase() : "";
@@ -196,7 +258,9 @@ public class AuthService {
 
         RiderProfile rp = new RiderProfile();
         rp.setUserId(userId);
-        rp.setVehicleType(vehicleType != null && !vehicleType.isBlank() ? vehicleType.trim() : "Electric Scooter");
+        rp.setVehicleType(
+            vehicleType != null && !vehicleType.isBlank() ? vehicleType.trim() : "Electric Scooter"
+        );
         rp.setVehicleNumber(vehicleNumber.trim().toUpperCase());
         rp.setDrivingLicense(drivingLicense.trim().toUpperCase());
         rp.setKycApproved(false); // Unapproved until admin reviews
@@ -213,7 +277,10 @@ public class AuthService {
         resp.put("userId", userId);
         resp.put("riderId", riderId);
         resp.put("status", "PENDING_KYC");
-        resp.put("message", "Delivery rider application submitted successfully. Pending admin KYC approval.");
+        resp.put(
+            "message",
+            "Delivery rider application submitted successfully. Pending admin KYC approval."
+        );
         return resp;
     }
 
@@ -225,13 +292,23 @@ public class AuthService {
         }
 
         if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {
-            throw new IllegalStateException("Your account has been suspended by platform administration. Please contact ops support.");
+            throw new IllegalStateException(
+                "Your account has been suspended by platform administration. Please contact ops support."
+            );
         }
 
         // Check account lock
-        if (user.getLockedUntil() != null && user.getLockedUntil().after(Timestamp.from(Instant.now()))) {
-            long remainingMinutes = (user.getLockedUntil().getTime() - System.currentTimeMillis()) / 60000;
-            throw new IllegalStateException("Account is temporarily locked due to too many failed attempts. Try again in " + (remainingMinutes + 1) + " minutes.");
+        if (
+            user.getLockedUntil() != null &&
+            user.getLockedUntil().after(Timestamp.from(Instant.now()))
+        ) {
+            long remainingMinutes =
+                (user.getLockedUntil().getTime() - System.currentTimeMillis()) / 60000;
+            throw new IllegalStateException(
+                "Account is temporarily locked due to too many failed attempts. Try again in " +
+                    (remainingMinutes + 1) +
+                    " minutes."
+            );
         }
 
         if (!PasswordUtil.checkPassword(password, user.getPasswordHash())) {
@@ -264,7 +341,9 @@ public class AuthService {
             throw new IllegalArgumentException("User not found");
         }
 
-        if (!"ACTIVE".equals(user.getStatus()) && !"PENDING_KYC".equals(user.getStatus())) throw new IllegalArgumentException("Account is not active");
+        if (!"ACTIVE".equals(user.getStatus()) && !"PENDING_KYC".equals(user.getStatus())) {
+            throw new IllegalArgumentException("Account is not active");
+        }
         // Rotate token: revoke old, generate new
         userDao.revokeRefreshToken(refreshToken);
         return generateAuthResponse(user);
@@ -280,25 +359,43 @@ public class AuthService {
     }
 
     private Map<String, Object> generateAuthResponse(User user) {
-        String accessToken = JwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), user.getFullName());
+        String accessToken = JwtUtil.generateAccessToken(
+            user.getId(),
+            user.getEmail(),
+            user.getRole(),
+            user.getFullName()
+        );
         String newRefreshToken = JwtUtil.generateRefreshToken();
-        Timestamp refreshExpiry = new Timestamp(System.currentTimeMillis() + AppProperties.getRefreshTokenExpirationMillis()); // 7 days
+        Timestamp refreshExpiry = new Timestamp(
+            System.currentTimeMillis() + AppProperties.getRefreshTokenExpirationMillis()
+        ); // 7 days
 
         userDao.storeRefreshToken(user.getId(), newRefreshToken, refreshExpiry);
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("accessToken", accessToken);
         resp.put("refreshToken", newRefreshToken);
-        resp.put("user", Map.of(
-                "id", user.getId(),
-                "fullName", user.getFullName(),
-                "email", user.getEmail(),
-                "phone", user.getPhone() != null ? user.getPhone() : "",
-                "role", user.getRole(),
-                "status", user.getStatus(),
-                "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
-                "walletBalance", user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO
-        ));
+        resp.put(
+            "user",
+            Map.of(
+                "id",
+                user.getId(),
+                "fullName",
+                user.getFullName(),
+                "email",
+                user.getEmail(),
+                "phone",
+                user.getPhone() != null ? user.getPhone() : "",
+                "role",
+                user.getRole(),
+                "status",
+                user.getStatus(),
+                "avatarUrl",
+                user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
+                "walletBalance",
+                user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO
+            )
+        );
         return resp;
     }
 }

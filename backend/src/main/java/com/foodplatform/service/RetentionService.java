@@ -2,12 +2,11 @@ package com.foodplatform.service;
 
 import com.foodplatform.dao.RiderDao;
 import com.foodplatform.daoImpl.RiderDaoImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RetentionService {
 
@@ -33,12 +32,17 @@ public class RetentionService {
     public void startScheduledRetention() {
         // Run once on startup after 1 minute, then every 24 hours
         scheduler.scheduleAtFixedRate(this::executeRetentionSweep, 1, 1440, TimeUnit.MINUTES);
-        logger.info("RetentionService initialized with 7-day retention policy on rider telemetry logs");
+        logger.info(
+            "RetentionService initialized with 7-day retention policy on rider telemetry logs"
+        );
     }
 
     public int executeRetentionSweep() {
         try {
-            logger.info("Executing telemetry retention sweep (retaining {} days)...", DEFAULT_LOCATION_RETENTION_DAYS);
+            logger.info(
+                "Executing telemetry retention sweep (retaining {} days)...",
+                DEFAULT_LOCATION_RETENTION_DAYS
+            );
             int purged = riderDao.purgeOldLocationLogs(DEFAULT_LOCATION_RETENTION_DAYS);
             logger.info("Telemetry retention sweep completed: purged {} logs", purged);
             return purged;

@@ -2,11 +2,7 @@
 import { createPortal } from "react-dom";
 const openDialogs = [];
 let previousOverflow = "";
-export default function ModalPortal({
-  children,
-  isOpen = true,
-  label = "Dialog",
-}) {
+export default function ModalPortal({ children, isOpen = true, label = "Dialog" }) {
   const root = useRef(null);
   useEffect(() => {
     if (!isOpen) return;
@@ -37,15 +33,13 @@ export default function ModalPortal({
       }
       if (
         event.shiftKey &&
-        (document.activeElement === first ||
-          !node.contains(document.activeElement))
+        (document.activeElement === first || !node.contains(document.activeElement))
       ) {
         event.preventDefault();
         last.focus();
       } else if (
         !event.shiftKey &&
-        (document.activeElement === last ||
-          !node.contains(document.activeElement))
+        (document.activeElement === last || !node.contains(document.activeElement))
       ) {
         event.preventDefault();
         first.focus();
@@ -66,13 +60,7 @@ export default function ModalPortal({
   }, [isOpen]);
   return isOpen
     ? createPortal(
-        <div
-          ref={root}
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-          tabIndex={-1}
-        >
+        <div ref={root} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}>
           {children}
         </div>,
         document.body,

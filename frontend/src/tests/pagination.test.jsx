@@ -21,9 +21,12 @@ describe("Pagination", () => {
       />,
     );
 
-    expect(screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent)
-      .toContain("Showing 21–40 of 83 restaurants");
-    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current")).toBe("page");
+    expect(
+      screen.getByText((_, element) => element?.getAttribute("aria-live") === "polite").textContent,
+    ).toContain("Showing 21–40 of 83 restaurants");
+    expect(screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current")).toBe(
+      "page",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(onPageChange).toHaveBeenCalledWith(3);
   });

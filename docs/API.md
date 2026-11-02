@@ -1,6 +1,7 @@
 # Food Delivery Platform API Specification
 
 All REST API endpoints are served from the root prefix `/api`. All JSON request bodies and responses use standard `application/json` format with UTF-8 encoding. All authenticated requests require an `Authorization` header containing a valid Bearer token:
+
 ```http
 Authorization: Bearer <jwt-access-token>
 ```
@@ -10,6 +11,7 @@ Authorization: Bearer <jwt-access-token>
 ## 1. Standard Response & Error Format
 
 ### 1.1 Success Response Wrapper
+
 ```json
 {
   "success": true,
@@ -19,6 +21,7 @@ Authorization: Bearer <jwt-access-token>
 ```
 
 ### 1.2 Error Response Wrapper
+
 ```json
 {
   "success": false,
@@ -29,6 +32,7 @@ Authorization: Bearer <jwt-access-token>
 ```
 
 The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response and commonly include:
+
 - `200 OK`: Request succeeded.
 - `201 Created`: Resource successfully created.
 - `400 Bad Request`: Payload validation failure or business rule violation.
@@ -44,9 +48,11 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ## 2. Authentication & Session Management
 
 ### 2.1 User Registration
+
 - **Endpoint:** `POST /api/auth/register`
 - **Auth Required:** No
 - **Request Body:**
+
 ```json
 {
   "email": "customer@foodplatform.com",
@@ -56,8 +62,11 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
   "role": "CUSTOMER"
 }
 ```
-*(Roles: `CUSTOMER`, `RESTAURANT`, `RIDER`, `ADMIN`)*
+
+_(Roles: `CUSTOMER`, `RESTAURANT`, `RIDER`, `ADMIN`)_
+
 - **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -68,7 +77,7 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
       "full_name": "Rohan Gupta",
       "role": "CUSTOMER",
       "is_kyc_verified": true,
-      "wallet_balance": 150.00
+      "wallet_balance": 150.0
     },
     "tokens": {
       "access_token": "eyJhbGciOi...",
@@ -80,16 +89,20 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ```
 
 ### 2.2 User Login
+
 - **Endpoint:** `POST /api/auth/login`
 - **Auth Required:** No
 - **Request Body:**
+
 ```json
 {
   "email": "partner@foodplatform.com",
   "password": "Password@123"
 }
 ```
+
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -111,15 +124,19 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ```
 
 ### 2.3 Token Refresh (Rotation)
+
 - **Endpoint:** `POST /api/auth/refresh`
 - **Auth Required:** No
 - **Request Body:**
+
 ```json
 {
   "refresh_token": "c71e09b2-..."
 }
 ```
+
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -132,14 +149,17 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ```
 
 ### 2.4 Current User Profile
+
 - **Endpoint:** `GET /api/auth/me`
 - **Auth Required:** Yes
 - **Response (200 OK):** Returns authenticated user profile including wallet balance and KYC status.
 
 ### 2.5 Update User Profile
+
 - **Endpoint:** `POST /api/auth/profile`
 - **Auth Required:** Yes
 - **Request Body:**
+
 ```json
 {
   "fullName": "Aarav Patel",
@@ -147,14 +167,17 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
   "avatarUrl": "https://images.unsplash.com/photo-..."
 }
 ```
+
 - **Response (200 OK):** Updated user profile.
 
 ### 2.6 Verify Phone Number OTP
+
 - **Endpoint:** `POST /api/auth/verify-phone-otp`
 - **Auth Required:** Yes
 - Phone verification currently returns `503 Service Unavailable` until an SMS verification provider is configured.
 
 ### 2.7 Saved Address CRUD
+
 - **Endpoints:**
   - `GET /api/auth/addresses`: List saved addresses for authenticated user.
   - `POST /api/auth/addresses`: Add new address (title, addressLine, landmark, city, state, postalCode, latitude, longitude, mapsUrl).
@@ -167,6 +190,7 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ## 3. Restaurant & Catalog APIs
 
 ### 3.1 Discover Restaurants (with Cross-Dish Search)
+
 - **Endpoint:** `GET /api/restaurants`
 - **Auth Required:** No
 - **Query Parameters:** `lat`, `lng`, `cuisine`, `search`, `vegOnly`, `rating` (minimum rating), `time` (maximum preparation time), `price` (`BUDGET`, `MID`, or `PREMIUM`), `sort` (`relevance`, `rating`, `time`, `costAsc`, or `costDesc`), `limit` (default 20), and `offset` (default 0).
@@ -174,19 +198,23 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 - **Response:** `data` is the requested page of restaurant objects; `pagination` includes `page`, `pageSize`, `totalCount`, and `totalPages`. Counts and filters are calculated server-side. Continue through the list with `offset += limit`; keep filters and coordinates unchanged between pages.
 
 ### 3.1.1 Search Suggestions (Dishes & Restaurants)
+
 - **Endpoint:** `GET /api/restaurants/suggestions?query={term}` (also accepts `q`)
 - **Auth Required:** No
 - **Response:** `data` contains restaurant and dish suggestion lists.
 
 ### 3.1.2 Customer Cuisine Filters
+
 - **Endpoint:** `GET /api/catalog/categories`
 - **Auth Required:** No
 - Returns active, administrator-managed discovery categories with `id`, `name`, `imageUrl`, `displayOrder`, and `active`. The category name is used as the restaurant discovery `cuisine` parameter.
 
 ### 3.2 Get Menu Hierarchy
+
 - **Endpoint:** `GET /api/menu/restaurant/{restaurantId}`
 - **Auth Required:** No
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -201,19 +229,19 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
             "id": 101,
             "name": "Dum Handi Murgh",
             "description": "Slow cooked chicken in rich brass handi gravy",
-            "dine_in_price": 420.00,
-            "price": 420.00,
+            "dine_in_price": 420.0,
+            "price": 420.0,
             "price_markup_pct": 0.0,
             "is_veg": false,
             "prep_time_minutes": 20,
             "is_available": true,
             "variants": [
-              { "id": 1, "name": "Half (2 pcs)", "price_delta": 0.00 },
-              { "id": 2, "name": "Full (4 pcs)", "price_delta": 180.00 }
+              { "id": 1, "name": "Half (2 pcs)", "price_delta": 0.0 },
+              { "id": 2, "name": "Full (4 pcs)", "price_delta": 180.0 }
             ],
             "addons": [
-              { "id": 1, "name": "Extra Gravy Cup", "price": 40.00 },
-              { "id": 2, "name": "Butter Garlic Naan", "price": 65.00 }
+              { "id": 1, "name": "Extra Gravy Cup", "price": 40.0 },
+              { "id": 2, "name": "Butter Garlic Naan", "price": 65.0 }
             ]
           }
         ]
@@ -228,9 +256,11 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ## 4. Radical Price Transparency & Cart Calculation
 
 ### 4.1 Compute Itemized Transparent Bill
+
 - **Endpoint:** `POST /api/cart/price`
 - **Auth Required:** Yes (Role: `CUSTOMER`)
 - **Request Body:**
+
 ```json
 {
   "restaurant_id": 1,
@@ -247,25 +277,27 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
   "delivery_lng": 77.5946
 }
 ```
+
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
-    "subtotal": 1280.00,
-    "dine_in_subtotal": 1280.00,
-    "markup_difference": 0.00,
+    "subtotal": 1280.0,
+    "dine_in_subtotal": 1280.0,
+    "markup_difference": 0.0,
     "parity_badge": "VERIFIED_0_PERCENT_MARKUP",
-    "packaging_fee": 30.00,
+    "packaging_fee": 30.0,
     "packaging_fee_reason": "Eco-friendly biodegradable containers & tamper-evident seals",
-    "delivery_fee": 35.00,
+    "delivery_fee": 35.0,
     "delivery_distance_km": 3.2,
-    "platform_fee": 5.00,
+    "platform_fee": 5.0,
     "platform_fee_reason": "Server operations, 24/7 support & fair rider insurance fund",
-    "gst_tax": 64.00,
-    "coupon_discount": 100.00,
-    "wallet_deduction": 0.00,
-    "total_payable": 1314.00,
+    "gst_tax": 64.0,
+    "coupon_discount": 100.0,
+    "wallet_deduction": 0.0,
+    "total_payable": 1314.0,
     "honest_eta": {
       "kitchen_prep_minutes": 22,
       "kitchen_load_factor": 1.15,
@@ -273,7 +305,7 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
       "confidence_min_minutes": 32,
       "confidence_max_minutes": 38,
       "sla_guarantee_minutes": 48,
-      "goodwill_compensation_inr": 50.00
+      "goodwill_compensation_inr": 50.0
     }
   }
 }
@@ -284,15 +316,15 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
 ## 5. Order Management & Real-Time Tracking
 
 ### 5.1 Place Order
+
 - **Endpoint:** `POST /api/orders`
 - **Auth Required:** Yes (Role: `CUSTOMER`)
 - **Request Body:**
+
 ```json
 {
   "restaurantId": 1,
-  "items": [
-    { "menuItemId": 101, "quantity": 2, "variantId": 2, "addonIds": [1] }
-  ],
+  "items": [{ "menuItemId": 101, "quantity": 2, "variantId": 2, "addonIds": [1] }],
   "deliveryAddressId": 5,
   "paymentMode": "RAZORPAY",
   "couponCode": "FOOD50",
@@ -300,22 +332,27 @@ The `timestamp` is an ISO-8601 string. HTTP status codes are set on the response
   "specialInstructions": "Please ring bell and leave on shoe rack"
 }
 ```
+
 - The request may include an `X-Idempotency-Key` header. The response data includes `id`, `orderId`, `orderNumber`, `status`, payment fields, the created `order`, and `paymentSession` when applicable.
 - The server generates a four-digit delivery PIN. The authenticated customer can retrieve it on the order tracking page; it is hidden from restaurant and rider order-detail responses and should only be shared when the rider arrives.
 
 ### 5.2 Transition Order State (Partner / Rider / Admin)
+
 - **Endpoint:** `POST /api/orders/{id}/status`
 - **Auth Required:** Yes
 - **Request Body:**
+
 ```json
 {
   "status": "PREPARING",
   "reason": "Chef accepted ticket and initiated cooking"
 }
 ```
+
 - The response data is the updated order object. Allowed transitions depend on the caller's role and current order state.
 
 ### 5.3 Get Order Details
+
 - **Endpoint:** `GET /api/orders/{id}`
 - **Auth Required:** Yes
 - The authenticated order participant receives the order details. Live status updates are delivered over the WebSocket order channel; this API does not expose a separate `/events` endpoint.
@@ -346,19 +383,23 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
 ## 7. Instant Dispute Resolution & Refunds
 
 ### 7.1 File Dispute with Evidence
+
 - **Endpoint:** `POST /api/disputes`
 - **Auth Required:** Yes (Role: `CUSTOMER`)
 - **Request Body:**
+
 ```json
 {
   "order_id": 501,
   "dispute_category": "MISSING_ITEM",
-  "claimed_amount": 240.00,
+  "claimed_amount": 240.0,
   "description": "Butter Garlic Naan was missing from package, seal was intact",
   "evidence_photo_url": "https://storage.foodplatform.com/disputes/501_evidence.jpg"
 }
 ```
+
 - **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -366,7 +407,7 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
     "dispute_id": 89,
     "dispute_code": "DSP-20261025-089",
     "dispute_status": "AUTO_APPROVED",
-    "approved_refund_amount": 240.00,
+    "approved_refund_amount": 240.0,
     "refund_destination": "CUSTOMER_WALLET",
     "auto_resolved": true,
     "resolution_note": "Rule Tier 1: Claim under ₹300 with photo evidence automatically credited to wallet"
@@ -379,15 +420,17 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
 ## 8. Restaurant Analytics & Admin Ops
 
 ### 8.1 Partner Dashboard Analytics
+
 - **Endpoint:** `GET /api/restaurants/{id}/analytics`
 - **Auth Required:** Yes (Role: `RESTAURANT` or `ADMIN`)
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "summary": {
-      "total_revenue": 14850.00,
+      "total_revenue": 14850.0,
       "total_orders": 64,
       "avg_prep_time_minutes": 18.2,
       "customer_rating": 4.8
@@ -398,8 +441,8 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
       { "hour": "8 PM", "revenue": 6850, "orders": 24 }
     ],
     "top_selling_dishes": [
-      { "name": "Dum Handi Murgh", "units_sold": 38, "revenue": 15960.00 },
-      { "name": "Paneer Tikka Roll", "units_sold": 26, "revenue": 4940.00 }
+      { "name": "Dum Handi Murgh", "units_sold": 38, "revenue": 15960.0 },
+      { "name": "Paneer Tikka Roll", "units_sold": 26, "revenue": 4940.0 }
     ],
     "category_distribution": [
       { "category": "Curries", "percentage": 48 },
@@ -411,6 +454,7 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
 ```
 
 ### 8.2 Admin Platform Operations
+
 - **Endpoint:** `GET /api/admin/metrics`
 - **Auth Required:** Yes (Role: `ADMIN`)
 - **Response (200 OK):** Platform GMV, net commission revenue, SLA breach count, dispute volume, and live rider fleet capacity.
@@ -429,14 +473,17 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
 ### 9.1 Client Inbound Frames
 
 #### Heartbeat Ping
+
 ```json
 {
   "action": "ping"
 }
 ```
-*Server replies with:* `{"action": "pong", "timestamp": 1729881025000}`
+
+_Server replies with:_ `{"action": "pong", "timestamp": 1729881025000}`
 
 #### Channel Subscription
+
 ```json
 {
   "action": "subscribe",
@@ -445,15 +492,17 @@ Rider endpoints use the singular prefix `/api/rider` and require `RIDER` or `ADM
 ```
 
 ##### Subscription Authorization Matrix
-| Channel Pattern | Allowed Roles | Enforcement Logic |
-| :--- | :--- | :--- |
-| `admin:feed` | `ADMIN` | Role check from authenticated JWT token. |
-| `user:{id}` | `ADMIN`, Matching User | User ID from JWT must match channel ID. |
-| `rider:{id}` | `ADMIN`, Matching Rider | Rider profile ID must belong to authenticated rider. |
-| `restaurant:{id}` | `ADMIN`, Restaurant Partner | Restaurant partner owner or admin. |
-| `order:{id}` | `ADMIN`, Order Customer, Order Rider, Order Restaurant | User must be buyer, assigned rider, or merchant for order. |
+
+| Channel Pattern   | Allowed Roles                                          | Enforcement Logic                                          |
+| :---------------- | :----------------------------------------------------- | :--------------------------------------------------------- |
+| `admin:feed`      | `ADMIN`                                                | Role check from authenticated JWT token.                   |
+| `user:{id}`       | `ADMIN`, Matching User                                 | User ID from JWT must match channel ID.                    |
+| `rider:{id}`      | `ADMIN`, Matching Rider                                | Rider profile ID must belong to authenticated rider.       |
+| `restaurant:{id}` | `ADMIN`, Restaurant Partner                            | Restaurant partner owner or admin.                         |
+| `order:{id}`      | `ADMIN`, Order Customer, Order Rider, Order Restaurant | User must be buyer, assigned rider, or merchant for order. |
 
 If subscription is rejected:
+
 ```json
 {
   "action": "subscribe_error",
@@ -463,6 +512,7 @@ If subscription is rejected:
 ```
 
 #### Channel Unsubscription
+
 ```json
 {
   "action": "unsubscribe",
@@ -471,6 +521,7 @@ If subscription is rejected:
 ```
 
 #### Rider Live GPS Telemetry
+
 ```json
 {
   "action": "rider_telemetry",
@@ -481,9 +532,11 @@ If subscription is rejected:
   "batteryLevel": 88
 }
 ```
-*Broadcasts `rider_location_updated` to assigned order channels, `admin:feed`, and active dispatch monitors.*
+
+_Broadcasts `rider_location_updated` to assigned order channels, `admin:feed`, and active dispatch monitors._
 
 #### Direct Order Chat Message
+
 ```json
 {
   "action": "chat_message",
@@ -498,7 +551,9 @@ If subscription is rejected:
 ### 9.2 Server Event Payloads
 
 #### 1. `order_status_updated`
+
 Broadcasted to `order:{orderId}` and `user:{userId}` when status progresses (`PLACED` -> `ACCEPTED` -> `PREPARING` -> `READY` -> `PICKED_UP` -> `DELIVERED`).
+
 ```json
 {
   "event": "order_status_updated",
@@ -509,7 +564,9 @@ Broadcasted to `order:{orderId}` and `user:{userId}` when status progresses (`PL
 ```
 
 #### 2. `rider_assigned`
+
 Broadcasted to `order:{orderId}` and customer feed when delivery captain accepts dispatch.
+
 ```json
 {
   "event": "rider_assigned",
@@ -522,7 +579,9 @@ Broadcasted to `order:{orderId}` and customer feed when delivery captain accepts
 ```
 
 #### 3. `rider_location_updated`
+
 Broadcasted to `order:{orderId}` and `admin:feed`.
+
 ```json
 {
   "event": "rider_location_updated",
@@ -536,20 +595,24 @@ Broadcasted to `order:{orderId}` and `admin:feed`.
 ```
 
 #### 4. `new_order_placed`
+
 Broadcasted to `restaurant:{restaurantId}`.
+
 ```json
 {
   "event": "new_order_placed",
   "orderId": 501,
   "orderNumber": "CP-20261027-A8B9C0",
   "itemCount": 3,
-  "totalAmount": 780.00,
+  "totalAmount": 780.0,
   "timestamp": 1729881010000
 }
 ```
 
 #### 5. `rider_job_offer`
+
 Broadcasted to `rider:{riderId}` when that rider is selected for an order. Only one rider is offered an order at a time. A rejection advances to the next eligible rider immediately; an unanswered offer is retried after the configured acceptance window. Candidates are selected by distance within a progressively expanded search radius.
+
 ```json
 {
   "event": "rider_job_offer",
@@ -559,13 +622,15 @@ Broadcasted to `rider:{riderId}` when that rider is selected for an order. Only 
   "pickupAddress": "Indiranagar 100ft Rd",
   "deliveryAddress": "Koramangala 4th Block",
   "distanceKm": 4.2,
-  "estimatedEarnings": 72.50,
+  "estimatedEarnings": 72.5,
   "expiresAt": 1729881045000
 }
 ```
 
 #### 6. `rider_offer_timed_out`
+
 Broadcasted to the rider whose offer expired. The backend then retries the order with the next eligible rider.
+
 ```json
 {
   "event": "rider_offer_timed_out",
@@ -575,7 +640,9 @@ Broadcasted to the rider whose offer expired. The backend then retries the order
 ```
 
 #### 7. `notification`
+
 Broadcasted to `user:{userId}` for announcements, refunds, and milestones.
+
 ```json
 {
   "event": "notification",
@@ -586,7 +653,9 @@ Broadcasted to `user:{userId}` for announcements, refunds, and milestones.
 ```
 
 #### 7. `restaurant_status_updated`
+
 Broadcasted to active catalog consumers when a merchant opens or pauses kitchen intake.
+
 ```json
 {
   "event": "restaurant_status_updated",
@@ -596,7 +665,9 @@ Broadcasted to active catalog consumers when a merchant opens or pauses kitchen 
 ```
 
 #### 8. `new_chat_message`
+
 Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-order communication.
+
 ```json
 {
   "event": "new_chat_message",
@@ -615,15 +686,18 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ## 10. Non-Blocking SSE & Order Chat REST Endpoints
 
 ### 10.1 Server-Sent Events (SSE) Stream
+
 - **Endpoint:** `GET /api/events/sse?token=<jwt>`
 - **Auth Required:** Yes (via query token or `Authorization: Bearer <jwt>`)
 - **Transport:** HTTP text/event-stream using non-blocking Servlet 3.0 `AsyncContext`.
 - **Keepalive:** Heartbeat comment `: ping` dispatched every 15 seconds.
 
 ### 10.2 Fetch Order Chat Messages
+
 - **Endpoint:** `GET /api/orders/{id}/messages`
 - **Auth Required:** Yes (`CUSTOMER` who owns order, assigned `RIDER`, merchant `RESTAURANT`, or `ADMIN`)
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -642,15 +716,18 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ```
 
 ### 10.3 Post Order Chat Message
+
 - **Endpoint:** `POST /api/orders/{id}/messages`
 - **Auth Required:** Yes (Order participants only)
 - **Request Body:**
+
 ```json
 {
   "recipientRole": "RIDER",
   "messageText": "Please leave at security desk."
 }
 ```
+
 - **Response (201 Created):** Created `OrderMessage` object, automatically broadcasted via WebSocket `new_chat_message`.
 
 ---
@@ -658,11 +735,13 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ## 11. Partner (Restaurant) Portal APIs
 
 ### 11.1 Dynamic Partner Profile Resolution
+
 - **Endpoint:** `GET /api/restaurants/my-profile`
 - **Auth Required:** Yes (`RESTAURANT_OWNER` or `ADMIN`)
 - **Response (200 OK):** Current authenticated partner's `Restaurant` profile.
 
 ### 11.2 Restaurant Settings & Payout Banking
+
 - **Endpoint:** `GET /api/restaurants/{id}/settings`
 - **Auth Required:** Yes (Owner of restaurant or `ADMIN`)
 - **Response (200 OK):** Settings object with masked bank account (`••••••••••9931`), IFSC, beneficiary, UPI ID, auto-reject SLA minutes, throttle status, and operating hours.
@@ -670,6 +749,7 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 - **Endpoint:** `POST /api/restaurants/{id}/settings`
 - **Auth Required:** Yes (Owner of restaurant or `ADMIN`)
 - **Request Body:**
+
 ```json
 {
   "name": "Meghana Foods Indiranagar",
@@ -685,26 +765,31 @@ Broadcasted to `order:{orderId}` when customer, rider, or kitchen sends an in-or
 ```
 
 ### 11.3 Weekly Operating Hours Schedule
+
 - **Endpoint:** `GET /api/restaurants/{id}/hours` & `POST /api/restaurants/{id}/hours`
 - **Auth Required:** Yes (Owner or `ADMIN`)
 - **Payload:** Array of `{ "dayOfWeek": "Monday", "openTime": "11:00", "closeTime": "23:00", "isClosed": false }`.
 
 ### 11.4 Partner Financial Settlements Ledger
+
 - **Endpoint:** `GET /api/restaurants/{id}/payouts`
 - **Auth Required:** Yes (Owner or `ADMIN`)
 - **Response (200 OK):** Array of recorded settlement statements containing `payoutReference`, `grossSales`, `commissionAmount`, `netPayout`, `status`, and bank `utrNumber`. Empty ledgers remain empty; the API does not synthesize paid statements or transfer references.
 
 ### 11.5 Partner Payout Requests
+
 - `GET /api/restaurants/{id}/payout-requests` returns the available balance, pending amount, net eligible earnings, and request history.
 - `POST /api/restaurants/{id}/payout-requests` accepts `{ "amount": 500.00, "payoutDestination": "restaurant@bank" }`. The destination is a UPI ID and is stored with the request. Available balance is calculated from delivered, paid orders after commission and commission GST, less recorded paid settlements and pending requests. COD orders are excluded until collection is reconciled.
 - Payout requests are manually reviewed. The application does not initiate a bank/UPI transfer.
 
 ### 11.6 Real-Time SQL Analytics
+
 - **Endpoint:** `GET /api/restaurants/{id}/analytics`
 - **Auth Required:** Yes (Owner or `ADMIN`)
 - **Response (200 OK):** Computed SQL metrics containing `summaryToday`, `summary7Days`, `summary30Days`, `summaryAllTime`, `cancellation` (rate & count), `peakHours`, `dailyTrend7Days`, `topDishes`, and `ratings`.
 
 ### 11.7 Menu Management & Soft Deletion
+
 - **Endpoint:** `GET /api/menu/restaurant/{restaurantId}` (menu categories and items)
 - **Endpoint:** `GET /api/menu/item/{id}` (item details)
 - **Endpoint:** `POST /api/menu/item` (Create dish with image URL validation)
@@ -726,10 +811,12 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 ## 12. Admin Console & Platform Operations
 
 ### Payout Review
+
 - `GET /api/admin/payout-requests?status=PENDING|PAID|REJECTED` lists payout requests for admin review.
 - `POST /api/admin/payout-requests/{id}/process` accepts `status` (`PAID` or `REJECTED`), `adminNote`, and `paymentReference`. Marking a request `PAID` requires a transfer reference and `transferConfirmed: true`; this records a completed external transfer but does not initiate one. Rider wallet debits and payout status changes are committed atomically.
 
 ### 12.0 Discovery Categories, Partner Approval, and Restaurant Status
+
 - **List/manage categories:** `GET /api/admin/categories`
 - **Create category:** `POST /api/admin/categories` with `{ "name", "imageUrl", "displayOrder" }`. Photo URLs must use HTTPS.
 - **Edit/restore category:** `POST /api/admin/categories/{id}/update` with category fields and `active`.
@@ -740,14 +827,16 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 - **Activate/pause restaurant:** `POST /api/admin/restaurant/{id}/status` with `{ "status": "ACTIVE"|"PAUSED" }`. An unapproved restaurant cannot be activated.
 
 ### 12.1 Real-Time Operations Telemetry & SQL Platform Metrics
+
 - **Endpoint:** `GET /api/admin/metrics`
 - **Auth Required:** Yes (`ADMIN` role)
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
-    "gmv": 128500.00,
+    "gmv": 128500.0,
     "totalOrders": 342,
     "deliveredOrders": 310,
     "cancelledOrders": 12,
@@ -756,38 +845,53 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
     "activeRidersCount": 18,
     "activeDeliveriesCount": 9,
     "avgDeliveryTimeMinutes": 28,
-    "platformRevenue": 6840.00,
-    "totalRefunds": 1450.00,
+    "platformRevenue": 6840.0,
+    "totalRefunds": 1450.0,
     "pendingRestaurantApprovals": 2,
     "pendingRiderApprovals": 3,
     "dailyTrend7Days": [
-      { "date": "2026-10-21", "orders": 42, "revenue": 16400.00 },
-      { "date": "2026-10-22", "orders": 48, "revenue": 18200.00 }
+      { "date": "2026-10-21", "orders": 42, "revenue": 16400.0 },
+      { "date": "2026-10-22", "orders": 48, "revenue": 18200.0 }
     ]
   }
 }
 ```
 
 ### 12.2 Operations Live Fleet & Order Radar
+
 - **Endpoint:** `GET /api/admin/live-map`
 - **Auth Required:** Yes (`ADMIN` role)
 - **Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "restaurants": [
-      { "id": 1, "name": "Meghana Foods", "latitude": 12.9716, "longitude": 77.5946, "isOpen": true }
+      {
+        "id": 1,
+        "name": "Meghana Foods",
+        "latitude": 12.9716,
+        "longitude": 77.5946,
+        "isOpen": true
+      }
     ],
     "riders": [
-      { "id": 4, "name": "Rider Rajesh", "latitude": 12.9730, "longitude": 77.5960, "isActive": true, "assignedOrderId": 108 }
+      {
+        "id": 4,
+        "name": "Rider Rajesh",
+        "latitude": 12.973,
+        "longitude": 77.596,
+        "isActive": true,
+        "assignedOrderId": 108
+      }
     ],
     "activeOrders": [
       {
         "orderId": 108,
         "orderNumber": "ORD-1729881000",
         "status": "OUT_FOR_DELIVERY",
-        "totalAmount": 450.00,
+        "totalAmount": 450.0,
         "restaurantName": "Meghana Foods",
         "riderName": "Rider Rajesh",
         "customerAddress": "104 Indiranagar, Bengaluru"
@@ -798,6 +902,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 ```
 
 ### 12.3 User Directory Moderation & Fraud Risk Management
+
 - **Search Users:** `GET /api/admin/users?query={query}&role={CUSTOMER|RESTAURANT_OWNER|RIDER|ADMIN}&status={ACTIVE|SUSPENDED}&limit=50&offset=0`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Response (200 OK):** Paginated array of users including `id`, `fullName`, `email`, `phone`, `role`, `status`, `fraudFlagCount`, and `createdAt`.
@@ -805,6 +910,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 - **Update User Status:** `POST /api/admin/users/{id}/status`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Request Body:**
+
   ```json
   {
     "status": "SUSPENDED",
@@ -822,6 +928,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
   ```
 
 ### 12.4 Coupon Engine Lifecycle Management
+
 - **List All Coupons:** `GET /api/admin/coupons`
   - **Auth Required:** Yes (`ADMIN` role)
 - **Create Coupon:** `POST /api/admin/coupons`
@@ -832,9 +939,9 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
     "code": "FESTIVE50",
     "description": "50% off up to ₹100",
     "discountType": "PERCENTAGE",
-    "discountValue": 50.00,
-    "minOrderAmount": 199.00,
-    "maxDiscountAmount": 100.00,
+    "discountValue": 50.0,
+    "minOrderAmount": 199.0,
+    "maxDiscountAmount": 100.0,
     "validFrom": "2026-10-27T00:00:00",
     "validTo": "2026-11-15T23:59:59",
     "usageLimitPerUser": 3,
@@ -846,6 +953,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 - **Delete Coupon:** `DELETE /api/admin/coupons/{id}`
 
 ### 12.5 Dynamic Platform Operational Settings
+
 - **Retrieve Settings:** `GET /api/admin/settings`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Response (200 OK):** Key-value dictionary of platform operational parameters (`platform_fee`, `delivery_fee_base`, `gst_rate_percent`, `max_delivery_radius_km`, `surge_multiplier`, `cod_order_limit`, `dispute_auto_refund_cap`, `dispute_window_hours`).
@@ -854,11 +962,13 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
   - **Request Body:** JSON dictionary of updated settings (e.g. `{ "surge_multiplier": 1.25, "dispute_auto_refund_cap": 200.00 }`).
 
 ### 12.6 Immutable Admin Audit Trail
+
 - **Retrieve Audit Logs:** `GET /api/admin/audit-logs?limit=100`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Response (200 OK):** Immutable event log containing `id`, `adminId`, `targetType`, `targetId`, `action`, `details`, `ipAddress`, and `createdAt`.
 
 ### 12.7 Operations CSV Data Streaming Export
+
 - **Stream CSV Data:** `GET /api/admin/export?type={orders|users|disputes|audit-logs}`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Response Headers:**
@@ -867,6 +977,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
   - **Body:** RFC 4180 streaming CSV payload.
 
 ### 12.8 Dispute Resolution & Supervisor Escalation
+
 - **Resolve Dispute:** `POST /api/disputes/{id}/resolve`
   - **Auth Required:** Yes (`ADMIN` role)
   - **Request Body:**
@@ -874,7 +985,7 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
   {
     "resolution": "REFUNDED",
     "adminNote": "Customer provided valid photographic proof of spilled packaging",
-    "refundAmount": 120.00,
+    "refundAmount": 120.0,
     "flagUser": false
   }
   ```
@@ -884,9 +995,11 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 ## 13. Observability, Health & Telemetry
 
 ### 13.1 Liveness Probe
+
 - **Endpoint:** `GET /health` or `GET /api/health`
 - **Auth Required:** No
 - **Response (200 OK):**
+
 ```json
 {
   "status": "UP",
@@ -897,9 +1010,11 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 ```
 
 ### 13.2 Readiness Probe (Database & JVM Memory Probe)
+
 - **Endpoint:** `GET /ready` or `GET /api/ready`
 - **Auth Required:** No
 - **Response (200 OK / 503 Service Unavailable):**
+
 ```json
 {
   "status": "UP",
@@ -916,9 +1031,11 @@ Menu item creation uses **POST** `/api/menu/item`. The response text `Menu endpo
 ```
 
 ### 13.3 Operations Metrics Snapshot
+
 - **Endpoint:** `GET /metrics` or `GET /api/metrics`
 - **Auth Required:** No
 - **Response (200 OK):**
+
 ```json
 {
   "uptimeMs": 86400000,

@@ -1,4 +1,3 @@
-
 # CravePulse V2 – Master Prompt: Design, Responsiveness, Reviews Carousel and Remaining Defects
 
 ## Role
@@ -23,6 +22,7 @@ Backend: Java 17+, Jakarta Servlets, JDBC, HikariCP, MySQL/TiDB. Frontend: React
 ## Findings this prompt must fix (from the code review of CravePulse_v1)
 
 ### Design and responsiveness
+
 - Responsiveness is built from a **patchwork**: 17 media queries in `App.css`, 7 in `design-tokens.css`, more in `portals.css`, with overlapping ranges and breakpoints that disagree (Bootstrap 576/768/992/1200 vs tokens 390/1024/1440), plus `!important` overrides (e.g. `.container{padding:… !important}`).
 - Hard-coded layout numbers: `rider-cockpit-main{padding-top:142px}`, `.mobile-search-below-nav{top:72px}`, restaurant image `height:180` inline, sidebars `width:250/260/280`, `100vh` (breaks under mobile browser toolbars; use `dvh`).
 - Restaurant cards: fixed 180 px image, five badges stacked on the image, no consistent aspect ratio, no rating/ETA/distance/cost-for-two row like Zomato/Swiggy.
@@ -31,6 +31,7 @@ Backend: Java 17+, Jakarta Servlets, JDBC, HikariCP, MySQL/TiDB. Frontend: React
 - Render-blocking external CSS (Leaflet CSS from unpkg), duplicate icon/font loading.
 
 ### Real defects still in the code
+
 1. **Reviews are never fetched.** `RestaurantDetail.jsx` renders `<RestaurantReviews rating totalReviews />` with no `reviews` prop, so every restaurant shows the same three **hard-coded fake reviews** (Ananya Sharma, Vikram Mehta, Priya Sundaram) and a fake "1420+" count. The backend endpoint `GET /api/reviews/restaurant/{id}` exists but is unused.
 2. **Fake fallbacks remain:** `FALLBACK_RESTAURANTS` in `CustomerHome.jsx`, `FALLBACK_CATALOG` in `RestaurantDetail.jsx` (both with `totalReviews: 1420`), simulated GPS hub in `Navbar.jsx`, "Simulate QR Code Scanned & Paid" in `UpiPaymentDrawer.jsx`, "Simulated verification accepts any 4+ digit OTP" in `CustomerProfile.jsx`, "Simulate Incoming Delivery Dispatch" in `RiderActiveJob.jsx`.
 3. **Deployment risk on Vercel:** `vercel.json` rewrites `/(.*)` to `index.html`. If `VITE_API_URL` is not set in Vercel, `/api/*` calls return HTML, and the fallbacks above hide the failure by showing fake restaurants. The committed `frontend/.env` points to `localhost:8081`.
@@ -75,6 +76,7 @@ Backend: Java 17+, Jakarta Servlets, JDBC, HikariCP, MySQL/TiDB. Frontend: React
 Replace the vertical review list with a **horizontal, side-by-side carousel** that has **clickable left/right arrow buttons**. Build it as a reusable `ScrollCarousel` component first, then `RestaurantReviews` on top of it.
 
 ### `ScrollCarousel` (reusable)
+
 - A horizontal flex track with CSS `scroll-snap-type: x mandatory`, `scroll-snap-align: start`, `scroll-behavior: smooth`, `overscroll-behavior-x: contain`, hidden scrollbar, `gap` from tokens, and edge padding that aligns with the page container.
 - **Prev / Next arrow buttons** (circular, 40–44 px, `‹` and `›` icons, `aria-label="Previous reviews"` / `"Next reviews"`), vertically centred on the track edges on ≥ 768 px and placed in the section header on mobile. They scroll by one "page" (visible width minus one card). **Disabled state at the start/end** (use `aria-disabled`, reduced opacity). Update the state with `scroll` events and `ResizeObserver`.
 - Swipe/drag on touch and trackpad (native scroll), mouse drag optional. Keyboard: the track is focusable (`tabindex=0`, `role="region"`, `aria-roledescription="carousel"`), Left/Right arrows scroll, Home/End jump. Edge fade gradients to hint that more cards exist.
@@ -82,6 +84,7 @@ Replace the vertical review list with a **horizontal, side-by-side carousel** th
 - No layout shift: cards have fixed width so the track never reflows.
 
 ### `RestaurantReviews`
+
 - Fetch real data: `GET /api/reviews/restaurant/{id}` (add pagination/`limit` support and the rating distribution if missing). Loading → skeleton cards; empty → "No reviews yet – be the first after your order"; error → Retry.
 - Header: big average rating, star row, total count, and a **rating distribution** (5→1 star bars). Keep the sort control (Most recent / Highest / Lowest) and make it work server-side or on the loaded page.
 - **Review card:** fixed width (`min(86vw, 320px)` on mobile, 340–360 px on desktop), equal height, avatar (initials fallback instead of a random photo), name, "Verified order" badge, date, stars, text clamped to 4 lines with **Read more** (opens a modal or expands in place), optional photo thumbnails, restaurant reply if present.
@@ -94,15 +97,18 @@ Replace the vertical review list with a **horizontal, side-by-side carousel** th
 ## PHASE D – Zomato/Swiggy-class card design and page layouts
 
 ### Restaurant card (home and search)
+
 - Image with `aspect-ratio: 16/10`, `object-fit: cover`, `loading="lazy"`, `decoding="async"`, explicit width/height, a bottom gradient overlay carrying the best offer ("Flat ₹100 off above ₹499"), and a favourite (heart) button.
 - Body in this order: **name** (1 line, ellipsis) → **green rating pill** + review count → **ETA • distance • cost for two** → **cuisines** (1 line, ellipsis) → small badges (Pure Veg, Free delivery, 0% markup). Move the "0% Markup Parity" badge out of the image into a single small chip in the body so the image stays clean.
 - States: closed (greyed with "Opens at 11 AM"), busy/throttled (small amber chip), not-deliverable (disabled with reason).
 - Grid: CSS grid `auto-fill, minmax(280px, 1fr)`; one column on phones with comfortable 16 px gutters, 2–4 columns up the breakpoints. Equal card heights, hover lift only on pointer devices.
 
 ### Dish card (restaurant page)
+
 - Horizontal layout on all sizes: text left (veg/non-veg mark, name, bestseller tag, price, rating, 2-line description), image right (96–120 px square, rounded) with an **ADD** button overlapping the image bottom; stepper after adding; "Customisable" hint.
 
 ### Page layouts
+
 - **Home:** sticky header with location + search; live-order banner when the user has an active order ("Order out for delivery · Track"); category chips carousel; filter chips row (horizontal scroll); restaurant grid; skeleton grid while loading.
 - **Restaurant page:** compact sticky header after scroll, sticky horizontal category tabs with scroll-spy, offers carousel, menu list, reviews carousel, floating **cart bar** on mobile ("2 items · ₹560 · View cart") above the bottom nav.
 - **Checkout:** single-column on mobile with a sticky "Pay ₹X" bar; two-column on desktop (details left, bill right).

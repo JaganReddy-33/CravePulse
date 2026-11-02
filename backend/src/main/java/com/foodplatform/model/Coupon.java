@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Coupon {
+
     private Long id;
     private String code;
     private String description;
@@ -21,54 +22,133 @@ public class Coupon {
     private int perUserLimit = 1;
     private Timestamp createdAt;
 
-    public Coupon() {
+    public Coupon() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
+    public String getCode() {
+        return code;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setCode(String code) {
+        this.code = code;
+    }
 
-    public String getDiscountType() { return discountType; }
-    public void setDiscountType(String discountType) { this.discountType = discountType; }
+    public String getDescription() {
+        return description;
+    }
 
-    public BigDecimal getDiscountValue() { return discountValue; }
-    public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public BigDecimal getMinOrderAmount() { return minOrderAmount; }
-    public void setMinOrderAmount(BigDecimal minOrderAmount) { this.minOrderAmount = minOrderAmount; }
+    public String getDiscountType() {
+        return discountType;
+    }
 
-    public BigDecimal getMaxDiscountAmount() { return maxDiscountAmount; }
-    public void setMaxDiscountAmount(BigDecimal maxDiscountAmount) { this.maxDiscountAmount = maxDiscountAmount; }
+    public void setDiscountType(String discountType) {
+        this.discountType = discountType;
+    }
 
-    public Timestamp getValidFrom() { return validFrom; }
-    public void setValidFrom(Timestamp validFrom) { this.validFrom = validFrom; }
+    public BigDecimal getDiscountValue() {
+        return discountValue;
+    }
 
-    public Timestamp getValidUntil() { return validUntil; }
-    public void setValidUntil(Timestamp validUntil) { this.validUntil = validUntil; }
+    public void setDiscountValue(BigDecimal discountValue) {
+        this.discountValue = discountValue;
+    }
 
-    public int getUsageLimit() { return usageLimit; }
-    public void setUsageLimit(int usageLimit) { this.usageLimit = usageLimit; }
+    public BigDecimal getMinOrderAmount() {
+        return minOrderAmount;
+    }
 
-    public int getTimesUsed() { return timesUsed; }
-    public void setTimesUsed(int timesUsed) { this.timesUsed = timesUsed; }
+    public void setMinOrderAmount(BigDecimal minOrderAmount) {
+        this.minOrderAmount = minOrderAmount;
+    }
 
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
+    public BigDecimal getMaxDiscountAmount() {
+        return maxDiscountAmount;
+    }
 
-    public boolean isFirstOrderOnly() { return firstOrderOnly; }
-    public void setFirstOrderOnly(boolean firstOrderOnly) { this.firstOrderOnly = firstOrderOnly; }
+    public void setMaxDiscountAmount(BigDecimal maxDiscountAmount) {
+        this.maxDiscountAmount = maxDiscountAmount;
+    }
 
-    public Long getRestaurantId() { return restaurantId; }
-    public void setRestaurantId(Long restaurantId) { this.restaurantId = restaurantId; }
+    public Timestamp getValidFrom() {
+        return validFrom;
+    }
 
-    public int getPerUserLimit() { return perUserLimit; }
-    public void setPerUserLimit(int perUserLimit) { this.perUserLimit = perUserLimit; }
+    public void setValidFrom(Timestamp validFrom) {
+        this.validFrom = validFrom;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public Timestamp getValidUntil() {
+        return validUntil;
+    }
+
+    public void setValidUntil(Timestamp validUntil) {
+        this.validUntil = validUntil;
+    }
+
+    public int getUsageLimit() {
+        return usageLimit;
+    }
+
+    public void setUsageLimit(int usageLimit) {
+        this.usageLimit = usageLimit;
+    }
+
+    public int getTimesUsed() {
+        return timesUsed;
+    }
+
+    public void setTimesUsed(int timesUsed) {
+        this.timesUsed = timesUsed;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public boolean isFirstOrderOnly() {
+        return firstOrderOnly;
+    }
+
+    public void setFirstOrderOnly(boolean firstOrderOnly) {
+        this.firstOrderOnly = firstOrderOnly;
+    }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
+
+    public int getPerUserLimit() {
+        return perUserLimit;
+    }
+
+    public void setPerUserLimit(int perUserLimit) {
+        this.perUserLimit = perUserLimit;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 }

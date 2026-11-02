@@ -1,5 +1,10 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.PaymentDao;
 import com.foodplatform.dao.UserDao;
@@ -11,13 +16,6 @@ import com.foodplatform.service.PaymentService;
 import com.foodplatform.service.RazorpayGatewayClient;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
 import com.google.gson.JsonObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Map;
@@ -25,25 +23,31 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentEngineTest {
 
     @Mock
     private PaymentDao paymentDao;
+
     @Mock
     private OrderDao orderDao;
+
     @Mock
     private UserDao userDao;
+
     @Mock
     private WalletDao walletDao;
+
     @Mock
     private RazorpayGatewayClient razorpayClient;
+
     @Mock
     private RealtimeSessionRegistry sessionRegistry;
 
@@ -52,17 +56,19 @@ public class PaymentEngineTest {
     @BeforeEach
     void setUp() {
         paymentService = new PaymentService(
-                paymentDao,
-                orderDao,
-                userDao,
-                walletDao,
-                razorpayClient,
-                sessionRegistry
+            paymentDao,
+            orderDao,
+            userDao,
+            walletDao,
+            razorpayClient,
+            sessionRegistry
         );
     }
 
     @Test
-    @DisplayName("COD threshold enforcement should permit cart total <= ₹2,000 and reject totals > ₹2,000")
+    @DisplayName(
+        "COD threshold enforcement should permit cart total <= ₹2,000 and reject totals > ₹2,000"
+    )
     void testCodThresholdEnforcement() {
         // ₹1,999.00 -> Allowed
         assertDoesNotThrow(() -> paymentService.validateCodOrder(new BigDecimal("1999.00")));
@@ -71,13 +77,15 @@ public class PaymentEngineTest {
 
         // ₹2,000.01 -> Rejected with 400 validation error
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.validateCodOrder(new BigDecimal("2000.01"))
+            paymentService.validateCodOrder(new BigDecimal("2000.01"))
         );
-        assertTrue(ex.getMessage().contains("Cash on Delivery is only available for orders up to ₹2000"));
+        assertTrue(
+            ex.getMessage().contains("Cash on Delivery is only available for orders up to ₹2000")
+        );
 
         // ₹3,500.00 -> Rejected
         assertThrows(IllegalArgumentException.class, () ->
-                paymentService.validateCodOrder(new BigDecimal("3500.00"))
+            paymentService.validateCodOrder(new BigDecimal("3500.00"))
         );
     }
 
@@ -105,7 +113,9 @@ public class PaymentEngineTest {
 
         when(orderDao.findById(orderId)).thenReturn(order);
         when(userDao.findById(10L)).thenReturn(customer);
-        when(razorpayClient.createOrder(eq(new BigDecimal("450.50")), any(), any())).thenReturn(rzpJson);
+        when(razorpayClient.createOrder(eq(new BigDecimal("450.50")), any(), any())).thenReturn(
+            rzpJson
+        );
         when(razorpayClient.getKeyId()).thenReturn("rzp_test_mock");
 
         Map<String, Object> result = paymentService.createRazorpayOrder(orderId, 10L, "IDEMP-101");
@@ -119,7 +129,9 @@ public class PaymentEngineTest {
     }
 
     @Test
-    @DisplayName("Payment signature verification should accept valid signature and reject tampered signature")
+    @DisplayName(
+        "Payment signature verification should accept valid signature and reject tampered signature"
+    )
     void testVerifyPaymentSignatures() {
         String orderIdRzp = "order_rzp_98765";
         String paymentIdRzp = "pay_rzp_112233";
@@ -133,45 +145,55 @@ public class PaymentEngineTest {
         pendingPayment.setStatus("PENDING");
 
         when(razorpayClient.verifySignature(orderIdRzp, paymentIdRzp, validSig)).thenReturn(true);
-        when(razorpayClient.verifySignature(orderIdRzp, paymentIdRzp, tamperedSig)).thenReturn(false);
+        when(razorpayClient.verifySignature(orderIdRzp, paymentIdRzp, tamperedSig)).thenReturn(
+            false
+        );
 
-        // 1. Tampered signature must fail immediately
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.verifyPayment(orderIdRzp, paymentIdRzp, tamperedSig, 10L)
+            paymentService.verifyPayment(orderIdRzp, paymentIdRzp, tamperedSig, 10L)
         );
         assertTrue(ex.getMessage().contains("Invalid Razorpay payment signature"));
 
-        // 2. Valid signature succeeds and updates status
         when(paymentDao.findByRazorpayOrderId(orderIdRzp)).thenReturn(pendingPayment);
-        Map<String, Object> res = paymentService.verifyPayment(orderIdRzp, paymentIdRzp, validSig, 10L);
+        Map<String, Object> res = paymentService.verifyPayment(
+            orderIdRzp,
+            paymentIdRzp,
+            validSig,
+            10L
+        );
         assertNotNull(res);
         assertTrue((Boolean) res.get("success"));
         assertEquals("PAID", res.get("status"));
     }
 
     @Test
-    @DisplayName("Webhook ingestion should process payment.captured and deduplicate duplicate events")
+    @DisplayName(
+        "Webhook ingestion should process payment.captured and deduplicate duplicate events"
+    )
     void testWebhookIngestionAndDeduplication() {
-        String payload = "{\"id\":\"evt_1001\",\"event\":\"payment.captured\",\"payload\":{\"payment\":{\"entity\":{\"id\":\"pay_777\",\"order_id\":\"order_rzp_777\"}}}}";
+        String payload =
+            "{\"id\":\"evt_1001\",\"event\":\"payment.captured\",\"payload\":{\"payment\":{\"entity\":{\"id\":\"pay_777\",\"order_id\":\"order_rzp_777\"}}}}";
         String signature = "valid_webhook_sig";
 
         when(razorpayClient.verifyWebhookSignature(payload, signature)).thenReturn(true);
-        when(paymentDao.hasWebhookEventBeenProcessed("evt_1001")).thenReturn(false).thenReturn(true);
+        when(paymentDao.hasWebhookEventBeenProcessed("evt_1001"))
+            .thenReturn(false)
+            .thenReturn(true);
 
-        // 1. First time delivery: event is processed and recorded
         Map<String, Object> firstRes = paymentService.handleWebhook(payload, signature);
         assertEquals("processed", firstRes.get("status"));
         assertEquals("evt_1001", firstRes.get("eventId"));
         verify(paymentDao).recordWebhookEvent(eq("evt_1001"), eq("payment.captured"), eq(payload));
 
-        // 2. Duplicate delivery (same event ID): event is ignored without double processing
         Map<String, Object> secondRes = paymentService.handleWebhook(payload, signature);
         assertEquals("ignored", secondRes.get("status"));
         assertEquals("duplicate_event", secondRes.get("reason"));
     }
 
     @Test
-    @DisplayName("Wallet overdraft prevention should atomically reject debits exceeding available balance")
+    @DisplayName(
+        "Wallet overdraft prevention should atomically reject debits exceeding available balance"
+    )
     void testWalletOverdraftPrevention() throws SQLException, InterruptedException {
         // Simulating atomic wallet overdraft protection
         // Initial balance: ₹500.00. 10 concurrent requests to debit ₹300.00 each.
@@ -180,7 +202,7 @@ public class PaymentEngineTest {
         final Object lock = new Object();
         final BigDecimal initialBalance = new BigDecimal("500.00");
         final BigDecimal debitAmount = new BigDecimal("300.00");
-        final BigDecimal[] currentBalance = new BigDecimal[]{ initialBalance };
+        final BigDecimal[] currentBalance = new BigDecimal[] { initialBalance };
 
         int threadCount = 10;
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -194,7 +216,8 @@ public class PaymentEngineTest {
             executor.submit(() -> {
                 try {
                     startLatch.await(); // synchronous start
-                    synchronized (lock) { // simulates SELECT ... FOR UPDATE database row lock
+                    synchronized (lock) {
+                        // simulates SELECT ... FOR UPDATE database row lock
                         if (currentBalance[0].compareTo(debitAmount) >= 0) {
                             currentBalance[0] = currentBalance[0].subtract(debitAmount);
                             successCount.incrementAndGet();
@@ -215,8 +238,16 @@ public class PaymentEngineTest {
         executor.shutdown();
 
         assertEquals(1, successCount.get(), "Exactly one transaction should succeed");
-        assertEquals(9, failureCount.get(), "Remaining 9 concurrent transactions must fail due to insufficient funds");
-        assertEquals(new BigDecimal("200.00"), currentBalance[0], "Balance should never overdraft below zero");
+        assertEquals(
+            9,
+            failureCount.get(),
+            "Remaining 9 concurrent transactions must fail due to insufficient funds"
+        );
+        assertEquals(
+            new BigDecimal("200.00"),
+            currentBalance[0],
+            "Balance should never overdraft below zero"
+        );
     }
 
     @Test
@@ -238,7 +269,10 @@ public class PaymentEngineTest {
         when(paymentDao.findByOrderId(orderId)).thenReturn(payment);
         when(orderDao.findById(orderId)).thenReturn(order);
 
-        Map<String, Object> refundRes = paymentService.processRefund(orderId, "Customer cancellation");
+        Map<String, Object> refundRes = paymentService.processRefund(
+            orderId,
+            "Customer cancellation"
+        );
         assertNotNull(refundRes);
         assertTrue((Boolean) refundRes.get("refunded"));
         assertEquals("WALLET", refundRes.get("mode"));

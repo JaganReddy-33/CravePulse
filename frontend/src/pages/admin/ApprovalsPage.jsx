@@ -15,8 +15,7 @@ const ApprovalsPage = () => {
         api.get("/admin/restaurants"),
         api.get("/admin/riders"),
       ]);
-      if (restRes.success && Array.isArray(restRes.data))
-        setRestaurants(restRes.data);
+      if (restRes.success && Array.isArray(restRes.data)) setRestaurants(restRes.data);
       if (rdRes.success && Array.isArray(rdRes.data)) setRiders(rdRes.data);
     } catch (e) {
       console.error("Error fetching admin approvals", e);
@@ -30,25 +29,18 @@ const ApprovalsPage = () => {
   }, []);
 
   const handleToggleRestaurantKyc = async (restId, currentStatus) => {
-    const reason = prompt(
-      currentStatus ? "Reason for revoking license:" : "Approval notes:",
-    );
+    const reason = prompt(currentStatus ? "Reason for revoking license:" : "Approval notes:");
     if (reason === null) return;
 
     try {
       const res = await api.post(`/admin/restaurant/${restId}/kyc`, {
         approved: !currentStatus,
         reason:
-          reason ||
-          (currentStatus
-            ? "Revoked by compliance officer"
-            : "KYC and FSSAI verified"),
+          reason || (currentStatus ? "Revoked by compliance officer" : "KYC and FSSAI verified"),
       });
       if (res.success) {
         setRestaurants((prev) =>
-          prev.map((r) =>
-            r.id === restId ? { ...r, isKycApproved: !currentStatus } : r,
-          ),
+          prev.map((r) => (r.id === restId ? { ...r, isKycApproved: !currentStatus } : r)),
         );
         if (selectedEntity && selectedEntity.id === restId) {
           setSelectedEntity((prev) => ({
@@ -64,9 +56,7 @@ const ApprovalsPage = () => {
 
   const handleToggleRiderKyc = async (riderId, currentStatus) => {
     const reason = prompt(
-      currentStatus
-        ? "Reason for revoking captain clearance:"
-        : "Approval verification notes:",
+      currentStatus ? "Reason for revoking captain clearance:" : "Approval verification notes:",
     );
     if (reason === null) return;
 
@@ -75,15 +65,11 @@ const ApprovalsPage = () => {
         approved: !currentStatus,
         reason:
           reason ||
-          (currentStatus
-            ? "Revoked by fleet supervisor"
-            : "Driver license & RC verified"),
+          (currentStatus ? "Revoked by fleet supervisor" : "Driver license & RC verified"),
       });
       if (res.success) {
         setRiders((prev) =>
-          prev.map((r) =>
-            r.id === riderId ? { ...r, isKycApproved: !currentStatus } : r,
-          ),
+          prev.map((r) => (r.id === riderId ? { ...r, isKycApproved: !currentStatus } : r)),
         );
         if (selectedEntity && selectedEntity.id === riderId) {
           setSelectedEntity((prev) => ({
@@ -106,20 +92,14 @@ const ApprovalsPage = () => {
     <div>
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <h4 className="fw-extrabold mb-1 text-white">
-            Merchant & Fleet KYC Compliance Terminal
-          </h4>
+          <h4 className="fw-extrabold mb-1 text-white">Merchant & Fleet KYC Compliance Terminal</h4>
           <p className="text-muted small mb-0">
-            Inspect business licenses, FSSAI certificates, vehicle
-            registrations, and identity records.
+            Inspect business licenses, FSSAI certificates, vehicle registrations, and identity
+            records.
           </p>
         </div>
-        <button
-          className="btn btn-outline-info rounded-pill px-3 btn-sm"
-          onClick={fetchData}
-        >
-          <i className="bi bi-arrow-clockwise me-1"></i> Refresh Verification
-          Tables
+        <button className="btn btn-outline-info rounded-pill px-3 btn-sm" onClick={fetchData}>
+          <i className="bi bi-arrow-clockwise me-1"></i> Refresh Verification Tables
         </button>
       </div>
 
@@ -129,9 +109,7 @@ const ApprovalsPage = () => {
           style={{ background: "#162032" }}
         >
           <div className="spinner-border text-info" role="status"></div>
-          <p className="text-muted small mt-2">
-            Loading partner verification data...
-          </p>
+          <p className="text-muted small mt-2">Loading partner verification data...</p>
         </div>
       ) : (
         <>
@@ -141,8 +119,8 @@ const ApprovalsPage = () => {
             style={{ background: "#162032", border: "1px solid #1f293d" }}
           >
             <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
-              <i className="bi bi-shop text-info"></i> Restaurant Merchant
-              Partners ({restaurants.length})
+              <i className="bi bi-shop text-info"></i> Restaurant Merchant Partners (
+              {restaurants.length})
             </h6>
 
             {restaurants.length === 0 ? (
@@ -187,18 +165,13 @@ const ApprovalsPage = () => {
                           <div className="d-flex justify-content-end gap-2">
                             <button
                               className="btn btn-sm btn-outline-info rounded-pill px-3"
-                              onClick={() =>
-                                handleViewDocuments(r, "RESTAURANT")
-                              }
+                              onClick={() => handleViewDocuments(r, "RESTAURANT")}
                             >
-                              <i className="bi bi-file-earmark-text me-1"></i>{" "}
-                              View Docs
+                              <i className="bi bi-file-earmark-text me-1"></i> View Docs
                             </button>
                             <button
                               className={`btn btn-sm rounded-pill px-3 ${r.isKycApproved ? "btn-outline-danger" : "btn-success text-dark fw-bold"}`}
-                              onClick={() =>
-                                handleToggleRestaurantKyc(r.id, r.isKycApproved)
-                              }
+                              onClick={() => handleToggleRestaurantKyc(r.id, r.isKycApproved)}
                             >
                               {r.isKycApproved ? "Revoke" : "Approve ✓"}
                             </button>
@@ -218,8 +191,8 @@ const ApprovalsPage = () => {
             style={{ background: "#162032", border: "1px solid #1f293d" }}
           >
             <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
-              <i className="bi bi-bicycle text-success"></i> Delivery Fleet
-              Captains ({riders.length})
+              <i className="bi bi-bicycle text-success"></i> Delivery Fleet Captains (
+              {riders.length})
             </h6>
 
             {riders.length === 0 ? (
@@ -251,9 +224,7 @@ const ApprovalsPage = () => {
                         </td>
                         <td>
                           <div>{rd.vehicleType}</div>
-                          <code className="text-warning small">
-                            {rd.vehicleNumber}
-                          </code>
+                          <code className="text-warning small">{rd.vehicleNumber}</code>
                         </td>
                         <td>
                           <code className="text-info">{rd.drivingLicense}</code>
@@ -275,14 +246,11 @@ const ApprovalsPage = () => {
                               className="btn btn-sm btn-outline-info rounded-pill px-3"
                               onClick={() => handleViewDocuments(rd, "RIDER")}
                             >
-                              <i className="bi bi-file-earmark-text me-1"></i>{" "}
-                              View Docs
+                              <i className="bi bi-file-earmark-text me-1"></i> View Docs
                             </button>
                             <button
                               className={`btn btn-sm rounded-pill px-3 ${rd.isKycApproved ? "btn-outline-danger" : "btn-success text-dark fw-bold"}`}
-                              onClick={() =>
-                                handleToggleRiderKyc(rd.id, rd.isKycApproved)
-                              }
+                              onClick={() => handleToggleRiderKyc(rd.id, rd.isKycApproved)}
                             >
                               {rd.isKycApproved ? "Revoke" : "Approve ✓"}
                             </button>
@@ -300,11 +268,7 @@ const ApprovalsPage = () => {
 
       {/* Document View Modal */}
       {selectedEntity && (
-        <div
-          className="modal show d-block"
-          tabIndex="-1"
-          style={{ background: "rgba(0,0,0,0.8)" }}
-        >
+        <div className="modal show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.8)" }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div
               className="modal-content border-0 rounded-4 p-3 text-white"
@@ -320,8 +284,7 @@ const ApprovalsPage = () => {
                   <small className="text-muted">
                     {entityType === "RESTAURANT"
                       ? selectedEntity.name
-                      : selectedEntity.riderName ||
-                        `Captain #${selectedEntity.id}`}
+                      : selectedEntity.riderName || `Captain #${selectedEntity.id}`}
                   </small>
                 </div>
                 <button
@@ -343,12 +306,10 @@ const ApprovalsPage = () => {
                           {selectedEntity.fssaiLicense || "FSSAI-UNREGISTERED"}
                         </h6>
                         <small className="text-muted">
-                          Government Food Safety and Standards Authority of
-                          India
+                          Government Food Safety and Standards Authority of India
                         </small>
                         <div className="mt-2 text-success small">
-                          <i className="bi bi-patch-check-fill me-1"></i>{" "}
-                          Certificate Active
+                          <i className="bi bi-patch-check-fill me-1"></i> Certificate Active
                         </div>
                       </div>
                     </div>
@@ -358,15 +319,12 @@ const ApprovalsPage = () => {
                         <label className="text-muted small fw-bold text-uppercase d-block mb-1">
                           GST Identification Number (GSTIN)
                         </label>
-                        <h6 className="fw-bold text-warning mb-1">
-                          29AAAAA0000A1Z5
-                        </h6>
+                        <h6 className="fw-bold text-warning mb-1">29AAAAA0000A1Z5</h6>
                         <small className="text-muted">
                           State: Karnataka (29) • Tax Compliance Verified
                         </small>
                         <div className="mt-2 text-info small">
-                          <i className="bi bi-receipt me-1"></i> Tax Invoicing
-                          Enabled
+                          <i className="bi bi-receipt me-1"></i> Tax Invoicing Enabled
                         </div>
                       </div>
                     </div>
@@ -380,9 +338,7 @@ const ApprovalsPage = () => {
                           {selectedEntity.address ||
                             "Indiranagar 100ft Road, Bengaluru, Karnataka 560038"}
                         </p>
-                        <small className="text-muted">
-                          Contact: {selectedEntity.phone}
-                        </small>
+                        <small className="text-muted">Contact: {selectedEntity.phone}</small>
                       </div>
                     </div>
 
@@ -407,15 +363,12 @@ const ApprovalsPage = () => {
                         <label className="text-muted small fw-bold text-uppercase d-block mb-1">
                           Motor Driving License
                         </label>
-                        <h6 className="fw-bold text-info mb-1">
-                          {selectedEntity.drivingLicense}
-                        </h6>
+                        <h6 className="fw-bold text-info mb-1">{selectedEntity.drivingLicense}</h6>
                         <small className="text-muted">
                           Category: Two-Wheeler / Commercial Transport
                         </small>
                         <div className="mt-2 text-success small">
-                          <i className="bi bi-patch-check-fill me-1"></i> Valid
-                          License
+                          <i className="bi bi-patch-check-fill me-1"></i> Valid License
                         </div>
                       </div>
                     </div>
@@ -428,12 +381,9 @@ const ApprovalsPage = () => {
                         <h6 className="fw-bold text-warning mb-1">
                           {selectedEntity.vehicleNumber}
                         </h6>
-                        <small className="text-muted">
-                          {selectedEntity.vehicleType}
-                        </small>
+                        <small className="text-muted">{selectedEntity.vehicleType}</small>
                         <div className="mt-2 text-info small">
-                          <i className="bi bi-shield-check me-1"></i> PUC &
-                          Insurance Valid
+                          <i className="bi bi-shield-check me-1"></i> PUC & Insurance Valid
                         </div>
                       </div>
                     </div>
@@ -474,10 +424,7 @@ const ApprovalsPage = () => {
                   <span
                     className={`badge ${selectedEntity.isKycApproved ? "bg-success" : "bg-warning text-dark"} px-3 py-2`}
                   >
-                    Status:{" "}
-                    {selectedEntity.isKycApproved
-                      ? "VERIFIED"
-                      : "PENDING APPROVAL"}
+                    Status: {selectedEntity.isKycApproved ? "VERIFIED" : "PENDING APPROVAL"}
                   </span>
                 </div>
                 <div className="d-flex gap-2">
@@ -493,30 +440,20 @@ const ApprovalsPage = () => {
                       type="button"
                       className={`btn rounded-pill px-4 fw-bold ${selectedEntity.isKycApproved ? "btn-outline-danger" : "btn-success text-dark"}`}
                       onClick={() =>
-                        handleToggleRestaurantKyc(
-                          selectedEntity.id,
-                          selectedEntity.isKycApproved,
-                        )
+                        handleToggleRestaurantKyc(selectedEntity.id, selectedEntity.isKycApproved)
                       }
                     >
-                      {selectedEntity.isKycApproved
-                        ? "Revoke License"
-                        : "Approve Partner ✓"}
+                      {selectedEntity.isKycApproved ? "Revoke License" : "Approve Partner ✓"}
                     </button>
                   ) : (
                     <button
                       type="button"
                       className={`btn rounded-pill px-4 fw-bold ${selectedEntity.isKycApproved ? "btn-outline-danger" : "btn-success text-dark"}`}
                       onClick={() =>
-                        handleToggleRiderKyc(
-                          selectedEntity.id,
-                          selectedEntity.isKycApproved,
-                        )
+                        handleToggleRiderKyc(selectedEntity.id, selectedEntity.isKycApproved)
                       }
                     >
-                      {selectedEntity.isKycApproved
-                        ? "Revoke Clearance"
-                        : "Approve Captain ✓"}
+                      {selectedEntity.isKycApproved ? "Revoke Clearance" : "Approve Captain ✓"}
                     </button>
                   )}
                 </div>

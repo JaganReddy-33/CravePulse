@@ -16,7 +16,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -42,13 +41,16 @@ public class RiderServlet extends BaseServlet {
         Long userId = getAuthenticatedUserId(req);
         RiderProfile profile = riderDao.findByUserId(userId);
         if (profile == null) {
-            JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Rider profile not found for authenticated user");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_NOT_FOUND,
+                "Rider profile not found for authenticated user"
+            );
             return;
         }
 
         switch (path) {
             case "/profile" -> JsonUtil.sendSuccess(res, 200, "Rider profile", profile);
-
             case "/active-job", "/orders/active", "/active" -> {
                 DeliveryDispatch job = riderDao.getRiderActiveDispatch(profile.getId());
                 if (job != null) {
@@ -57,41 +59,50 @@ public class RiderServlet extends BaseServlet {
                 }
                 JsonUtil.sendSuccess(res, 200, "Active job", job);
             }
-
             case "/offers" -> {
                 List<DeliveryDispatch> offers = riderDao.getActiveOffersForRider(profile.getId());
                 JsonUtil.sendSuccess(res, 200, "Active job offers", offers);
             }
-
             case "/earnings" -> {
                 Map<String, Object> summary = riderDao.getRiderEarningsSummary(profile.getId());
-                summary.put("walletBalance", new com.foodplatform.daoImpl.UserDaoImpl().findById(userId).getWalletBalance());
+                summary.put(
+                    "walletBalance",
+                    new com.foodplatform.daoImpl.UserDaoImpl().findById(userId).getWalletBalance()
+                );
                 summary.put("cashInHand", profile.getCashInHand());
                 summary.put("maxCashLimit", profile.getMaxCashLimit());
                 JsonUtil.sendSuccess(res, 200, "Earnings summary", summary);
             }
-
-            case "/payout-requests" -> JsonUtil.sendSuccess(res, 200, "Rider payout balance and requests",
-                    payoutRequestDao.getRiderPayoutSummary(userId));
-
+            case "/payout-requests" -> JsonUtil.sendSuccess(
+                res,
+                200,
+                "Rider payout balance and requests",
+                payoutRequestDao.getRiderPayoutSummary(userId)
+            );
             case "/history", "/trips" -> {
                 int limit = getIntParam(req, "limit", 50);
                 int offset = getIntParam(req, "offset", 0);
-                List<DeliveryDispatch> history = riderDao.getRiderCompletedTrips(profile.getId(), limit, offset);
+                List<DeliveryDispatch> history = riderDao.getRiderCompletedTrips(
+                    profile.getId(),
+                    limit,
+                    offset
+                );
                 JsonUtil.sendSuccess(res, 200, "Delivery trip history", history);
             }
-
             case "/cod-ledger" -> {
                 int limit = getIntParam(req, "limit", 50);
                 int offset = getIntParam(req, "offset", 0);
-                List<RiderCodSettlement> settlements = riderDao.getCodSettlements(profile.getId(), limit, offset);
+                List<RiderCodSettlement> settlements = riderDao.getCodSettlements(
+                    profile.getId(),
+                    limit,
+                    offset
+                );
                 Map<String, Object> ledger = new HashMap<>();
                 ledger.put("cashInHand", profile.getCashInHand());
                 ledger.put("maxCashLimit", profile.getMaxCashLimit());
                 ledger.put("settlements", settlements);
                 JsonUtil.sendSuccess(res, 200, "Cash-on-delivery settlement ledger", ledger);
             }
-
             default -> JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
         }
     }
@@ -104,42 +115,80 @@ public class RiderServlet extends BaseServlet {
         Long userId = getAuthenticatedUserId(req);
         RiderProfile profile = riderDao.findByUserId(userId);
         if (profile == null) {
-            JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Rider profile not found for authenticated user");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_NOT_FOUND,
+                "Rider profile not found for authenticated user"
+            );
             return;
         }
 
         // Profile details update
         if ("/profile".equals(path)) {
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            String vehicleType = body != null && body.has("vehicleType") ? body.get("vehicleType").getAsString() : null;
-            String vehicleNumber = body != null && body.has("vehicleNumber") ? body.get("vehicleNumber").getAsString() : null;
-            String drivingLicense = body != null && body.has("drivingLicense") ? body.get("drivingLicense").getAsString() : null;
+            String vehicleType =
+                body != null && body.has("vehicleType")
+                    ? body.get("vehicleType").getAsString()
+                    : null;
+            String vehicleNumber =
+                body != null && body.has("vehicleNumber")
+                    ? body.get("vehicleNumber").getAsString()
+                    : null;
+            String drivingLicense =
+                body != null && body.has("drivingLicense")
+                    ? body.get("drivingLicense").getAsString()
+                    : null;
 
-            riderDao.updateRiderProfileDetails(profile.getId(), vehicleType, vehicleNumber, drivingLicense);
+            riderDao.updateRiderProfileDetails(
+                profile.getId(),
+                vehicleType,
+                vehicleNumber,
+                drivingLicense
+            );
             RiderProfile updated = riderDao.findById(profile.getId());
             JsonUtil.sendSuccess(res, 200, "Profile updated successfully", updated);
             return;
         }
 
         if (!profile.isKycApproved()) {
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Rider account is pending KYC approval from platform administrators.");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Rider account is pending KYC approval from platform administrators."
+            );
             return;
         }
 
         if ("/payout-requests".equals(path)) {
             if (!"RIDER".equalsIgnoreCase(getAuthenticatedRole(req))) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Only the rider account owner can request a payout");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Only the rider account owner can request a payout"
+                );
                 return;
             }
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body == null || !body.has("amount") || !body.has("payoutDestination")) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "amount and payoutDestination are required");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "amount and payoutDestination are required"
+                );
                 return;
             }
             try {
                 Map<String, Object> request = payoutRequestDao.createRiderRequest(
-                        userId, body.get("amount").getAsBigDecimal(), body.get("payoutDestination").getAsString());
-                JsonUtil.sendSuccess(res, 201, "Payout request submitted for admin review", request);
+                    userId,
+                    body.get("amount").getAsBigDecimal(),
+                    body.get("payoutDestination").getAsString()
+                );
+                JsonUtil.sendSuccess(
+                    res,
+                    201,
+                    "Payout request submitted for admin review",
+                    request
+                );
             } catch (IllegalArgumentException e) {
                 JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             } catch (com.foodplatform.daoImpl.PayoutRequestConflictException e) {
@@ -176,9 +225,18 @@ public class RiderServlet extends BaseServlet {
             }
             boolean success = dispatchService.acceptDispatch(dispatchId, profile.getId());
             if (success) {
-                JsonUtil.sendSuccess(res, 200, "Dispatch accepted successfully", Map.of("dispatchId", dispatchId));
+                JsonUtil.sendSuccess(
+                    res,
+                    200,
+                    "Dispatch accepted successfully",
+                    Map.of("dispatchId", dispatchId)
+                );
             } else {
-                JsonUtil.sendError(res, 400, "Could not accept dispatch. It may have expired or been assigned.");
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "Could not accept dispatch. It may have expired or been assigned."
+                );
             }
             return;
         }
@@ -194,10 +252,18 @@ public class RiderServlet extends BaseServlet {
                 }
             }
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "Distance / Personal Emergency";
+            String reason =
+                body != null && body.has("reason")
+                    ? body.get("reason").getAsString()
+                    : "Distance / Personal Emergency";
 
             boolean success = dispatchService.rejectDispatch(dispatchId, profile.getId(), reason);
-            JsonUtil.sendSuccess(res, 200, "Dispatch rejected with zero penalty", Map.of("success", success));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Dispatch rejected with zero penalty",
+                Map.of("success", success)
+            );
             return;
         }
 
@@ -205,14 +271,26 @@ public class RiderServlet extends BaseServlet {
         if (path.matches("^/orders/\\d+/status$")) {
             Long orderId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            String status = body != null && body.has("status") ? body.get("status").getAsString() : "";
+            String status =
+                body != null && body.has("status") ? body.get("status").getAsString() : "";
 
             if ("DELIVERED".equals(status)) {
-                String deliveryOtp = body.has("deliveryOtp") ? body.get("deliveryOtp").getAsString() : null;
+                String deliveryOtp = body.has("deliveryOtp")
+                    ? body.get("deliveryOtp").getAsString()
+                    : null;
                 try {
-                    boolean success = dispatchService.completeDelivery(orderId, profile.getId(), deliveryOtp);
+                    boolean success = dispatchService.completeDelivery(
+                        orderId,
+                        profile.getId(),
+                        deliveryOtp
+                    );
                     if (success) {
-                        JsonUtil.sendSuccess(res, 200, "Delivery successfully completed and verified with PIN", Map.of("orderId", orderId, "status", "DELIVERED"));
+                        JsonUtil.sendSuccess(
+                            res,
+                            200,
+                            "Delivery successfully completed and verified with PIN",
+                            Map.of("orderId", orderId, "status", "DELIVERED")
+                        );
                     } else {
                         JsonUtil.sendError(res, 400, "Could not complete delivery");
                     }
@@ -223,9 +301,18 @@ public class RiderServlet extends BaseServlet {
             }
 
             // Milestone updates: ARRIVED_AT_RESTAURANT, PICKED_UP, ARRIVED_AT_CUSTOMER
-            boolean updated = dispatchService.updateDispatchMilestone(orderId, profile.getId(), status);
+            boolean updated = dispatchService.updateDispatchMilestone(
+                orderId,
+                profile.getId(),
+                status
+            );
             if (updated) {
-                JsonUtil.sendSuccess(res, 200, "Trip milestone updated: " + status, Map.of("orderId", orderId, "status", status));
+                JsonUtil.sendSuccess(
+                    res,
+                    200,
+                    "Trip milestone updated: " + status,
+                    Map.of("orderId", orderId, "status", status)
+                );
             } else {
                 JsonUtil.sendError(res, 400, "Could not update milestone: " + status);
             }
@@ -244,13 +331,20 @@ public class RiderServlet extends BaseServlet {
             }
 
             try {
-                DeliveryDispatch owned = riderDao.findDispatchByOrderId(path.contains("/orders/") ? id : -1L);
-                if (owned == null || !profile.getId().equals(owned.getRiderId())) { JsonUtil.sendError(res,403,"Dispatch is not owned by this rider"); return; }
+                DeliveryDispatch owned = riderDao.findDispatchByOrderId(
+                    path.contains("/orders/") ? id : -1L
+                );
+                if (owned == null || !profile.getId().equals(owned.getRiderId())) {
+                    JsonUtil.sendError(res, 403, "Dispatch is not owned by this rider");
+                    return;
+                }
                 BigDecimal compensation = dispatchService.claimWaitTimeCompensation(dispatchId);
-                JsonUtil.sendSuccess(res, 200, "Wait-time compensation processed", Map.of(
-                        "dispatchId", dispatchId,
-                        "compensationCredited", compensation
-                ));
+                JsonUtil.sendSuccess(
+                    res,
+                    200,
+                    "Wait-time compensation processed",
+                    Map.of("dispatchId", dispatchId, "compensationCredited", compensation)
+                );
             } catch (IllegalStateException e) {
                 JsonUtil.sendError(res, 400, e.getMessage());
             }
@@ -265,15 +359,32 @@ public class RiderServlet extends BaseServlet {
                 return;
             }
             BigDecimal amount = body.get("amount").getAsBigDecimal();
-            String referenceNumber = body.has("referenceNumber") ? body.get("referenceNumber").getAsString() : "DEP-" + System.currentTimeMillis();
-            String notes = body.has("notes") ? body.get("notes").getAsString() : "Cash handed over at CravePulse hub";
+            String referenceNumber = body.has("referenceNumber")
+                ? body.get("referenceNumber").getAsString()
+                : "DEP-" + System.currentTimeMillis();
+            String notes = body.has("notes")
+                ? body.get("notes").getAsString()
+                : "Cash handed over at CravePulse hub";
 
-            BigDecimal remainingCash = riderDao.recordCodDeposit(profile.getId(), amount, referenceNumber, notes);
-            JsonUtil.sendSuccess(res, 200, "COD cash deposit recorded successfully", Map.of(
-                    "depositedAmount", amount,
-                    "remainingCashInHand", remainingCash,
-                    "referenceNumber", referenceNumber
-            ));
+            BigDecimal remainingCash = riderDao.recordCodDeposit(
+                profile.getId(),
+                amount,
+                referenceNumber,
+                notes
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "COD cash deposit recorded successfully",
+                Map.of(
+                    "depositedAmount",
+                    amount,
+                    "remainingCashInHand",
+                    remainingCash,
+                    "referenceNumber",
+                    referenceNumber
+                )
+            );
             return;
         }
 
@@ -283,24 +394,54 @@ public class RiderServlet extends BaseServlet {
             if (body != null && body.has("latitude") && body.has("longitude")) {
                 double lat = body.get("latitude").getAsDouble();
                 double lng = body.get("longitude").getAsDouble();
-                if (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) { JsonUtil.sendError(res,400,"Invalid GPS coordinates"); return; }
+                if (
+                    !Double.isFinite(lat) ||
+                    !Double.isFinite(lng) ||
+                    Math.abs(lat) > 90 ||
+                    Math.abs(lng) > 180
+                ) {
+                    JsonUtil.sendError(res, 400, "Invalid GPS coordinates");
+                    return;
+                }
                 double speed = body.has("speed") ? body.get("speed").getAsDouble() : 0.0;
                 double heading = body.has("heading") ? body.get("heading").getAsDouble() : 0.0;
-                Long orderId = body.has("orderId") && !body.get("orderId").isJsonNull() ? body.get("orderId").getAsLong() : null;
+                Long orderId =
+                    body.has("orderId") && !body.get("orderId").isJsonNull()
+                        ? body.get("orderId").getAsLong()
+                        : null;
 
                 // Validate that if orderId is provided, rider is assigned to it
                 if (orderId != null) {
                     DeliveryDispatch activeDispatch = riderDao.findDispatchByOrderId(orderId);
-                    if (activeDispatch != null && activeDispatch.getRiderId().equals(profile.getId())) {
-                        riderDao.updateRiderLocation(profile.getId(), lat, lng, speed, heading, orderId);
+                    if (
+                        activeDispatch != null &&
+                        activeDispatch.getRiderId().equals(profile.getId())
+                    ) {
+                        riderDao.updateRiderLocation(
+                            profile.getId(),
+                            lat,
+                            lng,
+                            speed,
+                            heading,
+                            orderId
+                        );
                         if (registry != null) {
-                            registry.broadcastToOrder(orderId, "rider_location_updated", Map.of(
-                                    "riderId", profile.getId(),
-                                    "latitude", lat,
-                                    "longitude", lng,
-                                    "speed", speed,
-                                    "heading", heading
-                            ));
+                            registry.broadcastToOrder(
+                                orderId,
+                                "rider_location_updated",
+                                Map.of(
+                                    "riderId",
+                                    profile.getId(),
+                                    "latitude",
+                                    lat,
+                                    "longitude",
+                                    lng,
+                                    "speed",
+                                    speed,
+                                    "heading",
+                                    heading
+                                )
+                            );
                         }
                     }
                 } else {

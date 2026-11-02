@@ -2,16 +2,9 @@ import ChangePassword from "../../components/ChangePassword";
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import api from "../../services/api";
+import ImageUploadField from "../../components/common/ImageUploadField";
 
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const PartnerSettings = () => {
   const { restaurant, refreshRestaurant } = useOutletContext();
@@ -19,6 +12,7 @@ const PartnerSettings = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -75,9 +69,7 @@ const PartnerSettings = () => {
         setBankIfsc(s.bankIfsc || "");
         setBankBeneficiaryName(s.bankBeneficiaryName || "");
         setUpiId(s.upiId || "");
-        setIsMaskedAccount(
-          !!(s.bankAccountNumber && s.bankAccountNumber.includes("•")),
-        );
+        setIsMaskedAccount(!!(s.bankAccountNumber && s.bankAccountNumber.includes("•")));
 
         if (Array.isArray(s.operatingHours) && s.operatingHours.length > 0) {
           setOperatingHours(s.operatingHours);
@@ -118,18 +110,13 @@ const PartnerSettings = () => {
     setPayoutMessage("");
     setErrorMsg("");
     try {
-      const response = await api.post(
-        `/restaurants/${restId}/payout-requests`,
-        {
-          amount: Number(payoutAmount),
-          payoutDestination: upiId.trim(),
-        },
-      );
+      const response = await api.post(`/restaurants/${restId}/payout-requests`, {
+        amount: Number(payoutAmount),
+        payoutDestination: upiId.trim(),
+      });
       if (!response.success) throw new Error("Unable to submit payout request");
       setPayoutAmount("");
-      setPayoutMessage(
-        `Payout request #${response.data.id} was submitted for admin review.`,
-      );
+      setPayoutMessage(`Payout request #${response.data.id} was submitted for admin review.`);
       await fetchSettingsAndData();
     } catch (error) {
       setErrorMsg(error.message || "Unable to submit payout request");
@@ -154,7 +141,6 @@ const PartnerSettings = () => {
       setSaving(true);
       setErrorMsg("");
 
-      // 1. Save restaurant profile & bank settings
       const settingsPayload = {
         name: name.trim(),
         phone: phone.trim(),
@@ -170,7 +156,6 @@ const PartnerSettings = () => {
 
       await api.post(`/restaurants/${restId}/settings`, settingsPayload);
 
-      // 2. Save operating hours
       await api.post(`/restaurants/${restId}/hours`, operatingHours);
 
       setSavedMsg(
@@ -190,13 +175,10 @@ const PartnerSettings = () => {
     <div className="container-fluid py-2" style={{ maxWidth: 960 }}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2 bg-white p-3 rounded-4 shadow-sm border">
         <div>
-          <h4 className="fw-extrabold mb-1 text-dark">
-            Kitchen & Merchant Profile Studio
-          </h4>
+          <h4 className="fw-extrabold mb-1 text-dark">Kitchen & Merchant Profile Studio</h4>
           <p className="text-muted small mb-0">
-            Secure regulatory licensing, auto-reject SLA, operating hours
-            schedule, and bank payout details for{" "}
-            <strong className="text-dark">{restaurant?.name}</strong>.
+            Secure regulatory licensing, auto-reject SLA, operating hours schedule, and bank payout
+            details for <strong className="text-dark">{restaurant?.name}</strong>.
           </p>
         </div>
         <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
@@ -221,23 +203,17 @@ const PartnerSettings = () => {
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-danger" role="status"></div>
-          <p className="text-muted small mt-2">
-            Loading restaurant configuration from database...
-          </p>
+          <p className="text-muted small mt-2">Loading restaurant configuration from database...</p>
         </div>
       ) : (
         <form onSubmit={handleSave}>
           {/* Section 1: Kitchen Profile & Brand Identity */}
           <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
-            <h5 className="fw-bold mb-3 text-dark">
-              🏪 Kitchen & Brand Profile
-            </h5>
+            <h5 className="fw-bold mb-3 text-dark">🏪 Kitchen & Brand Profile</h5>
 
             <div className="row g-3">
               <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold text-muted">
-                  Restaurant Name *
-                </label>
+                <label className="form-label small fw-bold text-muted">Restaurant Name *</label>
                 <input
                   type="text"
                   className="form-control rounded-3"
@@ -274,27 +250,14 @@ const PartnerSettings = () => {
               </div>
 
               <div className="col-12">
-                <label className="form-label small fw-bold text-muted">
-                  Banner Photography URL (Validated HTTP/HTTPS)
-                </label>
-                <input
-                  type="url"
-                  className="form-control rounded-3"
+                <ImageUploadField
+                  id="restaurant-banner"
+                  label="Restaurant banner"
+                  purpose="restaurant-banner"
                   value={bannerImage}
-                  onChange={(e) => setBannerImage(e.target.value)}
+                  onChange={setBannerImage}
+                  onUploadingChange={setUploadingImage}
                 />
-                {bannerImage && (
-                  <div
-                    className="mt-2 rounded-3 overflow-hidden border"
-                    style={{ height: 120 }}
-                  >
-                    <img
-                      src={bannerImage}
-                      alt="Banner Preview"
-                      className="w-100 h-100 object-fit-cover"
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="col-12 col-md-4">
@@ -310,9 +273,7 @@ const PartnerSettings = () => {
               </div>
 
               <div className="col-12 col-md-4">
-                <label className="form-label small fw-bold text-muted">
-                  GST Identification #
-                </label>
+                <label className="form-label small fw-bold text-muted">GST Identification #</label>
                 <input
                   type="text"
                   className="form-control rounded-3 bg-light"
@@ -366,24 +327,17 @@ const PartnerSettings = () => {
           <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h5 className="fw-bold mb-0 text-dark">
-                  🏦 Payout Bank & UPI Settlement
-                </h5>
+                <h5 className="fw-bold mb-0 text-dark">🏦 Payout Bank & UPI Settlement</h5>
                 <small className="text-muted">
-                  Banking details are available to authorized account
-                  operations.
+                  Banking details are available to authorized account operations.
                 </small>
               </div>
-              <span className="badge bg-light text-muted border small">
-                T+1 Daily Settlement
-              </span>
+              <span className="badge bg-light text-muted border small">T+1 Daily Settlement</span>
             </div>
 
             <div className="row g-3">
               <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold text-muted">
-                  Bank Beneficiary Name
-                </label>
+                <label className="form-label small fw-bold text-muted">Bank Beneficiary Name</label>
                 <input
                   type="text"
                   className="form-control rounded-3"
@@ -394,9 +348,7 @@ const PartnerSettings = () => {
               </div>
 
               <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold text-muted">
-                  Bank IFSC Code
-                </label>
+                <label className="form-label small fw-bold text-muted">Bank IFSC Code</label>
                 <input
                   type="text"
                   className="form-control rounded-3 font-monospace text-uppercase"
@@ -407,9 +359,7 @@ const PartnerSettings = () => {
               </div>
 
               <div className="col-12 col-md-6">
-                <label className="form-label small fw-bold text-muted">
-                  Bank Account Number
-                </label>
+                <label className="form-label small fw-bold text-muted">Bank Account Number</label>
                 <div className="input-group">
                   <input
                     type="text"
@@ -459,12 +409,9 @@ const PartnerSettings = () => {
 
           {/* Section 3: Weekly Operating Hours Schedule */}
           <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
-            <h5 className="fw-bold mb-1 text-dark">
-              ⏰ Weekly Business Hours Schedule
-            </h5>
+            <h5 className="fw-bold mb-1 text-dark">⏰ Weekly Business Hours Schedule</h5>
             <small className="text-muted mb-3 d-block">
-              Orders will only be allowed during active kitchen business
-              windows.
+              Orders will only be allowed during active kitchen business windows.
             </small>
 
             <div className="table-responsive">
@@ -487,13 +434,7 @@ const PartnerSettings = () => {
                             className="form-check-input"
                             type="checkbox"
                             checked={!oh.isClosed}
-                            onChange={(e) =>
-                              handleHourChange(
-                                idx,
-                                "isClosed",
-                                !e.target.checked,
-                              )
-                            }
+                            onChange={(e) => handleHourChange(idx, "isClosed", !e.target.checked)}
                           />
                           <label className="form-check-label small">
                             {oh.isClosed ? "Closed" : "Open"}
@@ -506,9 +447,7 @@ const PartnerSettings = () => {
                           className="form-control form-control-sm rounded-2"
                           disabled={oh.isClosed}
                           value={oh.openTime || "10:00"}
-                          onChange={(e) =>
-                            handleHourChange(idx, "openTime", e.target.value)
-                          }
+                          onChange={(e) => handleHourChange(idx, "openTime", e.target.value)}
                           style={{ width: 130 }}
                         />
                       </td>
@@ -518,9 +457,7 @@ const PartnerSettings = () => {
                           className="form-control form-control-sm rounded-2"
                           disabled={oh.isClosed}
                           value={oh.closeTime || "23:00"}
-                          onChange={(e) =>
-                            handleHourChange(idx, "closeTime", e.target.value)
-                          }
+                          onChange={(e) => handleHourChange(idx, "closeTime", e.target.value)}
                           style={{ width: 130 }}
                         />
                       </td>
@@ -537,9 +474,13 @@ const PartnerSettings = () => {
               type="submit"
               className="btn btn-danger rounded-pill px-5 py-2 fw-bold shadow-sm"
               style={{ background: "#ff5c35" }}
-              disabled={saving}
+              disabled={saving || uploadingImage}
             >
-              {saving ? "Saving to Database..." : "Save Configuration & Hours"}
+              {uploadingImage
+                ? "Uploading image..."
+                : saving
+                  ? "Saving to Database..."
+                  : "Save Configuration & Hours"}
             </button>
           </div>
         </form>
@@ -549,11 +490,10 @@ const PartnerSettings = () => {
       <div className="card border-0 rounded-4 shadow-sm p-4 bg-white mb-4">
         <h5 className="fw-bold mb-1 text-dark">Withdrawable balance</h5>
         <p className="small text-muted mb-3">
-          Available balance includes delivered orders with confirmed payment,
-          less commission, tax, recorded payouts, and pending requests.
-          Cash-on-delivery orders are excluded until their collection is
-          reconciled. Transfers are manual; an administrator records the payment
-          only after it has actually completed.
+          Available balance includes delivered orders with confirmed payment, less commission, tax,
+          recorded payouts, and pending requests. Cash-on-delivery orders are excluded until their
+          collection is reconciled. Transfers are manual; an administrator records the payment only
+          after it has actually completed.
         </p>
         {payoutSummary && (
           <div className="row g-3 mb-4">
@@ -565,9 +505,7 @@ const PartnerSettings = () => {
               <div className="col-12 col-md-4" key={label}>
                 <div className="rounded-3 border bg-light p-3 h-100">
                   <span className="small text-muted d-block">{label}</span>
-                  <strong className="fs-5 text-dark">
-                    ₹{Number(amount || 0).toFixed(2)}
-                  </strong>
+                  <strong className="fs-5 text-dark">₹{Number(amount || 0).toFixed(2)}</strong>
                 </div>
               </div>
             ))}
@@ -575,10 +513,7 @@ const PartnerSettings = () => {
         )}
         <form className="row g-3 mb-4" onSubmit={requestPayout}>
           <div className="col-12 col-md-4">
-            <label
-              htmlFor="partner-payout-amount"
-              className="form-label text-dark"
-            >
+            <label htmlFor="partner-payout-amount" className="form-label text-dark">
               Request amount (INR)
             </label>
             <input
@@ -594,10 +529,7 @@ const PartnerSettings = () => {
             />
           </div>
           <div className="col-12 col-md-5">
-            <label
-              htmlFor="partner-payout-upi"
-              className="form-label text-dark"
-            >
+            <label htmlFor="partner-payout-upi" className="form-label text-dark">
               UPI ID for settlement
             </label>
             <input
@@ -616,9 +548,7 @@ const PartnerSettings = () => {
               type="submit"
               className="btn btn-primary w-100"
               disabled={
-                payoutRequesting ||
-                !payoutSummary ||
-                Number(payoutSummary.availableBalance) <= 0
+                payoutRequesting || !payoutSummary || Number(payoutSummary.availableBalance) <= 0
               }
             >
               {payoutRequesting ? "Submitting..." : "Request payout"}
@@ -647,9 +577,7 @@ const PartnerSettings = () => {
                   <tr key={request.id}>
                     <td>
                       {request.createdAt
-                        ? new Date(request.createdAt).toLocaleDateString(
-                            "en-IN",
-                          )
+                        ? new Date(request.createdAt).toLocaleDateString("en-IN")
                         : "—"}
                     </td>
                     <td>₹{Number(request.amount).toFixed(2)}</td>
@@ -661,9 +589,7 @@ const PartnerSettings = () => {
                       </span>
                     </td>
                     <td>{request.payoutDestination}</td>
-                    <td>
-                      {request.adminNote || request.paymentReference || "—"}
-                    </td>
+                    <td>{request.adminNote || request.paymentReference || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -672,12 +598,8 @@ const PartnerSettings = () => {
         )}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h5 className="fw-bold mb-0 text-dark">
-              📜 Payout Ledger & Settlement Statements
-            </h5>
-            <small className="text-muted">
-              Recorded restaurant settlement batches.
-            </small>
+            <h5 className="fw-bold mb-0 text-dark">📜 Payout Ledger & Settlement Statements</h5>
+            <small className="text-muted">Recorded restaurant settlement batches.</small>
           </div>
           <span className="badge bg-light text-muted border small">
             {payouts.length} Settlements
@@ -705,15 +627,11 @@ const PartnerSettings = () => {
               <tbody className="small">
                 {payouts.map((p, idx) => (
                   <tr key={idx}>
-                    <td className="fw-bold text-dark font-monospace">
-                      {p.payoutReference}
-                    </td>
+                    <td className="fw-bold text-dark font-monospace">{p.payoutReference}</td>
                     <td className="text-muted">
                       {p.periodStart} to {p.periodEnd}
                     </td>
-                    <td className="text-end">
-                      ₹{Number(p.grossSales).toFixed(2)}
-                    </td>
+                    <td className="text-end">₹{Number(p.grossSales).toFixed(2)}</td>
                     <td className="text-end text-muted">
                       -₹{Number(p.commissionAmount).toFixed(2)}
                     </td>

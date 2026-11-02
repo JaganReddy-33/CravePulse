@@ -5,7 +5,6 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
@@ -32,9 +31,9 @@ public class CorsFilter implements Filter {
         String configured = AppProperties.getCorsAllowedOrigins();
         if (configured != null && !configured.isBlank()) {
             allowedOrigins = Arrays.stream(configured.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toSet());
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
         } else {
             allowedOrigins = Set.of("http://localhost:5173", "http://127.0.0.1:5173");
         }
@@ -42,7 +41,7 @@ public class CorsFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
@@ -56,7 +55,10 @@ public class CorsFilter implements Filter {
         }
 
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        res.setHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-Idempotency-Key");
+        res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-Idempotency-Key"
+        );
         res.setHeader("Access-Control-Max-Age", "3600");
 
         if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {

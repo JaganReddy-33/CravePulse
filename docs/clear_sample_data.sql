@@ -8,4 +8,6 @@
 -- It deletes children before parents in one transaction, retains configuration
 -- and schema_migrations, and never disables foreign-key checks.
 -- Historical V2/V6 files are not startup seeds in the updated application.
-SELECT DATABASE() AS current_database, 'No data deleted. Use scripts/DatabaseMaintenance.java with a backup.' AS instruction;
+SELECT
+    DATABASE() AS current_database,
+    'No data deleted. Use scripts/DatabaseMaintenance.java with a backup.' AS instruction;

@@ -4,12 +4,7 @@ import ModalPortal from "../ModalPortal";
 /**
  * TrackingReviewModal: Post-delivery multi-criteria review form (food, packaging, delivery).
  */
-const TrackingReviewModal = ({
-  show,
-  onClose,
-  onSubmitReview,
-  restaurantName,
-}) => {
+const TrackingReviewModal = ({ show, onClose, onSubmitReview, restaurantName }) => {
   const [foodRating, setFoodRating] = useState(5);
   const [packagingRating, setPackagingRating] = useState(5);
   const [deliveryRating, setDeliveryRating] = useState(5);
@@ -88,8 +83,7 @@ const TrackingReviewModal = ({
           </div>
 
           <p className="text-muted small mb-3">
-            Help other food lovers find the best meals from{" "}
-            <strong>{restaurantName}</strong>.
+            Help other food lovers find the best meals from <strong>{restaurantName}</strong>.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -99,16 +93,8 @@ const TrackingReviewModal = ({
               </div>
             )}
             <div className="p-3 bg-light rounded-4 mb-3">
-              {renderStarInput(
-                foodRating,
-                setFoodRating,
-                "Food Taste & Freshness",
-              )}
-              {renderStarInput(
-                packagingRating,
-                setPackagingRating,
-                "Packaging & Spill Protection",
-              )}
+              {renderStarInput(foodRating, setFoodRating, "Food Taste & Freshness")}
+              {renderStarInput(packagingRating, setPackagingRating, "Packaging & Spill Protection")}
               {renderStarInput(
                 deliveryRating,
                 setDeliveryRating,
@@ -117,10 +103,7 @@ const TrackingReviewModal = ({
             </div>
 
             <div className="mb-3">
-              <label
-                htmlFor="reviewFeedbackText"
-                className="form-label small fw-bold"
-              >
+              <label htmlFor="reviewFeedbackText" className="form-label small fw-bold">
                 Comments & Feedback
               </label>
               <textarea

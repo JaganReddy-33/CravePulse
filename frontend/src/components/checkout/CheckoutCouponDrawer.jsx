@@ -5,13 +5,7 @@ import ModalPortal from "../ModalPortal";
 /**
  * CheckoutCouponDrawer: Coupon discovery modal with dynamic eligibility checks.
  */
-const CheckoutCouponDrawer = ({
-  show,
-  onClose,
-  couponCode,
-  setCouponCode,
-  subtotal,
-}) => {
+const CheckoutCouponDrawer = ({ show, onClose, couponCode, setCouponCode, subtotal }) => {
   const [inputCoupon, setInputCoupon] = useState("");
 
   const [coupons, setCoupons] = useState([]);
@@ -49,10 +43,7 @@ const CheckoutCouponDrawer = ({
           aria-labelledby="coupon-drawer-title"
         >
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5
-              className="fw-extrabold text-dark mb-0"
-              id="coupon-drawer-title"
-            >
+            <h5 className="fw-extrabold text-dark mb-0" id="coupon-drawer-title">
               Available Promo Coupons
             </h5>
             <button
@@ -90,9 +81,7 @@ const CheckoutCouponDrawer = ({
           <div className="d-flex flex-column gap-3">
             {coupons.map((c) => {
               const hasSubtotal =
-                subtotal != null &&
-                subtotal !== "" &&
-                Number.isFinite(Number(subtotal));
+                subtotal != null && subtotal !== "" && Number.isFinite(Number(subtotal));
               const isEligible = !hasSubtotal || Number(subtotal) >= c.minOrder;
               const isCurrent = couponCode === c.code;
 
@@ -108,9 +97,7 @@ const CheckoutCouponDrawer = ({
                   }`}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="badge bg-danger fw-bold fs-6">
-                      {c.code}
-                    </span>
+                    <span className="badge bg-danger fw-bold fs-6">{c.code}</span>
                     {isCurrent ? (
                       <span className="badge bg-success small">✓ Applied</span>
                     ) : isEligible ? (
@@ -125,10 +112,7 @@ const CheckoutCouponDrawer = ({
                         Apply
                       </button>
                     ) : (
-                      <small
-                        className="text-danger fw-bold"
-                        style={{ fontSize: 11 }}
-                      >
+                      <small className="text-danger fw-bold" style={{ fontSize: 11 }}>
                         {hasSubtotal
                           ? `Add items worth ₹${(c.minOrder - Number(subtotal)).toFixed(2)} more`
                           : "Checking eligibility at checkout"}
@@ -136,10 +120,7 @@ const CheckoutCouponDrawer = ({
                     )}
                   </div>
                   <strong className="d-block text-dark small">{c.title}</strong>
-                  <small
-                    className="text-muted d-block"
-                    style={{ fontSize: 11 }}
-                  >
+                  <small className="text-muted d-block" style={{ fontSize: 11 }}>
                     {c.description} • Minimum order ₹{c.minOrder}
                   </small>
                 </div>

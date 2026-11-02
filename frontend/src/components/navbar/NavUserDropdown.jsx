@@ -40,9 +40,7 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
     );
   }
 
-  const initial = user.fullName
-    ? user.fullName.trim().charAt(0).toUpperCase()
-    : "U";
+  const initial = user.fullName ? user.fullName.trim().charAt(0).toUpperCase() : "U";
   const firstName = user.fullName ? user.fullName.trim().split(" ")[0] : "User";
   const displayName = user.fullName || user.email || "Customer";
 
@@ -60,16 +58,13 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
           style={{
             width: 38,
             height: 38,
-            background:
-              "linear-gradient(135deg, #ff4d29 0%, var(--c-secondary) 100%)",
+            background: "linear-gradient(135deg, #ff4d29 0%, var(--c-secondary) 100%)",
             fontSize: 16,
           }}
         >
           {initial}
         </div>
-        <span className="fw-semibold small text-dark d-none d-md-inline">
-          {firstName}
-        </span>
+        <span className="fw-semibold small text-dark d-none d-md-inline">{firstName}</span>
         <i className="bi bi-chevron-down small text-muted d-none d-md-inline"></i>
       </button>
 
@@ -80,18 +75,11 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
           role="menu"
         >
           <div className="px-3 py-2 border-bottom">
-            <div className="fw-bold text-dark small text-truncate">
-              {displayName}
-            </div>
-            <small
-              className="text-muted d-block text-truncate"
-              style={{ fontSize: 11 }}
-            >
+            <div className="fw-bold text-dark small text-truncate">{displayName}</div>
+            <small className="text-muted d-block text-truncate" style={{ fontSize: 11 }}>
               {user.email}
             </small>
-            <span className="badge bg-secondary-subtle text-secondary small mt-1">
-              {user.role}
-            </span>
+            <span className="badge bg-secondary-subtle text-secondary small mt-1">{user.role}</span>
           </div>
 
           <Link
@@ -108,8 +96,7 @@ const NavUserDropdown = ({ user, logout, showUserMenu, setShowUserMenu }) => {
             onClick={() => setShowUserMenu(false)}
             role="menuitem"
           >
-            <i className="bi bi-person-circle text-success"></i> Account &
-            Addresses
+            <i className="bi bi-person-circle text-success"></i> Account & Addresses
           </Link>
           <Link
             to="/offers"

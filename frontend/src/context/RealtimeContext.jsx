@@ -118,9 +118,7 @@ export const RealtimeProvider = ({ children }) => {
   const markAsRead = async (id) => {
     try {
       await api.post(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     } catch (err) {
       console.error(err.message);
     }

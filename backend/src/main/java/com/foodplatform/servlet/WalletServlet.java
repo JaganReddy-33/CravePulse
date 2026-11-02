@@ -12,9 +12,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -22,6 +19,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @WebServlet("/api/wallet/*")
 public class WalletServlet extends BaseServlet {
@@ -55,7 +54,10 @@ public class WalletServlet extends BaseServlet {
 
         List<WalletTransaction> transactions = walletDao.getUserTransactions(userId);
         Map<String, Object> data = new HashMap<>();
-        data.put("balance", user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO);
+        data.put(
+            "balance",
+            user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO
+        );
         data.put("transactions", transactions);
 
         JsonUtil.sendSuccess(res, 200, "Wallet details retrieved", data);
@@ -82,7 +84,10 @@ public class WalletServlet extends BaseServlet {
                 return;
             }
 
-            if (amount.compareTo(BigDecimal.ZERO) <= 0 || amount.compareTo(new BigDecimal("10000.00")) > 0) {
+            if (
+                amount.compareTo(BigDecimal.ZERO) <= 0 ||
+                amount.compareTo(new BigDecimal("10000.00")) > 0
+            ) {
                 JsonUtil.sendError(res, 400, "Top-up amount must be between ₹1.00 and ₹10,000.00");
                 return;
             }
@@ -97,7 +102,8 @@ public class WalletServlet extends BaseServlet {
                         return;
                     }
 
-                    BigDecimal currentBalance = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+                    BigDecimal currentBalance =
+                        user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
                     BigDecimal newBalance = currentBalance.add(amount);
 
                     userDao.updateWalletBalance(conn, userId, newBalance);
@@ -113,9 +119,12 @@ public class WalletServlet extends BaseServlet {
                     conn.commit();
 
                     Map<String, Object> result = Map.of(
-                            "success", true,
-                            "addedAmount", amount,
-                            "newBalance", newBalance
+                        "success",
+                        true,
+                        "addedAmount",
+                        amount,
+                        "newBalance",
+                        newBalance
                     );
                     JsonUtil.sendSuccess(res, 200, "Funds added to wallet successfully", result);
                 } catch (SQLException | RuntimeException e) {
@@ -126,7 +135,11 @@ public class WalletServlet extends BaseServlet {
                 }
             } catch (SQLException e) {
                 logger.error("Error topping up wallet for user {}: {}", userId, e.getMessage());
-                JsonUtil.sendError(res, 500, "Could not process wallet top-up at this time. Please try again later.");
+                JsonUtil.sendError(
+                    res,
+                    500,
+                    "Could not process wallet top-up at this time. Please try again later."
+                );
             }
             return;
         }

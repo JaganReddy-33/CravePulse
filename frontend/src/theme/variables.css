@@ -1,7 +1,4 @@
-/* ==============================================================================
-   FOOD PLATFORM: MULTI-PORTAL DESIGN SYSTEM & CSS VARIABLES
-   ============================================================================== */
-@import './design-tokens.css';
+@import "./design-tokens.css";
 
 :root {
   /* Customer Theme: CravePulse Warm Appetising Glassmorphism */
@@ -55,9 +52,8 @@
   --a-success: #10b981;
   --a-danger: #ef4444;
 
-  /* Global Typography */
-  --font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 body {
@@ -72,9 +68,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Reduced Motion Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

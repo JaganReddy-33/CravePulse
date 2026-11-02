@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../services/api";
 const money = (v) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-    Number(v || 0),
-  );
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(v || 0));
 export default function InvoicePage() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
@@ -108,8 +106,8 @@ export default function InvoicePage() {
           ))}
         </dl>
         <p className="small text-muted mb-0">
-          Payment method: {order.paymentMode}. This receipt shows recorded order
-          amounts. Request the restaurant's tax invoice when required.
+          Payment method: {order.paymentMode}. This receipt shows recorded order amounts. Request
+          the restaurant's tax invoice when required.
         </p>
       </div>
     </article>

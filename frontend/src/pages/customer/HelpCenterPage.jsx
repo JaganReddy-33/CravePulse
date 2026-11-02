@@ -49,8 +49,7 @@ const HelpCenterPage = () => {
     const matchesSearch =
       faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCat =
-      activeCategory === "ALL" || faq.category === activeCategory;
+    const matchesCat = activeCategory === "ALL" || faq.category === activeCategory;
     return matchesSearch && matchesCat;
   });
 
@@ -61,12 +60,10 @@ const HelpCenterPage = () => {
         <span className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-bold mb-2">
           💡 HELP & KNOWLEDGE BASE
         </span>
-        <h1 className="fw-extrabold text-dark display-6 mb-3">
-          Frequently Asked Questions
-        </h1>
+        <h1 className="fw-extrabold text-dark display-6 mb-3">Frequently Asked Questions</h1>
         <p className="text-muted lead mx-auto" style={{ maxWidth: 640 }}>
-          Got questions about our transparent pricing, order tracking,
-          cancellations, or delivery policies? We've got answers.
+          Got questions about our transparent pricing, order tracking, cancellations, or delivery
+          policies? We've got answers.
         </p>
 
         {/* Search input */}
@@ -128,8 +125,7 @@ const HelpCenterPage = () => {
             <div className="card border-0 rounded-4 p-5 text-center bg-white shadow-sm">
               <h5>No matching help articles found</h5>
               <p className="text-muted small">
-                Try searching with different terms or reach out to our 24/7
-                team.
+                Try searching with different terms or reach out to our 24/7 team.
               </p>
               <Link
                 to="/contact"
@@ -151,20 +147,13 @@ const HelpCenterPage = () => {
                       className="btn text-start p-4 w-100 d-flex justify-content-between align-items-center border-0 bg-transparent"
                       onClick={() => setOpenIndex(isOpen ? -1 : idx)}
                     >
-                      <span className="fw-bold text-dark fs-6 pe-3">
-                        {faq.question}
-                      </span>
+                      <span className="fw-bold text-dark fs-6 pe-3">{faq.question}</span>
                       <span className="badge bg-light text-muted border rounded-circle p-2">
-                        <i
-                          className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"}`}
-                        ></i>
+                        <i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
                       </span>
                     </button>
                     {isOpen && (
-                      <div
-                        className="px-4 pb-4 text-secondary small"
-                        style={{ lineHeight: 1.7 }}
-                      >
+                      <div className="px-4 pb-4 text-secondary small" style={{ lineHeight: 1.7 }}>
                         <span className="badge bg-light text-primary border mb-2 small">
                           {faq.category}
                         </span>
@@ -179,12 +168,9 @@ const HelpCenterPage = () => {
 
           {/* Still Need Help Box */}
           <div className="card border-0 rounded-4 shadow-sm p-4 bg-light mt-5 text-center">
-            <h5 className="fw-bold text-dark mb-1">
-              Still need help with an active order?
-            </h5>
+            <h5 className="fw-bold text-dark mb-1">Still need help with an active order?</h5>
             <p className="text-muted small mb-3">
-              Our live operations desk in Bangalore is available 24 hours a day,
-              7 days a week.
+              Our live operations desk in Bangalore is available 24 hours a day, 7 days a week.
             </p>
             <div className="d-flex justify-content-center gap-3">
               <Link

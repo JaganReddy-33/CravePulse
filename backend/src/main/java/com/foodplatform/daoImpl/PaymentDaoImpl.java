@@ -3,11 +3,10 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.PaymentDao;
 import com.foodplatform.model.Payment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PaymentDaoImpl implements PaymentDao {
 
@@ -15,12 +14,16 @@ public class PaymentDaoImpl implements PaymentDao {
 
     @Override
     public Long createPayment(Connection conn, Payment payment) throws SQLException {
-        String sql = "INSERT INTO payments (order_id, payment_mode, razorpay_order_id, razorpay_payment_id, " +
-                "razorpay_signature, amount, currency, status, idempotency_key, raw_response) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql =
+            "INSERT INTO payments (order_id, payment_mode, razorpay_order_id, razorpay_payment_id, " +
+            "razorpay_signature, amount, currency, status, idempotency_key, raw_response) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, payment.getOrderId());
-            ps.setString(2, payment.getPaymentMode() != null ? payment.getPaymentMode() : "RAZORPAY");
+            ps.setString(
+                2,
+                payment.getPaymentMode() != null ? payment.getPaymentMode() : "RAZORPAY"
+            );
             ps.setString(3, payment.getRazorpayOrderId());
             ps.setString(4, payment.getRazorpayPaymentId());
             ps.setString(5, payment.getRazorpaySignature());
@@ -44,8 +47,10 @@ public class PaymentDaoImpl implements PaymentDao {
     @Override
     public Payment findById(long id) {
         String sql = "SELECT * FROM payments WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -62,8 +67,10 @@ public class PaymentDaoImpl implements PaymentDao {
     @Override
     public Payment findByIdempotencyKey(String idempotencyKey) {
         String sql = "SELECT * FROM payments WHERE idempotency_key = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, idempotencyKey);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -80,8 +87,10 @@ public class PaymentDaoImpl implements PaymentDao {
     @Override
     public Payment findByOrderId(long orderId) {
         String sql = "SELECT * FROM payments WHERE order_id = ? ORDER BY id DESC LIMIT 1";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -98,8 +107,10 @@ public class PaymentDaoImpl implements PaymentDao {
     @Override
     public Payment findByRazorpayOrderId(String razorpayOrderId) {
         String sql = "SELECT * FROM payments WHERE razorpay_order_id = ? LIMIT 1";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, razorpayOrderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -114,7 +125,8 @@ public class PaymentDaoImpl implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentStatus(Connection conn, long paymentId, String status) throws SQLException {
+    public void updatePaymentStatus(Connection conn, long paymentId, String status)
+        throws SQLException {
         String sql = "UPDATE payments SET status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -124,8 +136,16 @@ public class PaymentDaoImpl implements PaymentDao {
     }
 
     @Override
-    public void updateStatusAndDetails(Connection conn, long paymentId, String status, String paymentIdRzp, String signature, String rawResponse) throws SQLException {
-        String sql = "UPDATE payments SET status = ?, razorpay_payment_id = ?, razorpay_signature = ?, raw_response = ? WHERE id = ?";
+    public void updateStatusAndDetails(
+        Connection conn,
+        long paymentId,
+        String status,
+        String paymentIdRzp,
+        String signature,
+        String rawResponse
+    ) throws SQLException {
+        String sql =
+            "UPDATE payments SET status = ?, razorpay_payment_id = ?, razorpay_signature = ?, raw_response = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setString(2, paymentIdRzp);
@@ -137,8 +157,15 @@ public class PaymentDaoImpl implements PaymentDao {
     }
 
     @Override
-    public void recordRefund(Connection conn, long paymentId, String refundId, BigDecimal refundAmount, String refundStatus) throws SQLException {
-        String sql = "UPDATE payments SET status = CASE WHEN ? = 'PROCESSED' THEN 'REFUNDED' ELSE status END, refund_id = ?, refund_amount = ?, refund_status = ? WHERE id = ?";
+    public void recordRefund(
+        Connection conn,
+        long paymentId,
+        String refundId,
+        BigDecimal refundAmount,
+        String refundStatus
+    ) throws SQLException {
+        String sql =
+            "UPDATE payments SET status = CASE WHEN ? = 'PROCESSED' THEN 'REFUNDED' ELSE status END, refund_id = ?, refund_amount = ?, refund_status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, refundStatus);
             ps.setString(2, refundId);
@@ -152,23 +179,32 @@ public class PaymentDaoImpl implements PaymentDao {
     @Override
     public boolean hasWebhookEventBeenProcessed(String eventId) {
         String sql = "SELECT 1 FROM payment_webhook_events WHERE event_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, eventId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {
-            logger.error("Error checking webhook event idempotency for {}: {}", eventId, e.getMessage());
+            logger.error(
+                "Error checking webhook event idempotency for {}: {}",
+                eventId,
+                e.getMessage()
+            );
             return false;
         }
     }
 
     @Override
     public void recordWebhookEvent(String eventId, String eventType, String payload) {
-        String sql = "INSERT INTO payment_webhook_events (event_id, event_type, payload) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "INSERT INTO payment_webhook_events (event_id, event_type, payload) VALUES (?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, eventId);
             ps.setString(2, eventType);
             ps.setString(3, payload != null ? payload : "{}");

@@ -25,9 +25,7 @@ const CheckoutPaymentMethods = ({
         {/* 1. Online Payment: UPI, Cards, Netbanking (Razorpay) */}
         <label
           className={`d-flex align-items-center justify-content-between p-3 rounded-4 border cursor-pointer transition ${
-            paymentMode === "RAZORPAY"
-              ? "border-danger bg-danger-subtle"
-              : "border-light bg-light"
+            paymentMode === "RAZORPAY" ? "border-danger bg-danger-subtle" : "border-light bg-light"
           }`}
         >
           <div className="d-flex align-items-center gap-3">
@@ -40,9 +38,7 @@ const CheckoutPaymentMethods = ({
               className="form-check-input mt-0"
             />
             <div>
-              <strong className="d-block text-dark small">
-                UPI, Cards, Net Banking & Wallets
-              </strong>
+              <strong className="d-block text-dark small">UPI, Cards, Net Banking & Wallets</strong>
               <small className="text-muted" style={{ fontSize: 11 }}>
                 {onlineAvailable
                   ? "Verified through Razorpay"
@@ -50,17 +46,13 @@ const CheckoutPaymentMethods = ({
               </small>
             </div>
           </div>
-          <span className="badge bg-primary-subtle text-primary small">
-            Instant & Secure
-          </span>
+          <span className="badge bg-primary-subtle text-primary small">Instant & Secure</span>
         </label>
 
         {/* 2. CravePulse Wallet */}
         <label
           className={`d-flex align-items-center justify-content-between p-3 rounded-4 border cursor-pointer transition ${
-            paymentMode === "WALLET"
-              ? "border-danger bg-danger-subtle"
-              : "border-light bg-light"
+            paymentMode === "WALLET" ? "border-danger bg-danger-subtle" : "border-light bg-light"
           }`}
         >
           <div className="d-flex align-items-center gap-3">
@@ -73,13 +65,9 @@ const CheckoutPaymentMethods = ({
               className="form-check-input mt-0"
             />
             <div>
-              <strong className="d-block text-dark small">
-                CravePulse Wallet Balance
-              </strong>
+              <strong className="d-block text-dark small">CravePulse Wallet Balance</strong>
               <small
-                className={
-                  isWalletInsufficient ? "text-danger" : "text-success"
-                }
+                className={isWalletInsufficient ? "text-danger" : "text-success"}
                 style={{ fontSize: 11 }}
               >
                 Available Balance: ₹{walletBalance.toFixed(2)}
@@ -87,9 +75,7 @@ const CheckoutPaymentMethods = ({
               </small>
             </div>
           </div>
-          <span className="badge bg-success-subtle text-success small">
-            1-Click Fast Pay
-          </span>
+          <span className="badge bg-success-subtle text-success small">1-Click Fast Pay</span>
         </label>
 
         {/* 3. Cash on Delivery (COD) */}
@@ -112,9 +98,7 @@ const CheckoutPaymentMethods = ({
               className="form-check-input mt-0"
             />
             <div>
-              <strong className="d-block text-dark small">
-                Cash on Delivery (COD)
-              </strong>
+              <strong className="d-block text-dark small">Cash on Delivery (COD)</strong>
               <small className="text-muted" style={{ fontSize: 11 }}>
                 {isCodDisabled
                   ? `COD disabled for orders above ₹${codMaxLimit}. Please use online payment.`
@@ -122,9 +106,7 @@ const CheckoutPaymentMethods = ({
               </small>
             </div>
           </div>
-          <span className="badge bg-secondary-subtle text-secondary small">
-            Doorstep
-          </span>
+          <span className="badge bg-secondary-subtle text-secondary small">Doorstep</span>
         </label>
       </div>
     </div>

@@ -76,10 +76,8 @@ const DisputeModal = ({ show, onClose, order }) => {
                   </div>
                   <small className="text-muted">
                     Order Ref:{" "}
-                    <span className="font-monospace fw-bold text-dark">
-                      {order.orderNumber}
-                    </span>{" "}
-                    • Total Bill: ₹{totalBill}
+                    <span className="font-monospace fw-bold text-dark">{order.orderNumber}</span> •
+                    Total Bill: ₹{totalBill}
                   </small>
                 </div>
               </div>
@@ -94,9 +92,7 @@ const DisputeModal = ({ show, onClose, order }) => {
             <div className="modal-body p-4">
               {result ? (
                 <div className="text-center py-4">
-                  <div className="fs-1 mb-2">
-                    {result.autoRefundApproved ? "🎉" : "🛡️"}
-                  </div>
+                  <div className="fs-1 mb-2">{result.autoRefundApproved ? "🎉" : "🛡️"}</div>
                   <h4 className="fw-extrabold text-dark mb-2">
                     {result.autoRefundApproved
                       ? "Instant Refund Approved!"
@@ -115,14 +111,10 @@ const DisputeModal = ({ show, onClose, order }) => {
                     </div>
                     <div className="d-flex justify-content-between mb-2">
                       <span className="text-muted small">Credited Amount:</span>
-                      <strong className="fs-5 text-dark">
-                        ₹{result.requestedRefundAmount}
-                      </strong>
+                      <strong className="fs-5 text-dark">₹{result.requestedRefundAmount}</strong>
                     </div>
                     <div className="d-flex justify-content-between">
-                      <span className="text-muted small">
-                        Payout Destination:
-                      </span>
+                      <span className="text-muted small">Payout Destination:</span>
                       <span className="small fw-semibold text-secondary">
                         CravePulse Balance Wallet
                       </span>
@@ -164,21 +156,13 @@ const DisputeModal = ({ show, onClose, order }) => {
                       value={issueType}
                       onChange={(e) => setIssueType(e.target.value)}
                     >
-                      <option value="MISSING_ITEM">
-                        🍽️ Missing Dish, Side or Addon in Bag
-                      </option>
-                      <option value="SPILLAGE">
-                        🥣 Gravy Spillage / Crushed Packaging
-                      </option>
-                      <option value="WRONG_ITEM">
-                        ❌ Incorrect Dish Delivered
-                      </option>
+                      <option value="MISSING_ITEM">🍽️ Missing Dish, Side or Addon in Bag</option>
+                      <option value="SPILLAGE">🥣 Gravy Spillage / Crushed Packaging</option>
+                      <option value="WRONG_ITEM">❌ Incorrect Dish Delivered</option>
                       <option value="SEVERE_DELAY">
                         ⏳ Severe Delivery Delay Past SLA Guarantee
                       </option>
-                      <option value="SPOILED_FOOD">
-                        ❄️ Food Temperature / Quality Issue
-                      </option>
+                      <option value="SPOILED_FOOD">❄️ Food Temperature / Quality Issue</option>
                     </select>
                   </div>
 
@@ -188,9 +172,7 @@ const DisputeModal = ({ show, onClose, order }) => {
                       <label className="form-label small fw-bold text-dark text-uppercase mb-0">
                         2. Brief Details *
                       </label>
-                      <small className="text-muted">
-                        {description.length}/300 chars
-                      </small>
+                      <small className="text-muted">{description.length}/300 chars</small>
                     </div>
                     <textarea
                       className="form-control rounded-3 p-2.5 shadow-none border"
@@ -233,17 +215,13 @@ const DisputeModal = ({ show, onClose, order }) => {
                           }
                           onClick={() => setRefundAmount(val)}
                         >
-                          {val === String(totalBill)
-                            ? `Full Bill (₹${val})`
-                            : `₹${val}`}
+                          {val === String(totalBill) ? `Full Bill (₹${val})` : `₹${val}`}
                         </button>
                       ))}
                     </div>
 
                     <div className="input-group">
-                      <span className="input-group-text bg-light fw-bold">
-                        ₹
-                      </span>
+                      <span className="input-group-text bg-light fw-bold">₹</span>
                       <input
                         type="number"
                         className="form-control shadow-none"
@@ -279,8 +257,7 @@ const DisputeModal = ({ show, onClose, order }) => {
                       )}
                       <div className="flex-grow-1 overflow-hidden">
                         <label className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold mb-1 cursor-pointer">
-                          <i className="bi bi-camera me-1"></i> Evidence image
-                          URL
+                          <i className="bi bi-camera me-1"></i> Evidence image URL
                           <input
                             type="url"
                             className="form-control"
@@ -289,12 +266,8 @@ const DisputeModal = ({ show, onClose, order }) => {
                             placeholder="https://.../photo.jpg"
                           />
                         </label>
-                        <div
-                          className="small text-muted text-truncate"
-                          style={{ fontSize: 11 }}
-                        >
-                          {fileName ||
-                            "Enter a publicly accessible HTTPS image link"}
+                        <div className="small text-muted text-truncate" style={{ fontSize: 11 }}>
+                          {fileName || "Enter a publicly accessible HTTPS image link"}
                         </div>
                       </div>
                     </div>
@@ -304,9 +277,9 @@ const DisputeModal = ({ show, onClose, order }) => {
                   <div className="p-3 bg-light rounded-3 border mb-4 small text-secondary d-flex align-items-center gap-2">
                     <i className="bi bi-patch-check-fill text-success fs-5 flex-shrink-0"></i>
                     <div>
-                      <strong>CravePulse Fair-Resolution Promise:</strong>{" "}
-                      Claims ≤ ₹100 are processed instantly by automated rule
-                      validation with zero customer hold queues.
+                      <strong>CravePulse Fair-Resolution Promise:</strong> Claims ≤ ₹100 are
+                      processed instantly by automated rule validation with zero customer hold
+                      queues.
                     </div>
                   </div>
 
@@ -326,10 +299,7 @@ const DisputeModal = ({ show, onClose, order }) => {
                     >
                       {submitting ? (
                         <>
-                          <span
-                            className="spinner-border spinner-border-sm"
-                            role="status"
-                          ></span>
+                          <span className="spinner-border spinner-border-sm" role="status"></span>
                           <span>Validating Claim...</span>
                         </>
                       ) : (

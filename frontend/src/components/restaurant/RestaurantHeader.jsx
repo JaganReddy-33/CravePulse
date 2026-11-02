@@ -22,10 +22,7 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
               Restaurants
             </Link>
           </li>
-          <li
-            className="breadcrumb-item active text-dark fw-bold"
-            aria-current="page"
-          >
+          <li className="breadcrumb-item active text-dark fw-bold" aria-current="page">
             {restaurant.name}
           </li>
         </ol>
@@ -37,10 +34,7 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
         style={{ minHeight: 220 }}
       >
         <div className="row g-0">
-          <div
-            className="col-md-5 col-lg-4 position-relative"
-            style={{ minHeight: 200 }}
-          >
+          <div className="col-md-5 col-lg-4 position-relative" style={{ minHeight: 200 }}>
             <img
               src={restaurant.bannerImage || "/food-placeholder.svg"}
               alt={restaurant.name}
@@ -61,28 +55,20 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
             <div>
               <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
                 <div>
-                  <h1 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">
-                    {restaurant.name}
-                  </h1>
+                  <h1 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">{restaurant.name}</h1>
                   <p className="text-muted small mb-0">
-                    {restaurant.cuisineTypes || ""} •{" "}
-                    {restaurant.locality || ""}
+                    {restaurant.cuisineTypes || ""} • {restaurant.locality || ""}
                   </p>
                 </div>
                 <div className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-2 rounded-3 text-center">
                   <div className="fw-extrabold fs-6">
                     ★ {restaurant.totalReviews > 0 ? restaurant.rating : "New"}
                   </div>
-                  <small style={{ fontSize: 10 }}>
-                    {restaurant.totalReviews || 0} reviews
-                  </small>
+                  <small style={{ fontSize: 10 }}>{restaurant.totalReviews || 0} reviews</small>
                 </div>
               </div>
 
-              <p
-                className="text-secondary small mb-3 text-truncate-2"
-                style={{ maxWidth: 640 }}
-              >
+              <p className="text-secondary small mb-3 text-truncate-2" style={{ maxWidth: 640 }}>
                 {restaurant.description}
               </p>
             </div>
@@ -93,8 +79,7 @@ const RestaurantHeader = ({ restaurant, openPriceExplainer }) => {
                 <div>
                   <i className="bi bi-clock-history me-1 text-danger"></i>
                   <strong>
-                    {restaurant.prepTimeMin || 20}-
-                    {restaurant.prepTimeMax || 30} mins
+                    {restaurant.prepTimeMin || 20}-{restaurant.prepTimeMax || 30} mins
                   </strong>
                 </div>
                 <div>

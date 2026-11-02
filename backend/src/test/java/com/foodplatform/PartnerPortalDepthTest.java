@@ -1,17 +1,16 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Restaurant;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class PartnerPortalDepthTest {
 
@@ -123,7 +122,7 @@ public class PartnerPortalDepthTest {
     private double computeCancellationRate(int total, int cancelled) {
         if (total == 0) return 0.0;
         return BigDecimal.valueOf((cancelled * 100.0) / total)
-                .setScale(1, java.math.RoundingMode.HALF_UP)
-                .doubleValue();
+            .setScale(1, java.math.RoundingMode.HALF_UP)
+            .doubleValue();
     }
 }

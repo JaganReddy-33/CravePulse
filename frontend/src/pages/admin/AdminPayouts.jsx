@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import api from "../../services/api";
 
 const money = (value) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-    Number(value || 0),
-  );
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(value || 0));
 
 export default function AdminPayouts() {
   const [requests, setRequests] = useState([]);
@@ -21,9 +19,7 @@ export default function AdminPayouts() {
     setLoading(true);
     setError("");
     try {
-      const response = await api.get(
-        `/admin/payout-requests?status=${statusFilter}`,
-      );
+      const response = await api.get(`/admin/payout-requests?status=${statusFilter}`);
       if (!response.success || !Array.isArray(response.data))
         throw new Error("Unable to load payout requests");
       setRequests(response.data);
@@ -44,26 +40,18 @@ export default function AdminPayouts() {
     setSuccess("");
     try {
       const paymentReference = references[request.id]?.trim() || "";
-      if (
-        status === "PAID" &&
-        (!paymentReference || !confirmations[request.id])
-      ) {
+      if (status === "PAID" && (!paymentReference || !confirmations[request.id])) {
         throw new Error(
           "Record the transfer reference and confirm that the external transfer has completed.",
         );
       }
-      const response = await api.post(
-        `/admin/payout-requests/${request.id}/process`,
-        {
-          status,
-          paymentReference,
-          adminNote: notes[request.id] || "",
-          transferConfirmed:
-            status === "PAID" && Boolean(confirmations[request.id]),
-        },
-      );
-      if (!response.success)
-        throw new Error("Unable to process payout request");
+      const response = await api.post(`/admin/payout-requests/${request.id}/process`, {
+        status,
+        paymentReference,
+        adminNote: notes[request.id] || "",
+        transferConfirmed: status === "PAID" && Boolean(confirmations[request.id]),
+      });
+      if (!response.success) throw new Error("Unable to process payout request");
       setSuccess(`Payout request #${request.id} was ${status.toLowerCase()}.`);
       await load();
     } catch (err) {
@@ -79,8 +67,7 @@ export default function AdminPayouts() {
         <div>
           <h1 className="h3 fw-bold">Payout review</h1>
           <p className="text-secondary mb-0">
-            Review rider and restaurant payout requests. No transfer is
-            initiated by this portal.
+            Review rider and restaurant payout requests. No transfer is initiated by this portal.
           </p>
         </div>
         <div className="d-flex gap-2">
@@ -96,11 +83,7 @@ export default function AdminPayouts() {
               </option>
             ))}
           </select>
-          <button
-            className="btn btn-outline-primary"
-            onClick={load}
-            disabled={loading}
-          >
+          <button className="btn btn-outline-primary" onClick={load} disabled={loading}>
             Refresh
           </button>
         </div>
@@ -119,9 +102,7 @@ export default function AdminPayouts() {
         <p role="status">Loading payout requests...</p>
       ) : requests.length === 0 ? (
         <div className="card p-4">
-          <p className="text-secondary mb-0">
-            No {statusFilter.toLowerCase()} payout requests.
-          </p>
+          <p className="text-secondary mb-0">No {statusFilter.toLowerCase()} payout requests.</p>
         </div>
       ) : (
         <div className="d-grid gap-3">
@@ -129,12 +110,9 @@ export default function AdminPayouts() {
             <article key={request.id} className="card p-4">
               <div className="d-flex flex-wrap justify-content-between gap-3">
                 <div>
-                  <h2 className="h5 mb-1">
-                    {request.restaurantName || request.accountOwnerName}
-                  </h2>
+                  <h2 className="h5 mb-1">{request.restaurantName || request.accountOwnerName}</h2>
                   <p className="small text-secondary mb-2">
-                    Request #{request.id} · {request.accountType} ·{" "}
-                    {request.accountOwnerEmail}
+                    Request #{request.id} · {request.accountType} · {request.accountOwnerEmail}
                   </p>
                 </div>
                 <div className="text-end">
@@ -150,14 +128,10 @@ export default function AdminPayouts() {
               </div>
               <dl className="row mb-3">
                 <dt className="col-sm-3">UPI destination</dt>
-                <dd className="col-sm-9 font-monospace">
-                  {request.payoutDestination}
-                </dd>
+                <dd className="col-sm-9 font-monospace">{request.payoutDestination}</dd>
                 <dt className="col-sm-3">Requested</dt>
                 <dd className="col-sm-9">
-                  {request.createdAt
-                    ? new Date(request.createdAt).toLocaleString("en-IN")
-                    : "—"}
+                  {request.createdAt ? new Date(request.createdAt).toLocaleString("en-IN") : "—"}
                 </dd>
                 {request.paymentReference && (
                   <>
@@ -176,10 +150,7 @@ export default function AdminPayouts() {
                 <div className="border-top pt-3">
                   <div className="row g-3">
                     <div className="col-12 col-md-4">
-                      <label
-                        htmlFor={`payout-reference-${request.id}`}
-                        className="form-label"
-                      >
+                      <label htmlFor={`payout-reference-${request.id}`} className="form-label">
                         Transfer reference (required to mark paid)
                       </label>
                       <input
@@ -196,10 +167,7 @@ export default function AdminPayouts() {
                       />
                     </div>
                     <div className="col-12 col-md-8">
-                      <label
-                        htmlFor={`payout-note-${request.id}`}
-                        className="form-label"
-                      >
+                      <label htmlFor={`payout-note-${request.id}`} className="form-label">
                         Admin note
                       </label>
                       <input
@@ -229,12 +197,8 @@ export default function AdminPayouts() {
                         }))
                       }
                     />
-                    <label
-                      className="form-check-label"
-                      htmlFor={`payout-confirm-${request.id}`}
-                    >
-                      I have completed the external UPI transfer and verified
-                      the reference.
+                    <label className="form-check-label" htmlFor={`payout-confirm-${request.id}`}>
+                      I have completed the external UPI transfer and verified the reference.
                     </label>
                   </div>
                   <div className="d-flex gap-2 mt-3">

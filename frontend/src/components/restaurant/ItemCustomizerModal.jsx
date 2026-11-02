@@ -22,9 +22,7 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
   useEffect(() => {
     if (show) {
       setSelectedVariant(
-        dish?.variants?.find((v) => v.isDefault)?.id ||
-          dish?.variants?.[0]?.id ||
-          null,
+        dish?.variants?.find((v) => v.isDefault)?.id || dish?.variants?.[0]?.id || null,
       );
       setSelectedAddons([]);
       setSpecialInstructions("");
@@ -32,13 +30,9 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
   }, [show, dish]);
   if (!show || !dish) return null;
 
-  const basePrice = Number(
-    dish.platformPrice || dish.dineInPrice || dish.price || 0,
-  );
+  const basePrice = Number(dish.platformPrice || dish.dineInPrice || dish.price || 0);
   const activeVariant = dish.variants?.find((v) => v.id === selectedVariant);
-  const variantAdjustment = activeVariant
-    ? Number(activeVariant.priceAdjustment || 0)
-    : 0;
+  const variantAdjustment = activeVariant ? Number(activeVariant.priceAdjustment || 0) : 0;
 
   const addonsTotal = selectedAddons.reduce((sum, addonId) => {
     const addon = dish.addons?.find((a) => a.id === addonId);
@@ -49,15 +43,12 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
 
   const handleToggleAddon = (addonId) => {
     setSelectedAddons((prev) =>
-      prev.includes(addonId)
-        ? prev.filter((id) => id !== addonId)
-        : [...prev, addonId],
+      prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId],
     );
   };
 
   const handleAddToCart = () => {
-    const activeAddonsList =
-      dish.addons?.filter((a) => selectedAddons.includes(a.id)) || [];
+    const activeAddonsList = dish.addons?.filter((a) => selectedAddons.includes(a.id)) || [];
 
     addItem({
       restaurantId: dish.restaurantId,
@@ -91,9 +82,7 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
               <h5 className="fw-extrabold text-dark mb-1" id="customizer-title">
                 Customize {dish.name}
               </h5>
-              <small className="text-muted">
-                Choose your portion and favourite add-ons
-              </small>
+              <small className="text-muted">Choose your portion and favourite add-ons</small>
             </div>
             <button
               type="button"
@@ -130,14 +119,10 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
                         onChange={() => setSelectedVariant(v.id)}
                         className="form-check-input mt-0"
                       />
-                      <span className="small fw-semibold text-dark">
-                        {v.variantName}
-                      </span>
+                      <span className="small fw-semibold text-dark">{v.variantName}</span>
                     </div>
                     <span className="small text-muted fw-bold">
-                      {v.priceAdjustment > 0
-                        ? `+₹${v.priceAdjustment}`
-                        : "Included"}
+                      {v.priceAdjustment > 0 ? `+₹${v.priceAdjustment}` : "Included"}
                     </span>
                   </label>
                 ))}
@@ -171,13 +156,9 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
                         onChange={() => handleToggleAddon(a.id)}
                         className="form-check-input mt-0"
                       />
-                      <span className="small fw-semibold text-dark">
-                        {a.addonName}
-                      </span>
+                      <span className="small fw-semibold text-dark">{a.addonName}</span>
                     </div>
-                    <span className="small text-danger fw-bold">
-                      +₹{a.price}
-                    </span>
+                    <span className="small text-danger fw-bold">+₹{a.price}</span>
                   </label>
                 ))}
               </div>
@@ -200,10 +181,7 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
               onChange={(e) => setSpecialInstructions(e.target.value)}
               maxLength={150}
             ></textarea>
-            <small
-              className="text-muted d-block text-end mt-1"
-              style={{ fontSize: 10 }}
-            >
+            <small className="text-muted d-block text-end mt-1" style={{ fontSize: 10 }}>
               {specialInstructions.length}/150 characters
             </small>
           </div>
@@ -211,15 +189,10 @@ const ItemCustomizerModal = ({ dish, restaurantName, show, onClose }) => {
           {/* Modal Action Footer */}
           <div className="d-flex justify-content-between align-items-center pt-3 border-top">
             <div>
-              <span
-                className="text-muted small d-block"
-                style={{ fontSize: 11 }}
-              >
+              <span className="text-muted small d-block" style={{ fontSize: 11 }}>
                 Total Item Price
               </span>
-              <span className="fs-4 fw-extrabold text-danger">
-                ₹{finalPrice}
-              </span>
+              <span className="fs-4 fw-extrabold text-danger">₹{finalPrice}</span>
             </div>
             <button
               type="button"

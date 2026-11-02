@@ -15,8 +15,7 @@ const getInitials = (name = "") =>
 /** Deterministic hue from a string for avatar background. */
 const nameHue = (name = "") => {
   let hash = 0;
-  for (let i = 0; i < name.length; i++)
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return Math.abs(hash) % 360;
 };
 
@@ -44,18 +43,12 @@ const StarRow = ({ rating, size = 14 }) => {
 const RatingBar = ({ label, count, total }) => {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div
-      className="d-flex align-items-center gap-2 mb-1"
-      style={{ fontSize: 12 }}
-    >
+    <div className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: 12 }}>
       <span className="text-muted" style={{ width: 14, textAlign: "right" }}>
         {label}
       </span>
       <span style={{ color: "#ffa733", fontSize: 10 }}>★</span>
-      <div
-        className="flex-grow-1 bg-light rounded-pill overflow-hidden"
-        style={{ height: 6 }}
-      >
+      <div className="flex-grow-1 bg-light rounded-pill overflow-hidden" style={{ height: 6 }}>
         <div
           className="rounded-pill"
           style={{
@@ -109,10 +102,7 @@ const ReviewSkeleton = () => (
       className="rounded-pill bg-secondary bg-opacity-25 mb-2"
       style={{ height: 8, width: "100%" }}
     />
-    <div
-      className="rounded-pill bg-secondary bg-opacity-25"
-      style={{ height: 8, width: "65%" }}
-    />
+    <div className="rounded-pill bg-secondary bg-opacity-25" style={{ height: 8, width: "65%" }} />
   </div>
 );
 
@@ -151,10 +141,7 @@ const ReviewCard = ({ rev }) => {
           {initials}
         </div>
         <div className="flex-grow-1 min-w-0">
-          <div
-            className="fw-semibold text-dark text-truncate"
-            style={{ fontSize: 14 }}
-          >
+          <div className="fw-semibold text-dark text-truncate" style={{ fontSize: 14 }}>
             {rev.customerName || rev.userName || "Anonymous"}
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -217,10 +204,7 @@ const ReviewCard = ({ rev }) => {
             fontSize: 12,
           }}
         >
-          <strong
-            className="d-block mb-1"
-            style={{ fontSize: 11, color: "var(--c-primary)" }}
-          >
+          <strong className="d-block mb-1" style={{ fontSize: 11, color: "var(--c-primary)" }}>
             Restaurant replied:
           </strong>
           <span className="text-secondary">{rev.reply}</span>
@@ -237,11 +221,7 @@ const ReviewCard = ({ rev }) => {
  *   rating        – fallback display rating (from restaurant object)
  *   totalReviews  – fallback count
  */
-const RestaurantReviews = ({
-  restaurantId,
-  rating: propRating,
-  totalReviews: propTotal,
-}) => {
+const RestaurantReviews = ({ restaurantId, rating: propRating, totalReviews: propTotal }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -279,9 +259,7 @@ const RestaurantReviews = ({
   /* ── Computed values ── */
   const avgRating =
     reviews.length > 0
-      ? (
-          reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length
-        ).toFixed(1)
+      ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
       : propRating || "—";
 
   const totalCount = reviews.length > 0 ? reviews.length : propTotal || 0;
@@ -320,16 +298,12 @@ const RestaurantReviews = ({
               >
                 ★ {avgRating}
               </span>
-              <span className="text-muted small">
-                {totalCount} verified reviews
-              </span>
+              <span className="text-muted small">{totalCount} verified reviews</span>
             </div>
           ) : (
             !loading &&
             !error && (
-              <span className="text-muted small">
-                Be the first to review after your order!
-              </span>
+              <span className="text-muted small">Be the first to review after your order!</span>
             )
           )}
         </div>
@@ -337,10 +311,7 @@ const RestaurantReviews = ({
         {/* Sort control */}
         {reviews.length > 1 && (
           <div className="d-flex align-items-center gap-2">
-            <label
-              htmlFor="reviewSortSelect"
-              className="small text-muted fw-semibold text-nowrap"
-            >
+            <label htmlFor="reviewSortSelect" className="small text-muted fw-semibold text-nowrap">
               Sort:
             </label>
             <select
@@ -363,10 +334,7 @@ const RestaurantReviews = ({
         <div className="row g-4 mb-5 align-items-center">
           {/* Big average */}
           <div className="col-auto text-center">
-            <div
-              className="fw-extrabold"
-              style={{ fontSize: 52, lineHeight: 1, color: "#0f172a" }}
-            >
+            <div className="fw-extrabold" style={{ fontSize: 52, lineHeight: 1, color: "#0f172a" }}>
               {avgRating}
             </div>
             <StarRow rating={Number(avgRating)} size={18} />
@@ -375,12 +343,7 @@ const RestaurantReviews = ({
           {/* Bars */}
           <div className="col">
             {distribution.map(({ star, count }) => (
-              <RatingBar
-                key={star}
-                label={star}
-                count={count}
-                total={reviews.length}
-              />
+              <RatingBar key={star} label={star} count={count} total={reviews.length} />
             ))}
           </div>
         </div>

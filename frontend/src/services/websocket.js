@@ -1,19 +1,19 @@
-import { getAccessToken } from './session';
+import { getAccessToken } from "./session";
 
 export function resolveRealtimeUrl(configuredWsUrl, configuredApiUrl, origin) {
   const wsUrl = configuredWsUrl
     ? new URL(configuredWsUrl, origin)
     : new URL(configuredApiUrl, origin);
-  if (wsUrl.protocol === 'http:') wsUrl.protocol = 'ws:';
-  else if (wsUrl.protocol === 'https:') wsUrl.protocol = 'wss:';
+  if (wsUrl.protocol === "http:") wsUrl.protocol = "ws:";
+  else if (wsUrl.protocol === "https:") wsUrl.protocol = "wss:";
 
-  const basePath = wsUrl.pathname.replace(/\/+$/, '');
+  const basePath = wsUrl.pathname.replace(/\/+$/, "");
   if (/\/ws\/realtime$/.test(basePath)) {
     wsUrl.pathname = basePath;
   } else if (/\/ws$/.test(basePath)) {
     wsUrl.pathname = `${basePath}/realtime`;
   } else {
-    wsUrl.pathname = `${basePath.replace(/\/api$/, '')}/ws/realtime`;
+    wsUrl.pathname = `${basePath.replace(/\/api$/, "")}/ws/realtime`;
   }
   return wsUrl;
 }
@@ -29,15 +29,18 @@ class RealtimeClient {
   }
 
   connect() {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
     const token = getAccessToken();
     const configuredWsUrl = import.meta.env.VITE_WS_URL;
-    const configuredApiUrl = import.meta.env.VITE_API_URL || '/api';
+    const configuredApiUrl = import.meta.env.VITE_API_URL || "/api";
     const wsUrl = resolveRealtimeUrl(configuredWsUrl, configuredApiUrl, window.location.origin);
-    if (token) wsUrl.searchParams.set('token', token);
+    if (token) wsUrl.searchParams.set("token", token);
     const url = wsUrl.toString();
 
     try {
@@ -48,9 +51,9 @@ class RealtimeClient {
         this.startHeartbeat();
         // Re-subscribe channels on reconnect
         this.subscribedChannels.forEach((channel) => {
-          this.send({ action: 'subscribe', channel });
+          this.send({ action: "subscribe", channel });
         });
-        this.emit('connection_status', { status: 'connected' });
+        this.emit("connection_status", { status: "connected" });
       };
 
       this.ws.onmessage = (event) => {
@@ -66,7 +69,7 @@ class RealtimeClient {
 
       this.ws.onclose = () => {
         this.stopHeartbeat();
-        this.emit('connection_status', { status: 'disconnected' });
+        this.emit("connection_status", { status: "disconnected" });
         this.scheduleReconnect();
       };
 
@@ -93,7 +96,7 @@ class RealtimeClient {
   startHeartbeat() {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
-      this.send({ action: 'ping' });
+      this.send({ action: "ping" });
     }, 25000);
   }
 
@@ -106,12 +109,12 @@ class RealtimeClient {
 
   subscribe(channel) {
     this.subscribedChannels.add(channel);
-    this.send({ action: 'subscribe', channel });
+    this.send({ action: "subscribe", channel });
   }
 
   unsubscribe(channel) {
     this.subscribedChannels.delete(channel);
-    this.send({ action: 'unsubscribe', channel });
+    this.send({ action: "unsubscribe", channel });
   }
 
   send(data) {
@@ -140,7 +143,7 @@ class RealtimeClient {
         try {
           cb(payload);
         } catch (e) {
-          console.error('Listener callback error', e);
+          console.error("Listener callback error", e);
         }
       });
     }

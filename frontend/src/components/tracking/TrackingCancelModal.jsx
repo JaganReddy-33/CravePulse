@@ -4,13 +4,7 @@ import ModalPortal from "../ModalPortal";
 /**
  * TrackingCancelModal: Order cancellation confirmation with refund policy disclosure.
  */
-const TrackingCancelModal = ({
-  show,
-  onClose,
-  onConfirmCancel,
-  cancelling,
-  orderStatus,
-}) => {
+const TrackingCancelModal = ({ show, onClose, onConfirmCancel, cancelling, orderStatus }) => {
   const [cancelReason, setCancelReason] = useState("Placed order by mistake");
 
   if (!show) return null;
@@ -33,10 +27,7 @@ const TrackingCancelModal = ({
           aria-labelledby="cancel-order-title"
         >
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5
-              className="fw-extrabold text-danger mb-0"
-              id="cancel-order-title"
-            >
+            <h5 className="fw-extrabold text-danger mb-0" id="cancel-order-title">
               Cancel Order Confirmation
             </h5>
             <button
@@ -86,15 +77,13 @@ const TrackingCancelModal = ({
             </div>
             {isCooking ? (
               <span className="text-muted">
-                Since the kitchen has already commenced preparation, a partial
-                cancellation fee may apply unless the restaurant agrees to waive
-                charges.
+                Since the kitchen has already commenced preparation, a partial cancellation fee may
+                apply unless the restaurant agrees to waive charges.
               </span>
             ) : (
               <span className="text-success fw-semibold">
-                Your order hasn't entered preparation yet. A 100% full refund
-                will be credited instantly back to your CravePulse Wallet or
-                original source.
+                Your order hasn't entered preparation yet. A 100% full refund will be credited
+                instantly back to your CravePulse Wallet or original source.
               </span>
             )}
           </div>

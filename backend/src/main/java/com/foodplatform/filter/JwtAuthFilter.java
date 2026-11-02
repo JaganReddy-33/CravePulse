@@ -5,7 +5,6 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.io.IOException;
 
 @WebFilter("/*")
@@ -13,7 +12,7 @@ public class JwtAuthFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         String authHeader = req.getHeader("Authorization");
 
@@ -26,8 +25,7 @@ public class JwtAuthFilter implements Filter {
                     req.setAttribute("role", claims.get("role"));
                     req.setAttribute("email", claims.get("email"));
                     req.setAttribute("fullName", claims.get("name"));
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         }
 

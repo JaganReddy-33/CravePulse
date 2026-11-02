@@ -24,8 +24,7 @@ const CareersPage = () => {
 
   const activeDept = searchParams.get("dept") || "All";
   const pageParam = Number(searchParams.get("page"));
-  const currentPage =
-    Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+  const currentPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
   const totalPages = Math.max(1, Math.ceil(totalJobCount / JOB_PAGE_SIZE));
 
   const changePage = (page) => {
@@ -51,13 +50,9 @@ const CareersPage = () => {
 
       if (currentPage > 1) {
         const previousPage = lastSuccessfulPage.current;
-        const restorePage =
-          previousPage?.department === activeDept ? previousPage.page : 1;
+        const restorePage = previousPage?.department === activeDept ? previousPage.page : 1;
         if (restorePage !== currentPage) {
-          if (
-            previousPage?.department === activeDept &&
-            previousPage.page === restorePage
-          ) {
+          if (previousPage?.department === activeDept && previousPage.page === restorePage) {
             skipPageFetch.current = true;
           }
           setSearchParams(
@@ -85,9 +80,7 @@ const CareersPage = () => {
       if (requestId !== jobsRequestId.current) return;
       if (res.success && Array.isArray(res.data)) {
         setJobs(res.data);
-        setTotalJobCount(
-          Number(res.pagination?.totalCount ?? params.offset + res.data.length),
-        );
+        setTotalJobCount(Number(res.pagination?.totalCount ?? params.offset + res.data.length));
         lastSuccessfulPage.current = {
           page: currentPage,
           department: activeDept,
@@ -97,9 +90,7 @@ const CareersPage = () => {
           retryPage.current = null;
         }
       } else {
-        handlePageFailure(
-          res.message || "Unable to load open positions. Please try again.",
-        );
+        handlePageFailure(res.message || "Unable to load open positions. Please try again.");
       }
     } catch (err) {
       if (requestId !== jobsRequestId.current) return;
@@ -173,13 +164,11 @@ const CareersPage = () => {
           🚀 CRAVEPULSE TALENT NETWORK
         </span>
         <h1 className="fw-bold text-dark display-5 mb-3">
-          Build the Future of{" "}
-          <span style={{ color: "var(--c-primary)" }}>Fair Food Delivery</span>
+          Build the Future of <span style={{ color: "var(--c-primary)" }}>Fair Food Delivery</span>
         </h1>
         <p className="text-muted lead mx-auto" style={{ maxWidth: 680 }}>
-          Join an ambitious team redefining the Indian food delivery landscape
-          with 100% dine-in price parity, fair compensation for delivery
-          captains, and honest platform commission.
+          Join an ambitious team redefining the Indian food delivery landscape with 100% dine-in
+          price parity, fair compensation for delivery captains, and honest platform commission.
         </p>
       </div>
 
@@ -220,12 +209,9 @@ const CareersPage = () => {
       {/* Header */}
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
         <div>
-          <h4 className="fw-bold text-dark mb-1">
-            Open Positions ({totalJobCount})
-          </h4>
+          <h4 className="fw-bold text-dark mb-1">Open Positions ({totalJobCount})</h4>
           <p className="text-muted small mb-0">
-            Select any role to view detailed responsibilities, salary, and
-            submit your CV
+            Select any role to view detailed responsibilities, salary, and submit your CV
           </p>
         </div>
         <span className="badge bg-success-subtle text-success border border-success rounded-pill px-3 py-2 small">
@@ -234,10 +220,7 @@ const CareersPage = () => {
       </div>
 
       {/* Department Filter Pills */}
-      <div
-        className="d-flex gap-2 overflow-auto pb-2 mb-4"
-        style={{ scrollbarWidth: "none" }}
-      >
+      <div className="d-flex gap-2 overflow-auto pb-2 mb-4" style={{ scrollbarWidth: "none" }}>
         {departments.map((dept) => {
           const isActive = activeDept.toLowerCase() === dept.toLowerCase();
           return (
@@ -278,15 +261,9 @@ const CareersPage = () => {
       )}
 
       {error && !loading && (
-        <div
-          className="alert alert-warning text-center"
-          role="alert"
-          aria-live="assertive"
-        >
+        <div className="alert alert-warning text-center" role="alert" aria-live="assertive">
           {error}
-          {jobs.length > 0 && (
-            <span> Previously loaded positions remain visible.</span>
-          )}
+          {jobs.length > 0 && <span> Previously loaded positions remain visible.</span>}
           <button
             type="button"
             className="btn btn-sm btn-outline-primary ms-3 rounded-pill"
@@ -305,9 +282,7 @@ const CareersPage = () => {
             No open positions found
             {activeDept !== "All" ? ` in ${activeDept}` : ""}
           </h5>
-          <p className="text-muted small">
-            Check back soon as new requisitions are opened.
-          </p>
+          <p className="text-muted small">Check back soon as new requisitions are opened.</p>
           {activeDept !== "All" && (
             <button
               type="button"
@@ -348,10 +323,7 @@ const CareersPage = () => {
                     )}
                   </div>
 
-                  <h5
-                    className="fw-bold text-dark mb-2"
-                    style={{ fontSize: "1.15rem" }}
-                  >
+                  <h5 className="fw-bold text-dark mb-2" style={{ fontSize: "1.15rem" }}>
                     {job.title}
                   </h5>
 
@@ -402,9 +374,7 @@ const CareersPage = () => {
 
                 {/* Card Footer */}
                 <div className="pt-3 border-top d-flex justify-content-between align-items-center mt-auto">
-                  <span className="text-primary fw-bold small">
-                    View Full Role & Apply →
-                  </span>
+                  <span className="text-primary fw-bold small">View Full Role & Apply →</span>
                 </div>
               </div>
             </div>

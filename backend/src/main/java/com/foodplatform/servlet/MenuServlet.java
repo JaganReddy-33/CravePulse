@@ -1,4 +1,3 @@
-
 package com.foodplatform.servlet;
 
 import com.foodplatform.dao.MenuDao;
@@ -9,7 +8,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -34,7 +32,9 @@ public class MenuServlet extends BaseServlet {
                 return;
             }
 
-            List<Map<String, Object>> categories = menuDao.getCategoriesByRestaurantId(restaurantId);
+            List<Map<String, Object>> categories = menuDao.getCategoriesByRestaurantId(
+                restaurantId
+            );
             List<MenuItem> items = menuDao.getItemsByRestaurantId(restaurantId);
 
             Map<String, Object> resp = new HashMap<>();
@@ -80,10 +80,16 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean isAvailable = body != null && body.has("isAvailable") && body.get("isAvailable").getAsBoolean();
+            boolean isAvailable =
+                body != null && body.has("isAvailable") && body.get("isAvailable").getAsBoolean();
 
             menuDao.updateItemAvailability(itemId, isAvailable);
-            JsonUtil.sendSuccess(res, 200, "Item availability updated", Map.of("itemId", itemId, "isAvailable", isAvailable));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Item availability updated",
+                Map.of("itemId", itemId, "isAvailable", isAvailable)
+            );
             return;
         }
 
@@ -110,25 +116,49 @@ public class MenuServlet extends BaseServlet {
             BigDecimal dineInPrice = body.get("dineInPrice").getAsBigDecimal();
 
             menuDao.updatePrices(itemId, platformPrice, dineInPrice);
-            JsonUtil.sendSuccess(res, 200, "Item price transparency updated", Map.of(
-                    "itemId", itemId,
-                    "platformPrice", platformPrice,
-                    "dineInPrice", dineInPrice,
-                    "hasParity", platformPrice.compareTo(dineInPrice) == 0
-            ));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Item price transparency updated",
+                Map.of(
+                    "itemId",
+                    itemId,
+                    "platformPrice",
+                    platformPrice,
+                    "dineInPrice",
+                    dineInPrice,
+                    "hasParity",
+                    platformPrice.compareTo(dineInPrice) == 0
+                )
+            );
             return;
         }
 
         if ("/item".equals(path)) {
             MenuItem item = JsonUtil.readRequestBody(req, MenuItem.class);
-            if (item == null || item.getName() == null || item.getPlatformPrice() == null ||
-                    item.getRestaurantId() == null || item.getCategoryId() == null) {
-                JsonUtil.sendError(res, 400, "restaurantId, categoryId, item name and platformPrice are required");
+            if (
+                item == null ||
+                item.getName() == null ||
+                item.getPlatformPrice() == null ||
+                item.getRestaurantId() == null ||
+                item.getCategoryId() == null
+            ) {
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "restaurantId, categoryId, item name and platformPrice are required"
+                );
                 return;
             }
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
-            if (!menuDao.categoryBelongsToRestaurant(item.getCategoryId(), item.getRestaurantId())) {
-                JsonUtil.sendError(res, 400, "Select an active menu category belonging to this restaurant");
+            if (
+                !menuDao.categoryBelongsToRestaurant(item.getCategoryId(), item.getRestaurantId())
+            ) {
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "Select an active menu category belonging to this restaurant"
+                );
                 return;
             }
 
@@ -139,7 +169,7 @@ public class MenuServlet extends BaseServlet {
                 item.setImageUrl(null);
             }
             Long id = menuDao.createItem(item);
-            if(id==null) throw new IllegalStateException("Menu item could not be saved");
+            if (id == null) throw new IllegalStateException("Menu item could not be saved");
             item.setId(id);
             JsonUtil.sendSuccess(res, 201, "Menu item created", item);
             return;
@@ -155,7 +185,8 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
-            MenuItem update = requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
+            MenuItem update =
+                requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
                 menuDao.updateItem(update);
                 JsonUtil.sendSuccess(res, 200, "Menu item updated", update);
@@ -173,7 +204,12 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             menuDao.deleteItem(itemId);
-            JsonUtil.sendSuccess(res, 200, "Menu item soft deleted", Map.of("itemId", itemId, "deleted", true));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Menu item soft deleted",
+                Map.of("itemId", itemId, "deleted", true)
+            );
             return;
         }
 
@@ -197,11 +233,19 @@ public class MenuServlet extends BaseServlet {
             }
 
             menuDao.bulkUpdateAvailability(restId, itemIds, isAvail);
-            JsonUtil.sendSuccess(res, 200, "Bulk availability updated", Map.of(
-                    "restaurantId", restId,
-                    "updatedCount", itemIds.size(),
-                    "isAvailable", isAvail
-            ));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Bulk availability updated",
+                Map.of(
+                    "restaurantId",
+                    restId,
+                    "updatedCount",
+                    itemIds.size(),
+                    "isAvailable",
+                    isAvail
+                )
+            );
             return;
         }
 
@@ -220,7 +264,12 @@ public class MenuServlet extends BaseServlet {
             }
 
             menuDao.reorderItems(restId, itemIds);
-            JsonUtil.sendSuccess(res, 200, "Items reordered successfully", Map.of("count", itemIds.size()));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Items reordered successfully",
+                Map.of("count", itemIds.size())
+            );
             return;
         }
 
@@ -236,7 +285,12 @@ public class MenuServlet extends BaseServlet {
             String catName = body.get("name").getAsString().trim();
             int order = body.has("displayOrder") ? body.get("displayOrder").getAsInt() : 1;
             Long catId = menuDao.createCategory(restId, catName, order);
-            JsonUtil.sendSuccess(res, 201, "Category created", Map.of("id", catId, "name", catName));
+            JsonUtil.sendSuccess(
+                res,
+                201,
+                "Category created",
+                Map.of("id", catId, "name", catName)
+            );
             return;
         }
 
@@ -249,7 +303,10 @@ public class MenuServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
 
-            com.foodplatform.model.MenuItemVariant variant = JsonUtil.readRequestBody(req, com.foodplatform.model.MenuItemVariant.class);
+            com.foodplatform.model.MenuItemVariant variant = JsonUtil.readRequestBody(
+                req,
+                com.foodplatform.model.MenuItemVariant.class
+            );
             if (variant == null || variant.getVariantName() == null) {
                 JsonUtil.sendError(res, 400, "variantName is required");
                 return;
@@ -269,7 +326,10 @@ public class MenuServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
 
-            com.foodplatform.model.MenuItemAddon addon = JsonUtil.readRequestBody(req, com.foodplatform.model.MenuItemAddon.class);
+            com.foodplatform.model.MenuItemAddon addon = JsonUtil.readRequestBody(
+                req,
+                com.foodplatform.model.MenuItemAddon.class
+            );
             if (addon == null || addon.getAddonName() == null) {
                 JsonUtil.sendError(res, 400, "addonName is required");
                 return;
@@ -296,7 +356,8 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
-            MenuItem update = requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
+            MenuItem update =
+                requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
                 menuDao.updateItem(update);
                 JsonUtil.sendSuccess(res, 200, "Menu item updated", update);
@@ -315,7 +376,9 @@ public class MenuServlet extends BaseServlet {
         if (update.getDineInPrice() == null) update.setDineInPrice(existing.getDineInPrice());
         if (update.getImageUrl() == null) update.setImageUrl(existing.getImageUrl());
         if (!requestBody.has("calorieCount")) update.setCalorieCount(existing.getCalorieCount());
-        if (update.getPrepTimeMinutes() == null) update.setPrepTimeMinutes(existing.getPrepTimeMinutes());
+        if (update.getPrepTimeMinutes() == null) update.setPrepTimeMinutes(
+            existing.getPrepTimeMinutes()
+        );
         return update;
     }
 
@@ -332,7 +395,12 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             menuDao.deleteItem(itemId);
-            JsonUtil.sendSuccess(res, 200, "Menu item soft deleted", Map.of("itemId", itemId, "deleted", true));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Menu item soft deleted",
+                Map.of("itemId", itemId, "deleted", true)
+            );
             return;
         }
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);

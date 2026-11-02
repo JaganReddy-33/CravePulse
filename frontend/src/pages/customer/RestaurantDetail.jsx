@@ -24,8 +24,7 @@ const RestaurantDetail = () => {
   // Resolve restaurant ID from route params, query params, or slug rest suffix
   const slugId = slug?.match(/(?:^|-)rest(\d+)$/i)?.[1];
   const requestedId = searchParams.get("restaurant_id") || routeId || slugId;
-  const restaurantId =
-    requestedId && /^\d+$/.test(requestedId) ? requestedId : null;
+  const restaurantId = requestedId && /^\d+$/.test(requestedId) ? requestedId : null;
 
   const {
     restaurant,
@@ -89,10 +88,7 @@ const RestaurantDetail = () => {
   return (
     <div className="container py-4 customer-content-container">
       {/* 1. Hero Header Banner with Breadcrumbs & 100% Price Parity Assurance */}
-      <RestaurantHeader
-        restaurant={restaurant}
-        openPriceExplainer={openPriceExplainer}
-      />
+      <RestaurantHeader restaurant={restaurant} openPriceExplainer={openPriceExplainer} />
 
       {/* 2. Active Promotional Offers Carousel */}
       <RestaurantOffersStrip restaurantId={restaurant.id} />
@@ -111,9 +107,7 @@ const RestaurantDetail = () => {
       {/* 4. Menu Items Grid */}
       {error && (
         <div className="alert alert-danger" role="alert">
-          {typeof error === "string"
-            ? error
-            : "We couldn't load this restaurant menu."}
+          {typeof error === "string" ? error : "We couldn't load this restaurant menu."}
         </div>
       )}
       {displayItems.length === 0 ? (
@@ -125,9 +119,7 @@ const RestaurantDetail = () => {
               ? `No dishes match "${searchFilter}". Try searching for biryani, curry, or bread.`
               : "No items match your dietary preferences or category selection."
           }
-          actionText={
-            searchFilter || vegOnly || activeCategory ? "Reset Filters" : null
-          }
+          actionText={searchFilter || vegOnly || activeCategory ? "Reset Filters" : null}
           onAction={() => {
             setSearchFilter("");
             setVegOnly(false);

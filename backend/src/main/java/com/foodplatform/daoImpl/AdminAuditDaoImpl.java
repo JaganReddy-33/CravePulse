@@ -3,23 +3,33 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.AdminAuditDao;
 import com.foodplatform.model.AdminAuditLog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AdminAuditDaoImpl implements AdminAuditDao {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminAuditDaoImpl.class);
 
     @Override
-    public void logAction(long adminUserId, String adminName, String action, String targetType, String targetId, String details, String ipAddress) {
-        String sql = "INSERT INTO admin_audit_logs (admin_user_id, admin_name, action, target_type, target_id, details, ip_address) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public void logAction(
+        long adminUserId,
+        String adminName,
+        String action,
+        String targetType,
+        String targetId,
+        String details,
+        String ipAddress
+    ) {
+        String sql =
+            "INSERT INTO admin_audit_logs (admin_user_id, admin_name, action, target_type, target_id, details, ip_address) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, adminUserId);
             ps.setString(2, adminName);
             ps.setString(3, action);
@@ -29,7 +39,12 @@ public class AdminAuditDaoImpl implements AdminAuditDao {
             ps.setString(7, ipAddress);
             ps.executeUpdate();
         } catch (SQLException e) {
-            logger.error("Error writing admin audit log: action={}, target={}", action, targetId, e);
+            logger.error(
+                "Error writing admin audit log: action={}, target={}",
+                action,
+                targetId,
+                e
+            );
             throw new IllegalStateException("Database operation failed", e);
         }
     }
@@ -38,8 +53,10 @@ public class AdminAuditDaoImpl implements AdminAuditDao {
     public List<AdminAuditLog> listRecentLogs(int limit, int offset) {
         List<AdminAuditLog> logs = new ArrayList<>();
         String sql = "SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, limit);
             ps.setInt(2, offset);
             try (ResultSet rs = ps.executeQuery()) {

@@ -49,18 +49,15 @@ describe("partner menu calorie contract", () => {
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     fireEvent.click(screen.getByRole("button", { name: /add new dish/i }));
-    fireEvent.change(
-      screen.getByPlaceholderText("e.g. Special Hyderabadi Dum Biryani"),
-      { target: { value: "Lemon rice" } },
-    );
+    fireEvent.change(screen.getByPlaceholderText("e.g. Special Hyderabadi Dum Biryani"), {
+      target: { value: "Lemon rice" },
+    });
     fireEvent.change(screen.getByPlaceholderText("e.g. 299"), {
       target: { value: "140" },
     });
     const createCalories = screen.getByText("Calories (kcal)").nextElementSibling;
     fireEvent.change(createCalories, { target: { value: "425" } });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Add Dish to Catalog" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Add Dish to Catalog" }));
 
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith(
@@ -80,9 +77,7 @@ describe("partner menu calorie contract", () => {
     fireEvent.click(screen.getByTitle("Edit Dish & Pricing"));
     const editCalories = screen.getByText("Calories (kcal)").nextElementSibling;
     fireEvent.change(editCalories, { target: { value: "" } });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Save Modifications" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Save Modifications" }));
 
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith(
@@ -98,24 +93,23 @@ describe("partner menu calorie contract", () => {
     await waitFor(() => expect(api.get).toHaveBeenCalled());
 
     fireEvent.click(screen.getByRole("button", { name: /add new dish/i }));
-    fireEvent.change(
-      screen.getByPlaceholderText("e.g. Special Hyderabadi Dum Biryani"),
-      { target: { value: "Plain rice" } },
-    );
+    fireEvent.change(screen.getByPlaceholderText("e.g. Special Hyderabadi Dum Biryani"), {
+      target: { value: "Plain rice" },
+    });
     fireEvent.change(screen.getByPlaceholderText("e.g. 299"), {
       target: { value: "80" },
     });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Add Dish to Catalog" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Add Dish to Catalog" }));
 
-    await waitFor(() => expect(api.post).toHaveBeenCalledWith(
-      "/menu/item",
-      expect.objectContaining({
-        calorieCount: null,
-        imageUrl: null,
-        prepTimeMinutes: null,
-      }),
-    ));
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith(
+        "/menu/item",
+        expect.objectContaining({
+          calorieCount: null,
+          imageUrl: null,
+          prepTimeMinutes: null,
+        }),
+      ),
+    );
   });
 });

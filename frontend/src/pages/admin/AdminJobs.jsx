@@ -18,13 +18,7 @@ const DEPARTMENTS = [
   "Customer Support",
 ];
 
-const EMPLOYMENT_TYPES = [
-  "Full-time",
-  "Part-time",
-  "Contract",
-  "Internship",
-  "Freelance",
-];
+const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Freelance"];
 
 const EXPERIENCE_LEVELS = [
   "Fresher (0-1 Years)",
@@ -80,8 +74,7 @@ const AdminJobs = () => {
     status: "ACTIVE",
   });
 
-  const updateForm = (key, value) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const updateForm = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   // ─── Fetch Jobs ───
   const fetchJobs = useCallback(async () => {
@@ -174,12 +167,8 @@ const AdminJobs = () => {
     try {
       const payload = {
         ...form,
-        salaryMin: form.salaryMin
-          ? parseFloat(String(form.salaryMin).replace(/[₹,L]/g, ""))
-          : null,
-        salaryMax: form.salaryMax
-          ? parseFloat(String(form.salaryMax).replace(/[₹,L]/g, ""))
-          : null,
+        salaryMin: form.salaryMin ? parseFloat(String(form.salaryMin).replace(/[₹,L]/g, "")) : null,
+        salaryMax: form.salaryMax ? parseFloat(String(form.salaryMax).replace(/[₹,L]/g, "")) : null,
       };
 
       if (editingJobId) {
@@ -263,9 +252,7 @@ const AdminJobs = () => {
               RECRUITMENT & TALENT STUDIO
             </span>
           </div>
-          <h3 className="fw-bold text-white mb-0">
-            Careers & Job Openings Console
-          </h3>
+          <h3 className="fw-bold text-white mb-0">Careers & Job Openings Console</h3>
           <small className="text-secondary">
             Publish, edit, and manage open positions and candidate applications.
           </small>
@@ -292,10 +279,7 @@ const AdminJobs = () => {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span
-              className="text-secondary d-block small"
-              style={{ fontSize: 11 }}
-            >
+            <span className="text-secondary d-block small" style={{ fontSize: 11 }}>
               TOTAL POSTINGS
             </span>
             <strong className="fs-3 text-white d-block">{jobs.length}</strong>
@@ -312,10 +296,7 @@ const AdminJobs = () => {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span
-              className="text-secondary d-block small"
-              style={{ fontSize: 11 }}
-            >
+            <span className="text-secondary d-block small" style={{ fontSize: 11 }}>
               ACTIVE OPENINGS
             </span>
             <strong className="fs-3 text-success d-block">{activeCount}</strong>
@@ -332,10 +313,7 @@ const AdminJobs = () => {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span
-              className="text-secondary d-block small"
-              style={{ fontSize: 11 }}
-            >
+            <span className="text-secondary d-block small" style={{ fontSize: 11 }}>
               TOTAL APPLICATIONS
             </span>
             <strong className="fs-3 text-info d-block">
@@ -354,10 +332,7 @@ const AdminJobs = () => {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span
-              className="text-secondary d-block small"
-              style={{ fontSize: 11 }}
-            >
+            <span className="text-secondary d-block small" style={{ fontSize: 11 }}>
               DEPARTMENTS
             </span>
             <strong className="fs-3 text-warning d-block">
@@ -377,8 +352,7 @@ const AdminJobs = () => {
           className={`btn btn-sm rounded-pill px-4 py-2 fw-bold ${activeTab === "postings" ? "btn-info text-dark shadow" : "btn-outline-secondary text-light"}`}
           onClick={() => setActiveTab("postings")}
         >
-          <i className="bi bi-briefcase-fill me-1"></i> Job Postings (
-          {jobs.length})
+          <i className="bi bi-briefcase-fill me-1"></i> Job Postings ({jobs.length})
         </button>
         <button
           type="button"
@@ -446,10 +420,7 @@ const AdminJobs = () => {
                       )}
                     </div>
                     <h5 className="fw-bold text-white mb-1">{job.title}</h5>
-                    <p
-                      className="text-secondary small mb-2"
-                      style={{ maxWidth: 840 }}
-                    >
+                    <p className="text-secondary small mb-2" style={{ maxWidth: 840 }}>
                       {job.description}
                     </p>
                     <div className="d-flex flex-wrap gap-1">
@@ -553,8 +524,7 @@ const AdminJobs = () => {
                 <div className="fs-1 mb-2">📬</div>
                 <h5 className="text-white">No applications found</h5>
                 <p className="text-secondary small">
-                  Applications will appear here when candidates apply from the
-                  careers portal.
+                  Applications will appear here when candidates apply from the careers portal.
                 </p>
               </div>
             ) : (
@@ -572,9 +542,7 @@ const AdminJobs = () => {
                     <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
                       <div>
                         <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-monospace small text-secondary">
-                            APP-{app.id}
-                          </span>
+                          <span className="font-monospace small text-secondary">APP-{app.id}</span>
                           <span
                             className={`badge rounded-pill bg-${badge.color} ${badge.color === "warning" || badge.color === "info" ? "text-dark" : "text-white"} fw-bold px-3 py-1`}
                             style={{ fontSize: 10 }}
@@ -586,20 +554,15 @@ const AdminJobs = () => {
                               className="badge rounded-pill bg-dark border border-secondary text-light small"
                               style={{ fontSize: 10 }}
                             >
-                              {new Date(app.appliedAt).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                },
-                              )}
+                              {new Date(app.appliedAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
                             </span>
                           )}
                         </div>
-                        <h5 className="fw-bold text-white mb-0">
-                          {app.applicantName}
-                        </h5>
+                        <h5 className="fw-bold text-white mb-0">{app.applicantName}</h5>
                         <div className="small text-info fw-semibold mb-2">
                           Applied for: {app.jobTitle || `Job #${app.jobId}`}
                         </div>
@@ -641,9 +604,7 @@ const AdminJobs = () => {
                           </div>
                         )}
                         {app.coverNote && (
-                          <p className="text-secondary small fst-italic mb-0">
-                            "{app.coverNote}"
-                          </p>
+                          <p className="text-secondary small fst-italic mb-0">"{app.coverNote}"</p>
                         )}
                         {app.resumeFilename && (
                           <div className="mt-2">
@@ -656,19 +617,14 @@ const AdminJobs = () => {
                       </div>
                       <div className="text-md-end flex-shrink-0">
                         <div className="d-flex align-items-center gap-1 justify-content-md-end">
-                          <small
-                            className="text-secondary"
-                            style={{ fontSize: 11 }}
-                          >
+                          <small className="text-secondary" style={{ fontSize: 11 }}>
                             Update Status:
                           </small>
                           <select
                             className="form-select form-select-sm bg-dark text-white border-secondary rounded-pill"
                             style={{ width: 190, fontSize: 11 }}
                             value={app.status}
-                            onChange={(e) =>
-                              handleUpdateAppStatus(app.id, e.target.value)
-                            }
+                            onChange={(e) => handleUpdateAppStatus(app.id, e.target.value)}
                           >
                             {APP_STATUSES.map((s) => (
                               <option key={s.value} value={s.value}>
@@ -710,9 +666,7 @@ const AdminJobs = () => {
                     <span className="fs-4">💼</span>
                     <div>
                       <h5 className="fw-bold mb-0 text-white">
-                        {editingJobId
-                          ? "Edit Job Posting"
-                          : "Create New Job Opening"}
+                        {editingJobId ? "Edit Job Posting" : "Create New Job Opening"}
                       </h5>
                       <small className="text-secondary">
                         Step {formStep} of 3 —{" "}
@@ -739,10 +693,7 @@ const AdminJobs = () => {
                       className="flex-fill rounded-pill"
                       style={{
                         height: 4,
-                        background:
-                          formStep >= step
-                            ? "#38bdf8"
-                            : "rgba(255,255,255,0.1)",
+                        background: formStep >= step ? "#38bdf8" : "rgba(255,255,255,0.1)",
                       }}
                     ></div>
                   ))}
@@ -773,9 +724,7 @@ const AdminJobs = () => {
                         <select
                           className="form-select bg-dark text-white border-secondary"
                           value={form.department}
-                          onChange={(e) =>
-                            updateForm("department", e.target.value)
-                          }
+                          onChange={(e) => updateForm("department", e.target.value)}
                         >
                           {DEPARTMENTS.map((d) => (
                             <option key={d} value={d}>
@@ -795,9 +744,7 @@ const AdminJobs = () => {
                           required
                           placeholder="e.g. Bengaluru (Hybrid) / Remote (India)"
                           value={form.location}
-                          onChange={(e) =>
-                            updateForm("location", e.target.value)
-                          }
+                          onChange={(e) => updateForm("location", e.target.value)}
                         />
                       </div>
 
@@ -808,9 +755,7 @@ const AdminJobs = () => {
                         <select
                           className="form-select bg-dark text-white border-secondary"
                           value={form.employmentType}
-                          onChange={(e) =>
-                            updateForm("employmentType", e.target.value)
-                          }
+                          onChange={(e) => updateForm("employmentType", e.target.value)}
                         >
                           {EMPLOYMENT_TYPES.map((t) => (
                             <option key={t} value={t}>
@@ -827,9 +772,7 @@ const AdminJobs = () => {
                         <select
                           className="form-select bg-dark text-white border-secondary"
                           value={form.experienceLevel}
-                          onChange={(e) =>
-                            updateForm("experienceLevel", e.target.value)
-                          }
+                          onChange={(e) => updateForm("experienceLevel", e.target.value)}
                         >
                           <option value="">Not specified</option>
                           {EXPERIENCE_LEVELS.map((l) => (
@@ -849,9 +792,7 @@ const AdminJobs = () => {
                           value={form.status}
                           onChange={(e) => updateForm("status", e.target.value)}
                         >
-                          <option value="ACTIVE">
-                            Active (Live on careers page)
-                          </option>
+                          <option value="ACTIVE">Active (Live on careers page)</option>
                           <option value="DRAFT">Draft (Hidden)</option>
                           <option value="PAUSED">Paused</option>
                           <option value="CLOSED">Closed</option>
@@ -868,16 +809,10 @@ const AdminJobs = () => {
                           required
                           placeholder="e.g. ₹28,00,000 - ₹42,00,000 + ESOPs"
                           value={form.salaryDisplay}
-                          onChange={(e) =>
-                            updateForm("salaryDisplay", e.target.value)
-                          }
+                          onChange={(e) => updateForm("salaryDisplay", e.target.value)}
                         />
-                        <small
-                          className="text-secondary"
-                          style={{ fontSize: 11 }}
-                        >
-                          This text is shown directly on the job card and detail
-                          page
+                        <small className="text-secondary" style={{ fontSize: 11 }}>
+                          This text is shown directly on the job card and detail page
                         </small>
                       </div>
 
@@ -891,9 +826,7 @@ const AdminJobs = () => {
                           className="form-control bg-dark text-white border-secondary"
                           placeholder="e.g. 28"
                           value={form.salaryMin}
-                          onChange={(e) =>
-                            updateForm("salaryMin", e.target.value)
-                          }
+                          onChange={(e) => updateForm("salaryMin", e.target.value)}
                         />
                       </div>
                       <div className="col-md-6">
@@ -906,9 +839,7 @@ const AdminJobs = () => {
                           className="form-control bg-dark text-white border-secondary"
                           placeholder="e.g. 42"
                           value={form.salaryMax}
-                          onChange={(e) =>
-                            updateForm("salaryMax", e.target.value)
-                          }
+                          onChange={(e) => updateForm("salaryMax", e.target.value)}
                         />
                       </div>
                     </div>
@@ -927,9 +858,7 @@ const AdminJobs = () => {
                           required
                           placeholder="Detail the role's core mission, team mandate, and expected impact on the organization..."
                           value={form.description}
-                          onChange={(e) =>
-                            updateForm("description", e.target.value)
-                          }
+                          onChange={(e) => updateForm("description", e.target.value)}
                         ></textarea>
                       </div>
 
@@ -944,14 +873,9 @@ const AdminJobs = () => {
                             "Architect and scale high-throughput Jakarta Servlets\nBuild responsive, accessible React components\nImplement database locking and idempotency patterns\nCollaborate with product and design teams"
                           }
                           value={form.responsibilities}
-                          onChange={(e) =>
-                            updateForm("responsibilities", e.target.value)
-                          }
+                          onChange={(e) => updateForm("responsibilities", e.target.value)}
                         ></textarea>
-                        <small
-                          className="text-secondary"
-                          style={{ fontSize: 11 }}
-                        >
+                        <small className="text-secondary" style={{ fontSize: 11 }}>
                           Enter each responsibility on a new line
                         </small>
                       </div>
@@ -967,14 +891,9 @@ const AdminJobs = () => {
                             "5+ years hands-on experience in Java or React\nStrong proficiency in relational databases & indexing\nExperience with WebSocket/SSE real-time protocols\nExcellent communication and problem-solving skills"
                           }
                           value={form.requirements}
-                          onChange={(e) =>
-                            updateForm("requirements", e.target.value)
-                          }
+                          onChange={(e) => updateForm("requirements", e.target.value)}
                         ></textarea>
-                        <small
-                          className="text-secondary"
-                          style={{ fontSize: 11 }}
-                        >
+                        <small className="text-secondary" style={{ fontSize: 11 }}>
                           Enter each requirement on a new line
                         </small>
                       </div>
@@ -990,14 +909,9 @@ const AdminJobs = () => {
                             "100% Cashless Medical Insurance for family\nDirect Equity (ESOPs) with 4-year vesting\nApple Silicon MacBook Pro + workstation\n₹15,000 monthly CravePulse dining credit"
                           }
                           value={form.benefits}
-                          onChange={(e) =>
-                            updateForm("benefits", e.target.value)
-                          }
+                          onChange={(e) => updateForm("benefits", e.target.value)}
                         ></textarea>
-                        <small
-                          className="text-secondary"
-                          style={{ fontSize: 11 }}
-                        >
+                        <small className="text-secondary" style={{ fontSize: 11 }}>
                           Enter each benefit on a new line
                         </small>
                       </div>
@@ -1048,55 +962,31 @@ const AdminJobs = () => {
                         </h6>
                         <div className="row g-3 small">
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Title
-                            </span>
-                            <strong className="text-white">
-                              {form.title || "—"}
-                            </strong>
+                            <span className="text-secondary d-block">Title</span>
+                            <strong className="text-white">{form.title || "—"}</strong>
                           </div>
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Department
-                            </span>
-                            <strong className="text-white">
-                              {form.department}
-                            </strong>
+                            <span className="text-secondary d-block">Department</span>
+                            <strong className="text-white">{form.department}</strong>
                           </div>
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Location
-                            </span>
-                            <strong className="text-white">
-                              {form.location || "—"}
-                            </strong>
+                            <span className="text-secondary d-block">Location</span>
+                            <strong className="text-white">{form.location || "—"}</strong>
                           </div>
                           <div className="col-6">
                             <span className="text-secondary d-block">Type</span>
-                            <strong className="text-white">
-                              {form.employmentType}
-                            </strong>
+                            <strong className="text-white">{form.employmentType}</strong>
                           </div>
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Experience
-                            </span>
-                            <strong className="text-white">
-                              {form.experienceLevel || "—"}
-                            </strong>
+                            <span className="text-secondary d-block">Experience</span>
+                            <strong className="text-white">{form.experienceLevel || "—"}</strong>
                           </div>
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Compensation
-                            </span>
-                            <strong className="text-success">
-                              {form.salaryDisplay || "—"}
-                            </strong>
+                            <span className="text-secondary d-block">Compensation</span>
+                            <strong className="text-success">{form.salaryDisplay || "—"}</strong>
                           </div>
                           <div className="col-6">
-                            <span className="text-secondary d-block">
-                              Status
-                            </span>
+                            <span className="text-secondary d-block">Status</span>
                             <strong
                               className={`text-${form.status === "ACTIVE" ? "success" : "warning"}`}
                             >
@@ -1104,13 +994,9 @@ const AdminJobs = () => {
                             </strong>
                           </div>
                           <div className="col-12">
-                            <span className="text-secondary d-block">
-                              Description
-                            </span>
+                            <span className="text-secondary d-block">Description</span>
                             <span className="text-light">
-                              {form.description
-                                ? form.description.substring(0, 200) + "..."
-                                : "—"}
+                              {form.description ? form.description.substring(0, 200) + "..." : "—"}
                             </span>
                           </div>
                         </div>

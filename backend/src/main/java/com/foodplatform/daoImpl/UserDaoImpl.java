@@ -4,13 +4,12 @@ import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.UserDao;
 import com.foodplatform.model.Address;
 import com.foodplatform.model.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserDaoImpl implements UserDao {
 
@@ -19,8 +18,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User findByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -37,8 +38,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User findByPhone(String phone) {
         String sql = "SELECT * FROM users WHERE phone = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, phone);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -55,8 +58,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User findById(long id) {
         String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -86,10 +91,13 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Long createUser(User user) {
-        String sql = "INSERT INTO users (full_name, email, phone, password_hash, role, status, avatar_url, wallet_balance) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO users (full_name, email, phone, password_hash, role, status, avatar_url, wallet_balance) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
@@ -97,7 +105,10 @@ public class UserDaoImpl implements UserDao {
             ps.setString(5, user.getRole());
             ps.setString(6, user.getStatus() != null ? user.getStatus() : "ACTIVE");
             ps.setString(7, user.getAvatarUrl());
-            ps.setBigDecimal(8, user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                8,
+                user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO
+            );
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -119,8 +130,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void updateFailedAttempts(long userId, int attempts, Timestamp lockedUntil) {
         String sql = "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, attempts);
             ps.setTimestamp(2, lockedUntil);
             ps.setLong(3, userId);
@@ -134,8 +147,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void resetFailedAttempts(long userId) {
         String sql = "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -146,9 +161,12 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public void storeRefreshToken(long userId, String token, Timestamp expiresAt) {
-        String sql = "INSERT INTO user_tokens (user_id, refresh_token, expires_at) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "INSERT INTO user_tokens (user_id, refresh_token, expires_at) VALUES (?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.setString(2, token);
             ps.setTimestamp(3, expiresAt);
@@ -161,9 +179,12 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Long findUserIdByValidRefreshToken(String token) {
-        String sql = "SELECT user_id FROM user_tokens WHERE refresh_token = ? AND revoked = FALSE AND expires_at > CURRENT_TIMESTAMP";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT user_id FROM user_tokens WHERE refresh_token = ? AND revoked = FALSE AND expires_at > CURRENT_TIMESTAMP";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, token);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -180,8 +201,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void revokeRefreshToken(String token) {
         String sql = "UPDATE user_tokens SET revoked = TRUE WHERE refresh_token = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, token);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -193,8 +216,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void revokeAllUserTokens(long userId) {
         String sql = "UPDATE user_tokens SET revoked = TRUE WHERE user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -204,7 +229,8 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public void updateWalletBalance(Connection conn, long userId, BigDecimal newBalance) throws SQLException {
+    public void updateWalletBalance(Connection conn, long userId, BigDecimal newBalance)
+        throws SQLException {
         String sql = "UPDATE users SET wallet_balance = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBigDecimal(1, newBalance);
@@ -216,9 +242,12 @@ public class UserDaoImpl implements UserDao {
     @Override
     public List<Address> getUserAddresses(long userId) {
         List<Address> list = new ArrayList<>();
-        String sql = "SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -249,8 +278,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public Address getAddressById(long addressId) {
         String sql = "SELECT * FROM user_addresses WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, addressId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -280,10 +311,15 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Long addAddress(Address addr) {
-        String sql = "INSERT INTO user_addresses (user_id, title, address_line, landmark, city, state, postal_code, latitude, longitude, maps_url, is_default) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement lockUser = conn.prepareStatement("SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        String sql =
+            "INSERT INTO user_addresses (user_id, title, address_line, landmark, city, state, postal_code, latitude, longitude, maps_url, is_default) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement lockUser = conn.prepareStatement(
+                "SELECT id FROM users WHERE id = ? FOR UPDATE"
+            )
+        ) {
             boolean previousAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
@@ -293,7 +329,11 @@ public class UserDaoImpl implements UserDao {
                 }
 
                 boolean firstAddress;
-                try (PreparedStatement count = conn.prepareStatement("SELECT COUNT(*) FROM user_addresses WHERE user_id = ?")) {
+                try (
+                    PreparedStatement count = conn.prepareStatement(
+                        "SELECT COUNT(*) FROM user_addresses WHERE user_id = ?"
+                    )
+                ) {
                     count.setLong(1, addr.getUserId());
                     try (ResultSet rs = count.executeQuery()) {
                         rs.next();
@@ -302,7 +342,12 @@ public class UserDaoImpl implements UserDao {
                 }
 
                 addr.setDefault(firstAddress);
-                try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        sql,
+                        Statement.RETURN_GENERATED_KEYS
+                    )
+                ) {
                     ps.setLong(1, addr.getUserId());
                     ps.setString(2, addr.getTitle());
                     ps.setString(3, addr.getAddressLine());
@@ -338,8 +383,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void deleteAddress(long addressId, long userId) {
         String sql = "DELETE FROM user_addresses WHERE id = ? AND user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, addressId);
             ps.setLong(2, userId);
             ps.executeUpdate();
@@ -355,10 +402,16 @@ public class UserDaoImpl implements UserDao {
         String setSql = "UPDATE user_addresses SET is_default = TRUE WHERE id = ? AND user_id = ?";
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement lockUser = conn.prepareStatement("SELECT id FROM users WHERE id = ? FOR UPDATE");
-                 PreparedStatement address = conn.prepareStatement("SELECT id FROM user_addresses WHERE id = ? AND user_id = ? FOR UPDATE");
-                 PreparedStatement ps1 = conn.prepareStatement(resetSql);
-                 PreparedStatement ps2 = conn.prepareStatement(setSql)) {
+            try (
+                PreparedStatement lockUser = conn.prepareStatement(
+                    "SELECT id FROM users WHERE id = ? FOR UPDATE"
+                );
+                PreparedStatement address = conn.prepareStatement(
+                    "SELECT id FROM user_addresses WHERE id = ? AND user_id = ? FOR UPDATE"
+                );
+                PreparedStatement ps1 = conn.prepareStatement(resetSql);
+                PreparedStatement ps2 = conn.prepareStatement(setSql)
+            ) {
                 lockUser.setLong(1, userId);
                 try (ResultSet rs = lockUser.executeQuery()) {
                     if (!rs.next()) throw new IllegalArgumentException("Account not found");
@@ -367,7 +420,9 @@ public class UserDaoImpl implements UserDao {
                 address.setLong(1, addressId);
                 address.setLong(2, userId);
                 try (ResultSet rs = address.executeQuery()) {
-                    if (!rs.next()) throw new IllegalArgumentException("Saved address not found for this account");
+                    if (!rs.next()) throw new IllegalArgumentException(
+                        "Saved address not found for this account"
+                    );
                 }
 
                 ps1.setLong(1, userId);
@@ -393,8 +448,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void updateProfile(long userId, String fullName, String phone, String avatarUrl) {
         String sql = "UPDATE users SET full_name = ?, phone = ?, avatar_url = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, fullName);
             ps.setString(2, phone);
             ps.setString(3, avatarUrl);
@@ -437,8 +494,10 @@ public class UserDaoImpl implements UserDao {
         params.add(limit > 0 ? limit : 50);
         params.add(Math.max(offset, 0));
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 Object p = params.get(i);
                 if (p instanceof String) ps.setString(i + 1, (String) p);
@@ -450,7 +509,13 @@ public class UserDaoImpl implements UserDao {
                 }
             }
         } catch (SQLException e) {
-            logger.error("Error searching users with query: {}, role: {}, status: {}", query, role, status, e);
+            logger.error(
+                "Error searching users with query: {}, role: {}, status: {}",
+                query,
+                role,
+                status,
+                e
+            );
             throw new IllegalStateException("Database operation failed", e);
         }
         return list;
@@ -459,8 +524,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void updateUserStatus(long userId, String status) {
         String sql = "UPDATE users SET status = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, status);
             ps.setLong(2, userId);
             ps.executeUpdate();
@@ -473,8 +540,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void incrementFraudFlag(long userId) {
         String sql = "UPDATE users SET fraud_flag_count = fraud_flag_count + 1 WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -486,8 +555,10 @@ public class UserDaoImpl implements UserDao {
     @Override
     public int getFraudFlagCount(long userId) {
         String sql = "SELECT fraud_flag_count FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

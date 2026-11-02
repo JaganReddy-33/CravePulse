@@ -16,8 +16,7 @@ const AdminAuth = () => {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from =
-    searchParams.get("redirect") || location.state?.from?.pathname || "/admin";
+  const from = searchParams.get("redirect") || location.state?.from?.pathname || "/admin";
 
   // If already logged in as platform admin, go directly to ops console
   useEffect(() => {
@@ -64,10 +63,7 @@ const AdminAuth = () => {
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link
-            to="/"
-            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
-          >
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
             <div
               className="rounded-4 text-white fw-bold d-inline-flex align-items-center justify-content-center shadow-lg"
               style={{
@@ -80,13 +76,10 @@ const AdminAuth = () => {
             >
               🛡️
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
-              CravePulse Ops
-            </h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Ops</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
-            Restricted Central Control Tower • Authorized Operations Personnel
-            Only
+            Restricted Central Control Tower • Authorized Operations Personnel Only
           </p>
         </div>
 
@@ -103,8 +96,7 @@ const AdminAuth = () => {
         >
           <div className="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom border-secondary border-opacity-25">
             <span className="fw-bold text-info small text-uppercase tracking-wider">
-              <i className="bi bi-shield-lock-fill me-1"></i> Root
-              Administration
+              <i className="bi bi-shield-lock-fill me-1"></i> Root Administration
             </span>
             <span className="badge bg-dark border border-secondary text-light small font-monospace">
               Administrator access
@@ -160,9 +152,7 @@ const AdminAuth = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i
-                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
-                  ></i>
+                  <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
                 </button>
               </div>
             </div>
@@ -176,20 +166,14 @@ const AdminAuth = () => {
               disabled={loading}
             >
               {loading ? (
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                ></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
               ) : null}
               Authorize Console Access →
             </button>
           </form>
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
-            <Link
-              to="/"
-              className="text-secondary text-decoration-none hover-underline"
-            >
+            <Link to="/" className="text-secondary text-decoration-none hover-underline">
               ← Return to Consumer Home
             </Link>
           </div>

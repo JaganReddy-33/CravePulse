@@ -1,4 +1,5 @@
 # CravePulse – Master Prompt for the AI Coding Agent
+
 ---
 
 ## Table of Contents
@@ -32,11 +33,11 @@ You are a principal full-stack engineer and security reviewer. Your job is to tu
 
 ## Fixed Stack (do not change)
 
-| Layer | Technology |
-|---|---|
-| Backend | Java 17+, Jakarta Servlets 6 on embedded Tomcat 10.1, JDBC `PreparedStatement`s, HikariCP, MySQL 8, Gson, jBCrypt, JJWT, SLF4J/Logback, JUnit 5 + Mockito |
-| Frontend | React 18, Vite, React Router, Axios, Bootstrap 5, Leaflet |
-| Not allowed | **No Spring, Hibernate/JPA or Lombok** |
+| Layer       | Technology                                                                                                                                                |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend     | Java 17+, Jakarta Servlets 6 on embedded Tomcat 10.1, JDBC `PreparedStatement`s, HikariCP, MySQL 8, Gson, jBCrypt, JJWT, SLF4J/Logback, JUnit 5 + Mockito |
+| Frontend    | React 18, Vite, React Router, Axios, Bootstrap 5, Leaflet                                                                                                 |
+| Not allowed | **No Spring, Hibernate/JPA or Lombok**                                                                                                                    |
 
 Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model`, `filter`, `util`, `websocket`) and portal structure (customer, partner, rider, admin).
 
@@ -96,7 +97,7 @@ Keep the existing package layout (`servlet`, `service`, `dao`, `daoImpl`, `model
   5. The order becomes `PLACED` only after payment is captured (or immediately for COD).
 - [ ] Fix the payments DAO to match the schema; store gateway ids, signature, status and raw response; add idempotency by key.
 - [ ] **COD rules:** configurable max order value (default Rs 2,000), disabled for new accounts with no delivered orders if configured.
-- [ ] **Wallet payment option:** debit atomically with a ledger row. Combined wallet + online split payment is a *should-have*.
+- [ ] **Wallet payment option:** debit atomically with a ledger row. Combined wallet + online split payment is a _should-have_.
 - [ ] **Refunds:** on cancellation, rejection or admin-approved dispute, refund to the original method via the gateway API (or to the wallet when the user chooses), update `payment_status`, write ledger rows, and make refunds idempotent.
 - [ ] **Tests with a mocked gateway:** success, failed signature, duplicate webhook, double-click, refund idempotency.
 

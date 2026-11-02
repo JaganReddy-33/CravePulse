@@ -21,9 +21,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
             style={{ width: "3rem", height: "3rem" }}
             role="status"
           ></div>
-          <h6 className="fw-bold text-muted">
-            Verifying credentials & security access...
-          </h6>
+          <h6 className="fw-bold text-muted">Verifying credentials & security access...</h6>
         </div>
       </div>
     );
@@ -33,9 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (!user) {
     // Direct to the appropriate portal login based on the attempted path
     if (location.pathname.startsWith("/partner")) {
-      return (
-        <Navigate to="/partner/login" state={{ from: location }} replace />
-      );
+      return <Navigate to="/partner/login" state={{ from: location }} replace />;
     }
     if (location.pathname.startsWith("/rider")) {
       return <Navigate to="/rider/login" state={{ from: location }} replace />;
@@ -57,30 +53,22 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
           <div className="fs-1 text-danger mb-3">🛡️</div>
           <h4 className="fw-extrabold text-dark mb-2">Access Restricted</h4>
           <p className="text-muted small mb-4">
-            You are signed in as <strong>{user.fullName || user.email}</strong>{" "}
-            with role
+            You are signed in as <strong>{user.fullName || user.email}</strong> with role
             <span className="badge bg-secondary ms-1">{user.role}</span>.
             <br />
-            This portal strictly requires{" "}
-            <strong>{allowedRoles.join(" or ")}</strong> privileges.
+            This portal strictly requires <strong>{allowedRoles.join(" or ")}</strong> privileges.
           </p>
           <div className="d-flex flex-column flex-sm-row justify-content-center gap-2">
             <a href="/" className="btn btn-outline-secondary rounded-pill px-4">
               Return to CravePulse Home
             </a>
             {allowedRoles.includes("RESTAURANT_OWNER") && (
-              <a
-                href="/partner/login"
-                className="btn btn-primary rounded-pill px-4"
-              >
+              <a href="/partner/login" className="btn btn-primary rounded-pill px-4">
                 Partner Sign In
               </a>
             )}
             {allowedRoles.includes("RIDER") && (
-              <a
-                href="/rider/login"
-                className="btn btn-success rounded-pill px-4"
-              >
+              <a href="/rider/login" className="btn btn-success rounded-pill px-4">
                 Rider Sign In
               </a>
             )}

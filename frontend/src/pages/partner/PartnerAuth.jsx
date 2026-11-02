@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import AuthBackground from "../../components/AuthBackground";
+import { isSafeGoogleMapsUrl } from "../../utils/googleMaps";
 
 const PartnerAuth = ({ initialMode = "login" }) => {
   const [isRegister, setIsRegister] = useState(initialMode === "register");
@@ -13,8 +14,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
   const [fssaiLicense, setFssaiLicense] = useState("");
   const [cuisineTypes, setCuisineTypes] = useState("");
   const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [mapsUrl, setMapsUrl] = useState("");
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,10 +26,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from =
-    searchParams.get("redirect") ||
-    location.state?.from?.pathname ||
-    "/partner";
+  const from = searchParams.get("redirect") || location.state?.from?.pathname || "/partner";
 
   // If already logged in as restaurant partner, go directly to kitchen console
   useEffect(() => {
@@ -46,15 +43,11 @@ const PartnerAuth = ({ initialMode = "login" }) => {
 
     try {
       if (isRegister) {
-        if (
-          !restaurantName.trim() ||
-          !fssaiLicense.trim() ||
-          !email.trim() ||
-          !password.trim()
-        ) {
-          throw new Error(
-            "Please enter all required restaurant and contact fields",
-          );
+        if (!restaurantName.trim() || !fssaiLicense.trim() || !email.trim() || !password.trim()) {
+          throw new Error("Please enter all required restaurant and contact fields");
+        }
+        if (!isSafeGoogleMapsUrl(mapsUrl)) {
+          throw new Error("Enter a valid HTTPS Google Maps location link.");
         }
         await api.post("/partner/apply", {
           fullName: fullName.trim() || "Restaurant Partner",
@@ -63,8 +56,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
           password,
           restaurantName: restaurantName.trim(),
           address: address.trim(),
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          mapsUrl: mapsUrl.trim(),
           fssaiLicense: fssaiLicense.trim(),
           cuisineTypes: cuisineTypes.trim() || "Multi-Cuisine",
         });
@@ -107,10 +99,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link
-            to="/"
-            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
-          >
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
             <div
               className="rounded-4 text-white fw-bold d-flex align-items-center justify-content-center shadow-lg"
               style={{
@@ -122,9 +111,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
             >
               🍳
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
-              CravePulse Kitchen
-            </h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Kitchen</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister
@@ -199,37 +186,25 @@ const PartnerAuth = ({ initialMode = "login" }) => {
                     onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
-                <div className="col-6">
-                  <label className="form-label" htmlFor="partner-lat">
-                    Latitude
+                <div className="col-12">
+                  <label className="form-label" htmlFor="partner-maps-url">
+                    Google Maps location link
                   </label>
                   <input
-                    id="partner-lat"
+                    id="partner-maps-url"
                     required
                     className="form-control"
-                    type="number"
-                    step="any"
-                    min="-90"
-                    max="90"
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
+                    type="url"
+                    inputMode="url"
+                    maxLength={500}
+                    placeholder="Paste a Google Maps pin or place link"
+                    value={mapsUrl}
+                    onChange={(e) => setMapsUrl(e.target.value)}
+                    aria-describedby="partner-maps-help"
                   />
-                </div>
-                <div className="col-6">
-                  <label className="form-label" htmlFor="partner-lng">
-                    Longitude
-                  </label>
-                  <input
-                    id="partner-lng"
-                    required
-                    className="form-control"
-                    type="number"
-                    step="any"
-                    min="-180"
-                    max="180"
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                  />
+                  <p id="partner-maps-help" className="small text-light text-opacity-75 mt-1 mb-0">
+                    Coordinates are extracted automatically from the map link.
+                  </p>
                 </div>
               </div>
             )}
@@ -353,9 +328,7 @@ const PartnerAuth = ({ initialMode = "login" }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i
-                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
-                  ></i>
+                  <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
                 </button>
               </div>
             </div>
@@ -369,22 +342,14 @@ const PartnerAuth = ({ initialMode = "login" }) => {
               disabled={loading}
             >
               {loading ? (
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                ></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
               ) : null}
-              {isRegister
-                ? "Submit Partner Application"
-                : "Open Kitchen Terminal →"}
+              {isRegister ? "Submit Partner Application" : "Open Kitchen Terminal →"}
             </button>
           </form>
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
-            <Link
-              to="/"
-              className="text-secondary text-decoration-none me-2 hover-underline"
-            >
+            <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">
               ← Back to Customer App
             </Link>
             <span>•</span>

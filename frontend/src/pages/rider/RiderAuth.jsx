@@ -24,8 +24,7 @@ const RiderAuth = ({ initialMode = "login" }) => {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from =
-    searchParams.get("redirect") || location.state?.from?.pathname || "/rider";
+  const from = searchParams.get("redirect") || location.state?.from?.pathname || "/rider";
 
   // If already logged in as fleet captain, go directly to cockpit
   useEffect(() => {
@@ -42,15 +41,8 @@ const RiderAuth = ({ initialMode = "login" }) => {
 
     try {
       if (isRegister) {
-        if (
-          !fullName.trim() ||
-          !email.trim() ||
-          !drivingLicense.trim() ||
-          !password.trim()
-        ) {
-          throw new Error(
-            "Please fill in your name, license number, email and password",
-          );
+        if (!fullName.trim() || !email.trim() || !drivingLicense.trim() || !password.trim()) {
+          throw new Error("Please fill in your name, license number, email and password");
         }
         await api.post("/rider/apply", {
           fullName: fullName.trim(),
@@ -100,10 +92,7 @@ const RiderAuth = ({ initialMode = "login" }) => {
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link
-            to="/"
-            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
-          >
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
             <div
               className="rounded-4 text-dark fw-bold d-flex align-items-center justify-content-center shadow-lg"
               style={{
@@ -115,9 +104,7 @@ const RiderAuth = ({ initialMode = "login" }) => {
             >
               ⚡
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
-              CravePulse Fleet
-            </h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse Fleet</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister
@@ -246,16 +233,10 @@ const RiderAuth = ({ initialMode = "login" }) => {
                         onChange={(e) => setVehicleType(e.target.value)}
                         style={{ color: "#ffffff" }}
                       >
-                        <option
-                          value="ELECTRIC_BIKE"
-                          className="bg-dark text-white"
-                        >
+                        <option value="ELECTRIC_BIKE" className="bg-dark text-white">
                           ⚡ Ather / Ola EV
                         </option>
-                        <option
-                          value="PETROL_BIKE"
-                          className="bg-dark text-white"
-                        >
+                        <option value="PETROL_BIKE" className="bg-dark text-white">
                           🛵 Motorcycle / Scooter
                         </option>
                         <option value="BICYCLE" className="bg-dark text-white">
@@ -309,9 +290,7 @@ const RiderAuth = ({ initialMode = "login" }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i
-                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
-                  ></i>
+                  <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
                 </button>
               </div>
             </div>
@@ -323,22 +302,14 @@ const RiderAuth = ({ initialMode = "login" }) => {
               disabled={loading}
             >
               {loading ? (
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                ></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
               ) : null}
-              {isRegister
-                ? "Submit Captain Onboarding"
-                : "Enter Captain Cockpit ⚡"}
+              {isRegister ? "Submit Captain Onboarding" : "Enter Captain Cockpit ⚡"}
             </button>
           </form>
 
           <div className="text-center mt-3 pt-3 border-top border-secondary border-opacity-25 small text-light text-opacity-60">
-            <Link
-              to="/"
-              className="text-secondary text-decoration-none me-2 hover-underline"
-            >
+            <Link to="/" className="text-secondary text-decoration-none me-2 hover-underline">
               ← Back to Customer App
             </Link>
             <span>•</span>

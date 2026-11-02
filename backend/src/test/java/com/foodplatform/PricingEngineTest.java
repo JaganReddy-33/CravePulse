@@ -1,5 +1,8 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.WalletDao;
@@ -7,18 +10,14 @@ import com.foodplatform.model.Coupon;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.PricingService;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PricingEngineTest {
@@ -36,7 +35,13 @@ public class PricingEngineTest {
 
     @BeforeEach
     void setUp() {
-        pricingService = new PricingService(menuDao, restaurantDao, walletDao, null, mock(com.foodplatform.dao.OrderDao.class));
+        pricingService = new PricingService(
+            menuDao,
+            restaurantDao,
+            walletDao,
+            null,
+            mock(com.foodplatform.dao.OrderDao.class)
+        );
     }
 
     @Test
@@ -68,7 +73,12 @@ public class PricingEngineTest {
 
         // Act
         PricingService.PriceCalculationResult result = pricingService.calculateBill(
-                1L, List.of(cartItem), 12.9783692, 77.6408356, null);
+            1L,
+            List.of(cartItem),
+            12.9783692,
+            77.6408356,
+            null
+        );
 
         // Assert Subtotal (280 * 2 = 560.00)
         assertEquals(0, new BigDecimal("560.00").compareTo(result.subtotal));
@@ -125,7 +135,12 @@ public class PricingEngineTest {
         in.quantity = 1;
 
         PricingService.PriceCalculationResult res = pricingService.calculateBill(
-                1L, List.of(in), 12.9783692, 77.6408356, "FOOD50");
+            1L,
+            List.of(in),
+            12.9783692,
+            77.6408356,
+            "FOOD50"
+        );
 
         // 50% of 400 is 200, capped at 150
         assertEquals(0, BigDecimal.valueOf(150.00).compareTo(res.couponDiscount));

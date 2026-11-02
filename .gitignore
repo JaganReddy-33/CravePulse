@@ -99,6 +99,11 @@ logs/
 # ==============================================================================
 node_modules/
 **/node_modules/
+.venv/
+**/.venv/
+**/__pycache__/
+*.py[cod]
+**/.ruff_cache/
 dist/
 **/dist/
 dist-ssr/

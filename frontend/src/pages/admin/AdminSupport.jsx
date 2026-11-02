@@ -37,9 +37,7 @@ export default function AdminSupport() {
           {error}
         </div>
       )}
-      {!tickets.length && (
-        <p className="text-secondary">No support requests yet.</p>
-      )}
+      {!tickets.length && <p className="text-secondary">No support requests yet.</p>}
       <div className="d-grid gap-3">
         {tickets.map((ticket) => (
           <article className="card p-4" key={ticket.id}>
@@ -47,9 +45,7 @@ export default function AdminSupport() {
             <p className="small text-secondary">
               {ticket.ticketNumber} · {ticket.name} · {ticket.email}
             </p>
-            <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
-              {ticket.message}
-            </p>
+            <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{ticket.message}</p>
             <label htmlFor={`status-${ticket.id}`} className="form-label">
               Status
             </label>

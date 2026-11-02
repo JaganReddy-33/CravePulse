@@ -1,5 +1,8 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.MenuDao;
 import com.foodplatform.dao.OrderDao;
 import com.foodplatform.dao.PlatformSettingDao;
@@ -10,18 +13,14 @@ import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.MenuItemAddon;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.PricingService;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderPricingDepthTest {
@@ -45,9 +44,16 @@ public class OrderPricingDepthTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(platformSettingDao.getSettingValue(anyString(), anyString()))
-                .thenAnswer(invocation -> invocation.getArgument(1));
-        pricingService = new PricingService(menuDao, restaurantDao, walletDao, platformSettingDao, orderDao);
+        lenient()
+            .when(platformSettingDao.getSettingValue(anyString(), anyString()))
+            .thenAnswer(invocation -> invocation.getArgument(1));
+        pricingService = new PricingService(
+            menuDao,
+            restaurantDao,
+            walletDao,
+            platformSettingDao,
+            orderDao
+        );
     }
 
     private Restaurant mockRestaurant(long id, double lat, double lng) {
@@ -84,7 +90,7 @@ public class OrderPricingDepthTest {
         itemZero.quantity = 0;
 
         IllegalArgumentException exZero = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(itemZero), 12.9750, 77.6400, null, 10L)
+            pricingService.calculateBill(1L, List.of(itemZero), 12.9750, 77.6400, null, 10L)
         );
         assertTrue(exZero.getMessage().contains("must be between 1 and 20"));
 
@@ -93,7 +99,7 @@ public class OrderPricingDepthTest {
         item21.quantity = 21;
 
         IllegalArgumentException ex21 = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(item21), 12.9750, 77.6400, null, 10L)
+            pricingService.calculateBill(1L, List.of(item21), 12.9750, 77.6400, null, 10L)
         );
         assertTrue(ex21.getMessage().contains("must be between 1 and 20"));
     }
@@ -109,7 +115,7 @@ public class OrderPricingDepthTest {
         item.quantity = 1;
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(item), 12.9750, 77.6400, null, 10L)
+            pricingService.calculateBill(1L, List.of(item), 12.9750, 77.6400, null, 10L)
         );
         assertTrue(ex.getMessage().contains("does not belong to the selected restaurant"));
     }
@@ -120,7 +126,9 @@ public class OrderPricingDepthTest {
         mockRestaurant(1L, 12.9716, 77.6350); // Bangalore central
 
         // Override max delivery radius to 5.0 km for test
-        when(platformSettingDao.getSettingValue("max_delivery_radius_km", "15.0")).thenReturn("5.0");
+        when(platformSettingDao.getSettingValue("max_delivery_radius_km", "15.0")).thenReturn(
+            "5.0"
+        );
 
         PricingService.CartInputItem item = new PricingService.CartInputItem();
         item.menuItemId = 101L;
@@ -128,7 +136,7 @@ public class OrderPricingDepthTest {
 
         // User coordinates 50km away
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(item), 13.5000, 78.2000, null, 10L)
+            pricingService.calculateBill(1L, List.of(item), 13.5000, 78.2000, null, 10L)
         );
         assertTrue(ex.getMessage().contains("outside restaurant delivery radius"));
     }
@@ -138,7 +146,7 @@ public class OrderPricingDepthTest {
     void testAddonMultiplicationByQuantity() {
         mockRestaurant(1L, 12.9716, 77.6350);
         MenuItem item = mockMenuItem(101L, 1L, "Butter Idli Vada", 100.00);
-        
+
         MenuItemAddon addon = new MenuItemAddon();
         addon.setId(5L);
         addon.setMenuItemId(101L);
@@ -152,12 +160,23 @@ public class OrderPricingDepthTest {
         in.addonIds = List.of(5L); // 25.00 each -> total addon = 75.00
 
         PricingService.PriceCalculationResult res = pricingService.calculateBill(
-                1L, List.of(in), 12.9750, 77.6400, null, 10L);
+            1L,
+            List.of(in),
+            12.9750,
+            77.6400,
+            null,
+            10L
+        );
 
         // Subtotal: (100 + 25) * 3 = 375.00
         assertEquals(0, new BigDecimal("375.00").compareTo(res.subtotal));
         assertEquals(1, res.itemisedBill.size());
-        assertEquals(0, new BigDecimal("75.00").compareTo((BigDecimal) res.itemisedBill.get(0).get("addonTotal")));
+        assertEquals(
+            0,
+            new BigDecimal("75.00").compareTo(
+                (BigDecimal) res.itemisedBill.get(0).get("addonTotal")
+            )
+        );
     }
 
     @Test
@@ -166,15 +185,25 @@ public class OrderPricingDepthTest {
         mockRestaurant(1L, 12.9716, 77.6350);
         mockMenuItem(101L, 1L, "Royal Feast Platter", 600.00);
 
-        when(platformSettingDao.getSettingValue("enable_free_delivery", "false")).thenReturn("true");
-        when(platformSettingDao.getSettingValue("free_delivery_threshold", "499.00")).thenReturn("499.00");
+        when(platformSettingDao.getSettingValue("enable_free_delivery", "false")).thenReturn(
+            "true"
+        );
+        when(platformSettingDao.getSettingValue("free_delivery_threshold", "499.00")).thenReturn(
+            "499.00"
+        );
 
         PricingService.CartInputItem in = new PricingService.CartInputItem();
         in.menuItemId = 101L;
         in.quantity = 1; // 600.00 >= 499.00
 
         PricingService.PriceCalculationResult res = pricingService.calculateBill(
-                1L, List.of(in), 12.9750, 77.6400, null, 10L);
+            1L,
+            List.of(in),
+            12.9750,
+            77.6400,
+            null,
+            10L
+        );
 
         // Free delivery applied
         assertEquals(0, BigDecimal.ZERO.compareTo(res.deliveryFee));
@@ -205,7 +234,7 @@ public class OrderPricingDepthTest {
         in.quantity = 1;
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(in), 12.9750, 77.6400, "WELCOME50", 99L)
+            pricingService.calculateBill(1L, List.of(in), 12.9750, 77.6400, "WELCOME50", 99L)
         );
         assertTrue(ex.getMessage().contains("valid only on your first order"));
     }
@@ -235,7 +264,7 @@ public class OrderPricingDepthTest {
         in.quantity = 1;
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                pricingService.calculateBill(1L, List.of(in), 12.9750, 77.6400, "ONCEONLY", 99L)
+            pricingService.calculateBill(1L, List.of(in), 12.9750, 77.6400, "ONCEONLY", 99L)
         );
         assertTrue(ex.getMessage().contains("maximum usage limit"));
     }

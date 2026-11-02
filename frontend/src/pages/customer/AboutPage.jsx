@@ -7,8 +7,7 @@ export default function AboutPage() {
         <span className="badge bg-light text-dark border mb-3">CravePulse</span>
         <h1 className="display-5 fw-bold">Good food. Clear choices.</h1>
         <p className="lead text-muted">
-          Discover restaurant menus, see your order breakdown and follow your
-          delivery in one place.
+          Discover restaurant menus, see your order breakdown and follow your delivery in one place.
         </p>
       </div>
       <div className="row g-4 mb-5">

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Order {
+
     private Long id;
     private String orderNumber;
     private Long customerId;
@@ -51,29 +52,63 @@ public class Order {
     private List<OrderItem> items = new ArrayList<>();
     private List<OrderEvent> timeline = new ArrayList<>();
 
-    public Order() {
+    public Order() {}
+
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getOrderNumber() { return orderNumber; }
-    public void setOrderNumber(String orderNumber) { this.orderNumber = orderNumber; }
+    public String getOrderNumber() {
+        return orderNumber;
+    }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
 
-    public Long getRestaurantId() { return restaurantId; }
-    public void setRestaurantId(Long restaurantId) { this.restaurantId = restaurantId; }
+    public Long getCustomerId() {
+        return customerId;
+    }
 
-    public Long getRiderId() { return riderId; }
-    public void setRiderId(Long riderId) { this.riderId = riderId; }
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
 
-    public Long getDeliveryAddressId() { return deliveryAddressId; }
-    public void setDeliveryAddressId(Long deliveryAddressId) { this.deliveryAddressId = deliveryAddressId; }
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
+
+    public Long getRiderId() {
+        return riderId;
+    }
+
+    public void setRiderId(Long riderId) {
+        this.riderId = riderId;
+    }
+
+    public Long getDeliveryAddressId() {
+        return deliveryAddressId;
+    }
+
+    public void setDeliveryAddressId(Long deliveryAddressId) {
+        this.deliveryAddressId = deliveryAddressId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     private static void checkNonNegative(BigDecimal amount, String fieldName) {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0) {
@@ -81,135 +116,292 @@ public class Order {
         }
     }
 
-    public BigDecimal getSubtotal() { return subtotal; }
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
     public void setSubtotal(BigDecimal subtotal) {
         checkNonNegative(subtotal, "subtotal");
         this.subtotal = subtotal;
     }
 
-    public BigDecimal getRestaurantDiscount() { return restaurantDiscount; }
+    public BigDecimal getRestaurantDiscount() {
+        return restaurantDiscount;
+    }
+
     public void setRestaurantDiscount(BigDecimal restaurantDiscount) {
         checkNonNegative(restaurantDiscount, "restaurantDiscount");
         this.restaurantDiscount = restaurantDiscount;
     }
 
-    public Long getCouponId() { return couponId; }
-    public void setCouponId(Long couponId) { this.couponId = couponId; }
+    public Long getCouponId() {
+        return couponId;
+    }
 
-    public BigDecimal getCouponDiscount() { return couponDiscount; }
+    public void setCouponId(Long couponId) {
+        this.couponId = couponId;
+    }
+
+    public BigDecimal getCouponDiscount() {
+        return couponDiscount;
+    }
+
     public void setCouponDiscount(BigDecimal couponDiscount) {
         checkNonNegative(couponDiscount, "couponDiscount");
         this.couponDiscount = couponDiscount;
     }
 
-    public BigDecimal getPackagingFee() { return packagingFee; }
+    public BigDecimal getPackagingFee() {
+        return packagingFee;
+    }
+
     public void setPackagingFee(BigDecimal packagingFee) {
         checkNonNegative(packagingFee, "packagingFee");
         this.packagingFee = packagingFee;
     }
 
-    public BigDecimal getDeliveryFee() { return deliveryFee; }
+    public BigDecimal getDeliveryFee() {
+        return deliveryFee;
+    }
+
     public void setDeliveryFee(BigDecimal deliveryFee) {
         checkNonNegative(deliveryFee, "deliveryFee");
         this.deliveryFee = deliveryFee;
     }
 
-    public BigDecimal getPlatformFee() { return platformFee; }
+    public BigDecimal getPlatformFee() {
+        return platformFee;
+    }
+
     public void setPlatformFee(BigDecimal platformFee) {
         checkNonNegative(platformFee, "platformFee");
         this.platformFee = platformFee;
     }
 
-    public BigDecimal getGstTax() { return gstTax; }
+    public BigDecimal getGstTax() {
+        return gstTax;
+    }
+
     public void setGstTax(BigDecimal gstTax) {
         checkNonNegative(gstTax, "gstTax");
         this.gstTax = gstTax;
     }
 
-    public BigDecimal getTotalAmount() { return totalAmount; }
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
     public void setTotalAmount(BigDecimal totalAmount) {
         checkNonNegative(totalAmount, "totalAmount");
         this.totalAmount = totalAmount;
     }
 
-    public String getPaymentMode() { return paymentMode; }
-    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
+    public String getPaymentMode() {
+        return paymentMode;
+    }
 
-    public String getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
 
-    public BigDecimal getTipAmount() { return tipAmount != null ? tipAmount : BigDecimal.ZERO; }
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public BigDecimal getTipAmount() {
+        return tipAmount != null ? tipAmount : BigDecimal.ZERO;
+    }
+
     public void setTipAmount(BigDecimal tipAmount) {
         checkNonNegative(tipAmount, "tipAmount");
         this.tipAmount = tipAmount;
     }
 
-    public String getIdempotencyKey() { return idempotencyKey; }
-    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
 
-    public int getEtaMinMinutes() { return etaMinMinutes; }
-    public void setEtaMinMinutes(int etaMinMinutes) { this.etaMinMinutes = etaMinMinutes; }
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
 
-    public int getEtaMaxMinutes() { return etaMaxMinutes; }
-    public void setEtaMaxMinutes(int etaMaxMinutes) { this.etaMaxMinutes = etaMaxMinutes; }
+    public int getEtaMinMinutes() {
+        return etaMinMinutes;
+    }
 
-    public Timestamp getEstimatedDeliveryAt() { return estimatedDeliveryAt; }
-    public void setEstimatedDeliveryAt(Timestamp estimatedDeliveryAt) { this.estimatedDeliveryAt = estimatedDeliveryAt; }
+    public void setEtaMinMinutes(int etaMinMinutes) {
+        this.etaMinMinutes = etaMinMinutes;
+    }
 
-    public Timestamp getActualDeliveryAt() { return actualDeliveryAt; }
-    public void setActualDeliveryAt(Timestamp actualDeliveryAt) { this.actualDeliveryAt = actualDeliveryAt; }
+    public int getEtaMaxMinutes() {
+        return etaMaxMinutes;
+    }
 
-    public boolean isGoodwillCreditAwarded() { return isGoodwillCreditAwarded; }
-    public void setGoodwillCreditAwarded(boolean goodwillCreditAwarded) { isGoodwillCreditAwarded = goodwillCreditAwarded; }
+    public void setEtaMaxMinutes(int etaMaxMinutes) {
+        this.etaMaxMinutes = etaMaxMinutes;
+    }
 
-    public String getSpecialInstructions() { return specialInstructions; }
-    public void setSpecialInstructions(String specialInstructions) { this.specialInstructions = specialInstructions; }
+    public Timestamp getEstimatedDeliveryAt() {
+        return estimatedDeliveryAt;
+    }
 
-    public String getCancellationReason() { return cancellationReason; }
-    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+    public void setEstimatedDeliveryAt(Timestamp estimatedDeliveryAt) {
+        this.estimatedDeliveryAt = estimatedDeliveryAt;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public Timestamp getActualDeliveryAt() {
+        return actualDeliveryAt;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public void setActualDeliveryAt(Timestamp actualDeliveryAt) {
+        this.actualDeliveryAt = actualDeliveryAt;
+    }
 
-    public String getRestaurantName() { return restaurantName; }
-    public void setRestaurantName(String restaurantName) { this.restaurantName = restaurantName; }
+    public boolean isGoodwillCreditAwarded() {
+        return isGoodwillCreditAwarded;
+    }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public void setGoodwillCreditAwarded(boolean goodwillCreditAwarded) {
+        isGoodwillCreditAwarded = goodwillCreditAwarded;
+    }
 
-    public String getCustomerPhone() { return customerPhone; }
-    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
+    public String getSpecialInstructions() {
+        return specialInstructions;
+    }
 
-    public String getRiderName() { return riderName; }
-    public void setRiderName(String riderName) { this.riderName = riderName; }
+    public void setSpecialInstructions(String specialInstructions) {
+        this.specialInstructions = specialInstructions;
+    }
 
-    public String getRiderPhone() { return riderPhone; }
-    public void setRiderPhone(String riderPhone) { this.riderPhone = riderPhone; }
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
 
-    public String getDeliveryAddressText() { return deliveryAddressText; }
-    public void setDeliveryAddressText(String deliveryAddressText) { this.deliveryAddressText = deliveryAddressText; }
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
+    }
 
-    public Double getRestaurantLat() { return restaurantLat; }
-    public void setRestaurantLat(Double restaurantLat) { this.restaurantLat = restaurantLat; }
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
 
-    public Double getRestaurantLng() { return restaurantLng; }
-    public void setRestaurantLng(Double restaurantLng) { this.restaurantLng = restaurantLng; }
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public Double getDeliveryLat() { return deliveryLat; }
-    public void setDeliveryLat(Double deliveryLat) { this.deliveryLat = deliveryLat; }
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public Double getDeliveryLng() { return deliveryLng; }
-    public void setDeliveryLng(Double deliveryLng) { this.deliveryLng = deliveryLng; }
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-    public List<OrderItem> getItems() { return items; }
-    public void setItems(List<OrderItem> items) { this.items = items; }
+    public String getRestaurantName() {
+        return restaurantName;
+    }
 
-    public List<OrderEvent> getTimeline() { return timeline; }
-    public void setTimeline(List<OrderEvent> timeline) { this.timeline = timeline; }
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
+    }
 
-    public String getDeliveryOtp() { return deliveryOtp; }
-    public void setDeliveryOtp(String deliveryOtp) { this.deliveryOtp = deliveryOtp; }
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getRiderName() {
+        return riderName;
+    }
+
+    public void setRiderName(String riderName) {
+        this.riderName = riderName;
+    }
+
+    public String getRiderPhone() {
+        return riderPhone;
+    }
+
+    public void setRiderPhone(String riderPhone) {
+        this.riderPhone = riderPhone;
+    }
+
+    public String getDeliveryAddressText() {
+        return deliveryAddressText;
+    }
+
+    public void setDeliveryAddressText(String deliveryAddressText) {
+        this.deliveryAddressText = deliveryAddressText;
+    }
+
+    public Double getRestaurantLat() {
+        return restaurantLat;
+    }
+
+    public void setRestaurantLat(Double restaurantLat) {
+        this.restaurantLat = restaurantLat;
+    }
+
+    public Double getRestaurantLng() {
+        return restaurantLng;
+    }
+
+    public void setRestaurantLng(Double restaurantLng) {
+        this.restaurantLng = restaurantLng;
+    }
+
+    public Double getDeliveryLat() {
+        return deliveryLat;
+    }
+
+    public void setDeliveryLat(Double deliveryLat) {
+        this.deliveryLat = deliveryLat;
+    }
+
+    public Double getDeliveryLng() {
+        return deliveryLng;
+    }
+
+    public void setDeliveryLng(Double deliveryLng) {
+        this.deliveryLng = deliveryLng;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public List<OrderEvent> getTimeline() {
+        return timeline;
+    }
+
+    public void setTimeline(List<OrderEvent> timeline) {
+        this.timeline = timeline;
+    }
+
+    public String getDeliveryOtp() {
+        return deliveryOtp;
+    }
+
+    public void setDeliveryOtp(String deliveryOtp) {
+        this.deliveryOtp = deliveryOtp;
+    }
 }

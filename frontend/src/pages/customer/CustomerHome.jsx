@@ -20,10 +20,7 @@ const RestaurantCardImage = ({ src, name, closed, offer }) => {
   const [failed, setFailed] = useState(!src);
 
   return (
-    <div
-      className="restaurant-card-img-wrap"
-      style={{ minHeight: 150, background: "#f3eee8" }}
-    >
+    <div className="restaurant-card-img-wrap" style={{ minHeight: 150, background: "#f3eee8" }}>
       {src && !failed ? (
         <img
           src={src}
@@ -44,10 +41,7 @@ const RestaurantCardImage = ({ src, name, closed, offer }) => {
         </div>
       )}
       {!closed && offer && (
-        <div
-          className="restaurant-card-offer-overlay"
-          aria-label={`Offer: ${offer}`}
-        >
+        <div className="restaurant-card-offer-overlay" aria-label={`Offer: ${offer}`}>
           <span aria-hidden="true">🏷️</span>
           <span>{offer}</span>
         </div>
@@ -112,9 +106,7 @@ const CustomerHome = () => {
       const favorite = !favorites.includes(restId);
       await api.post("/account/favorites", { restaurantId: restId, favorite });
       setFavorites((prev) =>
-        favorite
-          ? [...new Set([...prev, restId])]
-          : prev.filter((id) => id !== restId),
+        favorite ? [...new Set([...prev, restId])] : prev.filter((id) => id !== restId),
       );
     } catch (err) {
       window.alert(err.message);
@@ -125,13 +117,9 @@ const CustomerHome = () => {
   const [search, setSearch] = useState(
     () => searchParams.get("query") || searchParams.get("search") || "",
   );
-  const [selectedCuisine, setSelectedCuisine] = useState(
-    () => searchParams.get("cuisine") || "",
-  );
+  const [selectedCuisine, setSelectedCuisine] = useState(() => searchParams.get("cuisine") || "");
   const [vegOnly, setVegOnly] = useState(
-    () =>
-      searchParams.get("veg_only") === "true" ||
-      searchParams.get("veg") === "true",
+    () => searchParams.get("veg_only") === "true" || searchParams.get("veg") === "true",
   );
   const [minRating, setMinRating] = useState(() =>
     searchParams.get("rating") ? Number(searchParams.get("rating")) : null,
@@ -139,12 +127,8 @@ const CustomerHome = () => {
   const [maxDeliveryTime, setMaxDeliveryTime] = useState(() =>
     searchParams.get("time") ? Number(searchParams.get("time")) : null,
   );
-  const [selectedPriceTier, setSelectedPriceTier] = useState(
-    () => searchParams.get("price") || "",
-  );
-  const [sortBy, setSortBy] = useState(
-    () => searchParams.get("sort") || "relevance",
-  );
+  const [selectedPriceTier, setSelectedPriceTier] = useState(() => searchParams.get("price") || "");
+  const [sortBy, setSortBy] = useState(() => searchParams.get("sort") || "relevance");
 
   const [currentHub, setCurrentHub] = useState(() => {
     const saved = getPreference("hub");
@@ -156,14 +140,11 @@ const CustomerHome = () => {
     api
       .get("/catalog/categories")
       .then((response) => {
-        if (active && Array.isArray(response.data))
-          setCategories(response.data);
+        if (active && Array.isArray(response.data)) setCategories(response.data);
       })
       .catch((error) => {
         if (active)
-          setCategoriesError(
-            error.message || "Cuisine filters are temporarily unavailable.",
-          );
+          setCategoriesError(error.message || "Cuisine filters are temporarily unavailable.");
       });
     return () => {
       active = false;
@@ -174,8 +155,7 @@ const CustomerHome = () => {
   useEffect(() => {
     const params = new URLSearchParams();
     if (search.trim()) params.set("query", search.trim());
-    if (selectedCuisine && selectedCuisine !== "All")
-      params.set("cuisine", selectedCuisine);
+    if (selectedCuisine && selectedCuisine !== "All") params.set("cuisine", selectedCuisine);
     if (vegOnly) params.set("veg_only", "true");
     if (minRating) params.set("rating", String(minRating));
     if (maxDeliveryTime) params.set("time", String(maxDeliveryTime));
@@ -212,8 +192,7 @@ const CustomerHome = () => {
       setCurrentPage(1);
     };
     window.addEventListener("preferences-changed", handleStorage);
-    return () =>
-      window.removeEventListener("preferences-changed", handleStorage);
+    return () => window.removeEventListener("preferences-changed", handleStorage);
   }, []);
 
   const loadRestaurants = useCallback(async () => {
@@ -227,8 +206,7 @@ const CustomerHome = () => {
         params.lng = currentHub.coords[1];
       }
       if (search) params.search = search;
-      if (selectedCuisine && selectedCuisine !== "All")
-        params.cuisine = selectedCuisine;
+      if (selectedCuisine && selectedCuisine !== "All") params.cuisine = selectedCuisine;
       if (vegOnly) params.vegOnly = true;
       if (minRating) params.rating = minRating;
       if (maxDeliveryTime) params.time = maxDeliveryTime;
@@ -246,9 +224,7 @@ const CustomerHome = () => {
         );
         setFetchError(null);
       } else {
-        setFetchError(
-          res.message || "Unable to load restaurants. Please try again.",
-        );
+        setFetchError(res.message || "Unable to load restaurants. Please try again.");
       }
     } catch (e) {
       if (requestId !== restaurantRequestId.current) return;
@@ -280,10 +256,7 @@ const CustomerHome = () => {
   const filteredAndSortedRestaurants = restaurants;
 
   useEffect(() => {
-    const totalPages = Math.max(
-      1,
-      Math.ceil(totalRestaurantCount / RESTAURANT_PAGE_SIZE),
-    );
+    const totalPages = Math.max(1, Math.ceil(totalRestaurantCount / RESTAURANT_PAGE_SIZE));
     if (!loading && currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, loading, totalRestaurantCount]);
 
@@ -313,9 +286,7 @@ const CustomerHome = () => {
     setCurrentPage(page);
   };
 
-  const featuredRestaurant = restaurants.find(
-    (restaurant) => restaurant.bannerImage,
-  );
+  const featuredRestaurant = restaurants.find((restaurant) => restaurant.bannerImage);
 
   return (
     <div className="container-fluid px-3 px-md-4 py-3 customer-content-container">
@@ -355,22 +326,19 @@ const CustomerHome = () => {
                 to="/offers"
                 className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2 mb-1"
               >
-                <i className="bi bi-tag-fill text-danger"></i> Offers &amp;
-                Deals
+                <i className="bi bi-tag-fill text-danger"></i> Offers &amp; Deals
               </Link>
               <Link
                 to="/help"
                 className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2 mb-1"
               >
-                <i className="bi bi-question-circle-fill text-primary"></i> Help
-                &amp; Support
+                <i className="bi bi-question-circle-fill text-primary"></i> Help &amp; Support
               </Link>
               <Link
                 to="/cities"
                 className="list-group-item list-group-item-action border-0 rounded-3 py-2 text-secondary d-flex align-items-center gap-2"
               >
-                <i className="bi bi-geo-alt-fill text-warning"></i> Delivery
-                Cities
+                <i className="bi bi-geo-alt-fill text-warning"></i> Delivery Cities
               </Link>
             </div>
 
@@ -379,10 +347,7 @@ const CustomerHome = () => {
               <p className="small text-muted">
                 Browse menus and current offers from restaurants near you.
               </p>
-              <Link
-                to="/offers"
-                className="btn btn-sm btn-outline-primary rounded-pill"
-              >
+              <Link to="/offers" className="btn btn-sm btn-outline-primary rounded-pill">
                 View available offers
               </Link>
             </div>
@@ -406,8 +371,7 @@ const CustomerHome = () => {
                     Explore local kitchens
                   </span>
                   <span className="badge bg-success rounded-pill px-3 py-2 fw-bold d-none d-sm-inline">
-                    <i className="bi bi-patch-check-fill me-1"></i> 100% Price
-                    Parity
+                    <i className="bi bi-patch-check-fill me-1"></i> 100% Price Parity
                   </span>
                 </div>
                 <h1
@@ -415,13 +379,11 @@ const CustomerHome = () => {
                   style={{ fontSize: "clamp(1.5rem, 3.2vw, 2.25rem)" }}
                 >
                   Delicious food,{" "}
-                  <span style={{ color: "var(--c-primary)" }}>
-                    zero menu markups
-                  </span>
+                  <span style={{ color: "var(--c-primary)" }}>zero menu markups</span>
                 </h1>
                 <p className="text-secondary mb-4" style={{ maxWidth: 440 }}>
-                  Order from verified neighborhood kitchens at exact dining room
-                  prices with guaranteed honest ETA tracking.
+                  Order from verified neighborhood kitchens at exact dining room prices with
+                  guaranteed honest ETA tracking.
                 </p>
                 <div className="d-flex flex-wrap gap-2">
                   <a
@@ -459,10 +421,7 @@ const CustomerHome = () => {
               ariaLabel="Cuisine categories"
               sectionHeader={
                 <div>
-                  <h5
-                    className="fw-bold mb-0"
-                    style={{ fontSize: "clamp(1.1rem, 2vw, 1.3rem)" }}
-                  >
+                  <h5 className="fw-bold mb-0" style={{ fontSize: "clamp(1.1rem, 2vw, 1.3rem)" }}>
                     What's on your mind?
                   </h5>
                   <small className="text-muted">Browse by cuisine</small>
@@ -471,8 +430,7 @@ const CustomerHome = () => {
             >
               {[ALL_CATEGORY, ...categories].map((cat) => {
                 const isActive =
-                  selectedCuisine === cat.name ||
-                  (!selectedCuisine && cat.name === "All");
+                  selectedCuisine === cat.name || (!selectedCuisine && cat.name === "All");
                 return (
                   <button
                     key={cat.id}
@@ -543,8 +501,7 @@ const CustomerHome = () => {
                     setCurrentPage(1);
                   }}
                 >
-                  <i className="bi bi-star-fill text-warning me-1"></i> 4.5+
-                  Rating
+                  <i className="bi bi-star-fill text-warning me-1"></i> 4.5+ Rating
                 </button>
 
                 {/* Delivery Time < 30m Filter */}
@@ -556,8 +513,7 @@ const CustomerHome = () => {
                     setCurrentPage(1);
                   }}
                 >
-                  <i className="bi bi-stopwatch me-1"></i> Fast Delivery
-                  (&lt;30m)
+                  <i className="bi bi-stopwatch me-1"></i> Fast Delivery (&lt;30m)
                 </button>
 
                 {/* Price Tier Filter */}
@@ -568,9 +524,7 @@ const CustomerHome = () => {
                     data-bs-toggle="dropdown"
                   >
                     <i className="bi bi-cash me-1"></i>{" "}
-                    {selectedPriceTier
-                      ? `Price: ${selectedPriceTier}`
-                      : "Price Range"}
+                    {selectedPriceTier ? `Price: ${selectedPriceTier}` : "Price Range"}
                   </button>
                   {/* Updated with Rupee Tiers */}
                   <ul className="dropdown-menu shadow border-0 rounded-3 p-1">
@@ -635,9 +589,7 @@ const CustomerHome = () => {
 
               {/* Right Sort By Dropdown */}
               <div className="sort-group d-flex align-items-center gap-2">
-                <span className="small text-muted fw-semibold d-none d-sm-inline">
-                  Sort by:
-                </span>
+                <span className="small text-muted fw-semibold d-none d-sm-inline">Sort by:</span>
                 <select
                   className="form-select form-select-sm rounded-pill border shadow-none"
                   style={{ minWidth: 160 }}
@@ -663,11 +615,7 @@ const CustomerHome = () => {
             <div className="cp-discovery-heading d-flex justify-content-between align-items-center mb-3">
               <div className="d-flex align-items-start gap-3">
                 <span className="cp-pulse-mark" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 32 32"
-                    focusable="false"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
+                  <svg viewBox="0 0 32 32" focusable="false" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M16 3C12.8 7 10 10.1 10 14.4c0 3.5 2.6 6.2 6 6.2s6-2.7 6-6.2C22 10.1 19.2 7 16 3Z"
                       fill="currentColor"
@@ -684,13 +632,8 @@ const CustomerHome = () => {
                   </svg>
                 </span>
                 <div>
-                  <div className="cp-discovery-kicker">
-                    CravePulse · Local tables
-                  </div>
-                  <h5
-                    className="fw-bold mb-1"
-                    style={{ fontSize: "clamp(1.15rem, 2vw, 1.4rem)" }}
-                  >
+                  <div className="cp-discovery-kicker">CravePulse · Local tables</div>
+                  <h5 className="fw-bold mb-1" style={{ fontSize: "clamp(1.15rem, 2vw, 1.4rem)" }}>
                     {currentHub?.id && currentHub.id !== "unselected"
                       ? `Restaurants in ${currentHub.cityName || currentHub.name}`
                       : "Explore restaurants"}
@@ -744,9 +687,7 @@ const CustomerHome = () => {
                   const isFav = favorites.includes(rest.id);
                   const isClosed = rest.isOpen === false;
                   const discountOffer =
-                    typeof rest.discountTag === "string"
-                      ? rest.discountTag.trim()
-                      : "";
+                    typeof rest.discountTag === "string" ? rest.discountTag.trim() : "";
                   const reviewCount = Number(rest.totalReviews);
                   const rating = Number(rest.rating);
                   const hasRating =
@@ -786,25 +727,21 @@ const CustomerHome = () => {
                     rest.prepTimeMax !== "" &&
                     Number.isFinite(prepMax) &&
                     prepMax > 0;
-                  const prepLabel = !deliveryLabel && hasPrepMin
-                    ? `Prep ${prepMin}${hasPrepMax && prepMax >= prepMin ? `–${prepMax}` : ""} min`
-                    : null;
+                  const prepLabel =
+                    !deliveryLabel && hasPrepMin
+                      ? `Prep ${prepMin}${hasPrepMax && prepMax >= prepMin ? `–${prepMax}` : ""} min`
+                      : null;
                   const locationLabel =
                     rest.locality ||
                     rest.localityName ||
                     rest.street ||
-                    (typeof rest.address === "string"
-                      ? rest.address.split(",")[0].trim()
-                      : "");
+                    (typeof rest.address === "string" ? rest.address.split(",")[0].trim() : "");
                   const cuisines = Array.isArray(rest.cuisineTypes)
                     ? rest.cuisineTypes.join(" · ")
                     : rest.cuisineTypes;
 
                   return (
-                    <div
-                      key={rest.id}
-                      className="restaurant-card position-relative"
-                    >
+                    <div key={rest.id} className="restaurant-card position-relative">
                       <Link
                         to={restaurantUrl}
                         className="text-decoration-none d-block h-100"
@@ -852,11 +789,8 @@ const CustomerHome = () => {
                                   className="rating-pill-green flex-shrink-0"
                                   aria-label={`${rating.toFixed(1)} out of 5 from ${reviewCount} reviews`}
                                 >
-                                  <span aria-hidden="true">★</span>{" "}
-                                  {rating.toFixed(1)}{" "}
-                                  <small className="fw-normal">
-                                    ({reviewCount})
-                                  </small>
+                                  <span aria-hidden="true">★</span> {rating.toFixed(1)}{" "}
+                                  <small className="fw-normal">({reviewCount})</small>
                                 </span>
                               ) : null}
                             </div>
@@ -871,10 +805,7 @@ const CustomerHome = () => {
                             >
                               {(deliveryLabel || prepLabel) && (
                                 <span className="d-inline-flex align-items-center gap-1">
-                                  <i
-                                    className="bi bi-clock"
-                                    aria-hidden="true"
-                                  ></i>
+                                  <i className="bi bi-clock" aria-hidden="true"></i>
                                   {deliveryLabel || prepLabel}
                                 </span>
                               )}
@@ -883,10 +814,7 @@ const CustomerHome = () => {
                             <div className="d-flex align-items-center gap-2 flex-wrap mt-auto pt-2 border-top">
                               {locationLabel && (
                                 <span className="text-secondary small d-inline-flex align-items-center gap-1">
-                                  <i
-                                    className="bi bi-geo-alt"
-                                    aria-hidden="true"
-                                  ></i>
+                                  <i className="bi bi-geo-alt" aria-hidden="true"></i>
                                   {locationLabel}
                                 </span>
                               )}
@@ -916,9 +844,7 @@ const CustomerHome = () => {
                             : `Add ${rest.name} to favorites`
                         }
                       >
-                        <i
-                          className={`bi ${isFav ? "bi-heart-fill text-danger" : "bi-heart"}`}
-                        ></i>
+                        <i className={`bi ${isFav ? "bi-heart-fill text-danger" : "bi-heart"}`}></i>
                       </button>
                     </div>
                   );
@@ -930,9 +856,7 @@ const CustomerHome = () => {
                 currentPage={currentPage}
                 pageSize={RESTAURANT_PAGE_SIZE}
                 totalCount={totalRestaurantCount}
-                itemLabel={
-                  totalRestaurantCount === 1 ? "restaurant" : "restaurants"
-                }
+                itemLabel={totalRestaurantCount === 1 ? "restaurant" : "restaurants"}
                 onPageChange={handleRestaurantPageChange}
                 isLoading={loading}
               />

@@ -79,15 +79,11 @@ describe("customer restaurant card data", () => {
       name: "View Juniper Kitchen menu",
     });
     expect(screen.getByText("CravePulse · Local tables")).toBeTruthy();
-    expect(
-      document.querySelector(".cp-discovery-heading .cp-pulse-mark svg"),
-    ).toBeTruthy();
+    expect(document.querySelector(".cp-discovery-heading .cp-pulse-mark svg")).toBeTruthy();
     expect(
       restaurantLink.closest(".restaurant-card").querySelector(".restaurant-card-img-wrap"),
     ).toBeTruthy();
-    expect(restaurantLink.getAttribute("href")).toBe(
-      "/restaurant/27?source=collection",
-    );
+    expect(restaurantLink.getAttribute("href")).toBe("/restaurant/27?source=collection");
     expect(screen.getByText("Prep 24 min")).toBeTruthy();
     expect(screen.getByText("South Indian · Regional")).toBeTruthy();
     expect(screen.getByText("Jayanagar")).toBeTruthy();
@@ -149,9 +145,7 @@ describe("customer restaurant card data", () => {
 
     expect(screen.getByText("₹120")).toBeTruthy();
     expect(screen.queryByText(/standard apps|markup parity/i)).toBeNull();
-    expect(
-      screen.getByRole("img", { name: "Lemon rice: image unavailable" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Lemon rice: image unavailable" })).toBeTruthy();
   });
 
   it("shows calories only when the menu API supplies a calorie count", () => {
@@ -168,7 +162,13 @@ describe("customer restaurant card data", () => {
     rerender(
       <CartProvider>
         <DishCard
-          dish={{ id: 5, restaurantId: 27, name: "Plain dosa", platformPrice: 75, calorieCount: 420 }}
+          dish={{
+            id: 5,
+            restaurantId: 27,
+            name: "Plain dosa",
+            platformPrice: 75,
+            calorieCount: 420,
+          }}
           restaurantName="Juniper Kitchen"
         />
       </CartProvider>,

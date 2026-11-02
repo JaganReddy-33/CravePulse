@@ -5,14 +5,7 @@ import BrandLogo from "../BrandLogo";
 /**
  * NavMobileDrawer: Mobile side-drawer navigation menu for secondary customer links and portal switching.
  */
-const NavMobileDrawer = ({
-  show,
-  onClose,
-  user,
-  logout,
-  selectedHub,
-  onOpenLocationModal,
-}) => {
+const NavMobileDrawer = ({ show, onClose, user, logout, selectedHub, onOpenLocationModal }) => {
   if (!show) return null;
 
   return (
@@ -83,24 +76,21 @@ const NavMobileDrawer = ({
             className="nav-link py-2 px-3 rounded-3 text-dark fw-semibold d-flex align-items-center gap-2 touch-target hover-bg-light"
             onClick={onClose}
           >
-            <i className="bi bi-receipt text-success"></i> Order History &
-            Invoices
+            <i className="bi bi-receipt text-success"></i> Order History & Invoices
           </Link>
           <Link
             to="/profile"
             className="nav-link py-2 px-3 rounded-3 text-dark fw-semibold d-flex align-items-center gap-2 touch-target hover-bg-light"
             onClick={onClose}
           >
-            <i className="bi bi-person-circle text-info"></i> Account & Saved
-            Addresses
+            <i className="bi bi-person-circle text-info"></i> Account & Saved Addresses
           </Link>
           <Link
             to="/help"
             className="nav-link py-2 px-3 rounded-3 text-dark fw-semibold d-flex align-items-center gap-2 touch-target hover-bg-light"
             onClick={onClose}
           >
-            <i className="bi bi-question-circle text-secondary"></i> Help Center
-            & FAQs
+            <i className="bi bi-question-circle text-secondary"></i> Help Center & FAQs
           </Link>
 
           <div className="border-top my-2"></div>

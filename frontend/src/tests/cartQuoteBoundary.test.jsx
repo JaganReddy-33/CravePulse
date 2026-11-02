@@ -12,11 +12,7 @@ vi.mock("../services/api", () => ({
 }));
 
 function CartQuoteControls() {
-  const {
-    addItem,
-    setDeliveryCoordinates,
-    setCheckoutQuoteEnabled,
-  } = useCart();
+  const { addItem, setDeliveryCoordinates, setCheckoutQuoteEnabled } = useCart();
   return (
     <div>
       <button
@@ -30,16 +26,10 @@ function CartQuoteControls() {
       >
         Add item
       </button>
-      <button
-        onClick={() =>
-          setDeliveryCoordinates({ latitude: 12.97, longitude: 77.59 })
-        }
-      >
+      <button onClick={() => setDeliveryCoordinates({ latitude: 12.97, longitude: 77.59 })}>
         Set previous address
       </button>
-      <button onClick={() => setCheckoutQuoteEnabled(true)}>
-        Enter checkout
-      </button>
+      <button onClick={() => setCheckoutQuoteEnabled(true)}>Enter checkout</button>
     </div>
   );
 }
@@ -71,14 +61,9 @@ describe("address quote boundary", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Add item" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Set previous address" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Set previous address" }));
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(api.post).not.toHaveBeenCalledWith(
-      "/cart/calculate",
-      expect.anything(),
-    );
+    expect(api.post).not.toHaveBeenCalledWith("/cart/calculate", expect.anything());
 
     fireEvent.click(screen.getByRole("button", { name: "Enter checkout" }));
     await waitFor(() =>

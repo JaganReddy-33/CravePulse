@@ -1,63 +1,229 @@
 package com.foodplatform.servlet;
+
 import com.foodplatform.config.DatabaseConfig;
+import com.foodplatform.util.GoogleMapsUrlParser;
 import com.foodplatform.util.JsonUtil;
-import jakarta.servlet.http.*;
+import com.google.gson.JsonObject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 public class CatalogServlet extends BaseServlet {
-    @Override protected void doPost(HttpServletRequest req,HttpServletResponse res) throws IOException {
-        if(!requireAdmin(req,res)) return;
-        if(!"/locations".equals(req.getPathInfo())) {JsonUtil.sendError(res,404,"Endpoint not found");return;}
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+        if (!requireAdmin(request, response)) {
+            return;
+        }
+        if (!"/locations".equals(request.getPathInfo())) {
+            JsonUtil.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found");
+            return;
+        }
+
         try {
-            var b=JsonUtil.readRequestBody(req,com.google.gson.JsonObject.class);
-            String city=b.get("city").getAsString().trim(), name=b.get("name").getAsString().trim();
-            double lat=b.get("latitude").getAsDouble(),lng=b.get("longitude").getAsDouble(),radius=b.get("radiusKm").getAsDouble();
-            if(city.isEmpty()||city.length()>100||name.isEmpty()||name.length()>100||!Double.isFinite(lat)||!Double.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||!Double.isFinite(radius)||radius<=0||radius>100) throw new IllegalArgumentException("Provide a city, zone name, valid coordinates and radius up to 100 km");
-            try(Connection c=DatabaseConfig.getConnection();PreparedStatement ps=c.prepareStatement("INSERT INTO delivery_zones(zone_name,city,center_lat,center_lng,radius_km) VALUES(?,?,?,?,?)")) {
-                ps.setString(1,name);ps.setString(2,city);ps.setDouble(3,lat);ps.setDouble(4,lng);ps.setDouble(5,radius);ps.executeUpdate();
+            JsonObject body = JsonUtil.readRequestBody(request, JsonObject.class);
+            if (
+                body == null ||
+                !body.has("city") ||
+                !body.has("name") ||
+                !body.has("mapsUrl") ||
+                !body.has("radiusKm")
+            ) {
+                throw new IllegalArgumentException("Required service area fields are missing");
             }
-            JsonUtil.sendSuccess(res,201,"Delivery zone created",null);
-        } catch(IllegalArgumentException|NullPointerException e) {JsonUtil.sendError(res,400,"Valid delivery zone details are required");}
-        catch(SQLException e) {JsonUtil.sendError(res,503,"Unable to save delivery zone");}
+
+            String city = body.get("city").getAsString().trim();
+            String name = body.get("name").getAsString().trim();
+            String mapsUrl = body.get("mapsUrl").getAsString().trim();
+            double radiusKm = body.get("radiusKm").getAsDouble();
+            if (
+                city.isEmpty() ||
+                city.length() > 100 ||
+                name.isEmpty() ||
+                name.length() > 100 ||
+                !Double.isFinite(radiusKm) ||
+                radiusKm <= 0 ||
+                radiusKm > 100
+            ) {
+                throw new IllegalArgumentException(
+                    "Provide a city, zone name, Maps link and radius up to 100 km"
+                );
+            }
+
+            GoogleMapsUrlParser.Coordinates coordinates = GoogleMapsUrlParser.parseAndResolve(
+                mapsUrl
+            );
+            String sql =
+                "INSERT INTO delivery_zones(zone_name, city, center_lat, center_lng, radius_km) " +
+                "VALUES (?, ?, ?, ?, ?)";
+            try (
+                Connection connection = DatabaseConfig.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+            ) {
+                statement.setString(1, name);
+                statement.setString(2, city);
+                statement.setBigDecimal(3, coordinates.latitude());
+                statement.setBigDecimal(4, coordinates.longitude());
+                statement.setDouble(5, radiusKm);
+                statement.executeUpdate();
+            }
+            JsonUtil.sendSuccess(
+                response,
+                HttpServletResponse.SC_CREATED,
+                "Delivery zone created",
+                null
+            );
+        } catch (IllegalArgumentException | NullPointerException e) {
+            String message = e.getMessage();
+            JsonUtil.sendError(
+                response,
+                HttpServletResponse.SC_BAD_REQUEST,
+                message == null ? "Valid delivery zone details are required" : message
+            );
+        } catch (SQLException e) {
+            JsonUtil.sendError(
+                response,
+                HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                "Unable to save delivery zone"
+            );
+        }
     }
-    @Override protected void doGet(HttpServletRequest req,HttpServletResponse res) throws IOException {
-        String path=req.getPathInfo()==null?"":req.getPathInfo();
-        try(Connection c=DatabaseConfig.getConnection()) {
-            if(path.equals("/offers")) {
-                List<Map<String,Object>> offers=new ArrayList<>();
-                String sql="SELECT * FROM coupons WHERE is_active=TRUE AND times_used<usage_limit AND (valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP) AND (valid_until IS NULL OR valid_until>=CURRENT_TIMESTAMP)";
-                try(Statement st=c.createStatement();ResultSet rs=st.executeQuery(sql)) {
-                    while(rs.next()) {
-                        long restaurantId=rs.getLong("restaurant_id"); boolean global=rs.wasNull();
-                        String requested=req.getParameter("restaurantId");
-                        if(requested!=null && !global && !requested.equals(String.valueOf(restaurantId))) continue;
-                        Map<String,Object> offer=new HashMap<>();
-                        offer.put("code",rs.getString("code"));offer.put("title",rs.getString("description"));offer.put("description",rs.getString("description"));
-                        offer.put("minOrder",rs.getBigDecimal("min_order_amount"));offer.put("restaurantId",global?null:restaurantId);
-                        offer.put("discount",rs.getBigDecimal("discount_value").toPlainString()+("PERCENTAGE".equals(rs.getString("discount_type"))?"% OFF":" INR OFF"));
-                        offer.put("details",rs.getString("description"));offer.put("color","var(--c-primary)");offer.put("tag",rs.getBoolean("first_order_only")?"FIRST ORDER":"AVAILABLE");
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+        String path = request.getPathInfo() == null ? "" : request.getPathInfo();
+        try (Connection connection = DatabaseConfig.getConnection()) {
+            if (path.equals("/offers")) {
+                List<Map<String, Object>> offers = new ArrayList<>();
+                String sql =
+                    "SELECT * FROM coupons WHERE is_active = TRUE AND times_used < usage_limit " +
+                    "AND (valid_from IS NULL OR valid_from <= CURRENT_TIMESTAMP) " +
+                    "AND (valid_until IS NULL OR valid_until >= CURRENT_TIMESTAMP)";
+                try (
+                    Statement statement = connection.createStatement();
+                    ResultSet results = statement.executeQuery(sql)
+                ) {
+                    while (results.next()) {
+                        long restaurantId = results.getLong("restaurant_id");
+                        boolean global = results.wasNull();
+                        String requestedRestaurantId = request.getParameter("restaurantId");
+                        if (
+                            requestedRestaurantId != null &&
+                            !global &&
+                            !requestedRestaurantId.equals(String.valueOf(restaurantId))
+                        ) {
+                            continue;
+                        }
+
+                        Map<String, Object> offer = new HashMap<>();
+                        offer.put("code", results.getString("code"));
+                        offer.put("title", results.getString("description"));
+                        offer.put("description", results.getString("description"));
+                        offer.put("minOrder", results.getBigDecimal("min_order_amount"));
+                        offer.put("restaurantId", global ? null : restaurantId);
+                        offer.put(
+                            "discount",
+                            results.getBigDecimal("discount_value").toPlainString() +
+                                ("PERCENTAGE".equals(results.getString("discount_type"))
+                                    ? "% OFF"
+                                    : " INR OFF")
+                        );
+                        offer.put("details", results.getString("description"));
+                        offer.put("color", "var(--c-primary)");
+                        offer.put(
+                            "tag",
+                            results.getBoolean("first_order_only") ? "FIRST ORDER" : "AVAILABLE"
+                        );
                         offers.add(offer);
                     }
                 }
-                JsonUtil.sendSuccess(res,200,"Available offers",offers);
-            } else if(path.equals("/locations")) {
-                Map<String,Map<String,Object>> cities=new LinkedHashMap<>();
-                try(Statement st=c.createStatement();ResultSet rs=st.executeQuery("SELECT id,zone_name,city,center_lat,center_lng FROM delivery_zones WHERE is_active=TRUE ORDER BY city,zone_name")) {
-                    while(rs.next()) {
-                        String city=rs.getString("city");
-                        Map<String,Object> entry=cities.computeIfAbsent(city,key -> {
-                            Map<String,Object> m=new HashMap<>();m.put("id",key);m.put("name",key);m.put("hubs",new ArrayList<Map<String,Object>>());return m;
+                JsonUtil.sendSuccess(
+                    response,
+                    HttpServletResponse.SC_OK,
+                    "Available offers",
+                    offers
+                );
+            } else if (path.equals("/locations")) {
+                Map<String, Map<String, Object>> cities = new LinkedHashMap<>();
+                String sql =
+                    "SELECT id, zone_name, city, center_lat, center_lng " +
+                    "FROM delivery_zones WHERE is_active = TRUE ORDER BY city, zone_name";
+                try (
+                    Statement statement = connection.createStatement();
+                    ResultSet results = statement.executeQuery(sql)
+                ) {
+                    while (results.next()) {
+                        String city = results.getString("city");
+                        Map<String, Object> entry = cities.computeIfAbsent(city, key -> {
+                            Map<String, Object> value = new HashMap<>();
+                            value.put("id", key);
+                            value.put("name", key);
+                            value.put("hubs", new ArrayList<Map<String, Object>>());
+                            return value;
                         });
-                        @SuppressWarnings("unchecked") List<Map<String,Object>> hubs=(List<Map<String,Object>>)entry.get("hubs");
-                        hubs.add(Map.of("id",rs.getLong("id"),"name",rs.getString("zone_name"),"area",city,"cityName",city,"coords",List.of(rs.getDouble("center_lat"),rs.getDouble("center_lng"))));
+                        @SuppressWarnings("unchecked")
+                        List<Map<String, Object>> hubs = (List<Map<String, Object>>) entry.get(
+                            "hubs"
+                        );
+                        hubs.add(
+                            Map.of(
+                                "id",
+                                results.getLong("id"),
+                                "name",
+                                results.getString("zone_name"),
+                                "area",
+                                city,
+                                "cityName",
+                                city,
+                                "coords",
+                                List.of(
+                                    results.getDouble("center_lat"),
+                                    results.getDouble("center_lng")
+                                )
+                            )
+                        );
                     }
                 }
-                JsonUtil.sendSuccess(res,200,"Configured delivery locations",cities.values());
-            } else if(path.equals("/categories")) {
-                List<Map<String,Object>> categories = new com.foodplatform.daoImpl.DiscoveryCategoryDaoImpl().listCategories(false);
-                JsonUtil.sendSuccess(res,200,"Restaurant discovery categories",categories);
-            } else JsonUtil.sendError(res,404,"Endpoint not found");
-        } catch(SQLException e) { JsonUtil.sendError(res,503,"Catalog unavailable. Please retry."); }
+                JsonUtil.sendSuccess(
+                    response,
+                    HttpServletResponse.SC_OK,
+                    "Configured delivery locations",
+                    cities.values()
+                );
+            } else if (path.equals("/categories")) {
+                List<Map<String, Object>> categories =
+                    new com.foodplatform.daoImpl.DiscoveryCategoryDaoImpl().listCategories(false);
+                JsonUtil.sendSuccess(
+                    response,
+                    HttpServletResponse.SC_OK,
+                    "Restaurant discovery categories",
+                    categories
+                );
+            } else {
+                JsonUtil.sendError(
+                    response,
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Endpoint not found"
+                );
+            }
+        } catch (SQLException e) {
+            JsonUtil.sendError(
+                response,
+                HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                "Catalog unavailable. Please retry."
+            );
+        }
     }
 }

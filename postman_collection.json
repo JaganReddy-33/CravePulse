@@ -21,7 +21,11 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@foodora.com\",\n  \"password\": \"Password@123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           }
         },
         {
@@ -33,7 +37,11 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"chef@foodanalytics.com\",\n  \"password\": \"Password@123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           }
         },
         {
@@ -45,7 +53,11 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"rider@swiftlogistics.com\",\n  \"password\": \"Password@123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           }
         },
         {
@@ -57,7 +69,11 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@foodplatform.com\",\n  \"password\": \"Password@123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           }
         },
         {
@@ -92,14 +108,22 @@
           "name": "Restaurant Detail",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/restaurants/1", "host": ["{{baseUrl}}"], "path": ["restaurants", "1"] }
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "1"]
+            }
           }
         },
         {
           "name": "Restaurant Analytics (Image 2 Stats)",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/restaurants/1/analytics", "host": ["{{baseUrl}}"], "path": ["restaurants", "1", "analytics"] }
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/1/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["restaurants", "1", "analytics"]
+            }
           }
         }
       ]
@@ -111,7 +135,11 @@
           "name": "Get Restaurant Menu",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/menu/restaurant/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurant", "1"] }
+            "url": {
+              "raw": "{{baseUrl}}/menu/restaurant/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["menu", "restaurant", "1"]
+            }
           }
         },
         {
@@ -126,7 +154,11 @@
               "mode": "raw",
               "raw": "{\n  \"platformPrice\": 280.00,\n  \"dineInPrice\": 280.00\n}"
             },
-            "url": { "raw": "{{baseUrl}}/menu/item/1/price-parity", "host": ["{{baseUrl}}"], "path": ["menu", "item", "1", "price-parity"] }
+            "url": {
+              "raw": "{{baseUrl}}/menu/item/1/price-parity",
+              "host": ["{{baseUrl}}"],
+              "path": ["menu", "item", "1", "price-parity"]
+            }
           }
         }
       ]
@@ -143,14 +175,22 @@
               "mode": "raw",
               "raw": "{\n  \"restaurantId\": 1,\n  \"items\": [\n    {\n      \"menuItemId\": 1,\n      \"quantity\": 2,\n      \"addonIds\": [1]\n    }\n  ],\n  \"couponCode\": \"FOOD50\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/cart/calculate", "host": ["{{baseUrl}}"], "path": ["cart", "calculate"] }
+            "url": {
+              "raw": "{{baseUrl}}/cart/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "calculate"]
+            }
           }
         },
         {
           "name": "List Active Coupons",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/cart/coupons", "host": ["{{baseUrl}}"], "path": ["cart", "coupons"] }
+            "url": {
+              "raw": "{{baseUrl}}/cart/coupons",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "coupons"]
+            }
           }
         }
       ]
@@ -185,7 +225,11 @@
               "mode": "raw",
               "raw": "{\n  \"status\": \"ACCEPTED\",\n  \"reason\": \"Kitchen confirmed\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/orders/1/status", "host": ["{{baseUrl}}"], "path": ["orders", "1", "status"] }
+            "url": {
+              "raw": "{{baseUrl}}/orders/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "1", "status"]
+            }
           }
         }
       ]

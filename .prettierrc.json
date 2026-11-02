@@ -1,0 +1,22 @@
+{
+  "plugins": ["prettier-plugin-java", "prettier-plugin-sql", "@prettier/plugin-xml"],
+  "printWidth": 100,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "overrides": [
+    {
+      "files": ["**/*.java"],
+      "options": {
+        "tabWidth": 4
+      }
+    },
+    {
+      "files": ["**/*.sql"],
+      "options": {
+        "language": "mysql",
+        "keywordCase": "upper",
+        "tabWidth": 4
+      }
+    }
+  ]
+}

@@ -50,12 +50,9 @@ const AdminRiders = () => {
     <div className="container-fluid py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h4 className="fw-bold mb-1 text-white">
-            Live Logistics Fleet Radar
-          </h4>
+          <h4 className="fw-bold mb-1 text-white">Live Logistics Fleet Radar</h4>
           <p className="text-secondary small mb-0">
-            Real-time driver location, active dispatches, and fair-pay
-            compliance
+            Real-time driver location, active dispatches, and fair-pay compliance
           </p>
         </div>
       </div>
@@ -67,12 +64,8 @@ const AdminRiders = () => {
             className="card border-0 rounded-4 p-3 text-white"
             style={{ background: "#111827", border: "1px solid #1f293d" }}
           >
-            <span className="text-secondary small fw-bold">
-              TOTAL ACTIVE FLEET
-            </span>
-            <h3 className="fw-extrabold text-info mt-1 mb-0">
-              {riders.length} Riders
-            </h3>
+            <span className="text-secondary small fw-bold">TOTAL ACTIVE FLEET</span>
+            <h3 className="fw-extrabold text-info mt-1 mb-0">{riders.length} Riders</h3>
           </div>
         </div>
         <div className="col-md-3">
@@ -80,9 +73,7 @@ const AdminRiders = () => {
             className="card border-0 rounded-4 p-3 text-white"
             style={{ background: "#111827", border: "1px solid #1f293d" }}
           >
-            <span className="text-secondary small fw-bold">
-              ON-DUTY AVAILABLE
-            </span>
+            <span className="text-secondary small fw-bold">ON-DUTY AVAILABLE</span>
             <h3 className="fw-extrabold text-success mt-1 mb-0">
               {riders.filter((r) => r.status === "AVAILABLE").length}
             </h3>
@@ -93,9 +84,7 @@ const AdminRiders = () => {
             className="card border-0 rounded-4 p-3 text-white"
             style={{ background: "#111827", border: "1px solid #1f293d" }}
           >
-            <span className="text-secondary small fw-bold">
-              ACTIVE DELIVERIES
-            </span>
+            <span className="text-secondary small fw-bold">ACTIVE DELIVERIES</span>
             <h3 className="fw-extrabold text-warning mt-1 mb-0">
               {riders.filter((r) => r.status === "ON_DELIVERY").length}
             </h3>
@@ -107,9 +96,7 @@ const AdminRiders = () => {
             style={{ background: "#111827", border: "1px solid #1f293d" }}
           >
             <span className="text-secondary small fw-bold">GREEN EV RATIO</span>
-            <h3 className="fw-extrabold text-success mt-1 mb-0">
-              50% Zero Carbon
-            </h3>
+            <h3 className="fw-extrabold text-success mt-1 mb-0">50% Zero Carbon</h3>
           </div>
         </div>
       </div>
@@ -135,16 +122,14 @@ const AdminRiders = () => {
               {loading ? (
                 <tr>
                   <td colSpan="7" className="text-center py-4 text-secondary">
-                    <div className="spinner-border spinner-border-sm text-info me-2"></div>{" "}
-                    Loading fleet radar...
+                    <div className="spinner-border spinner-border-sm text-info me-2"></div> Loading
+                    fleet radar...
                   </td>
                 </tr>
               ) : riders.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center py-5 text-muted">
-                    <p className="mb-0 fs-6">
-                      No delivery captains registered in the fleet yet.
-                    </p>
+                    <p className="mb-0 fs-6">No delivery captains registered in the fleet yet.</p>
                   </td>
                 </tr>
               ) : (

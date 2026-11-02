@@ -10,7 +10,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -42,7 +41,6 @@ public class AdminServlet extends BaseServlet {
 
         if (!requireRole(req, res, "ADMIN")) return;
 
-        // 1. CSV Data Exports
         if ("/export".equals(path)) {
             handleCsvExport(req, res);
             return;
@@ -63,14 +61,26 @@ public class AdminServlet extends BaseServlet {
                 JsonUtil.sendSuccess(res, 200, "User directory", users);
             }
             case "/restaurants" -> {
-                int limit = Math.max(1, Math.min(100, parseIntOrDefault(req.getParameter("limit"), 50)));
+                int limit = Math.max(
+                    1,
+                    Math.min(100, parseIntOrDefault(req.getParameter("limit"), 50))
+                );
                 int offset = Math.max(0, parseIntOrDefault(req.getParameter("offset"), 0));
                 List<Restaurant> list = restaurantDao.listAllRestaurants(limit, offset);
                 JsonUtil.sendSuccess(res, 200, "Restaurant partners", list);
             }
-            case "/categories" -> JsonUtil.sendSuccess(res, 200, "Discovery categories", discoveryCategoryDao.listCategories(true));
-            case "/payout-requests" -> JsonUtil.sendSuccess(res, 200, "Payout requests",
-                    payoutRequestDao.listAdminRequests(req.getParameter("status")));
+            case "/categories" -> JsonUtil.sendSuccess(
+                res,
+                200,
+                "Discovery categories",
+                discoveryCategoryDao.listCategories(true)
+            );
+            case "/payout-requests" -> JsonUtil.sendSuccess(
+                res,
+                200,
+                "Payout requests",
+                payoutRequestDao.listAdminRequests(req.getParameter("status"))
+            );
             case "/riders" -> {
                 List<RiderProfile> list = riderDao.listAllRiders(100, 0);
                 JsonUtil.sendSuccess(res, 200, "Delivery riders", list);
@@ -83,12 +93,17 @@ public class AdminServlet extends BaseServlet {
             case "/live-map" -> {
                 List<Restaurant> rests = restaurantDao.listAllRestaurants(100, 0);
                 List<RiderProfile> riders = riderDao.listAllRiders(100, 0);
-                List<Order> activeOrders = orderDao.listAllOrders(100, 0).stream()
-                        .filter(o -> "ACCEPTED".equalsIgnoreCase(o.getStatus())
-                                || "PREPARING".equalsIgnoreCase(o.getStatus())
-                                || "READY".equalsIgnoreCase(o.getStatus())
-                                || "PICKED_UP".equalsIgnoreCase(o.getStatus()))
-                        .collect(Collectors.toList());
+                List<Order> activeOrders = orderDao
+                    .listAllOrders(100, 0)
+                    .stream()
+                    .filter(
+                        o ->
+                            "ACCEPTED".equalsIgnoreCase(o.getStatus()) ||
+                            "PREPARING".equalsIgnoreCase(o.getStatus()) ||
+                            "READY".equalsIgnoreCase(o.getStatus()) ||
+                            "PICKED_UP".equalsIgnoreCase(o.getStatus())
+                    )
+                    .collect(Collectors.toList());
                 activeOrders.forEach(order -> order.setDeliveryOtp(null));
 
                 Map<String, Object> mapData = new HashMap<>();
@@ -98,12 +113,16 @@ public class AdminServlet extends BaseServlet {
                 JsonUtil.sendSuccess(res, 200, "Live ops map telemetry", mapData);
             }
             case "/approvals/pending", "/pending-approvals" -> {
-                List<Restaurant> pendingRestaurants = restaurantDao.listAllRestaurants(100, 0).stream()
-                        .filter(r -> !r.isKycApproved())
-                        .collect(Collectors.toList());
-                List<RiderProfile> pendingRiders = riderDao.listAllRiders(100, 0).stream()
-                        .filter(r -> !r.isKycApproved())
-                        .collect(Collectors.toList());
+                List<Restaurant> pendingRestaurants = restaurantDao
+                    .listAllRestaurants(100, 0)
+                    .stream()
+                    .filter(r -> !r.isKycApproved())
+                    .collect(Collectors.toList());
+                List<RiderProfile> pendingRiders = riderDao
+                    .listAllRiders(100, 0)
+                    .stream()
+                    .filter(r -> !r.isKycApproved())
+                    .collect(Collectors.toList());
                 Map<String, Object> pending = new HashMap<>();
                 pending.put("restaurants", pendingRestaurants);
                 pending.put("riders", pendingRiders);
@@ -142,27 +161,50 @@ public class AdminServlet extends BaseServlet {
             Long requestId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (requestId == null || body == null || !body.has("status")) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "Request ID and status are required");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Request ID and status are required"
+                );
                 return;
             }
             String status = body.get("status").getAsString();
-            String paymentReference = body.has("paymentReference") && !body.get("paymentReference").isJsonNull()
-                    ? body.get("paymentReference").getAsString() : null;
-            String adminNote = body.has("adminNote") && !body.get("adminNote").isJsonNull()
-                    ? body.get("adminNote").getAsString() : null;
-            if ("PAID".equalsIgnoreCase(status) &&
-                    (!body.has("transferConfirmed") || !body.get("transferConfirmed").getAsBoolean())) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST,
-                        "Confirm that the external transfer completed before marking the request paid");
+            String paymentReference =
+                body.has("paymentReference") && !body.get("paymentReference").isJsonNull()
+                    ? body.get("paymentReference").getAsString()
+                    : null;
+            String adminNote =
+                body.has("adminNote") && !body.get("adminNote").isJsonNull()
+                    ? body.get("adminNote").getAsString()
+                    : null;
+            if (
+                "PAID".equalsIgnoreCase(status) &&
+                (!body.has("transferConfirmed") || !body.get("transferConfirmed").getAsBoolean())
+            ) {
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Confirm that the external transfer completed before marking the request paid"
+                );
                 return;
             }
             try {
                 Map<String, Object> processed = payoutRequestDao.updateAdminRequest(
-                        requestId, adminId, status, paymentReference, adminNote);
-                adminAuditDao.logAction(adminId, adminName,
-                        "PAID".equalsIgnoreCase(status) ? "MARK_PAYOUT_PAID" : "REJECT_PAYOUT_REQUEST",
-                        "PAYOUT_REQUEST", String.valueOf(requestId),
-                        adminNote == null ? status : status + ": " + adminNote, ip);
+                    requestId,
+                    adminId,
+                    status,
+                    paymentReference,
+                    adminNote
+                );
+                adminAuditDao.logAction(
+                    adminId,
+                    adminName,
+                    "PAID".equalsIgnoreCase(status) ? "MARK_PAYOUT_PAID" : "REJECT_PAYOUT_REQUEST",
+                    "PAYOUT_REQUEST",
+                    String.valueOf(requestId),
+                    adminNote == null ? status : status + ": " + adminNote,
+                    ip
+                );
                 JsonUtil.sendSuccess(res, 200, "Payout request processed", processed);
             } catch (IllegalArgumentException e) {
                 JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
@@ -175,18 +217,43 @@ public class AdminServlet extends BaseServlet {
         if ("/categories".equals(path)) {
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (!validCategoryBody(body)) {
-                JsonUtil.sendError(res, 400, "A category name, HTTPS imageUrl, and non-negative displayOrder are required");
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "A category name, HTTPS imageUrl, and non-negative displayOrder are required"
+                );
                 return;
             }
             String name = body.get("name").getAsString().trim();
             String imageUrl = body.get("imageUrl").getAsString().trim();
             int displayOrder = body.get("displayOrder").getAsInt();
             Long categoryId = discoveryCategoryDao.createCategory(name, imageUrl, displayOrder);
-            adminAuditDao.logAction(adminId, adminName, "CREATE_DISCOVERY_CATEGORY", "DISCOVERY_CATEGORY",
-                    String.valueOf(categoryId), "Created cuisine discovery category " + name, ip);
-            JsonUtil.sendSuccess(res, 201, "Discovery category created", Map.of(
-                    "id", categoryId, "name", name, "imageUrl", imageUrl,
-                    "displayOrder", displayOrder, "active", true));
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "CREATE_DISCOVERY_CATEGORY",
+                "DISCOVERY_CATEGORY",
+                String.valueOf(categoryId),
+                "Created cuisine discovery category " + name,
+                ip
+            );
+            JsonUtil.sendSuccess(
+                res,
+                201,
+                "Discovery category created",
+                Map.of(
+                    "id",
+                    categoryId,
+                    "name",
+                    name,
+                    "imageUrl",
+                    imageUrl,
+                    "displayOrder",
+                    displayOrder,
+                    "active",
+                    true
+                )
+            );
             return;
         }
 
@@ -194,22 +261,55 @@ public class AdminServlet extends BaseServlet {
             Long categoryId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (categoryId == null || !validCategoryBody(body) || !body.has("active")) {
-                JsonUtil.sendError(res, 400, "A category ID, name, HTTPS imageUrl, displayOrder, and active status are required");
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "A category ID, name, HTTPS imageUrl, displayOrder, and active status are required"
+                );
                 return;
             }
             String name = body.get("name").getAsString().trim();
             String imageUrl = body.get("imageUrl").getAsString().trim();
             int displayOrder = body.get("displayOrder").getAsInt();
             boolean active = body.get("active").getAsBoolean();
-            if (!discoveryCategoryDao.updateCategory(categoryId, name, imageUrl, displayOrder, active)) {
+            if (
+                !discoveryCategoryDao.updateCategory(
+                    categoryId,
+                    name,
+                    imageUrl,
+                    displayOrder,
+                    active
+                )
+            ) {
                 JsonUtil.sendError(res, 404, "Discovery category not found");
                 return;
             }
-            adminAuditDao.logAction(adminId, adminName, "UPDATE_DISCOVERY_CATEGORY", "DISCOVERY_CATEGORY",
-                    String.valueOf(categoryId), "Updated cuisine discovery category " + name, ip);
-            JsonUtil.sendSuccess(res, 200, "Discovery category updated", Map.of(
-                    "id", categoryId, "name", name, "imageUrl", imageUrl,
-                    "displayOrder", displayOrder, "active", active));
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "UPDATE_DISCOVERY_CATEGORY",
+                "DISCOVERY_CATEGORY",
+                String.valueOf(categoryId),
+                "Updated cuisine discovery category " + name,
+                ip
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Discovery category updated",
+                Map.of(
+                    "id",
+                    categoryId,
+                    "name",
+                    name,
+                    "imageUrl",
+                    imageUrl,
+                    "displayOrder",
+                    displayOrder,
+                    "active",
+                    active
+                )
+            );
             return;
         }
 
@@ -219,9 +319,21 @@ public class AdminServlet extends BaseServlet {
                 JsonUtil.sendError(res, 404, "Discovery category not found");
                 return;
             }
-            adminAuditDao.logAction(adminId, adminName, "DEACTIVATE_DISCOVERY_CATEGORY", "DISCOVERY_CATEGORY",
-                    String.valueOf(categoryId), "Deactivated cuisine discovery category", ip);
-            JsonUtil.sendSuccess(res, 200, "Discovery category deactivated", Map.of("id", categoryId, "active", false));
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "DEACTIVATE_DISCOVERY_CATEGORY",
+                "DISCOVERY_CATEGORY",
+                String.valueOf(categoryId),
+                "Deactivated cuisine discovery category",
+                ip
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Discovery category deactivated",
+                Map.of("id", categoryId, "active", false)
+            );
             return;
         }
 
@@ -243,67 +355,139 @@ public class AdminServlet extends BaseServlet {
                 return;
             }
             if ("ACTIVE".equals(status) && !restaurant.isKycApproved()) {
-                JsonUtil.sendError(res, 409, "A restaurant must be KYC-approved before it can be activated");
+                JsonUtil.sendError(
+                    res,
+                    409,
+                    "A restaurant must be KYC-approved before it can be activated"
+                );
                 return;
             }
             boolean isOpen = "ACTIVE".equals(status);
             restaurantDao.updateOpenStatus(restaurantId, isOpen);
-            adminAuditDao.logAction(adminId, adminName, isOpen ? "ACTIVATE_RESTAURANT" : "PAUSE_RESTAURANT",
-                    "RESTAURANT", String.valueOf(restaurantId), "Restaurant set to " + status, ip);
-            JsonUtil.sendSuccess(res, 200, "Restaurant status updated",
-                    Map.of("restaurantId", restaurantId, "status", status, "isOpen", isOpen));
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                isOpen ? "ACTIVATE_RESTAURANT" : "PAUSE_RESTAURANT",
+                "RESTAURANT",
+                String.valueOf(restaurantId),
+                "Restaurant set to " + status,
+                ip
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant status updated",
+                Map.of("restaurantId", restaurantId, "status", status, "isOpen", isOpen)
+            );
             return;
         }
 
-        // 1. Restaurant KYC Approval / Revocation
-        if ((path.startsWith("/restaurant/") && path.endsWith("/kyc")) || path.startsWith("/approvals/restaurant/")) {
+        if (
+            (path.startsWith("/restaurant/") && path.endsWith("/kyc")) ||
+            path.startsWith("/approvals/restaurant/")
+        ) {
             Long restId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean approved = body == null || !body.has("approved") || body.get("approved").getAsBoolean();
-            String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "KYC compliance verification";
+            boolean approved =
+                body == null || !body.has("approved") || body.get("approved").getAsBoolean();
+            String reason =
+                body != null && body.has("reason")
+                    ? body.get("reason").getAsString()
+                    : "KYC compliance verification";
 
-            if (restId == null) { JsonUtil.sendError(res,400,"Restaurant ID required"); return; }
+            if (restId == null) {
+                JsonUtil.sendError(res, 400, "Restaurant ID required");
+                return;
+            }
             Restaurant restaurant = restaurantDao.findById(restId);
-            if (restaurant == null) { JsonUtil.sendError(res,404,"Restaurant not found"); return; }
+            if (restaurant == null) {
+                JsonUtil.sendError(res, 404, "Restaurant not found");
+                return;
+            }
             restaurantDao.updateKyc(restId, approved);
-            notificationService.sendNotification(restaurant.getUserId(),
-                    approved ? "Restaurant application approved" : "Restaurant approval revoked",
-                    (approved ? "Your restaurant has been approved." : "Your restaurant approval has been revoked.") +
-                            " Admin note: " + reason,
-                    "SYSTEM", "restaurant-kyc-" + restId);
-            adminAuditDao.logAction(adminId, adminName, approved ? "APPROVE_RESTAURANT_KYC" : "REVOKE_RESTAURANT_KYC",
-                    "RESTAURANT", String.valueOf(restId), reason, ip);
+            notificationService.sendNotification(
+                restaurant.getUserId(),
+                approved ? "Restaurant application approved" : "Restaurant approval revoked",
+                (approved
+                    ? "Your restaurant has been approved."
+                    : "Your restaurant approval has been revoked.") +
+                    " Admin note: " +
+                    reason,
+                "SYSTEM",
+                "restaurant-kyc-" + restId
+            );
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                approved ? "APPROVE_RESTAURANT_KYC" : "REVOKE_RESTAURANT_KYC",
+                "RESTAURANT",
+                String.valueOf(restId),
+                reason,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "Restaurant KYC " + (approved ? "approved" : "revoked"),
-                    Map.of("restaurantId", restId, "isKycApproved", approved));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant KYC " + (approved ? "approved" : "revoked"),
+                Map.of("restaurantId", restId, "isKycApproved", approved)
+            );
             return;
         }
 
-        // 2. Rider KYC Approval / Revocation
-        if ((path.startsWith("/rider/") && path.endsWith("/kyc")) || path.startsWith("/approvals/rider/")) {
+        if (
+            (path.startsWith("/rider/") && path.endsWith("/kyc")) ||
+            path.startsWith("/approvals/rider/")
+        ) {
             Long riderId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean approved = body == null || !body.has("approved") || body.get("approved").getAsBoolean();
-            String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "License and RC verification";
+            boolean approved =
+                body == null || !body.has("approved") || body.get("approved").getAsBoolean();
+            String reason =
+                body != null && body.has("reason")
+                    ? body.get("reason").getAsString()
+                    : "License and RC verification";
 
-            if (riderId == null) { JsonUtil.sendError(res,400,"Rider ID required"); return; }
+            if (riderId == null) {
+                JsonUtil.sendError(res, 400, "Rider ID required");
+                return;
+            }
             RiderProfile rider = riderDao.findById(riderId);
-            if (rider == null) { JsonUtil.sendError(res,404,"Rider not found"); return; }
+            if (rider == null) {
+                JsonUtil.sendError(res, 404, "Rider not found");
+                return;
+            }
             riderDao.updateKyc(riderId, approved);
-            notificationService.sendNotification(rider.getUserId(),
-                    approved ? "Rider application approved" : "Rider approval revoked",
-                    (approved ? "Your rider application has been approved." : "Your rider approval has been revoked.") +
-                            " Admin note: " + reason,
-                    "SYSTEM", "rider-kyc-" + riderId);
-            adminAuditDao.logAction(adminId, adminName, approved ? "APPROVE_RIDER_KYC" : "REVOKE_RIDER_KYC",
-                    "RIDER", String.valueOf(riderId), reason, ip);
+            notificationService.sendNotification(
+                rider.getUserId(),
+                approved ? "Rider application approved" : "Rider approval revoked",
+                (approved
+                    ? "Your rider application has been approved."
+                    : "Your rider approval has been revoked.") +
+                    " Admin note: " +
+                    reason,
+                "SYSTEM",
+                "rider-kyc-" + riderId
+            );
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                approved ? "APPROVE_RIDER_KYC" : "REVOKE_RIDER_KYC",
+                "RIDER",
+                String.valueOf(riderId),
+                reason,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "Rider KYC " + (approved ? "approved" : "revoked"),
-                    Map.of("riderId", riderId, "isKycApproved", approved));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Rider KYC " + (approved ? "approved" : "revoked"),
+                Map.of("riderId", riderId, "isKycApproved", approved)
+            );
             return;
         }
 
-        // 3. User Suspension / Status Moderation
         if (path.startsWith("/users/") && path.endsWith("/status")) {
             Long userId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
@@ -312,35 +496,67 @@ public class AdminServlet extends BaseServlet {
                 return;
             }
             String newStatus = body.get("status").getAsString().toUpperCase();
-            String reason = body.has("reason") ? body.get("reason").getAsString() : "Admin moderation action";
+            String reason = body.has("reason")
+                ? body.get("reason").getAsString()
+                : "Admin moderation action";
 
             userDao.updateUserStatus(userId, newStatus);
-            adminAuditDao.logAction(adminId, adminName, "UPDATE_USER_STATUS", "USER",
-                    String.valueOf(userId), "Status updated to " + newStatus + ". Reason: " + reason, ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "UPDATE_USER_STATUS",
+                "USER",
+                String.valueOf(userId),
+                "Status updated to " + newStatus + ". Reason: " + reason,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "User status updated to " + newStatus, Map.of("userId", userId, "status", newStatus));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "User status updated to " + newStatus,
+                Map.of("userId", userId, "status", newStatus)
+            );
             return;
         }
 
-        // 4. User Fraud Flag Increment
         if (path.startsWith("/users/") && path.endsWith("/fraud-flag")) {
             Long userId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            String reason = body != null && body.has("reason") ? body.get("reason").getAsString() : "Suspicious claim / chargeback risk";
+            String reason =
+                body != null && body.has("reason")
+                    ? body.get("reason").getAsString()
+                    : "Suspicious claim / chargeback risk";
 
             userDao.incrementFraudFlag(userId);
             int newCount = userDao.getFraudFlagCount(userId);
-            adminAuditDao.logAction(adminId, adminName, "INCREMENT_FRAUD_FLAG", "USER",
-                    String.valueOf(userId), "Fraud flag incremented to " + newCount + ". Reason: " + reason, ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "INCREMENT_FRAUD_FLAG",
+                "USER",
+                String.valueOf(userId),
+                "Fraud flag incremented to " + newCount + ". Reason: " + reason,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "User fraud flag incremented", Map.of("userId", userId, "fraudFlagCount", newCount));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "User fraud flag incremented",
+                Map.of("userId", userId, "fraudFlagCount", newCount)
+            );
             return;
         }
 
-        // 5. Coupon Creation
         if ("/coupons".equals(path)) {
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            if (body == null || !body.has("code") || !body.has("description") || !body.has("discountValue")) {
+            if (
+                body == null ||
+                !body.has("code") ||
+                !body.has("description") ||
+                !body.has("discountValue")
+            ) {
                 JsonUtil.sendError(res, 400, "code, description, and discountValue are required");
                 return;
             }
@@ -348,13 +564,25 @@ public class AdminServlet extends BaseServlet {
             Coupon c = new Coupon();
             c.setCode(body.get("code").getAsString());
             c.setDescription(body.get("description").getAsString());
-            c.setDiscountType(body.has("discountType") ? body.get("discountType").getAsString() : "PERCENTAGE");
+            c.setDiscountType(
+                body.has("discountType") ? body.get("discountType").getAsString() : "PERCENTAGE"
+            );
             c.setDiscountValue(body.get("discountValue").getAsBigDecimal());
-            c.setMinOrderAmount(body.has("minOrderAmount") ? body.get("minOrderAmount").getAsBigDecimal() : BigDecimal.ZERO);
-            c.setMaxDiscountAmount(body.has("maxDiscountAmount") ? body.get("maxDiscountAmount").getAsBigDecimal() : BigDecimal.valueOf(500.00));
+            c.setMinOrderAmount(
+                body.has("minOrderAmount")
+                    ? body.get("minOrderAmount").getAsBigDecimal()
+                    : BigDecimal.ZERO
+            );
+            c.setMaxDiscountAmount(
+                body.has("maxDiscountAmount")
+                    ? body.get("maxDiscountAmount").getAsBigDecimal()
+                    : BigDecimal.valueOf(500.00)
+            );
             c.setUsageLimit(body.has("usageLimit") ? body.get("usageLimit").getAsInt() : 1000);
             c.setActive(!body.has("isActive") || body.get("isActive").getAsBoolean());
-            c.setFirstOrderOnly(body.has("firstOrderOnly") && body.get("firstOrderOnly").getAsBoolean());
+            c.setFirstOrderOnly(
+                body.has("firstOrderOnly") && body.get("firstOrderOnly").getAsBoolean()
+            );
             if (body.has("validUntil") && !body.get("validUntil").isJsonNull()) {
                 try {
                     c.setValidUntil(Timestamp.valueOf(body.get("validUntil").getAsString()));
@@ -363,14 +591,26 @@ public class AdminServlet extends BaseServlet {
 
             Long couponId = couponDao.createCoupon(c);
             c.setId(couponId);
-            adminAuditDao.logAction(adminId, adminName, "CREATE_COUPON", "COUPON",
-                    c.getCode(), "Created coupon " + c.getCode() + " (" + c.getDiscountValue() + " " + c.getDiscountType() + ")", ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "CREATE_COUPON",
+                "COUPON",
+                c.getCode(),
+                "Created coupon " +
+                    c.getCode() +
+                    " (" +
+                    c.getDiscountValue() +
+                    " " +
+                    c.getDiscountType() +
+                    ")",
+                ip
+            );
 
             JsonUtil.sendSuccess(res, 201, "Coupon created successfully", c);
             return;
         }
 
-        // 6. Coupon Update
         if (path.startsWith("/coupons/") && path.endsWith("/update")) {
             Long couponId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
@@ -381,39 +621,69 @@ public class AdminServlet extends BaseServlet {
             }
 
             if (body != null) {
-                if (body.has("description")) c.setDescription(body.get("description").getAsString());
-                if (body.has("discountType")) c.setDiscountType(body.get("discountType").getAsString());
-                if (body.has("discountValue")) c.setDiscountValue(body.get("discountValue").getAsBigDecimal());
-                if (body.has("minOrderAmount")) c.setMinOrderAmount(body.get("minOrderAmount").getAsBigDecimal());
-                if (body.has("maxDiscountAmount")) c.setMaxDiscountAmount(body.get("maxDiscountAmount").getAsBigDecimal());
+                if (body.has("description")) c.setDescription(
+                    body.get("description").getAsString()
+                );
+                if (body.has("discountType")) c.setDiscountType(
+                    body.get("discountType").getAsString()
+                );
+                if (body.has("discountValue")) c.setDiscountValue(
+                    body.get("discountValue").getAsBigDecimal()
+                );
+                if (body.has("minOrderAmount")) c.setMinOrderAmount(
+                    body.get("minOrderAmount").getAsBigDecimal()
+                );
+                if (body.has("maxDiscountAmount")) c.setMaxDiscountAmount(
+                    body.get("maxDiscountAmount").getAsBigDecimal()
+                );
                 if (body.has("usageLimit")) c.setUsageLimit(body.get("usageLimit").getAsInt());
                 if (body.has("isActive")) c.setActive(body.get("isActive").getAsBoolean());
-                if (body.has("firstOrderOnly")) c.setFirstOrderOnly(body.get("firstOrderOnly").getAsBoolean());
+                if (body.has("firstOrderOnly")) c.setFirstOrderOnly(
+                    body.get("firstOrderOnly").getAsBoolean()
+                );
             }
 
             couponDao.updateCoupon(c);
-            adminAuditDao.logAction(adminId, adminName, "UPDATE_COUPON", "COUPON",
-                    c.getCode(), "Updated coupon parameters for " + c.getCode(), ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "UPDATE_COUPON",
+                "COUPON",
+                c.getCode(),
+                "Updated coupon parameters for " + c.getCode(),
+                ip
+            );
 
             JsonUtil.sendSuccess(res, 200, "Coupon updated successfully", c);
             return;
         }
 
-        // 7. Coupon Toggle
         if (path.startsWith("/coupons/") && path.endsWith("/toggle")) {
             Long couponId = parseIdFromPath(req);
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean active = body == null || !body.has("isActive") || body.get("isActive").getAsBoolean();
+            boolean active =
+                body == null || !body.has("isActive") || body.get("isActive").getAsBoolean();
 
             couponDao.toggleCoupon(couponId, active);
-            adminAuditDao.logAction(adminId, adminName, active ? "ACTIVATE_COUPON" : "DEACTIVATE_COUPON",
-                    "COUPON", String.valueOf(couponId), "Toggled coupon active status to " + active, ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                active ? "ACTIVATE_COUPON" : "DEACTIVATE_COUPON",
+                "COUPON",
+                String.valueOf(couponId),
+                "Toggled coupon active status to " + active,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "Coupon status updated", Map.of("couponId", couponId, "isActive", active));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Coupon status updated",
+                Map.of("couponId", couponId, "isActive", active)
+            );
             return;
         }
 
-        // 8. Platform Dynamic Settings Update
         if ("/settings".equals(path)) {
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body == null || !body.has("key") || !body.has("value")) {
@@ -423,13 +693,27 @@ public class AdminServlet extends BaseServlet {
 
             String key = body.get("key").getAsString();
             String value = body.get("value").getAsString();
-            String desc = body.has("description") ? body.get("description").getAsString() : "Updated by ops supervisor";
+            String desc = body.has("description")
+                ? body.get("description").getAsString()
+                : "Updated by ops supervisor";
 
             platformSettingDao.updateSetting(key, value, desc);
-            adminAuditDao.logAction(adminId, adminName, "UPDATE_PLATFORM_SETTING", "SETTINGS",
-                    key, "Setting " + key + " updated to " + value, ip);
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "UPDATE_PLATFORM_SETTING",
+                "SETTINGS",
+                key,
+                "Setting " + key + " updated to " + value,
+                ip
+            );
 
-            JsonUtil.sendSuccess(res, 200, "Platform setting updated", Map.of("key", key, "value", value));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Platform setting updated",
+                Map.of("key", key, "value", value)
+            );
             return;
         }
 
@@ -449,92 +733,126 @@ public class AdminServlet extends BaseServlet {
         if (path.startsWith("/coupons/")) {
             Long couponId = parseIdFromPath(req);
             couponDao.deleteCoupon(couponId);
-            adminAuditDao.logAction(adminId, adminName, "DELETE_COUPON", "COUPON",
-                    String.valueOf(couponId), "Deleted coupon ID " + couponId, ip);
-            JsonUtil.sendSuccess(res, 200, "Coupon deleted successfully", Map.of("couponId", couponId));
+            adminAuditDao.logAction(
+                adminId,
+                adminName,
+                "DELETE_COUPON",
+                "COUPON",
+                String.valueOf(couponId),
+                "Deleted coupon ID " + couponId,
+                ip
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Coupon deleted successfully",
+                Map.of("couponId", couponId)
+            );
             return;
         }
 
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
     }
 
-    private void handleCsvExport(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    private void handleCsvExport(HttpServletRequest req, HttpServletResponse res)
+        throws IOException {
         String type = req.getParameter("type");
         if (type == null) type = "orders";
 
         res.setContentType("text/csv; charset=UTF-8");
-        res.setHeader("Content-Disposition", "attachment; filename=\"cravepulse_" + type + "_export.csv\"");
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=\"cravepulse_" + type + "_export.csv\""
+        );
 
         PrintWriter writer = res.getWriter();
 
         switch (type.toLowerCase()) {
             case "orders" -> {
-                writer.println("Order ID,Order Number,Customer ID,Restaurant ID,Rider ID,Status,Subtotal,Delivery Fee,Platform Fee,GST,Total Amount,Payment Mode,Payment Status,Created At");
+                writer.println(
+                    "Order ID,Order Number,Customer ID,Restaurant ID,Rider ID,Status,Subtotal,Delivery Fee,Platform Fee,GST,Total Amount,Payment Mode,Payment Status,Created At"
+                );
                 List<Order> orders = orderDao.listAllOrders(1000, 0);
                 for (Order o : orders) {
-                    writer.printf("%d,\"%s\",%d,%d,%s,\"%s\",%.2f,%.2f,%.2f,%.2f,%.2f,\"%s\",\"%s\",\"%s\"%n",
-                            o.getId(),
-                            escapeCsv(o.getOrderNumber()),
-                            o.getCustomerId(),
-                            o.getRestaurantId(),
-                            o.getRiderId() != null ? String.valueOf(o.getRiderId()) : "",
-                            o.getStatus(),
-                            o.getSubtotal() != null ? o.getSubtotal().doubleValue() : 0.0,
-                            o.getDeliveryFee() != null ? o.getDeliveryFee().doubleValue() : 0.0,
-                            o.getPlatformFee() != null ? o.getPlatformFee().doubleValue() : 0.0,
-                            o.getGstTax() != null ? o.getGstTax().doubleValue() : 0.0,
-                            o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0,
-                            o.getPaymentMode(),
-                            o.getPaymentStatus(),
-                            o.getCreatedAt() != null ? o.getCreatedAt().toString() : "");
+                    writer.printf(
+                        "%d,\"%s\",%d,%d,%s,\"%s\",%.2f,%.2f,%.2f,%.2f,%.2f,\"%s\",\"%s\",\"%s\"%n",
+                        o.getId(),
+                        escapeCsv(o.getOrderNumber()),
+                        o.getCustomerId(),
+                        o.getRestaurantId(),
+                        o.getRiderId() != null ? String.valueOf(o.getRiderId()) : "",
+                        o.getStatus(),
+                        o.getSubtotal() != null ? o.getSubtotal().doubleValue() : 0.0,
+                        o.getDeliveryFee() != null ? o.getDeliveryFee().doubleValue() : 0.0,
+                        o.getPlatformFee() != null ? o.getPlatformFee().doubleValue() : 0.0,
+                        o.getGstTax() != null ? o.getGstTax().doubleValue() : 0.0,
+                        o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0,
+                        o.getPaymentMode(),
+                        o.getPaymentStatus(),
+                        o.getCreatedAt() != null ? o.getCreatedAt().toString() : ""
+                    );
                 }
             }
             case "users" -> {
-                writer.println("User ID,Full Name,Email,Phone,Role,Status,Wallet Balance,Fraud Flags,Created At");
+                writer.println(
+                    "User ID,Full Name,Email,Phone,Role,Status,Wallet Balance,Fraud Flags,Created At"
+                );
                 List<User> users = userDao.listAllUsers(1000, 0);
                 for (User u : users) {
-                    writer.printf("%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.2f,%d,\"%s\"%n",
-                            u.getId(),
-                            escapeCsv(u.getFullName()),
-                            escapeCsv(u.getEmail()),
-                            escapeCsv(u.getPhone()),
-                            u.getRole(),
-                            u.getStatus(),
-                            u.getWalletBalance() != null ? u.getWalletBalance().doubleValue() : 0.0,
-                            u.getFraudFlagCount(),
-                            u.getCreatedAt() != null ? u.getCreatedAt().toString() : "");
+                    writer.printf(
+                        "%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.2f,%d,\"%s\"%n",
+                        u.getId(),
+                        escapeCsv(u.getFullName()),
+                        escapeCsv(u.getEmail()),
+                        escapeCsv(u.getPhone()),
+                        u.getRole(),
+                        u.getStatus(),
+                        u.getWalletBalance() != null ? u.getWalletBalance().doubleValue() : 0.0,
+                        u.getFraudFlagCount(),
+                        u.getCreatedAt() != null ? u.getCreatedAt().toString() : ""
+                    );
                 }
             }
             case "disputes" -> {
-                writer.println("Dispute ID,Order ID,Customer ID,Issue Type,Requested Refund,Auto Approved,Admin Status,Resolution Notes,Created At");
+                writer.println(
+                    "Dispute ID,Order ID,Customer ID,Issue Type,Requested Refund,Auto Approved,Admin Status,Resolution Notes,Created At"
+                );
                 List<Dispute> disputes = disputeDao.listAllDisputes(null, 1000, 0);
                 for (Dispute d : disputes) {
-                    writer.printf("%d,%d,%d,\"%s\",%.2f,%s,\"%s\",\"%s\",\"%s\"%n",
-                            d.getId(),
-                            d.getOrderId(),
-                            d.getCustomerId(),
-                            d.getIssueType(),
-                            d.getRequestedRefundAmount() != null ? d.getRequestedRefundAmount().doubleValue() : 0.0,
-                            d.isAutoRefundApproved() ? "YES" : "NO",
-                            d.getAdminStatus(),
-                            escapeCsv(d.getResolutionNotes()),
-                            d.getCreatedAt() != null ? d.getCreatedAt().toString() : "");
+                    writer.printf(
+                        "%d,%d,%d,\"%s\",%.2f,%s,\"%s\",\"%s\",\"%s\"%n",
+                        d.getId(),
+                        d.getOrderId(),
+                        d.getCustomerId(),
+                        d.getIssueType(),
+                        d.getRequestedRefundAmount() != null
+                            ? d.getRequestedRefundAmount().doubleValue()
+                            : 0.0,
+                        d.isAutoRefundApproved() ? "YES" : "NO",
+                        d.getAdminStatus(),
+                        escapeCsv(d.getResolutionNotes()),
+                        d.getCreatedAt() != null ? d.getCreatedAt().toString() : ""
+                    );
                 }
             }
             case "audit-logs", "audit" -> {
-                writer.println("Log ID,Admin ID,Admin Name,Action,Target Type,Target ID,Details,IP Address,Created At");
+                writer.println(
+                    "Log ID,Admin ID,Admin Name,Action,Target Type,Target ID,Details,IP Address,Created At"
+                );
                 List<AdminAuditLog> logs = adminAuditDao.listRecentLogs(1000, 0);
                 for (AdminAuditLog l : logs) {
-                    writer.printf("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
-                            l.getId(),
-                            l.getAdminUserId(),
-                            escapeCsv(l.getAdminName()),
-                            l.getAction(),
-                            l.getTargetType(),
-                            escapeCsv(l.getTargetId()),
-                            escapeCsv(l.getDetails()),
-                            l.getIpAddress(),
-                            l.getCreatedAt() != null ? l.getCreatedAt().toString() : "");
+                    writer.printf(
+                        "%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
+                        l.getId(),
+                        l.getAdminUserId(),
+                        escapeCsv(l.getAdminName()),
+                        l.getAction(),
+                        l.getTargetType(),
+                        escapeCsv(l.getTargetId()),
+                        escapeCsv(l.getDetails()),
+                        l.getIpAddress(),
+                        l.getCreatedAt() != null ? l.getCreatedAt().toString() : ""
+                    );
                 }
             }
             default -> writer.println("Unknown export type: " + type);
@@ -557,14 +875,18 @@ public class AdminServlet extends BaseServlet {
     }
 
     private boolean validCategoryBody(JsonObject body) {
-        if (body == null || !body.has("name") || !body.has("imageUrl") || !body.has("displayOrder")) return false;
+        if (
+            body == null || !body.has("name") || !body.has("imageUrl") || !body.has("displayOrder")
+        ) return false;
         if (body.get("name").isJsonNull() || body.get("imageUrl").isJsonNull()) return false;
         String name = body.get("name").getAsString().trim();
         String imageUrl = body.get("imageUrl").getAsString().trim();
         if (name.isEmpty() || name.length() > 100 || imageUrl.length() > 500) return false;
         try {
             java.net.URI image = java.net.URI.create(imageUrl);
-            if (!"https".equalsIgnoreCase(image.getScheme()) || image.getHost() == null) return false;
+            if (
+                !"https".equalsIgnoreCase(image.getScheme()) || image.getHost() == null
+            ) return false;
             int order = body.get("displayOrder").getAsInt();
             return order >= 0;
         } catch (IllegalArgumentException e) {

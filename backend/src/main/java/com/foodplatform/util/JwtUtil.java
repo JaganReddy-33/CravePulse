@@ -5,37 +5,41 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
+import javax.crypto.SecretKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class JwtUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(
-            AppProperties.getJwtSecret().getBytes(StandardCharsets.UTF_8));
+        AppProperties.getJwtSecret().getBytes(StandardCharsets.UTF_8)
+    );
 
-    private JwtUtil() {
-    }
+    private JwtUtil() {}
 
-    public static String generateAccessToken(long userId, String email, String role, String fullName) {
+    public static String generateAccessToken(
+        long userId,
+        String email,
+        String role,
+        String fullName
+    ) {
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
         Date expiryDate = new Date(nowMillis + AppProperties.getJwtExpirationMillis());
 
         return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .claim("email", email)
-                .claim("role", role)
-                .claim("name", fullName)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(SECRET_KEY)
-                .compact();
+            .subject(String.valueOf(userId))
+            .claim("email", email)
+            .claim("role", role)
+            .claim("name", fullName)
+            .issuedAt(now)
+            .expiration(expiryDate)
+            .signWith(SECRET_KEY)
+            .compact();
     }
 
     public static String generateRefreshToken() {
@@ -45,10 +49,10 @@ public final class JwtUtil {
     public static Claims validateAndExtractClaims(String token) {
         try {
             return Jwts.parser()
-                    .verifyWith(SECRET_KEY)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                .verifyWith(SECRET_KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
             logger.warn("Invalid JWT token: {}", e.getMessage());
             return null;

@@ -5,13 +5,12 @@ import com.foodplatform.dao.OrderDao;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.OrderEvent;
 import com.foodplatform.model.OrderItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderDaoImpl implements OrderDao {
 
@@ -19,11 +18,12 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public Long createOrder(Connection conn, Order order) throws SQLException {
-        String sql = "INSERT INTO orders (order_number, customer_id, restaurant_id, delivery_address_id, status, " +
-                "subtotal, restaurant_discount, coupon_id, coupon_discount, packaging_fee, delivery_fee, platform_fee, gst_tax, " +
-                "total_amount, payment_mode, payment_status, idempotency_key, eta_min_minutes, eta_max_minutes, " +
-                "estimated_delivery_at, special_instructions, delivery_otp, tip_amount) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql =
+            "INSERT INTO orders (order_number, customer_id, restaurant_id, delivery_address_id, status, " +
+            "subtotal, restaurant_discount, coupon_id, coupon_discount, packaging_fee, delivery_fee, platform_fee, gst_tax, " +
+            "total_amount, payment_mode, payment_status, idempotency_key, eta_min_minutes, eta_max_minutes, " +
+            "estimated_delivery_at, special_instructions, delivery_otp, tip_amount) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, order.getOrderNumber());
@@ -31,16 +31,39 @@ public class OrderDaoImpl implements OrderDao {
             ps.setLong(3, order.getRestaurantId());
             ps.setLong(4, order.getDeliveryAddressId());
             ps.setString(5, order.getStatus());
-            ps.setBigDecimal(6, order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO);
-            ps.setBigDecimal(7, order.getRestaurantDiscount() != null ? order.getRestaurantDiscount() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                6,
+                order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO
+            );
+            ps.setBigDecimal(
+                7,
+                order.getRestaurantDiscount() != null
+                    ? order.getRestaurantDiscount()
+                    : BigDecimal.ZERO
+            );
             if (order.getCouponId() != null) ps.setLong(8, order.getCouponId());
             else ps.setNull(8, Types.BIGINT);
-            ps.setBigDecimal(9, order.getCouponDiscount() != null ? order.getCouponDiscount() : BigDecimal.ZERO);
-            ps.setBigDecimal(10, order.getPackagingFee() != null ? order.getPackagingFee() : BigDecimal.ZERO);
-            ps.setBigDecimal(11, order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO);
-            ps.setBigDecimal(12, order.getPlatformFee() != null ? order.getPlatformFee() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                9,
+                order.getCouponDiscount() != null ? order.getCouponDiscount() : BigDecimal.ZERO
+            );
+            ps.setBigDecimal(
+                10,
+                order.getPackagingFee() != null ? order.getPackagingFee() : BigDecimal.ZERO
+            );
+            ps.setBigDecimal(
+                11,
+                order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO
+            );
+            ps.setBigDecimal(
+                12,
+                order.getPlatformFee() != null ? order.getPlatformFee() : BigDecimal.ZERO
+            );
             ps.setBigDecimal(13, order.getGstTax() != null ? order.getGstTax() : BigDecimal.ZERO);
-            ps.setBigDecimal(14, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                14,
+                order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO
+            );
             ps.setString(15, order.getPaymentMode());
             ps.setString(16, order.getPaymentStatus());
             ps.setString(17, order.getIdempotencyKey());
@@ -49,7 +72,10 @@ public class OrderDaoImpl implements OrderDao {
             ps.setTimestamp(20, order.getEstimatedDeliveryAt());
             ps.setString(21, order.getSpecialInstructions());
             ps.setString(22, order.getDeliveryOtp());
-            ps.setBigDecimal(23, order.getTipAmount() != null ? order.getTipAmount() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                23,
+                order.getTipAmount() != null ? order.getTipAmount() : BigDecimal.ZERO
+            );
 
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -64,9 +90,11 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void createOrderItems(Connection conn, long orderId, List<OrderItem> items) throws SQLException {
-        String sql = "INSERT INTO order_items (order_id, menu_item_id, item_name, variant_name, unit_price, quantity, total_price, addon_names, addon_total) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public void createOrderItems(Connection conn, long orderId, List<OrderItem> items)
+        throws SQLException {
+        String sql =
+            "INSERT INTO order_items (order_id, menu_item_id, item_name, variant_name, unit_price, quantity, total_price, addon_names, addon_total) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (OrderItem it : items) {
                 ps.setLong(1, orderId);
@@ -99,7 +127,12 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void updateOrderStatus(Connection conn, long orderId, String newStatus, Timestamp actualDeliveryAt) throws SQLException {
+    public void updateOrderStatus(
+        Connection conn,
+        long orderId,
+        String newStatus,
+        Timestamp actualDeliveryAt
+    ) throws SQLException {
         String sql = "UPDATE orders SET status = ?, actual_delivery_at = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newStatus);
@@ -110,7 +143,8 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void updateOrderPaymentStatus(Connection conn, long orderId, String paymentStatus) throws SQLException {
+    public void updateOrderPaymentStatus(Connection conn, long orderId, String paymentStatus)
+        throws SQLException {
         String sql = "UPDATE orders SET payment_status = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, paymentStatus);
@@ -120,7 +154,8 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void assignRiderToOrder(Connection conn, long orderId, long riderId) throws SQLException {
+    public void assignRiderToOrder(Connection conn, long orderId, long riderId)
+        throws SQLException {
         String sql = "UPDATE orders SET rider_id = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, riderId);
@@ -131,8 +166,9 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public void recordOrderEvent(Connection conn, OrderEvent event) throws SQLException {
-        String sql = "INSERT INTO order_events (order_id, previous_status, new_status, triggered_by_user_id, actor_role, reason, latitude, longitude) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql =
+            "INSERT INTO order_events (order_id, previous_status, new_status, triggered_by_user_id, actor_role, reason, latitude, longitude) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, event.getOrderId());
             ps.setString(2, event.getPreviousStatus());
@@ -149,21 +185,24 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public Order findById(long orderId) {
-        String sql = "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
-                "a.latitude AS addr_lat, a.longitude AS addr_lng " +
-                "FROM orders o " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
-                "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
-                "WHERE o.id = ?";
+        String sql =
+            "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
+            "a.latitude AS addr_lat, a.longitude AS addr_lng " +
+            "FROM orders o " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
+            "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
+            "WHERE o.id = ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -184,8 +223,10 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public Order findByOrderNumber(String orderNumber) {
         String sql = "SELECT id FROM orders WHERE order_number = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, orderNumber);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -203,8 +244,10 @@ public class OrderDaoImpl implements OrderDao {
     public Order findByIdempotencyKey(String idempotencyKey) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) return null;
         String sql = "SELECT id FROM orders WHERE idempotency_key = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, idempotencyKey);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -221,8 +264,10 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public int getCustomerOrderCount(long customerId) {
         String sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ? AND status != 'CANCELLED'";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, customerId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -240,8 +285,10 @@ public class OrderDaoImpl implements OrderDao {
     public List<OrderItem> getOrderItems(long orderId) {
         List<OrderItem> list = new ArrayList<>();
         String sql = "SELECT * FROM order_items WHERE order_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -270,8 +317,10 @@ public class OrderDaoImpl implements OrderDao {
     public List<OrderEvent> getOrderTimeline(long orderId) {
         List<OrderEvent> list = new ArrayList<>();
         String sql = "SELECT * FROM order_events WHERE order_id = ? ORDER BY created_at ASC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -298,21 +347,24 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public List<Order> listCustomerOrders(long customerId, int limit, int offset) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
-                "a.latitude AS addr_lat, a.longitude AS addr_lng " +
-                "FROM orders o " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
-                "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
-                "WHERE o.customer_id = ? ORDER BY o.id DESC LIMIT ? OFFSET ?";
+        String sql =
+            "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
+            "a.latitude AS addr_lat, a.longitude AS addr_lng " +
+            "FROM orders o " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
+            "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
+            "WHERE o.customer_id = ? ORDER BY o.id DESC LIMIT ? OFFSET ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, customerId);
             ps.setInt(2, limit);
             ps.setInt(3, offset);
@@ -332,29 +384,40 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public List<Order> listRestaurantOrders(long restaurantId, String status, int limit, int offset) {
+    public List<Order> listRestaurantOrders(
+        long restaurantId,
+        String status,
+        int limit,
+        int offset
+    ) {
         List<Order> list = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
-        sb.append("SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, ")
-                .append("u.full_name AS cust_name, u.phone AS cust_phone, ")
-                .append("rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, ")
-                .append("CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, ")
-                .append("a.latitude AS addr_lat, a.longitude AS addr_lng ")
-                .append("FROM orders o ")
-                .append("JOIN restaurant_profiles r ON o.restaurant_id = r.id ")
-                .append("JOIN users u ON o.customer_id = u.id ")
-                .append("JOIN user_addresses a ON o.delivery_address_id = a.id ")
-                .append("LEFT JOIN rider_profiles rd ON o.rider_id = rd.id ")
-                .append("LEFT JOIN users rp_user ON rd.user_id = rp_user.id ")
-                .append("WHERE o.restaurant_id = ? ");
+        sb.append(
+            "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, "
+        )
+            .append("u.full_name AS cust_name, u.phone AS cust_phone, ")
+            .append("rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, ")
+            .append(
+                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, "
+            )
+            .append("a.latitude AS addr_lat, a.longitude AS addr_lng ")
+            .append("FROM orders o ")
+            .append("JOIN restaurant_profiles r ON o.restaurant_id = r.id ")
+            .append("JOIN users u ON o.customer_id = u.id ")
+            .append("JOIN user_addresses a ON o.delivery_address_id = a.id ")
+            .append("LEFT JOIN rider_profiles rd ON o.rider_id = rd.id ")
+            .append("LEFT JOIN users rp_user ON rd.user_id = rp_user.id ")
+            .append("WHERE o.restaurant_id = ? ");
 
         if (status != null && !status.isBlank()) {
             sb.append("AND o.status = ? ");
         }
         sb.append("ORDER BY o.id DESC LIMIT ? OFFSET ?");
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sb.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sb.toString())
+        ) {
             ps.setLong(1, restaurantId);
             int idx = 2;
             if (status != null && !status.isBlank()) {
@@ -381,21 +444,24 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public List<Order> listAllOrders(int limit, int offset) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
-                "a.latitude AS addr_lat, a.longitude AS addr_lng " +
-                "FROM orders o " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
-                "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
-                "ORDER BY o.id DESC LIMIT ? OFFSET ?";
+        String sql =
+            "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "rp_user.full_name AS rd_name, rp_user.phone AS rd_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
+            "a.latitude AS addr_lat, a.longitude AS addr_lng " +
+            "FROM orders o " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
+            "LEFT JOIN users rp_user ON rd.user_id = rp_user.id " +
+            "ORDER BY o.id DESC LIMIT ? OFFSET ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, limit);
             ps.setInt(2, offset);
             try (ResultSet rs = ps.executeQuery()) {
@@ -413,7 +479,8 @@ public class OrderDaoImpl implements OrderDao {
     }
 
     @Override
-    public void setGoodwillCreditAwarded(Connection conn, long orderId, boolean awarded) throws SQLException {
+    public void setGoodwillCreditAwarded(Connection conn, long orderId, boolean awarded)
+        throws SQLException {
         String sql = "UPDATE orders SET is_goodwill_credit_awarded = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBoolean(1, awarded);
@@ -425,24 +492,27 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public List<Order> findUnassignedOrders(int limit) {
         List<Order> list = new ArrayList<>();
-        String sql = "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
-                "u.full_name AS cust_name, u.phone AS cust_phone, " +
-                "NULL AS rd_name, NULL AS rd_phone, " +
-                "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
-                "a.latitude AS addr_lat, a.longitude AS addr_lng " +
-                "FROM orders o " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "JOIN users u ON o.customer_id = u.id " +
-                "JOIN user_addresses a ON o.delivery_address_id = a.id " +
-                "WHERE o.rider_id IS NULL " +
-                "AND o.status IN ('PLACED', 'ACCEPTED', 'PREPARING', 'READY') " +
-                "AND NOT EXISTS (" +
-                "    SELECT 1 FROM delivery_dispatches d " +
-                "    WHERE d.order_id = o.id AND d.dispatch_status = 'OFFERED'" +
-                ") " +
-                "ORDER BY o.id ASC LIMIT ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT o.*, r.name AS rest_name, r.latitude AS rest_lat, r.longitude AS rest_lng, " +
+            "u.full_name AS cust_name, u.phone AS cust_phone, " +
+            "NULL AS rd_name, NULL AS rd_phone, " +
+            "CONCAT(a.address_line, ', ', IFNULL(a.landmark, ''), ' ', a.city) AS addr_text, " +
+            "a.latitude AS addr_lat, a.longitude AS addr_lng " +
+            "FROM orders o " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "JOIN users u ON o.customer_id = u.id " +
+            "JOIN user_addresses a ON o.delivery_address_id = a.id " +
+            "WHERE o.rider_id IS NULL " +
+            "AND o.status IN ('PLACED', 'ACCEPTED', 'PREPARING', 'READY') " +
+            "AND NOT EXISTS (" +
+            "    SELECT 1 FROM delivery_dispatches d " +
+            "    WHERE d.order_id = o.id AND d.dispatch_status = 'OFFERED'" +
+            ") " +
+            "ORDER BY o.id ASC LIMIT ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

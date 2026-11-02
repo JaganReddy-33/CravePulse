@@ -1,18 +1,29 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.foodplatform.model.Address;
 import com.foodplatform.util.GoogleMapsUrlParser;
 import com.foodplatform.util.JsonUtil;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class GoogleMapsUrlParserTest {
+
     @Test
     void parsesCoordinatesFromMapAtPath() {
-        var coordinates = GoogleMapsUrlParser.parse("https://www.google.com/maps/@12.9716,77.5946,17z");
+        var coordinates = GoogleMapsUrlParser.parse(
+            "https://www.google.com/maps/@12.9716,77.5946,17z"
+        );
+        assertEquals(new BigDecimal("12.9716"), coordinates.latitude());
+        assertEquals(new BigDecimal("77.5946"), coordinates.longitude());
+    }
+
+    @Test
+    void parsesFullMapsLinksWithoutResolvingThemRemotely() {
+        var coordinates = GoogleMapsUrlParser.parseAndResolve(
+            "https://www.google.com/maps/@12.9716,77.5946,17z"
+        );
         assertEquals(new BigDecimal("12.9716"), coordinates.latitude());
         assertEquals(new BigDecimal("77.5946"), coordinates.longitude());
     }
@@ -20,7 +31,8 @@ class GoogleMapsUrlParserTest {
     @Test
     void parsesCoordinatesFromDataMarkers() {
         var coordinates = GoogleMapsUrlParser.parse(
-                "https://www.google.com/maps/place/Pin/data=!3d-33.8688!4d151.2093");
+            "https://www.google.com/maps/place/Pin/data=!3d-33.8688!4d151.2093"
+        );
         assertEquals(new BigDecimal("-33.8688"), coordinates.latitude());
         assertEquals(new BigDecimal("151.2093"), coordinates.longitude());
     }
@@ -28,36 +40,46 @@ class GoogleMapsUrlParserTest {
     @Test
     void parsesCoordinatesFromDataMarkersInQueryParameter() {
         var coordinates = GoogleMapsUrlParser.parse(
-                "https://www.google.com/maps/place/Pin?data=!3d-33.8688!4d151.2093");
+            "https://www.google.com/maps/place/Pin?data=!3d-33.8688!4d151.2093"
+        );
         assertEquals(new BigDecimal("-33.8688"), coordinates.latitude());
         assertEquals(new BigDecimal("151.2093"), coordinates.longitude());
     }
 
     @Test
     void ignoresUnrelatedCoordinatePairsInQueryParameters() {
-        assertThrows(IllegalArgumentException.class,
-                () -> GoogleMapsUrlParser.parse(
-                        "https://www.google.com/maps/place/Pin?other=12.9716,77.5946"));
+        assertThrows(IllegalArgumentException.class, () ->
+            GoogleMapsUrlParser.parse("https://www.google.com/maps/place/Pin?other=12.9716,77.5946")
+        );
     }
 
     @Test
     void parsesCoordinatesFromQueryParameter() {
-        var coordinates = GoogleMapsUrlParser.parse(
-                "https://maps.google.com/?q=12.9716%2C77.5946");
+        var coordinates = GoogleMapsUrlParser.parse("https://maps.google.com/?q=12.9716%2C77.5946");
         assertEquals(new BigDecimal("12.9716"), coordinates.latitude());
         assertEquals(new BigDecimal("77.5946"), coordinates.longitude());
     }
 
     @Test
     void rejectsNonGoogleLinksLinksWithoutCoordinatesAndOutOfRangeValues() {
-        assertThrows(IllegalArgumentException.class,
-                () -> GoogleMapsUrlParser.parse("http://www.google.com/maps/@12,77"));
-        assertThrows(IllegalArgumentException.class,
-                () -> GoogleMapsUrlParser.parse("https://google.com.evil.example/maps/@12,77"));
-        assertThrows(IllegalArgumentException.class,
-                () -> GoogleMapsUrlParser.parse("https://maps.app.goo.gl/example"));
-        assertThrows(IllegalArgumentException.class,
-                () -> GoogleMapsUrlParser.parse("https://www.google.com/maps/@91,77"));
+        assertThrows(IllegalArgumentException.class, () ->
+            GoogleMapsUrlParser.parse("http://www.google.com/maps/@12,77")
+        );
+        assertThrows(IllegalArgumentException.class, () ->
+            GoogleMapsUrlParser.parse("https://google.com.evil.example/maps/@12,77")
+        );
+        assertThrows(IllegalArgumentException.class, () ->
+            GoogleMapsUrlParser.parse("https://maps.app.goo.gl/example")
+        );
+        assertThrows(IllegalArgumentException.class, () ->
+            GoogleMapsUrlParser.parse("https://www.google.com/maps/@91,77")
+        );
+        assertTrue(GoogleMapsUrlParser.isSafeGoogleMapsUrl("https://maps.app.goo.gl/example"));
+        assertFalse(
+            GoogleMapsUrlParser.isSafeGoogleMapsUrl(
+                "https://maps.app.goo.gl.attacker.example/maps/@12,77"
+            )
+        );
     }
 
     @Test

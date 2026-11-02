@@ -5,12 +5,11 @@ import com.foodplatform.dao.MenuDao;
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.model.MenuItemAddon;
 import com.foodplatform.model.MenuItemVariant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MenuDaoImpl implements MenuDao {
 
@@ -19,9 +18,12 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public List<Map<String, Object>> getCategoriesByRestaurantId(long restaurantId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT * FROM menu_categories WHERE restaurant_id = ? AND is_active = TRUE ORDER BY display_order ASC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM menu_categories WHERE restaurant_id = ? AND is_active = TRUE ORDER BY display_order ASC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, restaurantId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -43,9 +45,12 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public List<MenuItem> getItemsByRestaurantId(long restaurantId) {
         List<MenuItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM menu_items WHERE restaurant_id = ? AND is_deleted = FALSE ORDER BY display_order ASC, category_id ASC, id ASC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM menu_items WHERE restaurant_id = ? AND is_deleted = FALSE ORDER BY display_order ASC, category_id ASC, id ASC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, restaurantId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -65,8 +70,10 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public MenuItem getItemById(long itemId) {
         String sql = "SELECT * FROM menu_items WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, itemId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -86,9 +93,12 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public List<MenuItemVariant> getVariantsByItemId(long itemId) {
         List<MenuItemVariant> list = new ArrayList<>();
-        String sql = "SELECT * FROM menu_item_variants WHERE menu_item_id = ? AND is_available = TRUE";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM menu_item_variants WHERE menu_item_id = ? AND is_available = TRUE";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, itemId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -112,9 +122,12 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public List<MenuItemAddon> getAddonsByItemId(long itemId) {
         List<MenuItemAddon> list = new ArrayList<>();
-        String sql = "SELECT * FROM menu_item_addons WHERE menu_item_id = ? AND is_available = TRUE";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM menu_item_addons WHERE menu_item_id = ? AND is_available = TRUE";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, itemId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -137,8 +150,10 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public void updateItemAvailability(long itemId, boolean isAvailable) {
         String sql = "UPDATE menu_items SET is_available = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBoolean(1, isAvailable);
             ps.setLong(2, itemId);
             ps.executeUpdate();
@@ -151,8 +166,10 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public void updatePrices(long itemId, BigDecimal platformPrice, BigDecimal dineInPrice) {
         String sql = "UPDATE menu_items SET platform_price = ?, dine_in_price = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBigDecimal(1, platformPrice);
             ps.setBigDecimal(2, dineInPrice);
             ps.setLong(3, itemId);
@@ -165,26 +182,37 @@ public class MenuDaoImpl implements MenuDao {
 
     @Override
     public boolean categoryBelongsToRestaurant(long categoryId, long restaurantId) {
-        String sql = "SELECT 1 FROM menu_categories WHERE id = ? AND restaurant_id = ? AND is_active = TRUE";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT 1 FROM menu_categories WHERE id = ? AND restaurant_id = ? AND is_active = TRUE";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, categoryId);
             ps.setLong(2, restaurantId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {
-            logger.error("Error validating menu category {} for restaurant {}", categoryId, restaurantId, e);
+            logger.error(
+                "Error validating menu category {} for restaurant {}",
+                categoryId,
+                restaurantId,
+                e
+            );
             throw new IllegalStateException("Database operation failed", e);
         }
     }
 
     @Override
     public Long createItem(MenuItem item) {
-        String sql = "INSERT INTO menu_items (restaurant_id, category_id, name, description, image_url, dine_in_price, platform_price, is_veg, is_available, prep_time_minutes, calorie_count) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO menu_items (restaurant_id, category_id, name, description, image_url, dine_in_price, platform_price, is_veg, is_available, prep_time_minutes, calorie_count) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, item.getRestaurantId());
             ps.setLong(2, item.getCategoryId());
             ps.setString(3, item.getName());
@@ -211,11 +239,14 @@ public class MenuDaoImpl implements MenuDao {
 
     @Override
     public void updateItem(MenuItem item) {
-        String sql = "UPDATE menu_items SET name = ?, description = ?, category_id = ?, dine_in_price = ?, platform_price = ?, " +
-                "image_url = ?, is_veg = ?, prep_time_minutes = ?, calorie_count = ?, food_type = ?, spice_level = ?, " +
-                "packaging_charge = ?, is_bestseller = ?, is_chef_special = ?, allergen_info = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "UPDATE menu_items SET name = ?, description = ?, category_id = ?, dine_in_price = ?, platform_price = ?, " +
+            "image_url = ?, is_veg = ?, prep_time_minutes = ?, calorie_count = ?, food_type = ?, spice_level = ?, " +
+            "packaging_charge = ?, is_bestseller = ?, is_chef_special = ?, allergen_info = ? WHERE id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, item.getName());
             ps.setString(2, item.getDescription());
             ps.setLong(3, item.getCategoryId());
@@ -225,9 +256,15 @@ public class MenuDaoImpl implements MenuDao {
             ps.setBoolean(7, item.isVeg());
             ps.setObject(8, item.getPrepTimeMinutes(), Types.INTEGER);
             ps.setObject(9, item.getCalorieCount(), Types.INTEGER);
-            ps.setString(10, item.getFoodType() != null ? item.getFoodType() : (item.isVeg() ? "VEG" : "NON_VEG"));
+            ps.setString(
+                10,
+                item.getFoodType() != null ? item.getFoodType() : item.isVeg() ? "VEG" : "NON_VEG"
+            );
             ps.setString(11, item.getSpiceLevel() != null ? item.getSpiceLevel() : "MEDIUM");
-            ps.setBigDecimal(12, item.getPackagingCharge() != null ? item.getPackagingCharge() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                12,
+                item.getPackagingCharge() != null ? item.getPackagingCharge() : BigDecimal.ZERO
+            );
             ps.setBoolean(13, item.isBestseller());
             ps.setBoolean(14, item.isChefSpecial());
             ps.setString(15, item.getAllergenInfo());
@@ -242,8 +279,10 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public void deleteItem(long itemId) {
         String sql = "UPDATE menu_items SET is_deleted = TRUE, is_available = FALSE WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, itemId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -255,15 +294,19 @@ public class MenuDaoImpl implements MenuDao {
     @Override
     public void bulkUpdateAvailability(long restaurantId, List<Long> itemIds, boolean isAvailable) {
         if (itemIds == null || itemIds.isEmpty()) return;
-        StringBuilder sql = new StringBuilder("UPDATE menu_items SET is_available = ? WHERE restaurant_id = ? AND id IN (");
+        StringBuilder sql = new StringBuilder(
+            "UPDATE menu_items SET is_available = ? WHERE restaurant_id = ? AND id IN ("
+        );
         for (int i = 0; i < itemIds.size(); i++) {
             if (i > 0) sql.append(",");
             sql.append("?");
         }
         sql.append(")");
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             ps.setBoolean(1, isAvailable);
             ps.setLong(2, restaurantId);
             for (int i = 0; i < itemIds.size(); i++) {
@@ -280,8 +323,10 @@ public class MenuDaoImpl implements MenuDao {
     public void reorderItems(long restaurantId, List<Long> itemIds) {
         if (itemIds == null || itemIds.isEmpty()) return;
         String sql = "UPDATE menu_items SET display_order = ? WHERE id = ? AND restaurant_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             for (int i = 0; i < itemIds.size(); i++) {
                 ps.setInt(1, i + 1);
                 ps.setLong(2, itemIds.get(i));
@@ -297,9 +342,12 @@ public class MenuDaoImpl implements MenuDao {
 
     @Override
     public Long createCategory(long restaurantId, String name, int displayOrder) {
-        String sql = "INSERT INTO menu_categories (restaurant_id, name, display_order, is_active) VALUES (?, ?, ?, TRUE)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO menu_categories (restaurant_id, name, display_order, is_active) VALUES (?, ?, ?, TRUE)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, restaurantId);
             ps.setString(2, name);
             ps.setInt(3, displayOrder);
@@ -316,12 +364,20 @@ public class MenuDaoImpl implements MenuDao {
 
     @Override
     public void addVariant(MenuItemVariant variant) {
-        String sql = "INSERT INTO menu_item_variants (menu_item_id, variant_name, price_adjustment, is_default, is_available) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO menu_item_variants (menu_item_id, variant_name, price_adjustment, is_default, is_available) VALUES (?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, variant.getMenuItemId());
             ps.setString(2, variant.getVariantName());
-            ps.setBigDecimal(3, variant.getPriceAdjustment() != null ? variant.getPriceAdjustment() : BigDecimal.ZERO);
+            ps.setBigDecimal(
+                3,
+                variant.getPriceAdjustment() != null
+                    ? variant.getPriceAdjustment()
+                    : BigDecimal.ZERO
+            );
             ps.setBoolean(4, variant.isDefault());
             ps.setBoolean(5, variant.isAvailable());
             ps.executeUpdate();
@@ -336,9 +392,12 @@ public class MenuDaoImpl implements MenuDao {
 
     @Override
     public void addAddon(MenuItemAddon addon) {
-        String sql = "INSERT INTO menu_item_addons (menu_item_id, addon_name, price, is_available) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO menu_item_addons (menu_item_id, addon_name, price, is_available) VALUES (?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, addon.getMenuItemId());
             ps.setString(2, addon.getAddonName());
             ps.setBigDecimal(3, addon.getPrice() != null ? addon.getPrice() : BigDecimal.ZERO);

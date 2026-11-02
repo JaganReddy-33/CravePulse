@@ -99,9 +99,7 @@ const CustomerOrders = () => {
           platformPrice: it.unitPrice,
           dineInPrice: it.unitPrice,
           quantity: it.quantity,
-          selectedVariant: it.variantId
-            ? { id: it.variantId, variantName: it.variantName }
-            : null,
+          selectedVariant: it.variantId ? { id: it.variantId, variantName: it.variantName } : null,
           selectedAddons: (it.addonIds || []).map((aid, idx) => ({
             id: aid,
             addonName: it.addonNames?.[idx] || "Addon",
@@ -124,10 +122,7 @@ const CustomerOrders = () => {
         alert(res.message || "Unable to reorder at this time.");
       }
     } catch (err) {
-      alert(
-        err.message ||
-          "Restaurant is currently closed or selected items are unavailable.",
-      );
+      alert(err.message || "Restaurant is currently closed or selected items are unavailable.");
     } finally {
       setReorderingId(null);
     }
@@ -174,17 +169,14 @@ const CustomerOrders = () => {
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status"></div>
-          <p className="text-muted small mt-2">
-            Loading your gourmet orders...
-          </p>
+          <p className="text-muted small mt-2">Loading your gourmet orders...</p>
         </div>
       ) : orders.length === 0 ? (
         <div className="card border-0 rounded-4 p-5 text-center bg-white shadow-sm">
           <div className="fs-1 mb-2">📦</div>
           <h5 className="fw-bold">No orders placed yet</h5>
           <p className="text-muted small">
-            Explore our delicious partner restaurants with 0% markup and place
-            your first order.
+            Explore our delicious partner restaurants with 0% markup and place your first order.
           </p>
           <Link
             to="/"
@@ -204,9 +196,7 @@ const CustomerOrders = () => {
               <div className="card border-0 rounded-4 shadow-sm p-4 bg-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                 <div className="flex-grow-1">
                   <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                    <h6 className="fw-bold mb-0 text-dark">
-                      {ord.restaurantName}
-                    </h6>
+                    <h6 className="fw-bold mb-0 text-dark">{ord.restaurantName}</h6>
                     <span className="badge bg-light text-muted border small font-monospace">
                       {ord.orderNumber}
                     </span>
@@ -226,9 +216,7 @@ const CustomerOrders = () => {
                       {ord.status}
                     </span>
                   </div>
-                  <small className="text-muted d-block mb-2">
-                    {ord.createdAt}
-                  </small>
+                  <small className="text-muted d-block mb-2">{ord.createdAt}</small>
 
                   <div className="small text-secondary mb-2">
                     {ord.items?.map((it, idx) => (
@@ -240,12 +228,8 @@ const CustomerOrders = () => {
                   </div>
 
                   <div className="d-flex align-items-center gap-3 small flex-wrap">
-                    <span className="fw-bold fs-6 text-dark">
-                      ₹{ord.totalAmount}
-                    </span>
-                    <span className="badge bg-light text-dark border">
-                      {ord.paymentMode}
-                    </span>
+                    <span className="fw-bold fs-6 text-dark">₹{ord.totalAmount}</span>
+                    <span className="badge bg-light text-dark border">{ord.paymentMode}</span>
                     {ord.status === "CANCELLED" && (
                       <span className="badge bg-danger-subtle text-danger border border-danger">
                         100% Refunded (₹{ord.totalAmount})
@@ -278,10 +262,7 @@ const CustomerOrders = () => {
                     title="Repeat this exact order with fresh pricing and live availability"
                   >
                     {reorderingId === ord.id ? (
-                      <span
-                        className="spinner-border spinner-border-sm"
-                        role="status"
-                      ></span>
+                      <span className="spinner-border spinner-border-sm" role="status"></span>
                     ) : (
                       <span>🔁 Reorder</span>
                     )}
@@ -351,17 +332,15 @@ const CustomerOrders = () => {
               <div className="p-3 bg-light rounded-3 mb-3 small">
                 <div className="d-flex justify-content-between mb-1">
                   <span className="text-muted">Total Paid:</span>
-                  <strong className="text-dark">
-                    ₹{cancellingOrder.totalAmount}
-                  </strong>
+                  <strong className="text-dark">₹{cancellingOrder.totalAmount}</strong>
                 </div>
                 <div className="d-flex justify-content-between text-success fw-bold">
                   <span>Refund Amount:</span>
                   <span>100% (₹{cancellingOrder.totalAmount})</span>
                 </div>
                 <small className="text-muted d-block mt-2">
-                  ✓ Instant 100% refund credited back to your original payment
-                  method or CravePulse Wallet.
+                  ✓ Instant 100% refund credited back to your original payment method or CravePulse
+                  Wallet.
                 </small>
               </div>
 
@@ -374,9 +353,7 @@ const CustomerOrders = () => {
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                 >
-                  <option value="Placed order by mistake">
-                    Placed order by mistake
-                  </option>
+                  <option value="Placed order by mistake">Placed order by mistake</option>
                   <option value="Delivery time is longer than expected">
                     Delivery time is longer than expected
                   </option>
@@ -386,9 +363,7 @@ const CustomerOrders = () => {
                   <option value="Found better dining alternative">
                     Found better dining alternative
                   </option>
-                  <option value="Other personal reason">
-                    Other personal reason
-                  </option>
+                  <option value="Other personal reason">Other personal reason</option>
                 </select>
               </div>
 
@@ -407,9 +382,7 @@ const CustomerOrders = () => {
                   onClick={handleConfirmCancel}
                   disabled={cancelling}
                 >
-                  {cancelling
-                    ? "Processing Refund..."
-                    : "Confirm & Cancel Order"}
+                  {cancelling ? "Processing Refund..." : "Confirm & Cancel Order"}
                 </button>
               </div>
             </div>

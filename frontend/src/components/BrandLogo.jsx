@@ -6,12 +6,7 @@ import { Link } from "react-router-dom";
  * Featuring a modern dual-tone flame-pulse emblem representing
  * gourmet culinary passion + real-time delivery heartbeat + 0% price parity.
  */
-const BrandLogo = ({
-  size = "md",
-  to = "/",
-  showTagline = true,
-  lightMode = false,
-}) => {
+const BrandLogo = ({ size = "md", to = "/", showTagline = true, lightMode = false }) => {
   const dimensions =
     size === "sm"
       ? { box: 34, icon: 20, font: "1.15rem" }
@@ -30,8 +25,7 @@ const BrandLogo = ({
         style={{
           width: dimensions.box,
           height: dimensions.box,
-          background:
-            "linear-gradient(135deg, #ff4d29 0%, #ff7a45 50%, #ffa133 100%)",
+          background: "linear-gradient(135deg, #ff4d29 0%, #ff7a45 50%, #ffa133 100%)",
           boxShadow: "0 4px 14px rgba(255, 77, 41, 0.35)",
         }}
       >

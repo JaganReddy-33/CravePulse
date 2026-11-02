@@ -3,12 +3,11 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.CouponDao;
 import com.foodplatform.model.Coupon;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CouponDaoImpl implements CouponDao {
 
@@ -18,9 +17,11 @@ public class CouponDaoImpl implements CouponDao {
     public List<Coupon> listAllCoupons() {
         List<Coupon> list = new ArrayList<>();
         String sql = "SELECT * FROM coupons ORDER BY id DESC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()
+        ) {
             while (rs.next()) {
                 list.add(mapCoupon(rs));
             }
@@ -34,10 +35,13 @@ public class CouponDaoImpl implements CouponDao {
     @Override
     public List<Coupon> listActiveCoupons() {
         List<Coupon> list = new ArrayList<>();
-        String sql = "SELECT * FROM coupons WHERE is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP) ORDER BY id DESC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        String sql =
+            "SELECT * FROM coupons WHERE is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP) ORDER BY id DESC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()
+        ) {
             while (rs.next()) {
                 list.add(mapCoupon(rs));
             }
@@ -51,8 +55,10 @@ public class CouponDaoImpl implements CouponDao {
     @Override
     public Coupon findById(long id) {
         String sql = "SELECT * FROM coupons WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -69,8 +75,10 @@ public class CouponDaoImpl implements CouponDao {
     @Override
     public Coupon findByCode(String code) {
         String sql = "SELECT * FROM coupons WHERE code = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, code);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -86,14 +94,20 @@ public class CouponDaoImpl implements CouponDao {
 
     @Override
     public Long createCoupon(Coupon coupon) {
-        String sql = "INSERT INTO coupons (code, description, discount_type, discount_value, min_order_amount, " +
-                "max_discount_amount, valid_from, valid_until, usage_limit, is_active, first_order_only) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO coupons (code, description, discount_type, discount_value, min_order_amount, " +
+            "max_discount_amount, valid_from, valid_until, usage_limit, is_active, first_order_only) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setString(1, coupon.getCode().toUpperCase().trim());
             ps.setString(2, coupon.getDescription());
-            ps.setString(3, coupon.getDiscountType() != null ? coupon.getDiscountType() : "PERCENTAGE");
+            ps.setString(
+                3,
+                coupon.getDiscountType() != null ? coupon.getDiscountType() : "PERCENTAGE"
+            );
             ps.setBigDecimal(4, coupon.getDiscountValue());
             ps.setBigDecimal(5, coupon.getMinOrderAmount());
             ps.setBigDecimal(6, coupon.getMaxDiscountAmount());
@@ -119,10 +133,13 @@ public class CouponDaoImpl implements CouponDao {
 
     @Override
     public void updateCoupon(Coupon coupon) {
-        String sql = "UPDATE coupons SET description = ?, discount_type = ?, discount_value = ?, min_order_amount = ?, " +
-                "max_discount_amount = ?, valid_until = ?, usage_limit = ?, is_active = ?, first_order_only = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "UPDATE coupons SET description = ?, discount_type = ?, discount_value = ?, min_order_amount = ?, " +
+            "max_discount_amount = ?, valid_until = ?, usage_limit = ?, is_active = ?, first_order_only = ? WHERE id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, coupon.getDescription());
             ps.setString(2, coupon.getDiscountType());
             ps.setBigDecimal(3, coupon.getDiscountValue());
@@ -143,8 +160,10 @@ public class CouponDaoImpl implements CouponDao {
     @Override
     public void toggleCoupon(long id, boolean isActive) {
         String sql = "UPDATE coupons SET is_active = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBoolean(1, isActive);
             ps.setLong(2, id);
             ps.executeUpdate();
@@ -157,8 +176,10 @@ public class CouponDaoImpl implements CouponDao {
     @Override
     public void deleteCoupon(long id) {
         String sql = "DELETE FROM coupons WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             ps.executeUpdate();
         } catch (SQLException e) {

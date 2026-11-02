@@ -1,19 +1,18 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.UserDao;
 import com.foodplatform.model.Address;
 import com.foodplatform.model.Order;
 import com.foodplatform.model.User;
 import com.foodplatform.service.PricingService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class CustomerExperienceDepthTest {
 
@@ -36,11 +35,11 @@ public class CustomerExperienceDepthTest {
         calc.gstTax = new BigDecimal("18.25");
         calc.tipAmount = new BigDecimal("30.00");
         calc.totalAmount = calc.subtotal
-                .add(calc.deliveryFee)
-                .add(calc.packagingFee)
-                .add(calc.platformFee)
-                .add(calc.gstTax)
-                .add(calc.tipAmount);
+            .add(calc.deliveryFee)
+            .add(calc.packagingFee)
+            .add(calc.platformFee)
+            .add(calc.gstTax)
+            .add(calc.tipAmount);
 
         assertEquals(new BigDecimal("30.00"), calc.tipAmount);
         assertEquals(new BigDecimal("453.25"), calc.totalAmount);
@@ -52,7 +51,10 @@ public class CustomerExperienceDepthTest {
         order.setSpecialInstructions("Extra crisp chur chur naan, less spicy curry");
         order.setTipAmount(new BigDecimal("50.00"));
 
-        assertEquals("Extra crisp chur chur naan, less spicy curry", order.getSpecialInstructions());
+        assertEquals(
+            "Extra crisp chur chur naan, less spicy curry",
+            order.getSpecialInstructions()
+        );
         assertEquals(new BigDecimal("50.00"), order.getTipAmount());
     }
 
@@ -85,7 +87,9 @@ public class CustomerExperienceDepthTest {
         assertTrue(results.containsKey("dishes"));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> resRestaurants = (List<Map<String, Object>>) results.get("restaurants");
+        List<Map<String, Object>> resRestaurants = (List<Map<String, Object>>) results.get(
+            "restaurants"
+        );
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> resDishes = (List<Map<String, Object>>) results.get("dishes");
 
@@ -131,10 +135,20 @@ public class CustomerExperienceDepthTest {
 
         assertEquals("Aarav Patel", user.getFullName());
         assertEquals("+91 98490 99887", user.getPhone());
-        assertEquals("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150", user.getAvatarUrl());
+        assertEquals(
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+            user.getAvatarUrl()
+        );
 
-        doNothing().when(userDao).updateProfile(7L, "Aarav Patel", "+91 98490 99887", user.getAvatarUrl());
+        doNothing()
+            .when(userDao)
+            .updateProfile(7L, "Aarav Patel", "+91 98490 99887", user.getAvatarUrl());
         userDao.updateProfile(7L, "Aarav Patel", "+91 98490 99887", user.getAvatarUrl());
-        verify(userDao, times(1)).updateProfile(7L, "Aarav Patel", "+91 98490 99887", user.getAvatarUrl());
+        verify(userDao, times(1)).updateProfile(
+            7L,
+            "Aarav Patel",
+            "+91 98490 99887",
+            user.getAvatarUrl()
+        );
     }
 }

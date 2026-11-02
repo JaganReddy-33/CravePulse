@@ -100,9 +100,7 @@ const RiderLayout = () => {
               style={{ background: "rgba(255,255,255,0.05)" }}
               aria-label="Toggle navigation menu"
             >
-              <i
-                className={`bi ${showMobileMenu ? "bi-x-lg" : "bi-list"} fs-5`}
-              ></i>
+              <i className={`bi ${showMobileMenu ? "bi-x-lg" : "bi-list"} fs-5`}></i>
             </button>
 
             <Link
@@ -140,10 +138,7 @@ const RiderLayout = () => {
                     COCKPIT
                   </span>
                 </div>
-                <small
-                  className="text-secondary d-none d-sm-inline"
-                  style={{ fontSize: 10 }}
-                >
+                <small className="text-secondary d-none d-sm-inline" style={{ fontSize: 10 }}>
                   Zero Penalty • 100% Tips Pass-Through
                 </small>
               </div>
@@ -166,9 +161,7 @@ const RiderLayout = () => {
                   key={item.path}
                   to={item.path}
                   className={`btn btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 transition ${
-                    active
-                      ? "text-dark shadow-sm"
-                      : "text-light text-opacity-75 hover-text-white"
+                    active ? "text-dark shadow-sm" : "text-light text-opacity-75 hover-text-white"
                   }`}
                   style={
                     active
@@ -279,9 +272,7 @@ const RiderLayout = () => {
                 >
                   <div className="p-2 border-bottom border-secondary border-opacity-25 mb-1">
                     <div className="fw-bold text-white small">{riderName}</div>
-                    <small className="text-success d-block">
-                      {vehicleModel}
-                    </small>
+                    <small className="text-success d-block">{vehicleModel}</small>
                     <small className="text-secondary" style={{ fontSize: 11 }}>
                       Indiranagar Hub • 4.98 ★
                     </small>
@@ -291,23 +282,20 @@ const RiderLayout = () => {
                     className="dropdown-item py-2 px-3 rounded-3 text-light small d-flex align-items-center gap-2 hover-bg-dark"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-shield-check text-success"></i> Captain
-                    KYC & Compliance
+                    <i className="bi bi-shield-check text-success"></i> Captain KYC & Compliance
                   </Link>
                   <Link
                     to="/rider/fleet/daily-earnings-incentives"
                     className="dropdown-item py-2 px-3 rounded-3 text-light small d-flex align-items-center gap-2 hover-bg-dark"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-wallet2 text-warning"></i> Earnings &
-                    Payout Wallet
+                    <i className="bi bi-wallet2 text-warning"></i> Earnings & Payout Wallet
                   </Link>
                   <button
                     onClick={handleLogout}
                     className="dropdown-item py-2 px-3 rounded-3 text-danger small d-flex align-items-center gap-2 hover-bg-dark w-100 text-start border-0 bg-transparent"
                   >
-                    <i className="bi bi-box-arrow-right"></i> End Shift & Sign
-                    Out
+                    <i className="bi bi-box-arrow-right"></i> End Shift & Sign Out
                   </button>
                 </div>
               )}
@@ -334,9 +322,7 @@ const RiderLayout = () => {
                         ? "text-dark shadow-sm"
                         : "text-light text-opacity-75 bg-transparent border border-secondary border-opacity-25"
                     }`}
-                    style={
-                      active ? { background: "#00e676", border: "none" } : {}
-                    }
+                    style={active ? { background: "#00e676", border: "none" } : {}}
                   >
                     <div className="d-flex align-items-center gap-2">
                       <i className={`bi ${item.icon} fs-6 me-2`}></i>

@@ -24,55 +24,139 @@ public class JobApplication {
     private String jobTitle;
     private String jobDepartment;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getJobId() { return jobId; }
-    public void setJobId(Long jobId) { this.jobId = jobId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getApplicantName() { return applicantName; }
-    public void setApplicantName(String applicantName) { this.applicantName = applicantName; }
+    public Long getJobId() {
+        return jobId;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setJobId(Long jobId) {
+        this.jobId = jobId;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getApplicantName() {
+        return applicantName;
+    }
 
-    public String getPortfolioUrl() { return portfolioUrl; }
-    public void setPortfolioUrl(String portfolioUrl) { this.portfolioUrl = portfolioUrl; }
+    public void setApplicantName(String applicantName) {
+        this.applicantName = applicantName;
+    }
 
-    public String getResumeFilename() { return resumeFilename; }
-    public void setResumeFilename(String resumeFilename) { this.resumeFilename = resumeFilename; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getCoverNote() { return coverNote; }
-    public void setCoverNote(String coverNote) { this.coverNote = coverNote; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getExperienceYears() { return experienceYears; }
-    public void setExperienceYears(String experienceYears) { this.experienceYears = experienceYears; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getCurrentCompany() { return currentCompany; }
-    public void setCurrentCompany(String currentCompany) { this.currentCompany = currentCompany; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getPortfolioUrl() {
+        return portfolioUrl;
+    }
 
-    public Timestamp getAppliedAt() { return appliedAt; }
-    public void setAppliedAt(Timestamp appliedAt) { this.appliedAt = appliedAt; }
+    public void setPortfolioUrl(String portfolioUrl) {
+        this.portfolioUrl = portfolioUrl;
+    }
 
-    public Timestamp getReviewedAt() { return reviewedAt; }
-    public void setReviewedAt(Timestamp reviewedAt) { this.reviewedAt = reviewedAt; }
+    public String getResumeFilename() {
+        return resumeFilename;
+    }
 
-    public Long getReviewedBy() { return reviewedBy; }
-    public void setReviewedBy(Long reviewedBy) { this.reviewedBy = reviewedBy; }
+    public void setResumeFilename(String resumeFilename) {
+        this.resumeFilename = resumeFilename;
+    }
 
-    public String getAdminNotes() { return adminNotes; }
-    public void setAdminNotes(String adminNotes) { this.adminNotes = adminNotes; }
+    public String getCoverNote() {
+        return coverNote;
+    }
 
-    public String getJobTitle() { return jobTitle; }
-    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    public void setCoverNote(String coverNote) {
+        this.coverNote = coverNote;
+    }
 
-    public String getJobDepartment() { return jobDepartment; }
-    public void setJobDepartment(String jobDepartment) { this.jobDepartment = jobDepartment; }
+    public String getExperienceYears() {
+        return experienceYears;
+    }
+
+    public void setExperienceYears(String experienceYears) {
+        this.experienceYears = experienceYears;
+    }
+
+    public String getCurrentCompany() {
+        return currentCompany;
+    }
+
+    public void setCurrentCompany(String currentCompany) {
+        this.currentCompany = currentCompany;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Timestamp getAppliedAt() {
+        return appliedAt;
+    }
+
+    public void setAppliedAt(Timestamp appliedAt) {
+        this.appliedAt = appliedAt;
+    }
+
+    public Timestamp getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(Timestamp reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Long getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(Long reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
+    public String getAdminNotes() {
+        return adminNotes;
+    }
+
+    public void setAdminNotes(String adminNotes) {
+        this.adminNotes = adminNotes;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+    public String getJobDepartment() {
+        return jobDepartment;
+    }
+
+    public void setJobDepartment(String jobDepartment) {
+        this.jobDepartment = jobDepartment;
+    }
 }
-

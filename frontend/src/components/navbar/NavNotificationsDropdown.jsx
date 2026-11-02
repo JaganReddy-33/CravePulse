@@ -94,17 +94,12 @@ const NavNotificationsDropdown = ({
                     <div className="fs-5 mt-n1">{n.icon || "🔔"}</div>
                     <div className="flex-grow-1 text-truncate">
                       <div className="d-flex justify-content-between align-items-center">
-                        <strong className="small text-dark text-truncate">
-                          {n.title}
-                        </strong>
+                        <strong className="small text-dark text-truncate">{n.title}</strong>
                         <small className="text-muted" style={{ fontSize: 10 }}>
                           {n.time || "Now"}
                         </small>
                       </div>
-                      <p
-                        className="mb-0 text-muted small text-truncate"
-                        style={{ fontSize: 12 }}
-                      >
+                      <p className="mb-0 text-muted small text-truncate" style={{ fontSize: 12 }}>
                         {n.message}
                       </p>
                     </div>

@@ -93,8 +93,7 @@ const AdminLayout = () => {
         onClick={() => setShowMobileSidebar(false)}
         className={`nav-link py-2 px-3 rounded-3 d-flex align-items-center gap-3 fw-semibold touch-target ${location.pathname === "/admin/coupons" ? "bg-primary-subtle text-primary fw-bold" : "text-secondary"}`}
       >
-        <i className="bi bi-ticket-perforated-fill text-warning"></i> Coupons &
-        Deals
+        <i className="bi bi-ticket-perforated-fill text-warning"></i> Coupons & Deals
       </Link>
       <Link
         to="/admin/settings"
@@ -143,9 +142,7 @@ const AdminLayout = () => {
             🛡️
           </div>
           <div>
-            <div className="fw-extrabold fs-5 lh-1 text-white">
-              Platform Ops
-            </div>
+            <div className="fw-extrabold fs-5 lh-1 text-white">Platform Ops</div>
             <small className="text-muted" style={{ fontSize: 10 }}>
               Control Tower
             </small>
@@ -158,9 +155,7 @@ const AdminLayout = () => {
           className="p-3 rounded-3 border border-dark text-center mt-auto"
           style={{ background: "#0b0f19" }}
         >
-          <div className="badge bg-secondary-subtle text-secondary mb-1 small">
-            ADMINISTRATION
-          </div>
+          <div className="badge bg-secondary-subtle text-secondary mb-1 small">ADMINISTRATION</div>
           <div className="fw-bold small text-light">Operations workspace</div>
           <small className="text-muted" style={{ fontSize: 11 }}>
             Tomcat 10 • MySQL 8 • WS
@@ -243,9 +238,7 @@ const AdminLayout = () => {
               <i className="bi bi-arrow-left me-1"></i>
               <span className="small">Customer App</span>
             </Link>
-            <h5 className="fw-bold mb-0 text-white fs-6 fs-md-5">
-              Central Operations Console
-            </h5>
+            <h5 className="fw-bold mb-0 text-white fs-6 fs-md-5">Central Operations Console</h5>
           </div>
 
           <div className="d-flex align-items-center gap-3">
@@ -261,9 +254,7 @@ const AdminLayout = () => {
                   🛡️
                 </div>
                 <div className="d-none d-sm-block text-end lh-1">
-                  <span className="small text-white fw-semibold d-block">
-                    {adminName}
-                  </span>
+                  <span className="small text-white fw-semibold d-block">{adminName}</span>
                   <span
                     className="badge bg-dark border border-secondary text-info"
                     style={{ fontSize: 10 }}
@@ -282,9 +273,7 @@ const AdminLayout = () => {
                 >
                   <div className="p-2 border-bottom border-secondary mb-1">
                     <div className="fw-bold text-white small">{adminName}</div>
-                    <small className="text-muted d-block">
-                      admin@foodplatform.com
-                    </small>
+                    <small className="text-muted d-block">admin@foodplatform.com</small>
                     <span className="badge bg-info-subtle text-info small mt-1">
                       Lead Operations Admin
                     </span>
@@ -294,16 +283,14 @@ const AdminLayout = () => {
                     className="dropdown-item py-2 px-3 text-white small rounded-3 d-flex align-items-center gap-2 hover-bg-secondary"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-shield-exclamation text-warning"></i>{" "}
-                    Dispute Escrows
+                    <i className="bi bi-shield-exclamation text-warning"></i> Dispute Escrows
                   </Link>
                   <Link
                     to="/admin/approvals"
                     className="dropdown-item py-2 px-3 text-white small rounded-3 d-flex align-items-center gap-2 hover-bg-secondary"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <i className="bi bi-person-check text-success"></i> Partner
-                    & Rider Approvals
+                    <i className="bi bi-person-check text-success"></i> Partner & Rider Approvals
                   </Link>
                   <Link
                     to="/"
@@ -311,8 +298,7 @@ const AdminLayout = () => {
                     onClick={() => setShowProfileMenu(false)}
                     target="_blank"
                   >
-                    <i className="bi bi-box-arrow-up-right text-info"></i>{" "}
-                    Consumer App View ↗
+                    <i className="bi bi-box-arrow-up-right text-info"></i> Consumer App View ↗
                   </Link>
                   <hr className="my-1 border-secondary" />
                   <button

@@ -27,61 +27,155 @@ public class JobPosting {
     // Transient fields for API responses
     private int applicantsCount;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public String getEmploymentType() { return employmentType; }
-    public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
+    public String getDepartment() {
+        return department;
+    }
 
-    public String getExperienceLevel() { return experienceLevel; }
-    public void setExperienceLevel(String experienceLevel) { this.experienceLevel = experienceLevel; }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 
-    public BigDecimal getSalaryMin() { return salaryMin; }
-    public void setSalaryMin(BigDecimal salaryMin) { this.salaryMin = salaryMin; }
+    public String getLocation() {
+        return location;
+    }
 
-    public BigDecimal getSalaryMax() { return salaryMax; }
-    public void setSalaryMax(BigDecimal salaryMax) { this.salaryMax = salaryMax; }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-    public String getSalaryDisplay() { return salaryDisplay; }
-    public void setSalaryDisplay(String salaryDisplay) { this.salaryDisplay = salaryDisplay; }
+    public String getEmploymentType() {
+        return employmentType;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setEmploymentType(String employmentType) {
+        this.employmentType = employmentType;
+    }
 
-    public String getResponsibilities() { return responsibilities; }
-    public void setResponsibilities(String responsibilities) { this.responsibilities = responsibilities; }
+    public String getExperienceLevel() {
+        return experienceLevel;
+    }
 
-    public String getRequirements() { return requirements; }
-    public void setRequirements(String requirements) { this.requirements = requirements; }
+    public void setExperienceLevel(String experienceLevel) {
+        this.experienceLevel = experienceLevel;
+    }
 
-    public String getBenefits() { return benefits; }
-    public void setBenefits(String benefits) { this.benefits = benefits; }
+    public BigDecimal getSalaryMin() {
+        return salaryMin;
+    }
 
-    public String getTags() { return tags; }
-    public void setTags(String tags) { this.tags = tags; }
+    public void setSalaryMin(BigDecimal salaryMin) {
+        this.salaryMin = salaryMin;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public BigDecimal getSalaryMax() {
+        return salaryMax;
+    }
 
-    public Long getCreatedBy() { return createdBy; }
-    public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
+    public void setSalaryMax(BigDecimal salaryMax) {
+        this.salaryMax = salaryMax;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public String getSalaryDisplay() {
+        return salaryDisplay;
+    }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public void setSalaryDisplay(String salaryDisplay) {
+        this.salaryDisplay = salaryDisplay;
+    }
 
-    public int getApplicantsCount() { return applicantsCount; }
-    public void setApplicantsCount(int applicantsCount) { this.applicantsCount = applicantsCount; }
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getResponsibilities() {
+        return responsibilities;
+    }
+
+    public void setResponsibilities(String responsibilities) {
+        this.responsibilities = responsibilities;
+    }
+
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
+    public String getBenefits() {
+        return benefits;
+    }
+
+    public void setBenefits(String benefits) {
+        this.benefits = benefits;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public int getApplicantsCount() {
+        return applicantsCount;
+    }
+
+    public void setApplicantsCount(int applicantsCount) {
+        this.applicantsCount = applicantsCount;
+    }
 }
-

@@ -2,12 +2,9 @@ package com.foodplatform.dao;
 
 import com.foodplatform.model.JobApplication;
 import com.foodplatform.model.JobPosting;
-
 import java.util.List;
 
 public interface JobDao {
-
-    // --- Job Postings ---
     Long createJobPosting(JobPosting job);
 
     JobPosting findJobById(long id);
@@ -24,14 +21,18 @@ public interface JobDao {
 
     List<String> listDepartments();
 
-    // --- Job Applications ---
     Long createApplication(JobApplication app);
 
     JobApplication findApplicationById(long id);
 
     List<JobApplication> listApplications(Long jobId, String status, int limit, int offset);
 
-    void updateApplicationStatus(long applicationId, String status, Long reviewedBy, String adminNotes);
+    void updateApplicationStatus(
+        long applicationId,
+        String status,
+        Long reviewedBy,
+        String adminNotes
+    );
 
     int countApplicationsByJob(long jobId);
 }

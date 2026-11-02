@@ -3,12 +3,11 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.OrderMessageDao;
 import com.foodplatform.model.OrderMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderMessageDaoImpl implements OrderMessageDao {
 
@@ -16,14 +15,20 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
 
     @Override
     public Long saveMessage(OrderMessage message) {
-        String sql = "INSERT INTO order_messages (order_id, sender_user_id, sender_role, recipient_role, message_text) " +
-                "VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO order_messages (order_id, sender_user_id, sender_role, recipient_role, message_text) " +
+            "VALUES (?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setLong(1, message.getOrderId());
             ps.setLong(2, message.getSenderUserId());
             ps.setString(3, message.getSenderRole());
-            ps.setString(4, message.getRecipientRole() != null ? message.getRecipientRole() : "ALL");
+            ps.setString(
+                4,
+                message.getRecipientRole() != null ? message.getRecipientRole() : "ALL"
+            );
             ps.setString(5, message.getMessageText());
             ps.executeUpdate();
 
@@ -44,13 +49,16 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
     @Override
     public List<OrderMessage> getOrderMessages(long orderId) {
         List<OrderMessage> list = new ArrayList<>();
-        String sql = "SELECT m.*, u.full_name AS sender_name " +
-                "FROM order_messages m " +
-                "JOIN users u ON m.sender_user_id = u.id " +
-                "WHERE m.order_id = ? " +
-                "ORDER BY m.created_at ASC, m.id ASC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT m.*, u.full_name AS sender_name " +
+            "FROM order_messages m " +
+            "JOIN users u ON m.sender_user_id = u.id " +
+            "WHERE m.order_id = ? " +
+            "ORDER BY m.created_at ASC, m.id ASC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -79,13 +87,16 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
             return true;
         }
 
-        String sql = "SELECT o.customer_id, r.user_id AS rest_owner_id, rd.user_id AS rider_user_id " +
-                "FROM orders o " +
-                "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
-                "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
-                "WHERE o.id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT o.customer_id, r.user_id AS rest_owner_id, rd.user_id AS rider_user_id " +
+            "FROM orders o " +
+            "JOIN restaurant_profiles r ON o.restaurant_id = r.id " +
+            "LEFT JOIN rider_profiles rd ON o.rider_id = rd.id " +
+            "WHERE o.id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -105,7 +116,12 @@ public class OrderMessageDaoImpl implements OrderMessageDao {
                 }
             }
         } catch (SQLException e) {
-            logger.error("Error verifying user participation in order chat: orderId={}, userId={}", orderId, userId, e);
+            logger.error(
+                "Error verifying user participation in order chat: orderId={}, userId={}",
+                orderId,
+                userId,
+                e
+            );
             throw new IllegalStateException("Database operation failed", e);
         }
         return false;

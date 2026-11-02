@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import api from "../../services/api";
 
 const money = (value) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-    Number(value || 0),
-  );
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(value || 0));
 
 export default function RiderEarnings() {
   const [summary, setSummary] = useState(null);
@@ -55,9 +53,7 @@ export default function RiderEarnings() {
       });
       if (!response.success) throw new Error("Unable to submit payout request");
       setAmount("");
-      setSuccess(
-        `Payout request #${response.data.id} was submitted for admin review.`,
-      );
+      setSuccess(`Payout request #${response.data.id} was submitted for admin review.`);
       await load();
     } catch (err) {
       setError(err.message || "Unable to submit payout request");
@@ -84,15 +80,10 @@ export default function RiderEarnings() {
         <div>
           <h1 className="h3 fw-bold">Earnings & settlements</h1>
           <p className="text-secondary mb-0">
-            Your completed deliveries, wallet balance, and manual payout
-            requests.
+            Your completed deliveries, wallet balance, and manual payout requests.
           </p>
         </div>
-        <button
-          className="btn btn-outline-primary"
-          onClick={load}
-          disabled={loading}
-        >
+        <button className="btn btn-outline-primary" onClick={load} disabled={loading}>
           Refresh
         </button>
       </div>
@@ -135,9 +126,8 @@ export default function RiderEarnings() {
           >
             <h2 className="h5">Request a payout</h2>
             <p className="text-secondary">
-              Requests are reviewed by an administrator. Transfers are manual;
-              your wallet is debited only after an administrator records the
-              completed transfer.
+              Requests are reviewed by an administrator. Transfers are manual; your wallet is
+              debited only after an administrator records the completed transfer.
             </p>
             <form onSubmit={submitRequest} className="row g-3">
               <div className="col-12 col-md-4">
@@ -203,9 +193,7 @@ export default function RiderEarnings() {
                       <tr key={request.id}>
                         <td>
                           {request.createdAt
-                            ? new Date(request.createdAt).toLocaleDateString(
-                                "en-IN",
-                              )
+                            ? new Date(request.createdAt).toLocaleDateString("en-IN")
                             : "—"}
                         </td>
                         <td>{request.payoutDestination}</td>
@@ -217,9 +205,7 @@ export default function RiderEarnings() {
                             {request.status}
                           </span>
                         </td>
-                        <td>
-                          {request.adminNote || request.paymentReference || "—"}
-                        </td>
+                        <td>{request.adminNote || request.paymentReference || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -255,11 +241,7 @@ export default function RiderEarnings() {
               <tbody>
                 {transactions.map((tx) => (
                   <tr key={tx.id}>
-                    <td>
-                      {tx.createdAt
-                        ? new Date(tx.createdAt).toLocaleString("en-IN")
-                        : "—"}
-                    </td>
+                    <td>{tx.createdAt ? new Date(tx.createdAt).toLocaleString("en-IN") : "—"}</td>
                     <td>{tx.reason}</td>
                     <td>{tx.transactionType}</td>
                     <td className="text-end">{money(tx.amount)}</td>

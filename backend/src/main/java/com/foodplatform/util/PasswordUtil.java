@@ -4,8 +4,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public final class PasswordUtil {
 
-    private PasswordUtil() {
-    }
+    private PasswordUtil() {}
 
     public static String hashPassword(String plainPassword) {
         if (plainPassword == null || plainPassword.isEmpty()) {

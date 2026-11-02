@@ -104,8 +104,7 @@ const CustomerLayout = () => {
                     <div className="fs-1 mb-2">🍽️</div>
                     <h6 className="fw-bold text-dark">Your bag is empty</h6>
                     <p className="text-muted small mb-4">
-                      Explore delicious items and enjoy genuine dine-in menu
-                      prices delivered!
+                      Explore delicious items and enjoy genuine dine-in menu prices delivered!
                     </p>
                     <button
                       className="btn btn-sm btn-primary rounded-pill px-4 fw-bold"
@@ -134,27 +133,16 @@ const CustomerLayout = () => {
                                   className={`badge ${it.veg ? "bg-success" : "bg-danger"} p-1 rounded-circle`}
                                   style={{ width: 8, height: 8 }}
                                 ></span>
-                                <div className="fw-bold small text-dark">
-                                  {it.name}
-                                </div>
+                                <div className="fw-bold small text-dark">{it.name}</div>
                               </div>
                               {it.selectedVariant && (
-                                <small
-                                  className="text-muted d-block"
-                                  style={{ fontSize: 11 }}
-                                >
+                                <small className="text-muted d-block" style={{ fontSize: 11 }}>
                                   Variant: {it.selectedVariant.variantName}
                                 </small>
                               )}
                               {it.selectedAddons?.length > 0 && (
-                                <small
-                                  className="text-muted d-block"
-                                  style={{ fontSize: 11 }}
-                                >
-                                  +{" "}
-                                  {it.selectedAddons
-                                    .map((a) => a.addonName)
-                                    .join(", ")}
+                                <small className="text-muted d-block" style={{ fontSize: 11 }}>
+                                  + {it.selectedAddons.map((a) => a.addonName).join(", ")}
                                 </small>
                               )}
                               <div className="mt-1 fw-bold text-dark small">
@@ -198,8 +186,7 @@ const CustomerLayout = () => {
                     <div className="card border-0 bg-light rounded-3 p-3 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <span className="small fw-bold text-dark d-flex align-items-center gap-1">
-                          <i className="bi bi-tag-fill text-danger"></i> Offers
-                          & Coupons
+                          <i className="bi bi-tag-fill text-danger"></i> Offers & Coupons
                         </span>
                         {couponCode && (
                           <button
@@ -213,10 +200,10 @@ const CustomerLayout = () => {
 
                       {couponCode ? (
                         <div className="badge bg-success-subtle text-success border border-success p-2 d-flex justify-content-between align-items-center rounded-3">
-                              <span>
-                                <strong>{couponCode}</strong> applied successfully!
-                              </span>
-                            </div>
+                          <span>
+                            <strong>{couponCode}</strong> applied successfully!
+                          </span>
+                        </div>
                       ) : (
                         <form
                           onSubmit={handleApplyCoupon}
@@ -243,12 +230,9 @@ const CustomerLayout = () => {
                       )}
 
                       {couponError && (
-                        <small className="text-danger d-block mt-1">
-                          {couponError}
-                        </small>
+                        <small className="text-danger d-block mt-1">{couponError}</small>
                       )}
                     </div>
-
                   </div>
                 )}
               </div>

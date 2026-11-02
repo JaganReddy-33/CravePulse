@@ -1,12 +1,13 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.foodplatform.model.MenuItem;
 import com.foodplatform.util.JsonUtil;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class MenuItemCalorieSerializationTest {
+
     @Test
     void calorieCountRequestAndResponseUseThePersistedFieldName() {
         MenuItem created = JsonUtil.fromJson("{\"calorieCount\":425}", MenuItem.class);
@@ -22,14 +23,17 @@ class MenuItemCalorieSerializationTest {
         MenuItem item = JsonUtil.fromJson("{}", MenuItem.class);
 
         assertNull(item.getCalorieCount());
-        assertTrue(JsonUtil.getGson().toJsonTree(item).getAsJsonObject()
-                .get("calorieCount").isJsonNull());
+        assertTrue(
+            JsonUtil.getGson().toJsonTree(item).getAsJsonObject().get("calorieCount").isJsonNull()
+        );
     }
 
     @Test
     void blankOptionalMenuMetadataSerializesAsNull() {
         MenuItem item = JsonUtil.fromJson(
-                "{\"imageUrl\":null,\"prepTimeMinutes\":null}", MenuItem.class);
+            "{\"imageUrl\":null,\"prepTimeMinutes\":null}",
+            MenuItem.class
+        );
 
         var response = JsonUtil.getGson().toJsonTree(item).getAsJsonObject();
         assertTrue(response.get("imageUrl").isJsonNull());

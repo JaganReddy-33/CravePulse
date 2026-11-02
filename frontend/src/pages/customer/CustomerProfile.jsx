@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import CheckoutAddressSection from "../../components/checkout/CheckoutAddressSection";
 import { getDefaultAddress } from "../../utils/address";
+import ImageUploadField from "../../components/common/ImageUploadField";
 export default function CustomerProfile() {
   const { user, refreshProfile } = useAuth();
   const [form, setForm] = useState({
@@ -17,6 +18,7 @@ export default function CustomerProfile() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   useEffect(() => {
     let active = true;
     Promise.all([api.get("/auth/addresses"), api.get("/auth/wallet")])
@@ -59,8 +61,7 @@ export default function CustomerProfile() {
   const selectAddress = async (id) => {
     try {
       const res = await api.post(`/auth/addresses/${id}/default`);
-      if (!res.success)
-        throw new Error(res.message || "The default address was not updated.");
+      if (!res.success) throw new Error(res.message || "The default address was not updated.");
       setSelected(id);
       setAddresses((prev) =>
         prev.map((a) => ({
@@ -76,19 +77,11 @@ export default function CustomerProfile() {
   const deleteAddress = async (id) => {
     try {
       const res = await api.delete(`/auth/addresses/${id}`);
-      if (!res.success)
-        throw new Error(res.message || "Address was not deleted.");
-      const deleted = addresses.find(
-        (address) => String(address.id) === String(id),
-      );
-      const remaining = addresses.filter(
-        (address) => String(address.id) !== String(id),
-      );
+      if (!res.success) throw new Error(res.message || "Address was not deleted.");
+      const deleted = addresses.find((address) => String(address.id) === String(id));
+      const remaining = addresses.filter((address) => String(address.id) !== String(id));
       setAddresses(remaining);
-      if (
-        String(selected) === String(id) ||
-        (deleted?.default ?? deleted?.isDefault)
-      ) {
+      if (String(selected) === String(id) || (deleted?.default ?? deleted?.isDefault)) {
         const fallback = getDefaultAddress(remaining);
         setSelected(fallback?.id ?? null);
         if (fallback) await selectAddress(fallback.id);
@@ -100,9 +93,7 @@ export default function CustomerProfile() {
   return (
     <section className="container py-4" style={{ maxWidth: 1000 }}>
       <h1 className="h3 fw-bold">Your account</h1>
-      <p className="text-muted">
-        Manage your details and saved delivery addresses.
-      </p>
+      <p className="text-muted">Manage your details and saved delivery addresses.</p>
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
@@ -116,49 +107,49 @@ export default function CustomerProfile() {
       <form className="card p-4 mb-4" onSubmit={save}>
         <h2 className="h5">Personal details</h2>
         <div className="row g-3">
-          {["fullName", "phone", "avatarUrl"].map((key) => (
+          {["fullName", "phone"].map((key) => (
             <div className="col-12 col-md-6" key={key}>
               <label htmlFor={`profile-${key}`} className="form-label">
                 {
                   {
                     fullName: "Full name",
                     phone: "Phone number",
-                    avatarUrl: "Profile image URL (optional)",
                   }[key]
                 }
               </label>
               <input
                 id={`profile-${key}`}
                 className="form-control"
-                type={
-                  key === "avatarUrl" ? "url" : key === "phone" ? "tel" : "text"
-                }
+                type={key === "phone" ? "tel" : "text"}
                 required={key === "fullName"}
-                maxLength={key === "avatarUrl" ? 500 : 100}
+                maxLength={100}
                 value={form[key]}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, [key]: e.target.value }))
-                }
+                onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
               />
             </div>
           ))}
           <div className="col-12 col-md-6">
+            <ImageUploadField
+              id="profile-avatar"
+              label="Profile photo"
+              purpose="avatar"
+              value={form.avatarUrl}
+              onChange={(avatarUrl) => setForm((prev) => ({ ...prev, avatarUrl }))}
+              onUploadingChange={setUploadingImage}
+            />
+          </div>
+          <div className="col-12 col-md-6">
             <label className="form-label" htmlFor="profile-email">
               Email
             </label>
-            <input
-              id="profile-email"
-              className="form-control"
-              readOnly
-              value={user?.email || ""}
-            />
+            <input id="profile-email" className="form-control" readOnly value={user?.email || ""} />
           </div>
         </div>
         <button
           className="btn btn-primary align-self-start mt-4"
-          disabled={saving}
+          disabled={saving || uploadingImage}
         >
-          {saving ? "Saving..." : "Save details"}
+          {uploadingImage ? "Uploading image..." : saving ? "Saving..." : "Save details"}
         </button>
       </form>
       <CheckoutAddressSection

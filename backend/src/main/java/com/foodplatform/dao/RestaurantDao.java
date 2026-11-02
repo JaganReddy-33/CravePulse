@@ -1,21 +1,43 @@
 package com.foodplatform.dao;
 
 import com.foodplatform.model.Restaurant;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public interface RestaurantDao {
+    List<Restaurant> listOpenRestaurants(
+        Double userLat,
+        Double userLng,
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        int limit,
+        int offset
+    );
 
-    List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search, Boolean vegOnly, int limit, int offset);
+    List<Restaurant> listOpenRestaurants(
+        Double userLat,
+        Double userLng,
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        Double minRating,
+        Integer maxDeliveryTime,
+        String priceTier,
+        String sortBy,
+        int limit,
+        int offset
+    );
 
-    List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search,
-                                         Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
-                                         String priceTier, String sortBy, int limit, int offset);
-
-    int countOpenRestaurants(String cuisine, String search, Boolean vegOnly, Double minRating,
-                             Integer maxDeliveryTime, String priceTier);
+    int countOpenRestaurants(
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        Double minRating,
+        Integer maxDeliveryTime,
+        String priceTier
+    );
 
     Restaurant findById(long id);
 
@@ -37,11 +59,27 @@ public interface RestaurantDao {
 
     List<Restaurant> listAllRestaurants(int limit, int offset);
 
-    void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes, Integer costForTwo, boolean updateCostForTwo);
+    void updateSettings(
+        long id,
+        String name,
+        String phone,
+        String address,
+        String bannerImage,
+        String bankAccount,
+        String ifsc,
+        String beneficiary,
+        String upiId,
+        int autoRejectMinutes,
+        Integer costForTwo,
+        boolean updateCostForTwo
+    );
 
     java.util.List<java.util.Map<String, Object>> getOperatingHours(long restaurantId);
 
-    void updateOperatingHours(long restaurantId, java.util.List<java.util.Map<String, Object>> hours);
+    void updateOperatingHours(
+        long restaurantId,
+        java.util.List<java.util.Map<String, Object>> hours
+    );
 
     java.util.List<java.util.Map<String, Object>> getPayouts(long restaurantId);
 

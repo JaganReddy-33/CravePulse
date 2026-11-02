@@ -11,7 +11,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,11 @@ public class ReviewServlet extends BaseServlet {
             long orderId = body.get("orderId").getAsLong();
             Order order = orderDao.findById(orderId);
             if (order == null || !order.getCustomerId().equals(customerId)) {
-                JsonUtil.sendError(res, 403, "Access forbidden: you may only review orders you placed");
+                JsonUtil.sendError(
+                    res,
+                    403,
+                    "Access forbidden: you may only review orders you placed"
+                );
                 return;
             }
             if (!"DELIVERED".equals(order.getStatus())) {
@@ -55,11 +58,27 @@ public class ReviewServlet extends BaseServlet {
             review.setRestaurantId(order.getRestaurantId());
             review.setRiderId(order.getRiderId());
             review.setFoodRating(body.get("foodRating").getAsInt());
-            review.setPackagingRating(body.has("packagingRating") ? body.get("packagingRating").getAsInt() : 5);
-            review.setDeliveryRating(body.has("deliveryRating") ? body.get("deliveryRating").getAsInt() : 5);
-            review.setReviewText(body.has("reviewText") ? body.get("reviewText").getAsString() : "");
+            review.setPackagingRating(
+                body.has("packagingRating") ? body.get("packagingRating").getAsInt() : 5
+            );
+            review.setDeliveryRating(
+                body.has("deliveryRating") ? body.get("deliveryRating").getAsInt() : 5
+            );
+            review.setReviewText(
+                body.has("reviewText") ? body.get("reviewText").getAsString() : ""
+            );
 
-            if (review.getFoodRating()<1 || review.getFoodRating()>5 || review.getPackagingRating()<1 || review.getPackagingRating()>5 || review.getDeliveryRating()<1 || review.getDeliveryRating()>5) { JsonUtil.sendError(res,400,"Ratings must be from 1 to 5"); return; }
+            if (
+                review.getFoodRating() < 1 ||
+                review.getFoodRating() > 5 ||
+                review.getPackagingRating() < 1 ||
+                review.getPackagingRating() > 5 ||
+                review.getDeliveryRating() < 1 ||
+                review.getDeliveryRating() > 5
+            ) {
+                JsonUtil.sendError(res, 400, "Ratings must be from 1 to 5");
+                return;
+            }
             Long reviewId = reviewDao.createReview(review);
             review.setId(reviewId);
             JsonUtil.sendSuccess(res, 201, "Review submitted successfully", review);
@@ -80,10 +99,16 @@ public class ReviewServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, rw.getRestaurantId())) return;
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            String reply = body != null && body.has("replyText") ? body.get("replyText").getAsString() : "";
+            String reply =
+                body != null && body.has("replyText") ? body.get("replyText").getAsString() : "";
 
             reviewDao.replyToReview(reviewId, reply);
-            JsonUtil.sendSuccess(res, 200, "Reply posted", Map.of("reviewId", reviewId, "replyText", reply));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Reply posted",
+                Map.of("reviewId", reviewId, "replyText", reply)
+            );
             return;
         }
 

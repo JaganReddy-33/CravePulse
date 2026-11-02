@@ -31,12 +31,10 @@ const NotFound = () => {
         <div className="fs-1 mb-3" aria-hidden="true">
           🧭🍕
         </div>
-        <h2 className="fw-extrabold text-dark mb-2">
-          We couldn't find that page
-        </h2>
+        <h2 className="fw-extrabold text-dark mb-2">We couldn't find that page</h2>
         <p className="text-muted small mb-4">
-          The dish, restaurant, or address you are looking for might have been
-          moved, renamed, or is currently taking a cooking break!
+          The dish, restaurant, or address you are looking for might have been moved, renamed, or is
+          currently taking a cooking break!
         </p>
 
         {/* Search Jump Box */}
@@ -100,10 +98,7 @@ const NotFound = () => {
 
         <div className="text-muted small">
           Need immediate support? Contact our customer desk at{" "}
-          <Link
-            to="/contact"
-            className="text-primary text-decoration-none fw-bold"
-          >
+          <Link to="/contact" className="text-primary text-decoration-none fw-bold">
             Contact Support
           </Link>
           .

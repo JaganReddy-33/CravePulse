@@ -18,14 +18,12 @@ const CustomerAuth = ({ initialMode = "login" }) => {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const from =
-    searchParams.get("redirect") || location.state?.from?.pathname || "/";
+  const from = searchParams.get("redirect") || location.state?.from?.pathname || "/";
 
   // If already logged in, redirect user directly to target or home
   useEffect(() => {
     if (user) {
-      if (user.role === "RESTAURANT_OWNER")
-        navigate("/partner", { replace: true });
+      if (user.role === "RESTAURANT_OWNER") navigate("/partner", { replace: true });
       else if (user.role === "RIDER") navigate("/rider", { replace: true });
       else if (user.role === "ADMIN") navigate("/admin", { replace: true });
       else navigate(from, { replace: true });
@@ -51,9 +49,7 @@ const CustomerAuth = ({ initialMode = "login" }) => {
       }
       navigate(from, { replace: true });
     } catch (err) {
-      setError(
-        err.message || "Authentication failed. Please verify credentials.",
-      );
+      setError(err.message || "Authentication failed. Please verify credentials.");
     } finally {
       setLoading(false);
     }
@@ -79,25 +75,19 @@ const CustomerAuth = ({ initialMode = "login" }) => {
       >
         {/* Brand Header */}
         <div className="text-center mb-3">
-          <Link
-            to="/"
-            className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2"
-          >
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
             <div
               className="rounded-4 text-white fw-bold d-flex align-items-center justify-content-center shadow-lg"
               style={{
                 width: 48,
                 height: 48,
-                background:
-                  "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
+                background: "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
                 fontSize: 24,
               }}
             >
               🔥
             </div>
-            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">
-              CravePulse
-            </h1>
+            <h1 className="fs-2 fw-extrabold text-white tracking-tight mb-0">CravePulse</h1>
           </Link>
           <p className="text-light text-opacity-75 small mb-0">
             {isRegister
@@ -197,10 +187,7 @@ const CustomerAuth = ({ initialMode = "login" }) => {
                   Phone Number (Optional)
                 </label>
                 <div className="auth-unified-input-group">
-                  <span
-                    className="auth-icon text-muted"
-                    style={{ fontSize: 13, fontWeight: 700 }}
-                  >
+                  <span className="auth-icon text-muted" style={{ fontSize: 13, fontWeight: 700 }}>
                     +91
                   </span>
                   <input
@@ -246,9 +233,7 @@ const CustomerAuth = ({ initialMode = "login" }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  <i
-                    className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}
-                  ></i>
+                  <i className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
                 </button>
               </div>
             </div>
@@ -257,20 +242,14 @@ const CustomerAuth = ({ initialMode = "login" }) => {
               type="submit"
               className="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-lg mb-3 text-white border-0 transition hover-lift"
               style={{
-                background:
-                  "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
+                background: "linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%)",
               }}
               disabled={loading}
             >
               {loading ? (
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                ></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
               ) : null}
-              {isRegister
-                ? "Create CravePulse Account"
-                : "Sign In to CravePulse"}
+              {isRegister ? "Create CravePulse Account" : "Sign In to CravePulse"}
             </button>
           </form>
 

@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import ModalPortal from "../ModalPortal";
-import {
-  getAddressMapUrl,
-  getFullAddressParts,
-  sameAddressId,
-} from "../../utils/address";
-import {
-  isSafeGoogleMapsUrl,
-  parseGoogleMapsCoordinates,
-} from "../../utils/googleMaps";
+import { getAddressMapUrl, getFullAddressParts, sameAddressId } from "../../utils/address";
+import { isSafeGoogleMapsUrl } from "../../utils/googleMaps";
 
 const initialAddress = () => ({
   title: "Home",
@@ -38,13 +31,6 @@ const CheckoutAddressSection = ({
       setSaveError("Enter a valid HTTPS Google Maps link.");
       return;
     }
-    if (!parseGoogleMapsCoordinates(newAddress.mapsUrl)) {
-      setSaveError(
-        "Could not read coordinates from that link. Use a Maps URL with /@latitude,longitude, !3dlatitude!4dlongitude, or ?q=latitude,longitude.",
-      );
-      return;
-    }
-
     setSaveError("");
     setSaving(true);
     try {
@@ -104,9 +90,7 @@ const CheckoutAddressSection = ({
               <div
                 key={address.id}
                 className={`d-flex align-items-start gap-3 p-3 rounded-4 border cursor-pointer transition ${
-                  selected
-                    ? "border-danger bg-danger-subtle"
-                    : "border-light bg-light"
+                  selected ? "border-danger bg-danger-subtle" : "border-light bg-light"
                 }`}
                 onClick={(event) => {
                   if (event.target.closest("input, a, button")) return;
@@ -159,9 +143,7 @@ const CheckoutAddressSection = ({
                   )}
                 </div>
                 <div className="d-flex align-items-start gap-2 flex-shrink-0">
-                  {selected && (
-                    <i className="bi bi-check-circle-fill text-danger fs-5 mt-1"></i>
-                  )}
+                  {selected && <i className="bi bi-check-circle-fill text-danger fs-5 mt-1"></i>}
                   {onDeleteAddress && (
                     <button
                       type="button"
@@ -198,10 +180,7 @@ const CheckoutAddressSection = ({
               aria-labelledby="add-address-title"
             >
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5
-                  className="fw-extrabold text-dark mb-0"
-                  id="add-address-title"
-                >
+                <h5 className="fw-extrabold text-dark mb-0" id="add-address-title">
                   Add Delivery Address
                 </h5>
                 <button
@@ -214,9 +193,7 @@ const CheckoutAddressSection = ({
 
               <form onSubmit={handleCreateSubmit}>
                 <fieldset className="mb-3">
-                  <legend className="form-label small fw-bold">
-                    Address Tag
-                  </legend>
+                  <legend className="form-label small fw-bold">Address Tag</legend>
                   <div className="d-flex gap-2">
                     {["Home", "Work", "Other"].map((tag) => (
                       <button
@@ -237,10 +214,7 @@ const CheckoutAddressSection = ({
                 </fieldset>
 
                 <div className="mb-3">
-                  <label
-                    className="form-label small fw-bold"
-                    htmlFor="address-line"
-                  >
+                  <label className="form-label small fw-bold" htmlFor="address-line">
                     Street Address / House No.
                   </label>
                   <textarea
@@ -251,18 +225,13 @@ const CheckoutAddressSection = ({
                     maxLength={255}
                     placeholder="e.g. Flat 304, Palm Grove Apartments, 5th Cross Road"
                     value={newAddress.addressLine}
-                    onChange={(event) =>
-                      updateAddress("addressLine", event.target.value)
-                    }
+                    onChange={(event) => updateAddress("addressLine", event.target.value)}
                   />
                 </div>
 
                 <div className="row g-2 mb-3">
                   <div className="col-6">
-                    <label
-                      className="form-label small fw-bold"
-                      htmlFor="address-landmark"
-                    >
+                    <label className="form-label small fw-bold" htmlFor="address-landmark">
                       Landmark
                     </label>
                     <input
@@ -272,16 +241,11 @@ const CheckoutAddressSection = ({
                       maxLength={120}
                       placeholder="e.g. Near Indiranagar Club"
                       value={newAddress.landmark}
-                      onChange={(event) =>
-                        updateAddress("landmark", event.target.value)
-                      }
+                      onChange={(event) => updateAddress("landmark", event.target.value)}
                     />
                   </div>
                   <div className="col-6">
-                    <label
-                      className="form-label small fw-bold"
-                      htmlFor="address-postal-code"
-                    >
+                    <label className="form-label small fw-bold" htmlFor="address-postal-code">
                       Postal PIN Code
                     </label>
                     <input
@@ -292,9 +256,7 @@ const CheckoutAddressSection = ({
                       maxLength={20}
                       placeholder="560038"
                       value={newAddress.postalCode}
-                      onChange={(event) =>
-                        updateAddress("postalCode", event.target.value)
-                      }
+                      onChange={(event) => updateAddress("postalCode", event.target.value)}
                     />
                   </div>
                 </div>
@@ -314,19 +276,14 @@ const CheckoutAddressSection = ({
                         required
                         maxLength={100}
                         value={newAddress[key]}
-                        onChange={(event) =>
-                          updateAddress(key, event.target.value)
-                        }
+                        onChange={(event) => updateAddress(key, event.target.value)}
                       />
                     </div>
                   ))}
                 </div>
 
                 <div className="mb-3">
-                  <label
-                    className="form-label small fw-bold"
-                    htmlFor="address-maps-url"
-                  >
+                  <label className="form-label small fw-bold" htmlFor="address-maps-url">
                     Google Maps link
                   </label>
                   <input
@@ -339,18 +296,12 @@ const CheckoutAddressSection = ({
                     maxLength={500}
                     placeholder="https://www.google.com/maps/@12.9716,77.5946,17z"
                     value={newAddress.mapsUrl}
-                    onChange={(event) =>
-                      updateAddress("mapsUrl", event.target.value)
-                    }
+                    onChange={(event) => updateAddress("mapsUrl", event.target.value)}
                     aria-describedby="address-maps-help"
                   />
-                  <p
-                    id="address-maps-help"
-                    className="small text-muted mt-1 mb-0"
-                  >
-                    Paste an HTTPS Google Maps pin link. Coordinates are read
-                    from the link; shortened links without coordinates are not
-                    supported.
+                  <p id="address-maps-help" className="small text-muted mt-1 mb-0">
+                    Paste a Google Maps place or pin link. Coordinates are extracted and saved
+                    automatically.
                   </p>
                 </div>
 

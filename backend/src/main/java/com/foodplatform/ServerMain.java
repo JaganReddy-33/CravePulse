@@ -6,14 +6,13 @@ import com.foodplatform.filter.*;
 import com.foodplatform.servlet.*;
 import com.foodplatform.websocket.RealtimeEndpoint;
 import jakarta.servlet.DispatcherType;
+import java.io.File;
+import java.util.Set;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.websocket.server.WsSci;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.Set;
 
 public class ServerMain {
 
@@ -73,16 +72,34 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/api/account/*", "UserDataServlet");
         Tomcat.addServlet(ctx, "CatalogServlet", new CatalogServlet());
         ctx.addServletMappingDecoded("/api/catalog/*", "CatalogServlet");
+        var imageUploadServlet = Tomcat.addServlet(
+            ctx,
+            "ImageUploadServlet",
+            new ImageUploadServlet()
+        );
+        imageUploadServlet.setMultipartConfigElement(
+            new jakarta.servlet.MultipartConfigElement(
+                System.getProperty("java.io.tmpdir"),
+                0,
+                5_242_880,
+                5_308_416
+            )
+        );
+        ctx.addServletMappingDecoded("/api/uploads/*", "ImageUploadServlet");
         // Register Servlets
         Tomcat.addServlet(ctx, "AuthServlet", new AuthServlet()).setAsyncSupported(true);
         ctx.addServletMappingDecoded("/api/auth/*", "AuthServlet");
         ctx.addServletMappingDecoded("/api/auth", "AuthServlet");
 
-        Tomcat.addServlet(ctx, "OnboardingServlet", new OnboardingServlet()).setAsyncSupported(true);
+        Tomcat.addServlet(ctx, "OnboardingServlet", new OnboardingServlet()).setAsyncSupported(
+            true
+        );
         ctx.addServletMappingDecoded("/api/partner/apply", "OnboardingServlet");
         ctx.addServletMappingDecoded("/api/rider/apply", "OnboardingServlet");
 
-        Tomcat.addServlet(ctx, "RestaurantServlet", new RestaurantServlet()).setAsyncSupported(true);
+        Tomcat.addServlet(ctx, "RestaurantServlet", new RestaurantServlet()).setAsyncSupported(
+            true
+        );
         ctx.addServletMappingDecoded("/api/restaurants/*", "RestaurantServlet");
         ctx.addServletMappingDecoded("/api/restaurants", "RestaurantServlet");
 
@@ -90,7 +107,9 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/api/menu/*", "MenuServlet");
         ctx.addServletMappingDecoded("/api/menu", "MenuServlet");
 
-        Tomcat.addServlet(ctx, "CartPricingServlet", new CartPricingServlet()).setAsyncSupported(true);
+        Tomcat.addServlet(ctx, "CartPricingServlet", new CartPricingServlet()).setAsyncSupported(
+            true
+        );
         ctx.addServletMappingDecoded("/api/cart/*", "CartPricingServlet");
         ctx.addServletMappingDecoded("/api/cart", "CartPricingServlet");
 
@@ -128,7 +147,9 @@ public class ServerMain {
         ctx.addServletMappingDecoded("/api/wallet/*", "WalletServlet");
         ctx.addServletMappingDecoded("/api/wallet", "WalletServlet");
 
-        Tomcat.addServlet(ctx, "NotificationServlet", new NotificationServlet()).setAsyncSupported(true);
+        Tomcat.addServlet(ctx, "NotificationServlet", new NotificationServlet()).setAsyncSupported(
+            true
+        );
         ctx.addServletMappingDecoded("/api/notifications/*", "NotificationServlet");
         ctx.addServletMappingDecoded("/api/notifications", "NotificationServlet");
 
@@ -143,7 +164,12 @@ public class ServerMain {
         }
     }
 
-    private static void addFilter(Context ctx, String name, jakarta.servlet.Filter filter, String urlPattern) {
+    private static void addFilter(
+        Context ctx,
+        String name,
+        jakarta.servlet.Filter filter,
+        String urlPattern
+    ) {
         var def = new org.apache.tomcat.util.descriptor.web.FilterDef();
         def.setFilterName(name);
         def.setFilterClass(filter.getClass().getName());

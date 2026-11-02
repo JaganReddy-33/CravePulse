@@ -5,12 +5,11 @@ import com.foodplatform.dao.WalletDao;
 import com.foodplatform.model.Coupon;
 import com.foodplatform.model.Notification;
 import com.foodplatform.model.WalletTransaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WalletDaoImpl implements WalletDao {
 
@@ -18,8 +17,9 @@ public class WalletDaoImpl implements WalletDao {
 
     @Override
     public void recordTransaction(Connection conn, WalletTransaction tx) throws SQLException {
-        String sql = "INSERT INTO wallet_transactions (user_id, amount, transaction_type, reason, reference_order_id, balance_after) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql =
+            "INSERT INTO wallet_transactions (user_id, amount, transaction_type, reason, reference_order_id, balance_after) " +
+            "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, tx.getUserId());
             ps.setBigDecimal(2, tx.getAmount());
@@ -35,9 +35,12 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public List<WalletTransaction> getUserTransactions(long userId) {
         List<WalletTransaction> list = new ArrayList<>();
-        String sql = "SELECT * FROM wallet_transactions WHERE user_id = ? ORDER BY id DESC LIMIT 50";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM wallet_transactions WHERE user_id = ? ORDER BY id DESC LIMIT 50";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -63,9 +66,12 @@ public class WalletDaoImpl implements WalletDao {
 
     @Override
     public void createNotification(Notification notif) {
-        String sql = "INSERT INTO notifications (user_id, title, message, type, reference_id) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "INSERT INTO notifications (user_id, title, message, type, reference_id) VALUES (?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, notif.getUserId());
             ps.setString(2, notif.getTitle());
             ps.setString(3, notif.getMessage());
@@ -81,11 +87,14 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public List<Notification> getUserNotifications(long userId, boolean unreadOnly) {
         List<Notification> list = new ArrayList<>();
-        String sql = "SELECT * FROM notifications WHERE user_id = ? " +
-                (unreadOnly ? "AND is_read = FALSE " : "") +
-                "ORDER BY id DESC LIMIT 30";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM notifications WHERE user_id = ? " +
+            (unreadOnly ? "AND is_read = FALSE " : "") +
+            "ORDER BY id DESC LIMIT 30";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -111,8 +120,10 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public void markNotificationRead(long notificationId, long userId) {
         String sql = "UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, notificationId);
             ps.setLong(2, userId);
             ps.executeUpdate();
@@ -125,8 +136,10 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public void markAllNotificationsRead(long userId) {
         String sql = "UPDATE notifications SET is_read = TRUE WHERE user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -138,8 +151,10 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public void clearAllNotifications(long userId) {
         String sql = "DELETE FROM notifications WHERE user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -150,9 +165,12 @@ public class WalletDaoImpl implements WalletDao {
 
     @Override
     public Coupon getCouponByCode(String code) {
-        String sql = "SELECT * FROM coupons WHERE code = ? AND is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM coupons WHERE code = ? AND is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, code);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -189,8 +207,10 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public int getCouponUsageCountByUser(long userId, long couponId) {
         String sql = "SELECT COUNT(*) FROM coupon_usages WHERE user_id = ? AND coupon_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             ps.setLong(2, couponId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -199,14 +219,20 @@ public class WalletDaoImpl implements WalletDao {
                 }
             }
         } catch (SQLException e) {
-            logger.error("Error checking coupon usage count: user {} coupon {}", userId, couponId, e);
+            logger.error(
+                "Error checking coupon usage count: user {} coupon {}",
+                userId,
+                couponId,
+                e
+            );
             throw new IllegalStateException("Database operation failed", e);
         }
         return 0;
     }
 
     @Override
-    public void recordCouponUsage(Connection conn, long userId, long couponId, long orderId) throws SQLException {
+    public void recordCouponUsage(Connection conn, long userId, long couponId, long orderId)
+        throws SQLException {
         String sql = "INSERT INTO coupon_usages (user_id, coupon_id, order_id) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, userId);
@@ -228,8 +254,10 @@ public class WalletDaoImpl implements WalletDao {
     @Override
     public String getPlatformSetting(String key, String defaultValue) {
         String sql = "SELECT config_value FROM platform_settings WHERE config_key = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, key);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

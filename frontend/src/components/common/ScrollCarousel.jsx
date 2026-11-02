@@ -133,10 +133,7 @@ const ScrollCarousel = ({
           className={`scroll-carousel-fade-left${atStart ? " hidden" : ""}`}
           aria-hidden="true"
         />
-        <div
-          className={`scroll-carousel-fade-right${atEnd ? " hidden" : ""}`}
-          aria-hidden="true"
-        />
+        <div className={`scroll-carousel-fade-right${atEnd ? " hidden" : ""}`} aria-hidden="true" />
 
         {/* The scrollable track */}
         <div

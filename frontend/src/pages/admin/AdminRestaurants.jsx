@@ -26,11 +26,7 @@ const AdminRestaurants = () => {
           commission: r.commissionRate || r.commission || 15.0,
           rating: r.rating ?? 0,
           isKycApproved: Boolean(r.isKycApproved),
-          status: !r.isKycApproved
-            ? "PENDING_AUDIT"
-            : r.isOpen
-              ? "ACTIVE"
-              : "PAUSED",
+          status: !r.isKycApproved ? "PENDING_AUDIT" : r.isOpen ? "ACTIVE" : "PAUSED",
         }));
         setRestaurants(mapped);
         setHasMore(res.data.length === PAGE_SIZE);
@@ -67,11 +63,7 @@ const AdminRestaurants = () => {
           commission: r.commissionRate || 15.0,
           rating: r.rating ?? 0,
           isKycApproved: Boolean(r.isKycApproved),
-          status: !r.isKycApproved
-            ? "PENDING_AUDIT"
-            : r.isOpen
-              ? "ACTIVE"
-              : "PAUSED",
+          status: !r.isKycApproved ? "PENDING_AUDIT" : r.isOpen ? "ACTIVE" : "PAUSED",
         })),
       ]);
       setHasMore(response.data.length === PAGE_SIZE);
@@ -109,12 +101,9 @@ const AdminRestaurants = () => {
     <div className="container-fluid py-4">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
         <div>
-          <h4 className="fw-bold mb-1 text-white">
-            Merchant Directory & Commission Controls
-          </h4>
+          <h4 className="fw-bold mb-1 text-white">Merchant Directory & Commission Controls</h4>
           <p className="text-secondary small mb-0">
-            Oversee onboarded culinary partners, FSSAI verification, and menu
-            parity compliance
+            Oversee onboarded culinary partners, FSSAI verification, and menu parity compliance
           </p>
         </div>
         {error && (
@@ -159,18 +148,14 @@ const AdminRestaurants = () => {
                     <small className="text-secondary">{rest.phone}</small>
                   </td>
                   <td className="small text-secondary">{rest.cuisine}</td>
-                  <td className="small font-monospace text-light">
-                    {rest.fssai}
-                  </td>
+                  <td className="small font-monospace text-light">{rest.fssai}</td>
                   <td>
                     <span className="badge bg-dark border border-secondary text-info">
                       {rest.commission}% Fair
                     </span>
                   </td>
                   <td>
-                    <span className="text-warning fw-bold">
-                      ★ {rest.rating}
-                    </span>
+                    <span className="text-warning fw-bold">★ {rest.rating}</span>
                   </td>
                   <td>
                     <span
@@ -203,9 +188,7 @@ const AdminRestaurants = () => {
         </div>
       </div>
       {loading ? (
-        <div className="text-center text-secondary mt-3">
-          Loading restaurant partners…
-        </div>
+        <div className="text-center text-secondary mt-3">Loading restaurant partners…</div>
       ) : null}
       {!loading && hasMore && (
         <div className="text-center mt-3">

@@ -19,9 +19,7 @@ export default function CitiesPage() {
           {error}
         </div>
       )}
-      {!cities.length && !error && (
-        <p>No delivery zones have been configured yet.</p>
-      )}
+      {!cities.length && !error && <p>No delivery zones have been configured yet.</p>}
       <div className="row g-4">
         {cities.map((city) => (
           <div className="col-12 col-md-6 col-xl-4" key={city.id}>

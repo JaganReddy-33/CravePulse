@@ -1,6 +1,9 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.foodplatform.config.DatabaseConfig;
+import com.foodplatform.config.DatabaseMigrationRunner;
 import com.foodplatform.dao.*;
 import com.foodplatform.daoImpl.*;
 import com.foodplatform.model.AdminAuditLog;
@@ -11,20 +14,16 @@ import com.foodplatform.model.PlatformSetting;
 import com.foodplatform.model.User;
 import com.foodplatform.service.AnalyticsService;
 import com.foodplatform.service.DisputeService;
-import com.foodplatform.config.DatabaseMigrationRunner;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AdminConsoleDepthTest {
@@ -79,7 +78,15 @@ public class AdminConsoleDepthTest {
 
         // Attempt to raise dispute for non-delivered order -> Must fail
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                disputeService.raiseDispute(orderId, 1L, "MISSING_ITEM", "Food was missing", null, BigDecimal.valueOf(50.00)));
+            disputeService.raiseDispute(
+                orderId,
+                1L,
+                "MISSING_ITEM",
+                "Food was missing",
+                null,
+                BigDecimal.valueOf(50.00)
+            )
+        );
         assertTrue(ex.getMessage().contains("DELIVERED"));
     }
 
@@ -102,13 +109,28 @@ public class AdminConsoleDepthTest {
         assertNotNull(orderId);
 
         // First dispute -> Should succeed
-        Dispute d1 = disputeService.raiseDispute(orderId, 1L, "MISSING_ITEM", "Raita missing", null, BigDecimal.valueOf(40.00));
+        Dispute d1 = disputeService.raiseDispute(
+            orderId,
+            1L,
+            "MISSING_ITEM",
+            "Raita missing",
+            null,
+            BigDecimal.valueOf(40.00)
+        );
         assertNotNull(d1);
         assertNotNull(d1.getId());
 
         // Second dispute on same order -> Must fail
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                disputeService.raiseDispute(orderId, 1L, "SPOILED_FOOD", "Duplicate claim", null, BigDecimal.valueOf(60.00)));
+            disputeService.raiseDispute(
+                orderId,
+                1L,
+                "SPOILED_FOOD",
+                "Duplicate claim",
+                null,
+                BigDecimal.valueOf(60.00)
+            )
+        );
         assertTrue(ex.getMessage().contains("already been submitted"));
     }
 
@@ -130,7 +152,14 @@ public class AdminConsoleDepthTest {
         assertNotNull(orderId);
 
         // Requested refund of ₹300 exceeds default cap of ₹150
-        Dispute d = disputeService.raiseDispute(orderId, 1L, "MISSING_ITEM", "Whole box missing", null, BigDecimal.valueOf(300.00));
+        Dispute d = disputeService.raiseDispute(
+            orderId,
+            1L,
+            "MISSING_ITEM",
+            "Whole box missing",
+            null,
+            BigDecimal.valueOf(300.00)
+        );
         assertNotNull(d);
         assertFalse(d.isAutoRefundApproved(), "Should NOT auto-approve claims over cap");
         assertEquals("PENDING", d.getAdminStatus());
@@ -159,7 +188,14 @@ public class AdminConsoleDepthTest {
         assertNotNull(orderId);
 
         // Small claim (₹40) under cap, but customer has fraud flags
-        Dispute d = disputeService.raiseDispute(orderId, 5L, "MISSING_ITEM", "Sauce missing", null, BigDecimal.valueOf(40.00));
+        Dispute d = disputeService.raiseDispute(
+            orderId,
+            5L,
+            "MISSING_ITEM",
+            "Sauce missing",
+            null,
+            BigDecimal.valueOf(40.00)
+        );
         assertNotNull(d);
         assertFalse(d.isAutoRefundApproved(), "Flagged user must never qualify for auto-refund");
         assertEquals("PENDING", d.getAdminStatus());
@@ -201,17 +237,14 @@ public class AdminConsoleDepthTest {
         c.setUsageLimit(500);
         c.setActive(true);
 
-        // 1. Create
         Long couponId = couponDao.createCoupon(c);
         assertNotNull(couponId);
 
-        // 2. Read
         Coupon fetched = couponDao.findById(couponId);
         assertNotNull(fetched);
         assertEquals(testCode, fetched.getCode());
         assertEquals(0, BigDecimal.valueOf(75.00).compareTo(fetched.getDiscountValue()));
 
-        // 3. Update
         fetched.setDescription("Updated Phase 8 Description");
         fetched.setDiscountValue(BigDecimal.valueOf(80.00));
         couponDao.updateCoupon(fetched);
@@ -220,12 +253,10 @@ public class AdminConsoleDepthTest {
         assertEquals("Updated Phase 8 Description", updated.getDescription());
         assertEquals(0, BigDecimal.valueOf(80.00).compareTo(updated.getDiscountValue()));
 
-        // 4. Toggle
         couponDao.toggleCoupon(couponId, false);
         Coupon toggled = couponDao.findById(couponId);
         assertFalse(toggled.isActive());
 
-        // 5. Delete
         couponDao.deleteCoupon(couponId);
         assertNull(couponDao.findById(couponId));
     }
@@ -247,7 +278,15 @@ public class AdminConsoleDepthTest {
     @org.junit.jupiter.api.Order(8)
     void testAdminAuditLogTrail() {
         String action = "TEST_ADMIN_ACTION_" + System.currentTimeMillis();
-        adminAuditDao.logAction(4L, "Admin User", action, "SYSTEM", "SYS-001", "Testing audit trail", "127.0.0.1");
+        adminAuditDao.logAction(
+            4L,
+            "Admin User",
+            action,
+            "SYSTEM",
+            "SYS-001",
+            "Testing audit trail",
+            "127.0.0.1"
+        );
 
         List<AdminAuditLog> logs = adminAuditDao.listRecentLogs(10, 0);
         assertNotNull(logs);

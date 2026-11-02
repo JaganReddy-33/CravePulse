@@ -50,9 +50,7 @@ export default function ContactPage() {
   return (
     <section className="container py-5" style={{ maxWidth: 1000 }}>
       <h1 className="h2 fw-bold">Contact support</h1>
-      <p className="text-muted">
-        Send a request and follow its progress from your account.
-      </p>
+      <p className="text-muted">Send a request and follow its progress from your account.</p>
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
@@ -66,10 +64,7 @@ export default function ContactPage() {
       {!user ? (
         <div className="card p-4">
           <p>Sign in to submit a request linked to your account.</p>
-          <Link
-            className="btn btn-primary align-self-start"
-            to="/login?redirect=/contact"
-          >
+          <Link className="btn btn-primary align-self-start" to="/login?redirect=/contact">
             Sign in
           </Link>
         </div>
@@ -122,10 +117,7 @@ export default function ContactPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
-              <button
-                className="btn btn-primary align-self-start"
-                disabled={sending}
-              >
+              <button className="btn btn-primary align-self-start" disabled={sending}>
                 {sending ? "Sending..." : "Send request"}
               </button>
             </form>
@@ -136,10 +128,7 @@ export default function ContactPage() {
             {tickets.map((ticket) => (
               <div className="card p-3 mb-3" key={ticket.ticketNumber}>
                 <strong>{ticket.subject}</strong>
-                <small
-                  className="text-muted"
-                  style={{ overflowWrap: "anywhere" }}
-                >
+                <small className="text-muted" style={{ overflowWrap: "anywhere" }}>
                   {ticket.ticketNumber}
                 </small>
                 <span className="mt-2">{ticket.status}</span>

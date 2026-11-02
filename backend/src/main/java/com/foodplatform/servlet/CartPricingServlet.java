@@ -10,7 +10,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -40,9 +39,18 @@ public class CartPricingServlet extends BaseServlet {
                 }
 
                 long restaurantId = body.get("restaurantId").getAsLong();
-                Double userLat = body.has("userLat") && !body.get("userLat").isJsonNull() ? body.get("userLat").getAsDouble() : null;
-                Double userLng = body.has("userLng") && !body.get("userLng").isJsonNull() ? body.get("userLng").getAsDouble() : null;
-                String couponCode = body.has("couponCode") && !body.get("couponCode").isJsonNull() ? body.get("couponCode").getAsString() : null;
+                Double userLat =
+                    body.has("userLat") && !body.get("userLat").isJsonNull()
+                        ? body.get("userLat").getAsDouble()
+                        : null;
+                Double userLng =
+                    body.has("userLng") && !body.get("userLng").isJsonNull()
+                        ? body.get("userLng").getAsDouble()
+                        : null;
+                String couponCode =
+                    body.has("couponCode") && !body.get("couponCode").isJsonNull()
+                        ? body.get("couponCode").getAsString()
+                        : null;
 
                 List<PricingService.CartInputItem> items = new ArrayList<>();
                 JsonArray arr = body.getAsJsonArray("items");
@@ -67,7 +75,13 @@ public class CartPricingServlet extends BaseServlet {
                     return;
                 }
 
-                PricingService.PriceCalculationResult calc = pricingService.calculateBill(restaurantId, items, userLat, userLng, couponCode);
+                PricingService.PriceCalculationResult calc = pricingService.calculateBill(
+                    restaurantId,
+                    items,
+                    userLat,
+                    userLng,
+                    couponCode
+                );
                 BigDecimal tipAmount = BigDecimal.ZERO;
                 if (body.has("tipAmount") && !body.get("tipAmount").isJsonNull()) {
                     try {
@@ -94,10 +108,13 @@ public class CartPricingServlet extends BaseServlet {
 
         if ("/coupons".equals(path)) {
             List<Coupon> coupons = new ArrayList<>();
-            String sql = "SELECT * FROM coupons WHERE is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)";
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
+            String sql =
+                "SELECT * FROM coupons WHERE is_active = TRUE AND (valid_until IS NULL OR valid_until > CURRENT_TIMESTAMP)";
+            try (
+                Connection conn = DatabaseConfig.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+            ) {
                 while (rs.next()) {
                     Coupon c = new Coupon();
                     c.setId(rs.getLong("id"));

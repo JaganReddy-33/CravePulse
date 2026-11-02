@@ -13,7 +13,6 @@ import com.foodplatform.util.JsonUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 
 public abstract class BaseServlet extends HttpServlet {
@@ -37,16 +36,25 @@ public abstract class BaseServlet extends HttpServlet {
         return role != null ? role.toString() : null;
     }
 
-    protected boolean requireAuthenticated(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected boolean requireAuthenticated(HttpServletRequest req, HttpServletResponse res)
+        throws IOException {
         Long userId = getAuthenticatedUserId(req);
         if (userId == null) {
-            JsonUtil.sendError(res, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required. Please provide a valid Bearer token.");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_UNAUTHORIZED,
+                "Authentication required. Please provide a valid Bearer token."
+            );
             return false;
         }
         return true;
     }
 
-    protected boolean requireRole(HttpServletRequest req, HttpServletResponse res, String... allowedRoles) throws IOException {
+    protected boolean requireRole(
+        HttpServletRequest req,
+        HttpServletResponse res,
+        String... allowedRoles
+    ) throws IOException {
         if (!requireAuthenticated(req, res)) {
             return false;
         }
@@ -56,11 +64,16 @@ public abstract class BaseServlet extends HttpServlet {
                 return true;
             }
         }
-        JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden for role: " + currentRole);
+        JsonUtil.sendError(
+            res,
+            HttpServletResponse.SC_FORBIDDEN,
+            "Access forbidden for role: " + currentRole
+        );
         return false;
     }
 
-    protected boolean requireAdmin(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected boolean requireAdmin(HttpServletRequest req, HttpServletResponse res)
+        throws IOException {
         return requireRole(req, res, "ADMIN");
     }
 
@@ -72,7 +85,11 @@ public abstract class BaseServlet extends HttpServlet {
      * - RESTAURANT_OWNER whose restaurant fulfills the order
      * - RIDER assigned to deliver the order
      */
-    protected boolean requireOwnerOfOrder(HttpServletRequest req, HttpServletResponse res, long orderId) throws IOException {
+    protected boolean requireOwnerOfOrder(
+        HttpServletRequest req,
+        HttpServletResponse res,
+        long orderId
+    ) throws IOException {
         if (!requireAuthenticated(req, res)) return false;
         Long userId = getAuthenticatedUserId(req);
         String role = getAuthenticatedRole(req);
@@ -83,7 +100,11 @@ public abstract class BaseServlet extends HttpServlet {
 
         Order order = baseOrderDao.findById(orderId);
         if (order == null) {
-            JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Order not found with id: " + orderId);
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_NOT_FOUND,
+                "Order not found with id: " + orderId
+            );
             return false;
         }
 
@@ -91,36 +112,64 @@ public abstract class BaseServlet extends HttpServlet {
             if (order.getCustomerId() != null && order.getCustomerId().equals(userId)) {
                 return true;
             }
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: you do not own this order");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Access forbidden: you do not own this order"
+            );
             return false;
         }
 
         if ("RESTAURANT_OWNER".equalsIgnoreCase(role)) {
             Restaurant rest = baseRestaurantDao.findByUserId(userId);
-            if (rest != null && order.getRestaurantId() != null && order.getRestaurantId().equals(rest.getId())) {
+            if (
+                rest != null &&
+                order.getRestaurantId() != null &&
+                order.getRestaurantId().equals(rest.getId())
+            ) {
                 return true;
             }
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: order belongs to another restaurant");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Access forbidden: order belongs to another restaurant"
+            );
             return false;
         }
 
         if ("RIDER".equalsIgnoreCase(role)) {
             RiderProfile rider = baseRiderDao.findByUserId(userId);
-            if (rider != null && order.getRiderId() != null && order.getRiderId().equals(rider.getId())) {
+            if (
+                rider != null &&
+                order.getRiderId() != null &&
+                order.getRiderId().equals(rider.getId())
+            ) {
                 return true;
             }
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: you are not the assigned rider for this order");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Access forbidden: you are not the assigned rider for this order"
+            );
             return false;
         }
 
-        JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden for this order");
+        JsonUtil.sendError(
+            res,
+            HttpServletResponse.SC_FORBIDDEN,
+            "Access forbidden for this order"
+        );
         return false;
     }
 
     /**
      * Verifies that the authenticated caller is the owner of the given restaurant or an ADMIN.
      */
-    protected boolean requireRestaurantOwner(HttpServletRequest req, HttpServletResponse res, long restaurantId) throws IOException {
+    protected boolean requireRestaurantOwner(
+        HttpServletRequest req,
+        HttpServletResponse res,
+        long restaurantId
+    ) throws IOException {
         if (!requireAuthenticated(req, res)) return false;
         Long userId = getAuthenticatedUserId(req);
         String role = getAuthenticatedRole(req);
@@ -134,18 +183,30 @@ public abstract class BaseServlet extends HttpServlet {
             if (rest != null && rest.getId() == restaurantId) {
                 return true;
             }
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: you do not own this restaurant");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Access forbidden: you do not own this restaurant"
+            );
             return false;
         }
 
-        JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: restaurant owner authorization required");
+        JsonUtil.sendError(
+            res,
+            HttpServletResponse.SC_FORBIDDEN,
+            "Access forbidden: restaurant owner authorization required"
+        );
         return false;
     }
 
     /**
      * Verifies that the authenticated caller is the assigned rider for the given order or an ADMIN.
      */
-    protected boolean requireAssignedRider(HttpServletRequest req, HttpServletResponse res, long orderId) throws IOException {
+    protected boolean requireAssignedRider(
+        HttpServletRequest req,
+        HttpServletResponse res,
+        long orderId
+    ) throws IOException {
         if (!requireAuthenticated(req, res)) return false;
         Long userId = getAuthenticatedUserId(req);
         String role = getAuthenticatedRole(req);
@@ -157,22 +218,38 @@ public abstract class BaseServlet extends HttpServlet {
         if ("RIDER".equalsIgnoreCase(role)) {
             RiderProfile rider = baseRiderDao.findByUserId(userId);
             if (rider == null) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Rider profile not found for authenticated account");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_FORBIDDEN,
+                    "Rider profile not found for authenticated account"
+                );
                 return false;
             }
             Order order = baseOrderDao.findById(orderId);
             if (order == null) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Order not found with id: " + orderId);
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Order not found with id: " + orderId
+                );
                 return false;
             }
             if (order.getRiderId() != null && order.getRiderId().equals(rider.getId())) {
                 return true;
             }
-            JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: you are not the assigned rider for this order");
+            JsonUtil.sendError(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                "Access forbidden: you are not the assigned rider for this order"
+            );
             return false;
         }
 
-        JsonUtil.sendError(res, HttpServletResponse.SC_FORBIDDEN, "Access forbidden: delivery rider authorization required");
+        JsonUtil.sendError(
+            res,
+            HttpServletResponse.SC_FORBIDDEN,
+            "Access forbidden: delivery rider authorization required"
+        );
         return false;
     }
 
@@ -186,8 +263,7 @@ public abstract class BaseServlet extends HttpServlet {
             if (!part.isEmpty()) {
                 try {
                     return Long.parseLong(part);
-                } catch (NumberFormatException ignored) {
-                }
+                } catch (NumberFormatException ignored) {}
             }
         }
         return null;

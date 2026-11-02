@@ -31,9 +31,7 @@ const KitchenKanban = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isThrottled, setIsThrottled] = useState(
-    restaurant?.isAutoThrottled || false,
-  );
+  const [isThrottled, setIsThrottled] = useState(restaurant?.isAutoThrottled || false);
   const [isOpen, setIsOpen] = useState(restaurant?.isOpen ?? true);
   const [now, setNow] = useState(Date.now());
   const [mobileTab, setMobileTab] = useState("PLACED");
@@ -87,19 +85,14 @@ const KitchenKanban = () => {
 
     const offNewOrder = realtime.on("new_order_placed", (newOrd) => {
       if (Number(newOrd.restaurantId) === Number(restId)) {
-        setOrders((prev) => [
-          newOrd,
-          ...prev.filter((o) => o.id !== newOrd.id),
-        ]);
+        setOrders((prev) => [newOrd, ...prev.filter((o) => o.id !== newOrd.id)]);
         playAlertSound("bell");
       }
     });
 
     const offStatus = realtime.on("order_status_updated", (payload) => {
       setOrders((prev) =>
-        prev.map((o) =>
-          o.id === payload.orderId ? { ...o, status: payload.status } : o,
-        ),
+        prev.map((o) => (o.id === payload.orderId ? { ...o, status: payload.status } : o)),
       );
     });
 
@@ -109,14 +102,11 @@ const KitchenKanban = () => {
       }
     });
 
-    const offRestStatus = realtime.on(
-      "restaurant_status_updated",
-      (payload) => {
-        if (Number(payload.restaurantId) === Number(restId)) {
-          setIsOpen(payload.isOpen);
-        }
-      },
-    );
+    const offRestStatus = realtime.on("restaurant_status_updated", (payload) => {
+      if (Number(payload.restaurantId) === Number(restId)) {
+        setIsOpen(payload.isOpen);
+      }
+    });
 
     // Polling fallback every 20 seconds
     const interval = setInterval(fetchOrders, 20000);
@@ -131,11 +121,7 @@ const KitchenKanban = () => {
     };
   }, [restId]);
 
-  const handleAdvanceStatus = async (
-    orderId,
-    nextStatus,
-    extraPayload = {},
-  ) => {
+  const handleAdvanceStatus = async (orderId, nextStatus, extraPayload = {}) => {
     try {
       setActionLoading(true);
       const res = await api.post(`/orders/${orderId}/status`, {
@@ -143,11 +129,7 @@ const KitchenKanban = () => {
         ...extraPayload,
       });
       if (res.success) {
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.id === orderId ? { ...o, status: nextStatus } : o,
-          ),
-        );
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o)));
         setAcceptingOrder(null);
         setRejectingOrder(null);
       }
@@ -210,8 +192,7 @@ const KitchenKanban = () => {
             Live Kitchen Order Board
           </h4>
           <p className="text-muted small mb-0">
-            Real-time ticket dispatch, prep SLA tracking, and status
-            transitions.
+            Real-time ticket dispatch, prep SLA tracking, and status transitions.
           </p>
         </div>
 
@@ -221,9 +202,7 @@ const KitchenKanban = () => {
             className={`btn btn-sm rounded-pill px-3 fw-bold ${isOpen ? "btn-success text-white" : "btn-outline-danger"}`}
             onClick={handleToggleOpen}
           >
-            <i
-              className={`bi ${isOpen ? "bi-door-open-fill" : "bi-door-closed-fill"} me-1`}
-            ></i>
+            <i className={`bi ${isOpen ? "bi-door-open-fill" : "bi-door-closed-fill"} me-1`}></i>
             {isOpen ? "Store Active (Open)" : "Store Paused (Closed)"}
           </button>
 
@@ -232,9 +211,7 @@ const KitchenKanban = () => {
             className={`btn btn-sm rounded-pill px-3 fw-bold ${isThrottled ? "btn-warning text-dark" : "btn-outline-secondary"}`}
             onClick={handleToggleThrottle}
           >
-            <i
-              className={`bi ${isThrottled ? "bi-hourglass-split" : "bi-speedometer2"} me-1`}
-            ></i>
+            <i className={`bi ${isThrottled ? "bi-hourglass-split" : "bi-speedometer2"} me-1`}></i>
             {isThrottled ? "Rush Throttling ON" : "Normal Capacity"}
           </button>
 
@@ -260,9 +237,7 @@ const KitchenKanban = () => {
               key={col.status}
               type="button"
               className={`btn btn-sm rounded-pill px-3 py-1.5 fw-bold text-nowrap d-flex align-items-center gap-2 ${
-                isActive
-                  ? "btn-primary text-white shadow-sm"
-                  : "btn-light text-secondary border"
+                isActive ? "btn-primary text-white shadow-sm" : "btn-light text-secondary border"
               }`}
               onClick={() => setMobileTab(col.status)}
             >
@@ -280,9 +255,7 @@ const KitchenKanban = () => {
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-danger" role="status"></div>
-          <p className="text-muted small mt-2">
-            Connecting to kitchen order feed...
-          </p>
+          <p className="text-muted small mt-2">Connecting to kitchen order feed...</p>
         </div>
       ) : (
         <div className="row g-3">
@@ -298,33 +271,20 @@ const KitchenKanban = () => {
                 <div className="card border-0 rounded-4 shadow-sm bg-light h-100 p-3">
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h6 className="fw-bold mb-0">{col.title}</h6>
-                    <span className={`badge ${col.badge} rounded-pill`}>
-                      {colOrders.length}
-                    </span>
+                    <span className={`badge ${col.badge} rounded-pill`}>{colOrders.length}</span>
                   </div>
 
-                  <div
-                    className="d-flex flex-column gap-3"
-                    style={{ minHeight: 450 }}
-                  >
+                  <div className="d-flex flex-column gap-3" style={{ minHeight: 450 }}>
                     {colOrders.length === 0 ? (
                       <div className="text-center py-5 text-muted small">
                         No tickets in this stage
                       </div>
                     ) : (
                       colOrders.map((ord) => {
-                        const slaRemainingSec = calculateSlaRemainingSeconds(
-                          ord.createdAt,
-                        );
+                        const slaRemainingSec = calculateSlaRemainingSeconds(ord.createdAt);
                         const isSlaBreached = slaRemainingSec <= 0;
-                        const minutesRemaining = Math.max(
-                          0,
-                          Math.floor(slaRemainingSec / 60),
-                        );
-                        const secondsRemaining = Math.max(
-                          0,
-                          slaRemainingSec % 60,
-                        );
+                        const minutesRemaining = Math.max(0, Math.floor(slaRemainingSec / 60));
+                        const secondsRemaining = Math.max(0, slaRemainingSec % 60);
 
                         return (
                           <div
@@ -349,15 +309,9 @@ const KitchenKanban = () => {
 
                             <div className="d-flex justify-content-between align-items-start mb-2">
                               <div>
-                                <span className="fw-bold text-dark">
-                                  {ord.orderNumber}
-                                </span>
-                                <div
-                                  className="text-muted small"
-                                  style={{ fontSize: 11 }}
-                                >
-                                  {ord.customerName ||
-                                    `Customer #${ord.customerId}`}
+                                <span className="fw-bold text-dark">{ord.orderNumber}</span>
+                                <div className="text-muted small" style={{ fontSize: 11 }}>
+                                  {ord.customerName || `Customer #${ord.customerId}`}
                                 </div>
                               </div>
                               <span className="badge bg-light text-dark border fw-bold">
@@ -375,9 +329,7 @@ const KitchenKanban = () => {
                                     {it.quantity}x {it.itemName}
                                   </span>
                                   {it.variantName && (
-                                    <small className="text-muted">
-                                      ({it.variantName})
-                                    </small>
+                                    <small className="text-muted">({it.variantName})</small>
                                   )}
                                 </div>
                               ))}
@@ -414,9 +366,7 @@ const KitchenKanban = () => {
                               {ord.status === "ACCEPTED" && (
                                 <button
                                   className="btn btn-sm btn-primary w-100 rounded-pill fw-bold"
-                                  onClick={() =>
-                                    handleAdvanceStatus(ord.id, "PREPARING")
-                                  }
+                                  onClick={() => handleAdvanceStatus(ord.id, "PREPARING")}
                                 >
                                   Start Cooking 🔥
                                 </button>
@@ -424,17 +374,15 @@ const KitchenKanban = () => {
                               {ord.status === "PREPARING" && (
                                 <button
                                   className="btn btn-sm btn-success w-100 rounded-pill fw-bold"
-                                  onClick={() =>
-                                    handleAdvanceStatus(ord.id, "READY")
-                                  }
+                                  onClick={() => handleAdvanceStatus(ord.id, "READY")}
                                 >
                                   Mark Food Ready 🍱
                                 </button>
                               )}
                               {ord.status === "READY" && (
                                 <div className="text-center small text-muted py-1">
-                                  <i className="bi bi-bicycle me-1 text-primary"></i>{" "}
-                                  Awaiting Rider Pickup...
+                                  <i className="bi bi-bicycle me-1 text-primary"></i> Awaiting Rider
+                                  Pickup...
                                 </div>
                               )}
                             </div>
@@ -466,8 +414,7 @@ const KitchenKanban = () => {
                       Accept Order {acceptingOrder.orderNumber}
                     </h5>
                     <small className="text-muted">
-                      Set realistic kitchen preparation time for the customer
-                      and dispatch worker.
+                      Set realistic kitchen preparation time for the customer and dispatch worker.
                     </small>
                   </div>
                   <button
@@ -493,10 +440,9 @@ const KitchenKanban = () => {
                     ))}
                   </div>
                   <p className="small text-muted bg-light p-3 rounded-3 border mb-0">
-                    💡 <strong>Smart SLA Notice:</strong> Selecting a realistic
-                    prep time ensures the delivery rider arrives precisely when
-                    the food is packed, preventing food cooling and delivery
-                    delays.
+                    💡 <strong>Smart SLA Notice:</strong> Selecting a realistic prep time ensures
+                    the delivery rider arrives precisely when the food is packed, preventing food
+                    cooling and delivery delays.
                   </p>
                 </div>
                 <div className="modal-footer border-0 pt-1">
@@ -517,9 +463,7 @@ const KitchenKanban = () => {
                       })
                     }
                   >
-                    {actionLoading
-                      ? "Confirming..."
-                      : `Confirm & Accept (${selectedPrepTime}m)`}
+                    {actionLoading ? "Confirming..." : `Confirm & Accept (${selectedPrepTime}m)`}
                   </button>
                 </div>
               </div>
@@ -544,8 +488,8 @@ const KitchenKanban = () => {
                       Reject Order {rejectingOrder.orderNumber}
                     </h5>
                     <small className="text-muted">
-                      Rejection will instantly release order hold and initiate
-                      an automatic refund to customer wallet/card.
+                      Rejection will instantly release order hold and initiate an automatic refund
+                      to customer wallet/card.
                     </small>
                   </div>
                   <button
@@ -560,10 +504,7 @@ const KitchenKanban = () => {
                   </label>
                   <div className="d-flex flex-column gap-2 mb-3">
                     {REJECTION_REASONS.map((r, i) => (
-                      <div
-                        key={i}
-                        className="form-check p-2 rounded-3 border hover-bg-light"
-                      >
+                      <div key={i} className="form-check p-2 rounded-3 border hover-bg-light">
                         <input
                           className="form-check-input ms-1"
                           type="radio"
@@ -614,9 +555,7 @@ const KitchenKanban = () => {
                       });
                     }}
                   >
-                    {actionLoading
-                      ? "Rejecting..."
-                      : "Confirm Rejection & Refund"}
+                    {actionLoading ? "Rejecting..." : "Confirm Rejection & Refund"}
                   </button>
                 </div>
               </div>

@@ -3,10 +3,7 @@ import React from "react";
 /**
  * Standardized accessible loading indicator component.
  */
-const LoadingState = ({
-  message = "Loading fresh delicious data...",
-  minHeight = 260,
-}) => {
+const LoadingState = ({ message = "Loading fresh delicious data...", minHeight = 260 }) => {
   return (
     <div
       className="d-flex flex-column align-items-center justify-content-center p-4 text-center w-100"

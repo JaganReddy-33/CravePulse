@@ -77,8 +77,7 @@ const CheckoutPage = () => {
         <div className="fs-1 mb-3">🛒</div>
         <h3 className="fw-extrabold text-dark">Your Bag is Empty</h3>
         <p className="text-muted small mb-4">
-          Explore our gourmet kitchen menus and add delicious dishes before
-          checking out.
+          Explore our gourmet kitchen menus and add delicious dishes before checking out.
         </p>
         <Link
           to="/"
@@ -95,18 +94,12 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div
-      className="container py-4 customer-content-container"
-      style={{ maxWidth: 1040 }}
-    >
+    <div className="container py-4 customer-content-container" style={{ maxWidth: 1040 }}>
       {/* Checkout Page Header */}
       <div className="mb-4">
-        <h2 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">
-          Secure Checkout
-        </h2>
+        <h2 className="fw-extrabold text-dark mb-1 fs-3 fs-md-2">Secure Checkout</h2>
         <p className="text-muted small mb-0">
-          Radical price parity: dine-in physical menu prices guaranteed, 0%
-          markup.
+          Radical price parity: dine-in physical menu prices guaranteed, 0% markup.
         </p>
       </div>
 
@@ -133,10 +126,7 @@ const CheckoutPage = () => {
             </p>
           )}
           {couponError && (
-            <div
-              className="alert alert-warning rounded-3 py-2 small"
-              role="status"
-            >
+            <div className="alert alert-warning rounded-3 py-2 small" role="status">
               {couponError}
             </div>
           )}
@@ -178,9 +168,7 @@ const CheckoutPage = () => {
                   <i className="bi bi-tag-fill text-danger fs-5"></i>
                   <div>
                     <strong className="d-block small text-dark">
-                      {couponCode
-                        ? `Coupon '${couponCode}' applied`
-                        : "Have a promo coupon?"}
+                      {couponCode ? `Coupon '${couponCode}' applied` : "Have a promo coupon?"}
                     </strong>
                     <small className="text-muted">
                       {couponCode
@@ -225,16 +213,10 @@ const CheckoutPage = () => {
               }}
               onClick={handlePlaceOrder}
               disabled={
-                submitting ||
-                addressesLoading ||
-                calculating ||
-                !selectedAddress ||
-                !hasValidQuote
+                submitting || addressesLoading || calculating || !selectedAddress || !hasValidQuote
               }
             >
-              <span>
-                {submitting ? "Confirming Order..." : "Place Secure Order"}
-              </span>
+              <span>{submitting ? "Confirming Order..." : "Place Secure Order"}</span>
               <span className="fs-5">₹{billDetails?.totalAmount || 0} →</span>
             </button>
 
@@ -245,8 +227,7 @@ const CheckoutPage = () => {
                 CravePulse Fair Dining Guarantee
               </div>
               <small className="text-muted d-block" style={{ fontSize: 11 }}>
-                Zero inflated prices • 100% tip pass-through • Live GPS captain
-                radar
+                Zero inflated prices • 100% tip pass-through • Live GPS captain radar
               </small>
             </div>
           </div>

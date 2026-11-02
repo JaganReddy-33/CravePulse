@@ -2,7 +2,6 @@ package com.foodplatform.daoImpl;
 
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.DiscoveryCategoryDao;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,15 +13,19 @@ import java.util.List;
 import java.util.Map;
 
 public class DiscoveryCategoryDaoImpl implements DiscoveryCategoryDao {
+
     @Override
     public List<Map<String, Object>> listCategories(boolean includeInactive) {
         List<Map<String, Object>> categories = new ArrayList<>();
-        String sql = "SELECT id, name, image_url, display_order, is_active FROM discovery_categories " +
-                (includeInactive ? "" : "WHERE is_active = TRUE ") +
-                "ORDER BY display_order, name";
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement statement = conn.createStatement();
-             ResultSet rs = statement.executeQuery(sql)) {
+        String sql =
+            "SELECT id, name, image_url, display_order, is_active FROM discovery_categories " +
+            (includeInactive ? "" : "WHERE is_active = TRUE ") +
+            "ORDER BY display_order, name";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            Statement statement = conn.createStatement();
+            ResultSet rs = statement.executeQuery(sql)
+        ) {
             while (rs.next()) {
                 Map<String, Object> category = new HashMap<>();
                 category.put("id", rs.getLong("id"));
@@ -40,9 +43,15 @@ public class DiscoveryCategoryDaoImpl implements DiscoveryCategoryDao {
 
     @Override
     public Long createCategory(String name, String imageUrl, int displayOrder) {
-        String sql = "INSERT INTO discovery_categories (name, image_url, display_order) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO discovery_categories (name, image_url, display_order) VALUES (?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement statement = conn.prepareStatement(
+                sql,
+                Statement.RETURN_GENERATED_KEYS
+            )
+        ) {
             statement.setString(1, name);
             statement.setString(2, imageUrl);
             statement.setInt(3, displayOrder);
@@ -57,10 +66,19 @@ public class DiscoveryCategoryDaoImpl implements DiscoveryCategoryDao {
     }
 
     @Override
-    public boolean updateCategory(long id, String name, String imageUrl, int displayOrder, boolean active) {
-        String sql = "UPDATE discovery_categories SET name = ?, image_url = ?, display_order = ?, is_active = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
+    public boolean updateCategory(
+        long id,
+        String name,
+        String imageUrl,
+        int displayOrder,
+        boolean active
+    ) {
+        String sql =
+            "UPDATE discovery_categories SET name = ?, image_url = ?, display_order = ?, is_active = ? WHERE id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement statement = conn.prepareStatement(sql)
+        ) {
             statement.setString(1, name);
             statement.setString(2, imageUrl);
             statement.setInt(3, displayOrder);
@@ -74,8 +92,12 @@ public class DiscoveryCategoryDaoImpl implements DiscoveryCategoryDao {
 
     @Override
     public boolean setCategoryActive(long id, boolean active) {
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement statement = conn.prepareStatement("UPDATE discovery_categories SET is_active = ? WHERE id = ?")) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement statement = conn.prepareStatement(
+                "UPDATE discovery_categories SET is_active = ? WHERE id = ?"
+            )
+        ) {
             statement.setBoolean(1, active);
             statement.setLong(2, id);
             return statement.executeUpdate() > 0;

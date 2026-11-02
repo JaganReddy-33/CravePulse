@@ -35,20 +35,22 @@ export function getAddressMapUrl(address) {
 }
 
 export function isValidBillQuote(quote) {
-  if (!quote || typeof quote !== 'object') return false;
+  if (!quote || typeof quote !== "object") return false;
   const amounts = [
-    'subtotal',
-    'couponDiscount',
-    'packagingFee',
-    'deliveryFee',
-    'platformFee',
-    'gstTax',
-    'tipAmount',
-    'totalAmount',
+    "subtotal",
+    "couponDiscount",
+    "packagingFee",
+    "deliveryFee",
+    "platformFee",
+    "gstTax",
+    "tipAmount",
+    "totalAmount",
   ];
-  return amounts.every((field) => {
-    if (quote[field] == null || String(quote[field]).trim() === '') return false;
-    const value = Number(quote[field]);
-    return Number.isFinite(value) && value >= 0;
-  }) && Number(quote.totalAmount) > 0;
+  return (
+    amounts.every((field) => {
+      if (quote[field] == null || String(quote[field]).trim() === "") return false;
+      const value = Number(quote[field]);
+      return Number.isFinite(value) && value >= 0;
+    }) && Number(quote.totalAmount) > 0
+  );
 }

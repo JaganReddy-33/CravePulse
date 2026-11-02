@@ -11,7 +11,6 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -47,19 +46,53 @@ public class RestaurantServlet extends BaseServlet {
             int offset = Math.max(0, parseIntParam(req, "offset", 0));
 
             List<Restaurant> list = restaurantDao.listOpenRestaurants(
-                    lat, lng, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier, sortBy, limit, offset);
-            int totalCount = restaurantDao.countOpenRestaurants(cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
-            JsonUtil.sendSuccess(res, 200, "Restaurants discovered", list, Map.of(
-                    "pagination", Map.of(
-                            "page", offset / limit + 1,
-                            "pageSize", limit,
-                            "totalCount", totalCount,
-                            "totalPages", (int) Math.ceil((double) totalCount / limit))));
+                lat,
+                lng,
+                cuisine,
+                search,
+                vegOnly,
+                minRating,
+                maxDeliveryTime,
+                priceTier,
+                sortBy,
+                limit,
+                offset
+            );
+            int totalCount = restaurantDao.countOpenRestaurants(
+                cuisine,
+                search,
+                vegOnly,
+                minRating,
+                maxDeliveryTime,
+                priceTier
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurants discovered",
+                list,
+                Map.of(
+                    "pagination",
+                    Map.of(
+                        "page",
+                        offset / limit + 1,
+                        "pageSize",
+                        limit,
+                        "totalCount",
+                        totalCount,
+                        "totalPages",
+                        (int) Math.ceil((double) totalCount / limit)
+                    )
+                )
+            );
             return;
         }
 
         if ("/suggestions".equals(path)) {
-            String q = req.getParameter("query") != null ? req.getParameter("query") : req.getParameter("q");
+            String q =
+                req.getParameter("query") != null
+                    ? req.getParameter("query")
+                    : req.getParameter("q");
             Map<String, Object> suggestions = restaurantDao.searchSuggestions(q);
             JsonUtil.sendSuccess(res, 200, "Search suggestions", suggestions);
             return;
@@ -84,7 +117,11 @@ public class RestaurantServlet extends BaseServlet {
                 }
             }
             if (rest == null) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_NOT_FOUND, "Restaurant profile not found for authenticated user");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Restaurant profile not found for authenticated user"
+                );
                 return;
             }
             JsonUtil.sendSuccess(res, 200, "Restaurant profile", rest);
@@ -145,7 +182,12 @@ public class RestaurantServlet extends BaseServlet {
                 return;
             }
             if (!requireRestaurantOwner(req, res, restId)) return;
-            JsonUtil.sendSuccess(res, 200, "Restaurant operating hours", restaurantDao.getOperatingHours(restId));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant operating hours",
+                restaurantDao.getOperatingHours(restId)
+            );
             return;
         }
 
@@ -156,7 +198,12 @@ public class RestaurantServlet extends BaseServlet {
                 return;
             }
             if (!requireRestaurantOwner(req, res, restId)) return;
-            JsonUtil.sendSuccess(res, 200, "Restaurant payouts ledger", restaurantDao.getPayouts(restId));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant payouts ledger",
+                restaurantDao.getPayouts(restId)
+            );
             return;
         }
 
@@ -167,8 +214,12 @@ public class RestaurantServlet extends BaseServlet {
                 return;
             }
             if (!requireRestaurantOwner(req, res, restId)) return;
-            JsonUtil.sendSuccess(res, 200, "Restaurant payout balance and requests",
-                    payoutRequestDao.getRestaurantPayoutSummary(restId));
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant payout balance and requests",
+                payoutRequestDao.getRestaurantPayoutSummary(restId)
+            );
             return;
         }
 
@@ -206,21 +257,37 @@ public class RestaurantServlet extends BaseServlet {
         if (path.endsWith("/payout-requests")) {
             Long restId = parseIdFromPath(req);
             if (restId == null) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "Restaurant ID is required");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Restaurant ID is required"
+                );
                 return;
             }
             if (!requireRole(req, res, "RESTAURANT_OWNER")) return;
             if (!requireRestaurantOwner(req, res, restId)) return;
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body == null || !body.has("amount") || !body.has("payoutDestination")) {
-                JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, "amount and payoutDestination are required");
+                JsonUtil.sendError(
+                    res,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "amount and payoutDestination are required"
+                );
                 return;
             }
             try {
                 Map<String, Object> request = payoutRequestDao.createRestaurantRequest(
-                        getAuthenticatedUserId(req), restId, body.get("amount").getAsBigDecimal(),
-                        body.get("payoutDestination").getAsString());
-                JsonUtil.sendSuccess(res, 201, "Payout request submitted for admin review", request);
+                    getAuthenticatedUserId(req),
+                    restId,
+                    body.get("amount").getAsBigDecimal(),
+                    body.get("payoutDestination").getAsString()
+                );
+                JsonUtil.sendSuccess(
+                    res,
+                    201,
+                    "Payout request submitted for admin review",
+                    request
+                );
             } catch (IllegalArgumentException e) {
                 JsonUtil.sendError(res, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             } catch (com.foodplatform.daoImpl.PayoutRequestConflictException e) {
@@ -238,11 +305,21 @@ public class RestaurantServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, restId)) return;
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean isOpen = body != null && body.has("isOpen") && body.get("isOpen").getAsBoolean();
+            boolean isOpen =
+                body != null && body.has("isOpen") && body.get("isOpen").getAsBoolean();
 
             restaurantDao.updateOpenStatus(restId, isOpen);
-            registry.broadcastToRestaurant(restId, "restaurant_status_updated", Map.of("restaurantId", restId, "isOpen", isOpen));
-            JsonUtil.sendSuccess(res, 200, "Restaurant open status updated", Map.of("isOpen", isOpen));
+            registry.broadcastToRestaurant(
+                restId,
+                "restaurant_status_updated",
+                Map.of("restaurantId", restId, "isOpen", isOpen)
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Restaurant open status updated",
+                Map.of("isOpen", isOpen)
+            );
             return;
         }
 
@@ -255,11 +332,21 @@ public class RestaurantServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, restId)) return;
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
-            boolean throttled = body != null && body.has("throttled") && body.get("throttled").getAsBoolean();
+            boolean throttled =
+                body != null && body.has("throttled") && body.get("throttled").getAsBoolean();
 
             restaurantDao.updateAutoThrottle(restId, throttled);
-            registry.broadcastToRestaurant(restId, "kitchen_throttle_updated", Map.of("restaurantId", restId, "throttled", throttled));
-            JsonUtil.sendSuccess(res, 200, "Kitchen overload throttle updated", Map.of("isAutoThrottled", throttled));
+            registry.broadcastToRestaurant(
+                restId,
+                "kitchen_throttle_updated",
+                Map.of("restaurantId", restId, "throttled", throttled)
+            );
+            JsonUtil.sendSuccess(
+                res,
+                200,
+                "Kitchen overload throttle updated",
+                Map.of("isAutoThrottled", throttled)
+            );
             return;
         }
 
@@ -273,25 +360,70 @@ public class RestaurantServlet extends BaseServlet {
 
             JsonObject body = JsonUtil.readRequestBody(req, JsonObject.class);
             if (body != null) {
-                String name = body.has("name") && !body.get("name").isJsonNull() ? body.get("name").getAsString() : null;
-                String phone = body.has("phone") && !body.get("phone").isJsonNull() ? body.get("phone").getAsString() : null;
-                String address = body.has("address") && !body.get("address").isJsonNull() ? body.get("address").getAsString() : null;
-                String banner = body.has("bannerImage") && !body.get("bannerImage").isJsonNull() ? body.get("bannerImage").getAsString() : null;
-                String bankAccount = body.has("bankAccountNumber") && !body.get("bankAccountNumber").isJsonNull() ? body.get("bankAccountNumber").getAsString() : null;
-                String ifsc = body.has("bankIfsc") && !body.get("bankIfsc").isJsonNull() ? body.get("bankIfsc").getAsString() : null;
-                String beneficiary = body.has("bankBeneficiaryName") && !body.get("bankBeneficiaryName").isJsonNull() ? body.get("bankBeneficiaryName").getAsString() : null;
-                String upi = body.has("upiId") && !body.get("upiId").isJsonNull() ? body.get("upiId").getAsString() : null;
-                int autoReject = body.has("autoRejectMinutes") ? body.get("autoRejectMinutes").getAsInt() : 10;
-                Integer costForTwo = body.has("costForTwo") && !body.get("costForTwo").isJsonNull()
-                        ? body.get("costForTwo").getAsInt() : null;
+                String name =
+                    body.has("name") && !body.get("name").isJsonNull()
+                        ? body.get("name").getAsString()
+                        : null;
+                String phone =
+                    body.has("phone") && !body.get("phone").isJsonNull()
+                        ? body.get("phone").getAsString()
+                        : null;
+                String address =
+                    body.has("address") && !body.get("address").isJsonNull()
+                        ? body.get("address").getAsString()
+                        : null;
+                String banner =
+                    body.has("bannerImage") && !body.get("bannerImage").isJsonNull()
+                        ? body.get("bannerImage").getAsString()
+                        : null;
+                String bankAccount =
+                    body.has("bankAccountNumber") && !body.get("bankAccountNumber").isJsonNull()
+                        ? body.get("bankAccountNumber").getAsString()
+                        : null;
+                String ifsc =
+                    body.has("bankIfsc") && !body.get("bankIfsc").isJsonNull()
+                        ? body.get("bankIfsc").getAsString()
+                        : null;
+                String beneficiary =
+                    body.has("bankBeneficiaryName") && !body.get("bankBeneficiaryName").isJsonNull()
+                        ? body.get("bankBeneficiaryName").getAsString()
+                        : null;
+                String upi =
+                    body.has("upiId") && !body.get("upiId").isJsonNull()
+                        ? body.get("upiId").getAsString()
+                        : null;
+                int autoReject = body.has("autoRejectMinutes")
+                    ? body.get("autoRejectMinutes").getAsInt()
+                    : 10;
+                Integer costForTwo =
+                    body.has("costForTwo") && !body.get("costForTwo").isJsonNull()
+                        ? body.get("costForTwo").getAsInt()
+                        : null;
                 if (costForTwo != null && (costForTwo < 1 || costForTwo > 100000)) {
                     JsonUtil.sendError(res, 400, "costForTwo must be between 1 and 100000");
                     return;
                 }
 
-                restaurantDao.updateSettings(restId, name, phone, address, banner, bankAccount, ifsc, beneficiary,
-                        upi, autoReject, costForTwo, body.has("costForTwo"));
-                JsonUtil.sendSuccess(res, 200, "Restaurant settings updated successfully", Map.of("restaurantId", restId));
+                restaurantDao.updateSettings(
+                    restId,
+                    name,
+                    phone,
+                    address,
+                    banner,
+                    bankAccount,
+                    ifsc,
+                    beneficiary,
+                    upi,
+                    autoReject,
+                    costForTwo,
+                    body.has("costForTwo")
+                );
+                JsonUtil.sendSuccess(
+                    res,
+                    200,
+                    "Restaurant settings updated successfully",
+                    Map.of("restaurantId", restId)
+                );
                 return;
             }
         }
@@ -309,7 +441,12 @@ public class RestaurantServlet extends BaseServlet {
             List<Map<String, Object>> hoursList = JsonUtil.readRequestBody(req, List.class);
             if (hoursList != null) {
                 restaurantDao.updateOperatingHours(restId, hoursList);
-                JsonUtil.sendSuccess(res, 200, "Operating hours updated", Map.of("restaurantId", restId));
+                JsonUtil.sendSuccess(
+                    res,
+                    200,
+                    "Operating hours updated",
+                    Map.of("restaurantId", restId)
+                );
                 return;
             }
         }
@@ -327,8 +464,7 @@ public class RestaurantServlet extends BaseServlet {
         if (s != null && !s.isBlank()) {
             try {
                 return Double.parseDouble(s);
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException ignored) {}
         }
         return defVal;
     }
@@ -338,8 +474,7 @@ public class RestaurantServlet extends BaseServlet {
         if (s != null && !s.isBlank()) {
             try {
                 return Integer.parseInt(s);
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException ignored) {}
         }
         return defVal;
     }

@@ -67,10 +67,7 @@ const OrderTracking = () => {
   const canCancelOrder = ["PLACED", "ACCEPTED"].includes(order.status);
 
   return (
-    <div
-      className="container py-4 customer-content-container"
-      style={{ maxWidth: 1040 }}
-    >
+    <div className="container py-4 customer-content-container" style={{ maxWidth: 1040 }}>
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
@@ -87,19 +84,14 @@ const OrderTracking = () => {
             <div className="card border-0 rounded-4 shadow-sm p-3 bg-white mb-4 overflow-hidden">
               <div className="d-flex justify-content-between align-items-center mb-2 px-1">
                 <span className="small fw-bold text-dark d-flex align-items-center gap-1">
-                  <span
-                    className="spinner-grow spinner-grow-sm text-danger"
-                    role="status"
-                  ></span>
+                  <span className="spinner-grow spinner-grow-sm text-danger" role="status"></span>
                   Live Dispatch Radar
                 </span>
                 <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
                   GPS High Precision Locked
                 </span>
               </div>
-              <div
-                style={{ height: 320, borderRadius: 16, overflow: "hidden" }}
-              >
+              <div style={{ height: 320, borderRadius: 16, overflow: "hidden" }}>
                 <LiveMap
                   restaurantCoords={
                     order.restaurantLat != null && order.restaurantLng != null
@@ -119,10 +111,7 @@ const OrderTracking = () => {
           )}
 
           {/* Assigned Delivery Captain Card */}
-          <TrackingRiderCard
-            order={order}
-            onOpenChat={() => setShowChatModal(true)}
-          />
+          <TrackingRiderCard order={order} onOpenChat={() => setShowChatModal(true)} />
         </div>
 
         {/* Right Column: Order Details, Delivery Address & Actions */}
@@ -151,9 +140,7 @@ const OrderTracking = () => {
                   <span className="text-dark fw-semibold">
                     {order.paymentMode || "Online Payment"}
                   </span>
-                  <strong className="text-danger fs-6">
-                    ₹{order.totalAmount}
-                  </strong>
+                  <strong className="text-danger fs-6">₹{order.totalAmount}</strong>
                 </div>
               </div>
             </div>
@@ -197,8 +184,7 @@ const OrderTracking = () => {
             )}
             {!isDelivered && !isCancelled && !canCancelOrder && (
               <p className="small text-muted text-center mb-0">
-                Cancellation is unavailable after the kitchen starts preparing
-                your order.
+                Cancellation is unavailable after the kitchen starts preparing your order.
               </p>
             )}
 
@@ -207,8 +193,7 @@ const OrderTracking = () => {
               to={`/orders/${order.orderNumber || order.id}/invoice`}
               className="btn btn-link text-muted text-decoration-none small touch-target text-center"
             >
-              <i className="bi bi-file-earmark-text me-1"></i> Download Tax
-              Invoice
+              <i className="bi bi-file-earmark-text me-1"></i> Download Tax Invoice
             </Link>
           </div>
         </div>

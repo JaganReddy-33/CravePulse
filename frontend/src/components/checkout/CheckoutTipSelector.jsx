@@ -28,15 +28,13 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
           </span>
         </h6>
         {riderTip > 0 && (
-          <span className="badge bg-danger rounded-pill fw-bold">
-            ₹{riderTip} Applied
-          </span>
+          <span className="badge bg-danger rounded-pill fw-bold">₹{riderTip} Applied</span>
         )}
       </div>
 
       <p className="text-muted small mb-3" style={{ fontSize: 12 }}>
-        CravePulse takes 0% commission on tips. 100% of your generous tip goes
-        straight to the delivery captain's bank account.
+        CravePulse takes 0% commission on tips. 100% of your generous tip goes straight to the
+        delivery captain's bank account.
       </p>
 
       {/* Tip Option Pills */}
@@ -62,9 +60,7 @@ const CheckoutTipSelector = ({ riderTip, setRiderTip }) => {
         <button
           type="button"
           className={`btn btn-sm rounded-pill px-3 py-1 fw-bold touch-target ${
-            showCustomInput
-              ? "btn-danger text-white"
-              : "btn-light border text-dark"
+            showCustomInput ? "btn-danger text-white" : "btn-light border text-dark"
           }`}
           onClick={() => setShowCustomInput(!showCustomInput)}
         >

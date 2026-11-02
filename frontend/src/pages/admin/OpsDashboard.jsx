@@ -43,9 +43,7 @@ const OpsDashboard = () => {
 
     const offStatus = realtime.on("order_status_updated", (payload) => {
       setOrders((prev) =>
-        prev.map((o) =>
-          o.id === payload.orderId ? { ...o, status: payload.status } : o,
-        ),
+        prev.map((o) => (o.id === payload.orderId ? { ...o, status: payload.status } : o)),
       );
       fetchDashboardData();
     });
@@ -61,16 +59,14 @@ const OpsDashboard = () => {
   const currentActiveOrder = activeOrders[selectedOrderIndex] || null;
 
   // Active delivery coordinates or real restaurant / rider coordinates
-  const activeRest =
-    (liveMapData.restaurants && liveMapData.restaurants[0]) || null;
+  const activeRest = (liveMapData.restaurants && liveMapData.restaurants[0]) || null;
   const activeRider =
     (liveMapData.riders && liveMapData.riders.find((r) => r.isOnline)) ||
     (liveMapData.riders && liveMapData.riders[0]) ||
     null;
 
   const restaurantCoords =
-    currentActiveOrder?.restaurantLatitude &&
-    currentActiveOrder?.restaurantLongitude
+    currentActiveOrder?.restaurantLatitude && currentActiveOrder?.restaurantLongitude
       ? [
           Number(currentActiveOrder.restaurantLatitude),
           Number(currentActiveOrder.restaurantLongitude),
@@ -80,29 +76,18 @@ const OpsDashboard = () => {
         : null;
 
   const deliveryCoords =
-    currentActiveOrder?.deliveryLatitude &&
-    currentActiveOrder?.deliveryLongitude
-      ? [
-          Number(currentActiveOrder.deliveryLatitude),
-          Number(currentActiveOrder.deliveryLongitude),
-        ]
+    currentActiveOrder?.deliveryLatitude && currentActiveOrder?.deliveryLongitude
+      ? [Number(currentActiveOrder.deliveryLatitude), Number(currentActiveOrder.deliveryLongitude)]
       : null;
 
   const riderCoords =
     currentActiveOrder?.riderLatitude && currentActiveOrder?.riderLongitude
-      ? [
-          Number(currentActiveOrder.riderLatitude),
-          Number(currentActiveOrder.riderLongitude),
-        ]
+      ? [Number(currentActiveOrder.riderLatitude), Number(currentActiveOrder.riderLongitude)]
       : activeRider?.currentLatitude && activeRider?.currentLongitude
-        ? [
-            Number(activeRider.currentLatitude),
-            Number(activeRider.currentLongitude),
-          ]
+        ? [Number(activeRider.currentLatitude), Number(activeRider.currentLongitude)]
         : null;
 
-  const riderName =
-    currentActiveOrder?.riderName || activeRider?.riderName || "Fleet Captain";
+  const riderName = currentActiveOrder?.riderName || activeRider?.riderName || "Fleet Captain";
 
   return (
     <div>
@@ -113,9 +98,7 @@ const OpsDashboard = () => {
           style={{ background: "#162032" }}
         >
           <div className="spinner-border text-info" role="status"></div>
-          <p className="text-muted small mt-2">
-            Loading executive operational telemetry...
-          </p>
+          <p className="text-muted small mt-2">Loading executive operational telemetry...</p>
         </div>
       ) : (
         <>
@@ -130,8 +113,7 @@ const OpsDashboard = () => {
                   Platform GMV (Delivered)
                 </span>
                 <h3 className="fw-extrabold my-2 text-white">
-                  ₹
-                  {Number(metrics?.grossMerchandiseValue || 0).toLocaleString()}
+                  ₹{Number(metrics?.grossMerchandiseValue || 0).toLocaleString()}
                 </h3>
                 <span className="text-info small fw-semibold">
                   <i className="bi bi-graph-up me-1"></i> AOV: ₹
@@ -148,15 +130,11 @@ const OpsDashboard = () => {
                 <span className="text-muted small fw-bold text-uppercase">
                   Platform Net Revenue
                 </span>
-                <h3
-                  className="fw-extrabold my-2 text-success"
-                  style={{ color: "#00e676" }}
-                >
+                <h3 className="fw-extrabold my-2 text-success" style={{ color: "#00e676" }}>
                   ₹{Number(metrics?.platformRevenue || 0).toLocaleString()}
                 </h3>
                 <span className="text-success small fw-semibold">
-                  <i className="bi bi-shield-check me-1"></i> Net Convenience
-                  Margin
+                  <i className="bi bi-shield-check me-1"></i> Net Convenience Margin
                 </span>
               </div>
             </div>
@@ -166,16 +144,11 @@ const OpsDashboard = () => {
                 className="card border-0 rounded-4 shadow-sm p-4 text-white h-100"
                 style={{ background: "#162032", border: "1px solid #1f293d" }}
               >
-                <span className="text-muted small fw-bold text-uppercase">
-                  Total Orders
-                </span>
-                <h3 className="fw-extrabold my-2 text-white">
-                  {metrics?.totalOrders || 0} Orders
-                </h3>
+                <span className="text-muted small fw-bold text-uppercase">Total Orders</span>
+                <h3 className="fw-extrabold my-2 text-white">{metrics?.totalOrders || 0} Orders</h3>
                 <span className="text-muted small">
-                  {metrics?.deliveredOrders || 0} Delivered •{" "}
-                  {metrics?.cancelledOrders || 0} Cancelled (
-                  {metrics?.cancellationRate || 0}%)
+                  {metrics?.deliveredOrders || 0} Delivered • {metrics?.cancelledOrders || 0}{" "}
+                  Cancelled ({metrics?.cancellationRate || 0}%)
                 </span>
               </div>
             </div>
@@ -189,12 +162,11 @@ const OpsDashboard = () => {
                   Active Fleet & Dispatch
                 </span>
                 <h3 className="fw-extrabold my-2 text-warning">
-                  {metrics?.activeRiders || 0} / {metrics?.totalRiders || 0}{" "}
-                  Online
+                  {metrics?.activeRiders || 0} / {metrics?.totalRiders || 0} Online
                 </h3>
                 <span className="text-warning small fw-semibold">
-                  <i className="bi bi-bicycle me-1"></i>{" "}
-                  {metrics?.activeDeliveriesCount || 0} Active Trips
+                  <i className="bi bi-bicycle me-1"></i> {metrics?.activeDeliveriesCount || 0}{" "}
+                  Active Trips
                 </span>
               </div>
             </div>
@@ -226,9 +198,7 @@ const OpsDashboard = () => {
                 <h5 className="fw-bold my-1 text-danger">
                   ₹{Number(metrics?.totalRefunds || 0).toFixed(2)}
                 </h5>
-                <small className="text-muted">
-                  Customer dispute & cancellation credits
-                </small>
+                <small className="text-muted">Customer dispute & cancellation credits</small>
               </div>
             </div>
 
@@ -239,13 +209,10 @@ const OpsDashboard = () => {
               >
                 <span className="text-muted small">Pending KYC Approvals</span>
                 <h5 className="fw-bold my-1 text-warning">
-                  {(metrics?.pendingRestaurantKyc || 0) +
-                    (metrics?.pendingRiderKyc || 0)}{" "}
-                  Pending
+                  {(metrics?.pendingRestaurantKyc || 0) + (metrics?.pendingRiderKyc || 0)} Pending
                 </h5>
                 <small className="text-muted">
-                  {metrics?.pendingRestaurantKyc || 0} Rest •{" "}
-                  {metrics?.pendingRiderKyc || 0} Riders
+                  {metrics?.pendingRestaurantKyc || 0} Rest • {metrics?.pendingRiderKyc || 0} Riders
                 </small>
               </div>
             </div>
@@ -259,9 +226,7 @@ const OpsDashboard = () => {
                 <h5 className="fw-bold my-1 text-warning">
                   {metrics?.pendingDisputes || 0} Escalated
                 </h5>
-                <small className="text-muted">
-                  Requires manual ops verification
-                </small>
+                <small className="text-muted">Requires manual ops verification</small>
               </div>
             </div>
           </div>
@@ -275,13 +240,10 @@ const OpsDashboard = () => {
       >
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
           <div>
-            <h6 className="fw-bold mb-0">
-              City Operations Pulse (Bengaluru Serviceable Zone)
-            </h6>
+            <h6 className="fw-bold mb-0">City Operations Pulse (Bengaluru Serviceable Zone)</h6>
             <small className="text-muted">
-              Live GPS telemetry from {liveMapData.riders?.length || 0} couriers
-              and {liveMapData.restaurants?.length || 0} partner fulfillment
-              centers
+              Live GPS telemetry from {liveMapData.riders?.length || 0} couriers and{" "}
+              {liveMapData.restaurants?.length || 0} partner fulfillment centers
             </small>
           </div>
 
@@ -300,9 +262,7 @@ const OpsDashboard = () => {
                 ))}
               </select>
             )}
-            <span className="badge bg-danger rounded-pill px-3 py-1">
-              ● LIVE STREAMING
-            </span>
+            <span className="badge bg-danger rounded-pill px-3 py-1">● LIVE STREAMING</span>
           </div>
         </div>
 
@@ -332,9 +292,7 @@ const OpsDashboard = () => {
         </div>
 
         {orders.length === 0 ? (
-          <div className="text-center py-4 text-muted small">
-            No order dispatch records yet.
-          </div>
+          <div className="text-center py-4 text-muted small">No order dispatch records yet.</div>
         ) : (
           <div className="table-responsive">
             <table
@@ -358,16 +316,10 @@ const OpsDashboard = () => {
                     <td className="fw-bold text-info">{ord.orderNumber}</td>
                     <td>{ord.customerName}</td>
                     <td>{ord.restaurantName}</td>
-                    <td>
-                      {ord.riderName || (
-                        <span className="text-muted">Unassigned</span>
-                      )}
-                    </td>
+                    <td>{ord.riderName || <span className="text-muted">Unassigned</span>}</td>
                     <td className="fw-bold">₹{ord.totalAmount}</td>
                     <td>
-                      <span className="badge bg-light text-dark">
-                        {ord.paymentMode}
-                      </span>
+                      <span className="badge bg-light text-dark">{ord.paymentMode}</span>
                     </td>
                     <td>
                       <span

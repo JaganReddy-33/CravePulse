@@ -101,9 +101,7 @@ const Navbar = ({ onOpenCart }) => {
         (err) => {
           setDetectingGps(false);
           setGpsLocked(false);
-          window.alert(
-            "Location permission was denied. Please choose your locality.",
-          );
+          window.alert("Location permission was denied. Please choose your locality.");
         },
         { timeout: 5000 },
       );
@@ -153,8 +151,7 @@ const Navbar = ({ onOpenCart }) => {
                     {selectedHub.name}
                   </div>
                   <small className="text-muted" style={{ fontSize: 10 }}>
-                    {selectedHub.cityName || selectedCity.name}{" "}
-                    {gpsLocked ? "• GPS" : ""}
+                    {selectedHub.cityName || selectedCity.name} {gpsLocked ? "• GPS" : ""}
                   </small>
                 </div>
                 <i className="bi bi-chevron-down small text-muted ms-1"></i>
@@ -180,10 +177,7 @@ const Navbar = ({ onOpenCart }) => {
                 >
                   {selectedHub.name}
                 </span>
-                <i
-                  className="bi bi-chevron-down text-muted"
-                  style={{ fontSize: 9 }}
-                ></i>
+                <i className="bi bi-chevron-down text-muted" style={{ fontSize: 9 }}></i>
               </button>
             </div>
           </div>

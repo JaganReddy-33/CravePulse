@@ -57,8 +57,7 @@ const RiderActiveJob = () => {
       if (jobRes && jobRes.success && jobRes.data) {
         const job = {
           ...jobRes.data,
-          deliveryAddress:
-            jobRes.data.customerAddress ?? jobRes.data.deliveryAddress,
+          deliveryAddress: jobRes.data.customerAddress ?? jobRes.data.deliveryAddress,
           deliveryLat: jobRes.data.customerLat ?? jobRes.data.deliveryLat,
           deliveryLng: jobRes.data.customerLng ?? jobRes.data.deliveryLng,
         };
@@ -82,9 +81,7 @@ const RiderActiveJob = () => {
             arrivedAtKitchen && !pickedUp && Number.isFinite(arrivalTime)
               ? Math.max(0, Math.floor((Date.now() - arrivalTime) / 60000))
               : 0;
-          setWaitingAtKitchen(
-            arrivedAtKitchen && !pickedUp && !job.waitCompensationClaimed,
-          );
+          setWaitingAtKitchen(arrivedAtKitchen && !pickedUp && !job.waitCompensationClaimed);
           setWaitTimerMinutes(Math.max(recordedWait, elapsedSinceArrival));
           setClaimedWaitPay(Number(job.waitTimePay) || 0);
           activeOrderIdRef.current = job.orderId;
@@ -139,9 +136,7 @@ const RiderActiveJob = () => {
       }
     };
     const onOfferTimeout = (offer) => {
-      setActiveJobOffer((current) =>
-        current?.id === offer?.dispatchId ? null : current,
-      );
+      setActiveJobOffer((current) => (current?.id === offer?.dispatchId ? null : current));
       loadOffers();
     };
     const onConnectionStatus = (status) => {
@@ -228,8 +223,7 @@ const RiderActiveJob = () => {
   };
 
   const allItemsVerified =
-    activeJob?.items?.length > 0 &&
-    activeJob.items.every((i) => verifiedItems[i.id]);
+    activeJob?.items?.length > 0 && activeJob.items.every((i) => verifiedItems[i.id]);
   const deliveryNavigationUrl = getGoogleMapsNavigationUrl(
     activeJob?.customerMapsUrl,
     activeJob?.deliveryLat,
@@ -257,14 +251,11 @@ const RiderActiveJob = () => {
     setDispatchError("");
     setMilestoneUpdating(true);
     try {
-      const response = await api.post(
-        `/rider/orders/${activeJob.orderId}/status`,
-        { status: "ARRIVED_AT_RESTAURANT" },
-      );
+      const response = await api.post(`/rider/orders/${activeJob.orderId}/status`, {
+        status: "ARRIVED_AT_RESTAURANT",
+      });
       if (!response.success) {
-        throw new Error(
-          response.message || "Could not record kitchen arrival.",
-        );
+        throw new Error(response.message || "Could not record kitchen arrival.");
       }
       setWaitingAtKitchen(true);
       setWaitTimerMinutes(0);
@@ -279,23 +270,15 @@ const RiderActiveJob = () => {
   const handleClaimWaitCompensation = async () => {
     if (activeJob) {
       try {
-        const res = await api.post(
-          `/rider/orders/${activeJob.orderId}/wait-compensation`,
-        );
-        if (
-          res.success &&
-          res.data &&
-          res.data.compensationCredited !== undefined
-        ) {
+        const res = await api.post(`/rider/orders/${activeJob.orderId}/wait-compensation`);
+        if (res.success && res.data && res.data.compensationCredited !== undefined) {
           setClaimedWaitPay(parseFloat(res.data.compensationCredited));
         } else {
           setDispatchError("Wait compensation was not credited. Please retry.");
           return;
         }
       } catch (e) {
-        setDispatchError(
-          e.message || "Wait compensation was not credited. Please retry.",
-        );
+        setDispatchError(e.message || "Wait compensation was not credited. Please retry.");
         return;
       }
       setWaitingAtKitchen(false);
@@ -309,10 +292,9 @@ const RiderActiveJob = () => {
     setDispatchError("");
     setMilestoneUpdating(true);
     try {
-      const response = await api.post(
-        `/rider/orders/${activeJob.orderId}/status`,
-        { status: "PICKED_UP" },
-      );
+      const response = await api.post(`/rider/orders/${activeJob.orderId}/status`, {
+        status: "PICKED_UP",
+      });
       if (!response.success) {
         throw new Error(response.message || "Could not record pickup.");
       }
@@ -329,14 +311,11 @@ const RiderActiveJob = () => {
     setDispatchError("");
     setMilestoneUpdating(true);
     try {
-      const response = await api.post(
-        `/rider/orders/${activeJob.orderId}/status`,
-        { status: "ARRIVED_AT_CUSTOMER" },
-      );
+      const response = await api.post(`/rider/orders/${activeJob.orderId}/status`, {
+        status: "ARRIVED_AT_CUSTOMER",
+      });
       if (!response.success) {
-        throw new Error(
-          response.message || "Could not record customer arrival.",
-        );
+        throw new Error(response.message || "Could not record customer arrival.");
       }
       setCurrentStep("AT_DOORSTEP");
     } catch (e) {
@@ -348,15 +327,11 @@ const RiderActiveJob = () => {
 
   const handleConfirmFinalDelivery = async () => {
     if (!/^\d{4}$/.test(deliveryOtp)) {
-      setDeliveryError(
-        "Enter the customer's 4-digit delivery PIN to continue.",
-      );
+      setDeliveryError("Enter the customer's 4-digit delivery PIN to continue.");
       return;
     }
     if (currentStep !== "AT_DOORSTEP") {
-      setDeliveryError(
-        "Record your arrival at the customer's address before handover.",
-      );
+      setDeliveryError("Record your arrival at the customer's address before handover.");
       return;
     }
     setDeliveryError("");
@@ -377,9 +352,7 @@ const RiderActiveJob = () => {
         setDeliveryError(res.message || "Delivery confirmation failed.");
       }
     } catch (e) {
-      setDeliveryError(
-        e.message || "Invalid delivery PIN or error completing delivery.",
-      );
+      setDeliveryError(e.message || "Invalid delivery PIN or error completing delivery.");
     }
   };
 
@@ -402,14 +375,8 @@ const RiderActiveJob = () => {
   return (
     <div className="rider-cockpit-container position-relative">
       {loading && (
-        <div
-          className="d-flex align-items-center gap-2 text-light py-4"
-          role="status"
-        >
-          <span
-            className="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          ></span>
+        <div className="d-flex align-items-center gap-2 text-light py-4" role="status">
+          <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
           Loading your active delivery…
         </div>
       )}
@@ -422,8 +389,8 @@ const RiderActiveJob = () => {
         <div className="card p-4 mb-4">
           <h2 className="h5">New delivery offer</h2>
           <p>
-            {activeJobOffer.orderNumber || `Order ${activeJobOffer.orderId}`} ·
-            Earning: {Number(activeJobOffer.totalEarning || 0).toFixed(2)} INR
+            {activeJobOffer.orderNumber || `Order ${activeJobOffer.orderId}`} · Earning:{" "}
+            {Number(activeJobOffer.totalEarning || 0).toFixed(2)} INR
           </p>
           <div className="d-flex flex-wrap gap-2">
             <button
@@ -490,9 +457,7 @@ const RiderActiveJob = () => {
                       {activeJob.orderNumber}
                     </span>
                   </div>
-                  <h4 className="fw-extrabold text-white mb-0">
-                    Delivery Run Dispatch
-                  </h4>
+                  <h4 className="fw-extrabold text-white mb-0">Delivery Run Dispatch</h4>
                 </div>
 
                 <div className="text-end">
@@ -506,8 +471,8 @@ const RiderActiveJob = () => {
                     className="badge bg-dark border border-secondary border-opacity-50 text-secondary"
                     style={{ fontSize: 9 }}
                   >
-                    BASE ₹{activeJob.basePay} + DIST ₹{activeJob.distancePay} +
-                    100% TIP ₹{activeJob.tipAmount}
+                    BASE ₹{activeJob.basePay} + DIST ₹{activeJob.distancePay} + 100% TIP ₹
+                    {activeJob.tipAmount}
                   </div>
                 </div>
               </div>
@@ -540,10 +505,8 @@ const RiderActiveJob = () => {
                     style={{
                       width: 32,
                       height: 32,
-                      background:
-                        currentStep === "PICKED_UP" ? "#00e676" : "#1e293b",
-                      color:
-                        currentStep === "PICKED_UP" ? "#080c14" : "#ffffff",
+                      background: currentStep === "PICKED_UP" ? "#00e676" : "#1e293b",
+                      color: currentStep === "PICKED_UP" ? "#080c14" : "#ffffff",
                       fontSize: 13,
                     }}
                   >
@@ -556,9 +519,7 @@ const RiderActiveJob = () => {
                     >
                       STEP 01 • KITCHEN PICKUP
                     </span>
-                    <h5 className="fw-bold text-white mb-0">
-                      {activeJob.restaurantName}
-                    </h5>
+                    <h5 className="fw-bold text-white mb-0">{activeJob.restaurantName}</h5>
                   </div>
                 </div>
               </div>
@@ -604,13 +565,8 @@ const RiderActiveJob = () => {
                   <div className="d-flex align-items-center gap-2">
                     <span className="fs-5">⏱️</span>
                     <div>
-                      <strong className="text-white small d-block">
-                        Kitchen Wait Meter
-                      </strong>
-                      <small
-                        className="text-secondary"
-                        style={{ fontSize: 10 }}
-                      >
+                      <strong className="text-white small d-block">Kitchen Wait Meter</strong>
+                      <small className="text-secondary" style={{ fontSize: 10 }}>
                         Server-verified after 8 minutes; ₹2/min, up to ₹100
                       </small>
                     </div>
@@ -642,9 +598,7 @@ const RiderActiveJob = () => {
                     onClick={handleArriveAtKitchen}
                     disabled={milestoneUpdating}
                   >
-                    {milestoneUpdating
-                      ? "Recording arrival…"
-                      : "Mark arrival at kitchen"}
+                    {milestoneUpdating ? "Recording arrival…" : "Mark arrival at kitchen"}
                   </button>
                 ) : currentStep === "AT_KITCHEN" && waitingAtKitchen ? (
                   <button
@@ -667,8 +621,7 @@ const RiderActiveJob = () => {
 
                 {claimedWaitPay > 0 && (
                   <div className="text-success small fw-bold text-center mt-2">
-                    ✓ ₹{claimedWaitPay} credited directly into your wallet
-                    balance!
+                    ✓ ₹{claimedWaitPay} credited directly into your wallet balance!
                   </div>
                 )}
               </div>
@@ -685,9 +638,7 @@ const RiderActiveJob = () => {
                   <span
                     className="badge rounded-pill fw-bold px-2.5 py-1"
                     style={{
-                      background: allItemsVerified
-                        ? "#00e676"
-                        : "rgba(255, 255, 255, 0.12)",
+                      background: allItemsVerified ? "#00e676" : "rgba(255, 255, 255, 0.12)",
                       color: allItemsVerified ? "#080c14" : "#94a3b8",
                       fontSize: 10,
                     }}
@@ -719,9 +670,7 @@ const RiderActiveJob = () => {
                           border: isChecked
                             ? "1.5px solid #00e676"
                             : "1px solid rgba(255, 255, 255, 0.1)",
-                          boxShadow: isChecked
-                            ? "0 0 16px rgba(0, 230, 118, 0.12)"
-                            : "none",
+                          boxShadow: isChecked ? "0 0 16px rgba(0, 230, 118, 0.12)" : "none",
                         }}
                       >
                         <div className="d-flex align-items-center gap-3">
@@ -731,9 +680,7 @@ const RiderActiveJob = () => {
                               width: 28,
                               height: 28,
                               background: isChecked ? "#00e676" : "transparent",
-                              border: isChecked
-                                ? "none"
-                                : "2px solid rgba(255, 255, 255, 0.35)",
+                              border: isChecked ? "none" : "2px solid rgba(255, 255, 255, 0.35)",
                               color: isChecked ? "#080c14" : "transparent",
                             }}
                           >
@@ -751,9 +698,7 @@ const RiderActiveJob = () => {
                         <span
                           className="badge rounded-pill fw-bold px-2.5 py-1"
                           style={{
-                            background: isChecked
-                              ? "#00e676"
-                              : "rgba(255, 255, 255, 0.1)",
+                            background: isChecked ? "#00e676" : "rgba(255, 255, 255, 0.1)",
                             color: isChecked ? "#080c14" : "#ffffff",
                             fontSize: 11,
                           }}
@@ -785,8 +730,7 @@ const RiderActiveJob = () => {
                   <span>
                     {milestoneUpdating
                       ? "Recording pickup…"
-                      : currentStep === "PICKED_UP" ||
-                          currentStep === "AT_DOORSTEP"
+                      : currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
                         ? "Pickup confirmed"
                         : allItemsVerified
                           ? "Confirm items picked up"
@@ -841,9 +785,7 @@ const RiderActiveJob = () => {
                     >
                       STEP 02 • DOORSTEP DELIVERY
                     </span>
-                    <h5 className="fw-bold text-white mb-0">
-                      {activeJob.customerName}
-                    </h5>
+                    <h5 className="fw-bold text-white mb-0">{activeJob.customerName}</h5>
                   </div>
                 </div>
 
@@ -858,10 +800,7 @@ const RiderActiveJob = () => {
                     }}
                     aria-label={`Call ${activeJob.customerName}`}
                   >
-                    <i
-                      className="bi bi-telephone-fill text-info fs-6"
-                      aria-hidden="true"
-                    ></i>
+                    <i className="bi bi-telephone-fill text-info fs-6" aria-hidden="true"></i>
                   </a>
                 )}
               </div>
@@ -881,8 +820,7 @@ const RiderActiveJob = () => {
                   }}
                 >
                   <i className="bi bi-bell-fill me-1 text-info"></i>
-                  <strong>Doorbell / Drop Note:</strong>{" "}
-                  {activeJob.deliveryInstructions}
+                  <strong>Doorbell / Drop Note:</strong> {activeJob.deliveryInstructions}
                 </div>
               )}
 
@@ -925,9 +863,7 @@ const RiderActiveJob = () => {
                 >
                   <i className="bi bi-geo-alt-fill fs-5" aria-hidden="true"></i>
                   <span>
-                    {milestoneUpdating
-                      ? "Recording arrival…"
-                      : "Mark arrival at customer"}
+                    {milestoneUpdating ? "Recording arrival…" : "Mark arrival at customer"}
                   </span>
                 </button>
               ) : currentStep === "AT_DOORSTEP" ? (
@@ -996,22 +932,15 @@ const RiderActiveJob = () => {
                     <i className="bi bi-arrow-up-right"></i>
                   </div>
                   <div>
-                    <strong
-                      className="d-block text-white small"
-                      style={{ fontSize: 13 }}
-                    >
-                      {currentStep === "PICKED_UP" ||
-                      currentStep === "AT_DOORSTEP"
+                    <strong className="d-block text-white small" style={{ fontSize: 13 }}>
+                      {currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
                         ? "Customer delivery"
                         : "Kitchen pickup"}
                     </strong>
                     <small className="text-secondary" style={{ fontSize: 10 }}>
-                      {currentStep === "PICKED_UP" ||
-                      currentStep === "AT_DOORSTEP"
-                        ? activeJob.deliveryAddress ||
-                          "Customer address unavailable"
-                        : activeJob.restaurantAddress ||
-                          "Kitchen address unavailable"}
+                      {currentStep === "PICKED_UP" || currentStep === "AT_DOORSTEP"
+                        ? activeJob.deliveryAddress || "Customer address unavailable"
+                        : activeJob.restaurantAddress || "Kitchen address unavailable"}
                     </small>
                   </div>
                 </div>
@@ -1024,14 +953,8 @@ const RiderActiveJob = () => {
               {/* Dark-Matter Leaflet Map */}
               <div style={{ height: 420, width: "100%", position: "relative" }}>
                 <LiveMap
-                  restaurantCoords={[
-                    activeJob.restaurantLat,
-                    activeJob.restaurantLng,
-                  ]}
-                  deliveryCoords={[
-                    activeJob.deliveryLat,
-                    activeJob.deliveryLng,
-                  ]}
+                  restaurantCoords={[activeJob.restaurantLat, activeJob.restaurantLng]}
+                  deliveryCoords={[activeJob.deliveryLat, activeJob.deliveryLng]}
                   riderCoords={gpsCoords}
                   riderName={profile?.riderName || ""}
                   darkMode={true}
@@ -1050,10 +973,7 @@ const RiderActiveJob = () => {
                     className="spinner-grow spinner-grow-sm text-success"
                     style={{ width: 7, height: 7 }}
                   ></span>
-                  <small
-                    className="text-light fw-bold"
-                    style={{ fontSize: 11 }}
-                  >
+                  <small className="text-light fw-bold" style={{ fontSize: 11 }}>
                     {gpsCoords
                       ? `GPS position: ${gpsCoords[0].toFixed(5)}, ${gpsCoords[1].toFixed(5)}`
                       : "Waiting for device GPS permission"}
@@ -1090,15 +1010,10 @@ const RiderActiveJob = () => {
                       border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <span
-                      className="text-secondary d-block"
-                      style={{ fontSize: 9 }}
-                    >
+                    <span className="text-secondary d-block" style={{ fontSize: 9 }}>
                       COMPLETED DELIVERIES
                     </span>
-                    <strong className="fs-5 text-white">
-                      {profile?.totalDeliveries ?? "—"}
-                    </strong>
+                    <strong className="fs-5 text-white">{profile?.totalDeliveries ?? "—"}</strong>
                   </div>
                 </div>
                 <div className="col-6">
@@ -1109,10 +1024,7 @@ const RiderActiveJob = () => {
                       border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    <span
-                      className="text-secondary d-block"
-                      style={{ fontSize: 9 }}
-                    >
+                    <span className="text-secondary d-block" style={{ fontSize: 9 }}>
                       RIDER RATING
                     </span>
                     <strong className="fs-5 text-success">
@@ -1141,9 +1053,10 @@ const RiderActiveJob = () => {
           <h3 className="fw-extrabold text-white mb-2">No active delivery</h3>
           <p className="text-secondary small mb-4">
             {isOnline
-              ? gpsError || (gpsCoords
-                ? "Your live location is active. Searching for nearby delivery offers."
-                : "Starting live location and waiting for nearby delivery offers.")
+              ? gpsError ||
+                (gpsCoords
+                  ? "Your live location is active. Searching for nearby delivery offers."
+                  : "Starting live location and waiting for nearby delivery offers.")
               : "Go online when you're ready to receive delivery offers."}
           </p>
           {isOnline && gpsCoords && !gpsError && (
@@ -1162,8 +1075,7 @@ const RiderActiveJob = () => {
           <div
             className="cravepulse-modal-overlay"
             onClick={(e) => {
-              if (e.target === e.currentTarget && !deliveryComplete)
-                closeDeliveryModal();
+              if (e.target === e.currentTarget && !deliveryComplete) closeDeliveryModal();
             }}
           >
             <div className="cravepulse-modal-dialog" style={{ maxWidth: 480 }}>
@@ -1177,12 +1089,10 @@ const RiderActiveJob = () => {
                 {deliveryComplete ? (
                   <div className="text-center py-4">
                     <div className="fs-1 mb-2">🎉</div>
-                    <h3 className="fw-extrabold text-success mb-1">
-                      Handover Verified!
-                    </h3>
+                    <h3 className="fw-extrabold text-success mb-1">Handover Verified!</h3>
                     <p className="text-secondary small mb-3">
-                      ₹{Number(activeJob?.totalEarning || 0).toFixed(2)} has
-                      been deposited into your CravePulse Captain Wallet.
+                      ₹{Number(activeJob?.totalEarning || 0).toFixed(2)} has been deposited into
+                      your CravePulse Captain Wallet.
                     </p>
                     <span className="badge rounded-pill bg-success text-dark px-3 py-1.5 fw-bold">
                       Payout Credited ✓
@@ -1193,9 +1103,7 @@ const RiderActiveJob = () => {
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <div className="d-flex align-items-center gap-2">
                         <span className="fs-4">📦</span>
-                        <h5 className="fw-bold mb-0 text-white">
-                          Customer Handover Verification
-                        </h5>
+                        <h5 className="fw-bold mb-0 text-white">Customer Handover Verification</h5>
                       </div>
                       <button
                         type="button"
@@ -1206,19 +1114,13 @@ const RiderActiveJob = () => {
                     </div>
 
                     <p className="text-secondary small mb-3">
-                      Ask customer{" "}
-                      <strong className="text-white">
-                        {activeJob?.customerName}
-                      </strong>{" "}
+                      Ask customer <strong className="text-white">{activeJob?.customerName}</strong>{" "}
                       for their 4-digit Delivery PIN to complete run.
                     </p>
 
                     {/* 4-Digit OTP PIN Input */}
                     <div className="mb-3">
-                      <label
-                        htmlFor="delivery-pin"
-                        className="form-label small fw-bold text-light"
-                      >
+                      <label htmlFor="delivery-pin" className="form-label small fw-bold text-light">
                         Customer 4-Digit Handover PIN *
                       </label>
                       <input
@@ -1240,9 +1142,7 @@ const RiderActiveJob = () => {
                         placeholder="••••"
                         value={deliveryOtp}
                         onChange={(e) => {
-                          setDeliveryOtp(
-                            e.target.value.replace(/\D/g, "").slice(0, 4),
-                          );
+                          setDeliveryOtp(e.target.value.replace(/\D/g, "").slice(0, 4));
                           setDeliveryError("");
                         }}
                         aria-describedby="delivery-pin-help"
@@ -1344,9 +1244,7 @@ const RiderActiveJob = () => {
             ></span>
           )}
 
-          <i
-            className={`bi ${isOnline ? "bi-broadcast" : "bi-power"} text-dark fs-3 fw-bold`}
-          ></i>
+          <i className={`bi ${isOnline ? "bi-broadcast" : "bi-power"} text-dark fs-3 fw-bold`}></i>
         </button>
       </div>
     </div>

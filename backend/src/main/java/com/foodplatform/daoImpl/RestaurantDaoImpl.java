@@ -3,9 +3,6 @@ package com.foodplatform.daoImpl;
 import com.foodplatform.config.DatabaseConfig;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.model.Restaurant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,40 +11,85 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RestaurantDaoImpl implements RestaurantDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RestaurantDaoImpl.class);
 
     @Override
-    public List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search, Boolean vegOnly, int limit, int offset) {
-        return listOpenRestaurants(userLat, userLng, cuisine, search, vegOnly, null, null, null, null, limit, offset);
+    public List<Restaurant> listOpenRestaurants(
+        Double userLat,
+        Double userLng,
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        int limit,
+        int offset
+    ) {
+        return listOpenRestaurants(
+            userLat,
+            userLng,
+            cuisine,
+            search,
+            vegOnly,
+            null,
+            null,
+            null,
+            null,
+            limit,
+            offset
+        );
     }
 
     @Override
-    public List<Restaurant> listOpenRestaurants(Double userLat, Double userLng, String cuisine, String search,
-                                                Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
-                                                String priceTier, String sortBy, int limit, int offset) {
+    public List<Restaurant> listOpenRestaurants(
+        Double userLat,
+        Double userLng,
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        Double minRating,
+        Integer maxDeliveryTime,
+        String priceTier,
+        String sortBy,
+        int limit,
+        int offset
+    ) {
         List<Restaurant> list = new ArrayList<>();
         Double lat = userLat;
         Double lng = userLng;
 
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT r.*, ")
-                .append("(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(r.latitude)) * COS(RADIANS(r.longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(r.latitude))))) AS distance_km ")
-                .append("FROM restaurant_profiles r ");
+            .append(
+                "(6371 * ACOS(LEAST(1.0, COS(RADIANS(?)) * COS(RADIANS(r.latitude)) * COS(RADIANS(r.longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(r.latitude))))) AS distance_km "
+            )
+            .append("FROM restaurant_profiles r ");
 
         List<Object> params = new ArrayList<>();
         params.add(lat);
         params.add(lng);
         params.add(lat);
-        appendDiscoveryFilters(sb, params, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
+        appendDiscoveryFilters(
+            sb,
+            params,
+            cuisine,
+            search,
+            vegOnly,
+            minRating,
+            maxDeliveryTime,
+            priceTier
+        );
         sb.append("ORDER BY ").append(discoveryOrder(sortBy)).append(" LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sb.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sb.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -67,14 +109,31 @@ public class RestaurantDaoImpl implements RestaurantDao {
     }
 
     @Override
-    public int countOpenRestaurants(String cuisine, String search, Boolean vegOnly, Double minRating,
-                                    Integer maxDeliveryTime, String priceTier) {
+    public int countOpenRestaurants(
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        Double minRating,
+        Integer maxDeliveryTime,
+        String priceTier
+    ) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM restaurant_profiles r ");
         List<Object> params = new ArrayList<>();
-        appendDiscoveryFilters(sql, params, cuisine, search, vegOnly, minRating, maxDeliveryTime, priceTier);
+        appendDiscoveryFilters(
+            sql,
+            params,
+            cuisine,
+            search,
+            vegOnly,
+            minRating,
+            maxDeliveryTime,
+            priceTier
+        );
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql.toString())
+        ) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -87,17 +146,27 @@ public class RestaurantDaoImpl implements RestaurantDao {
         }
     }
 
-    private void appendDiscoveryFilters(StringBuilder sql, List<Object> params, String cuisine, String search,
-                                        Boolean vegOnly, Double minRating, Integer maxDeliveryTime,
-                                        String priceTier) {
+    private void appendDiscoveryFilters(
+        StringBuilder sql,
+        List<Object> params,
+        String cuisine,
+        String search,
+        Boolean vegOnly,
+        Double minRating,
+        Integer maxDeliveryTime,
+        String priceTier
+    ) {
         sql.append("WHERE r.is_kyc_approved = TRUE ");
         if (cuisine != null && !cuisine.isBlank()) {
             sql.append("AND r.cuisine_types LIKE ? ");
             params.add("%" + cuisine.trim() + "%");
         }
         if (search != null && !search.isBlank()) {
-            sql.append("AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ? ")
-                    .append("OR EXISTS (SELECT 1 FROM menu_items m WHERE m.restaurant_id = r.id AND m.is_deleted = FALSE AND (m.name LIKE ? OR m.description LIKE ?))) ");
+            sql.append(
+                "AND (r.name LIKE ? OR r.description LIKE ? OR r.cuisine_types LIKE ? "
+            ).append(
+                "OR EXISTS (SELECT 1 FROM menu_items m WHERE m.restaurant_id = r.id AND m.is_deleted = FALSE AND (m.name LIKE ? OR m.description LIKE ?))) "
+            );
             String term = "%" + search.trim() + "%";
             params.add(term);
             params.add(term);
@@ -126,18 +195,28 @@ public class RestaurantDaoImpl implements RestaurantDao {
     }
 
     private String discoveryOrder(String sortBy) {
-        if ("rating".equals(sortBy)) return "COALESCE(r.rating, 0) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
-        if ("time".equals(sortBy)) return "COALESCE(r.prep_time_min, 20) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
-        if ("costAsc".equals(sortBy)) return "COALESCE(r.cost_for_two, 300) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
-        if ("costDesc".equals(sortBy)) return "COALESCE(r.cost_for_two, 300) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if (
+            "rating".equals(sortBy)
+        ) return "COALESCE(r.rating, 0) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if (
+            "time".equals(sortBy)
+        ) return "COALESCE(r.prep_time_min, 20) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if (
+            "costAsc".equals(sortBy)
+        ) return "COALESCE(r.cost_for_two, 300) ASC, r.is_open DESC, distance_km ASC, r.id DESC";
+        if (
+            "costDesc".equals(sortBy)
+        ) return "COALESCE(r.cost_for_two, 300) DESC, r.is_open DESC, distance_km ASC, r.id DESC";
         return "r.is_open DESC, distance_km ASC, COALESCE(r.rating, 0) DESC, r.id DESC";
     }
 
     @Override
     public Restaurant findById(long id) {
         String sql = "SELECT * FROM restaurant_profiles WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -154,8 +233,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public Restaurant findBySlug(String slug) {
         String sql = "SELECT * FROM restaurant_profiles WHERE slug = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, slug);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -172,8 +253,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public Restaurant findByUserId(long userId) {
         String sql = "SELECT * FROM restaurant_profiles WHERE user_id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -190,8 +273,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public void updateOpenStatus(long id, boolean isOpen) {
         String sql = "UPDATE restaurant_profiles SET is_open = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBoolean(1, isOpen);
             ps.setLong(2, id);
             ps.executeUpdate();
@@ -204,8 +289,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public void updateAutoThrottle(long id, boolean throttled) {
         String sql = "UPDATE restaurant_profiles SET is_auto_throttled = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setBoolean(1, throttled);
             ps.setLong(2, id);
             ps.executeUpdate();
@@ -217,9 +304,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
 
     @Override
     public void incrementCurrentLoad(Connection conn, long id) throws SQLException {
-        String sql = "UPDATE restaurant_profiles SET current_load = current_load + 1, " +
-                "is_auto_throttled = CASE WHEN (current_load + 1) >= max_concurrent_orders THEN TRUE ELSE is_auto_throttled END " +
-                "WHERE id = ?";
+        String sql =
+            "UPDATE restaurant_profiles SET current_load = current_load + 1, " +
+            "is_auto_throttled = CASE WHEN (current_load + 1) >= max_concurrent_orders THEN TRUE ELSE is_auto_throttled END " +
+            "WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             ps.executeUpdate();
@@ -228,9 +316,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
 
     @Override
     public void decrementCurrentLoad(Connection conn, long id) throws SQLException {
-        String sql = "UPDATE restaurant_profiles SET current_load = GREATEST(0, current_load - 1), " +
-                "is_auto_throttled = CASE WHEN (current_load - 1) < max_concurrent_orders THEN FALSE ELSE is_auto_throttled END " +
-                "WHERE id = ?";
+        String sql =
+            "UPDATE restaurant_profiles SET current_load = GREATEST(0, current_load - 1), " +
+            "is_auto_throttled = CASE WHEN (current_load - 1) < max_concurrent_orders THEN FALSE ELSE is_auto_throttled END " +
+            "WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             ps.executeUpdate();
@@ -243,24 +332,38 @@ public class RestaurantDaoImpl implements RestaurantDao {
             conn.setAutoCommit(false);
             try {
                 long userId;
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE restaurant_profiles SET is_kyc_approved = ? WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE restaurant_profiles SET is_kyc_approved = ? WHERE id = ?"
+                    )
+                ) {
                     ps.setBoolean(1, approved);
                     ps.setLong(2, id);
-                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException("Restaurant not found");
+                    if (ps.executeUpdate() == 0) throw new IllegalArgumentException(
+                        "Restaurant not found"
+                    );
                 }
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "SELECT user_id FROM restaurant_profiles WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "SELECT user_id FROM restaurant_profiles WHERE id = ?"
+                    )
+                ) {
                     ps.setLong(1, id);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) throw new IllegalArgumentException("Restaurant not found");
                         userId = rs.getLong("user_id");
                     }
                 }
-                try (PreparedStatement ps = conn.prepareStatement("UPDATE users SET status = ? WHERE id = ?")) {
+                try (
+                    PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE users SET status = ? WHERE id = ?"
+                    )
+                ) {
                     ps.setString(1, approved ? "ACTIVE" : "SUSPENDED");
                     ps.setLong(2, userId);
-                    if (ps.executeUpdate() == 0) throw new IllegalStateException("Restaurant owner account not found");
+                    if (ps.executeUpdate() == 0) throw new IllegalStateException(
+                        "Restaurant owner account not found"
+                    );
                 }
                 conn.commit();
             } catch (SQLException | RuntimeException e) {
@@ -277,11 +380,17 @@ public class RestaurantDaoImpl implements RestaurantDao {
 
     @Override
     public Long createRestaurant(Restaurant r) {
-        String sql = "INSERT INTO restaurant_profiles (user_id, name, slug, description, banner_image, logo_image, phone, email, " +
-                "cuisine_types, latitude, longitude, address, fssai_license, is_open, is_auto_throttled, is_kyc_approved) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        String sql =
+            "INSERT INTO restaurant_profiles (user_id, name, slug, description, banner_image, logo_image, phone, email, " +
+            "cuisine_types, latitude, longitude, address, fssai_license, is_open, is_auto_throttled, is_kyc_approved) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(
+                sql,
+                java.sql.Statement.RETURN_GENERATED_KEYS
+            )
+        ) {
             ps.setLong(1, r.getUserId());
             ps.setString(2, r.getName());
             ps.setString(3, r.getSlug());
@@ -320,8 +429,10 @@ public class RestaurantDaoImpl implements RestaurantDao {
     public List<Restaurant> listAllRestaurants(int limit, int offset) {
         List<Restaurant> list = new ArrayList<>();
         String sql = "SELECT * FROM restaurant_profiles ORDER BY id DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setInt(1, limit);
             ps.setInt(2, offset);
             try (ResultSet rs = ps.executeQuery()) {
@@ -383,21 +494,37 @@ public class RestaurantDaoImpl implements RestaurantDao {
     }
 
     @Override
-    public void updateSettings(long id, String name, String phone, String address, String bannerImage, String bankAccount, String ifsc, String beneficiary, String upiId, int autoRejectMinutes, Integer costForTwo, boolean updateCostForTwo) {
-        String sql = "UPDATE restaurant_profiles SET " +
-                "name = COALESCE(?, name), " +
-                "phone = COALESCE(?, phone), " +
-                "address = COALESCE(?, address), " +
-                "banner_image = COALESCE(?, banner_image), " +
-                "bank_account_number = COALESCE(?, bank_account_number), " +
-                "bank_ifsc = COALESCE(?, bank_ifsc), " +
-                "bank_beneficiary_name = COALESCE(?, bank_beneficiary_name), " +
-                "upi_id = COALESCE(?, upi_id), " +
-                "cost_for_two = CASE WHEN ? THEN ? ELSE cost_for_two END, " +
-                "auto_reject_minutes = CASE WHEN ? > 0 THEN ? ELSE auto_reject_minutes END " +
-                "WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    public void updateSettings(
+        long id,
+        String name,
+        String phone,
+        String address,
+        String bannerImage,
+        String bankAccount,
+        String ifsc,
+        String beneficiary,
+        String upiId,
+        int autoRejectMinutes,
+        Integer costForTwo,
+        boolean updateCostForTwo
+    ) {
+        String sql =
+            "UPDATE restaurant_profiles SET " +
+            "name = COALESCE(?, name), " +
+            "phone = COALESCE(?, phone), " +
+            "address = COALESCE(?, address), " +
+            "banner_image = COALESCE(?, banner_image), " +
+            "bank_account_number = COALESCE(?, bank_account_number), " +
+            "bank_ifsc = COALESCE(?, bank_ifsc), " +
+            "bank_beneficiary_name = COALESCE(?, bank_beneficiary_name), " +
+            "upi_id = COALESCE(?, upi_id), " +
+            "cost_for_two = CASE WHEN ? THEN ? ELSE cost_for_two END, " +
+            "auto_reject_minutes = CASE WHEN ? > 0 THEN ? ELSE auto_reject_minutes END " +
+            "WHERE id = ?";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, name);
             ps.setString(2, phone);
             ps.setString(3, address);
@@ -407,7 +534,8 @@ public class RestaurantDaoImpl implements RestaurantDao {
             ps.setString(7, beneficiary);
             ps.setString(8, upiId);
             ps.setBoolean(9, updateCostForTwo);
-            if (costForTwo != null) ps.setInt(10, costForTwo); else ps.setNull(10, java.sql.Types.INTEGER);
+            if (costForTwo != null) ps.setInt(10, costForTwo);
+            else ps.setNull(10, java.sql.Types.INTEGER);
             ps.setInt(11, autoRejectMinutes);
             ps.setInt(12, autoRejectMinutes);
             ps.setLong(13, id);
@@ -421,9 +549,12 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public List<Map<String, Object>> getOperatingHours(long restaurantId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT * FROM restaurant_hours WHERE restaurant_id = ? ORDER BY day_of_week ASC";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM restaurant_hours WHERE restaurant_id = ? ORDER BY day_of_week ASC";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, restaurantId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -436,7 +567,11 @@ public class RestaurantDaoImpl implements RestaurantDao {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("Could not query restaurant_hours for restaurant {}: {}", restaurantId, e.getMessage());
+            logger.warn(
+                "Could not query restaurant_hours for restaurant {}: {}",
+                restaurantId,
+                e.getMessage()
+            );
         }
 
         // Return default Mon-Sun if no custom schedule is registered
@@ -456,10 +591,13 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public void updateOperatingHours(long restaurantId, List<Map<String, Object>> hours) {
         if (hours == null || hours.isEmpty()) return;
-        String sql = "INSERT INTO restaurant_hours (restaurant_id, day_of_week, open_time, close_time, is_closed) " +
-                "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE open_time = VALUES(open_time), close_time = VALUES(close_time), is_closed = VALUES(is_closed)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "INSERT INTO restaurant_hours (restaurant_id, day_of_week, open_time, close_time, is_closed) " +
+            "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE open_time = VALUES(open_time), close_time = VALUES(close_time), is_closed = VALUES(is_closed)";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             for (Map<String, Object> h : hours) {
                 ps.setLong(1, restaurantId);
                 ps.setInt(2, ((Number) h.get("dayOfWeek")).intValue());
@@ -478,9 +616,12 @@ public class RestaurantDaoImpl implements RestaurantDao {
     @Override
     public List<Map<String, Object>> getPayouts(long restaurantId) {
         List<Map<String, Object>> payouts = new ArrayList<>();
-        String sql = "SELECT * FROM restaurant_payouts WHERE restaurant_id = ? ORDER BY id DESC LIMIT 30";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT * FROM restaurant_payouts WHERE restaurant_id = ? ORDER BY id DESC LIMIT 30";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setLong(1, restaurantId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -521,10 +662,13 @@ public class RestaurantDaoImpl implements RestaurantDao {
         String term = "%" + query.trim() + "%";
 
         // Query matching restaurants
-        String restSql = "SELECT id, name, slug, cuisine_types, logo_image, rating FROM restaurant_profiles " +
-                "WHERE is_kyc_approved = TRUE AND (name LIKE ? OR cuisine_types LIKE ?) LIMIT 5";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(restSql)) {
+        String restSql =
+            "SELECT id, name, slug, cuisine_types, logo_image, rating FROM restaurant_profiles " +
+            "WHERE is_kyc_approved = TRUE AND (name LIKE ? OR cuisine_types LIKE ?) LIMIT 5";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(restSql)
+        ) {
             ps.setString(1, term);
             ps.setString(2, term);
             try (ResultSet rs = ps.executeQuery()) {
@@ -545,12 +689,15 @@ public class RestaurantDaoImpl implements RestaurantDao {
         }
 
         // Query matching dishes
-        String dishSql = "SELECT m.id, m.restaurant_id, m.name, m.platform_price, m.image_url, m.is_veg, " +
-                "r.name AS restaurant_name, r.slug AS restaurant_slug " +
-                "FROM menu_items m JOIN restaurant_profiles r ON m.restaurant_id = r.id " +
-                "WHERE m.is_deleted = FALSE AND r.is_kyc_approved = TRUE AND m.name LIKE ? LIMIT 6";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(dishSql)) {
+        String dishSql =
+            "SELECT m.id, m.restaurant_id, m.name, m.platform_price, m.image_url, m.is_veg, " +
+            "r.name AS restaurant_name, r.slug AS restaurant_slug " +
+            "FROM menu_items m JOIN restaurant_profiles r ON m.restaurant_id = r.id " +
+            "WHERE m.is_deleted = FALSE AND r.is_kyc_approved = TRUE AND m.name LIKE ? LIMIT 6";
+        try (
+            Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement ps = conn.prepareStatement(dishSql)
+        ) {
             ps.setString(1, term);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

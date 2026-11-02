@@ -65,8 +65,8 @@ const AdminAuditLogs = () => {
             Operations Audit Trail & Compliance Export
           </h4>
           <p className="text-muted small mb-0">
-            Immutable record of administrative actions, compliance decisions,
-            and direct CSV data exports.
+            Immutable record of administrative actions, compliance decisions, and direct CSV data
+            exports.
           </p>
         </div>
 
@@ -121,8 +121,7 @@ const AdminAuditLogs = () => {
             </div>
             <h6 className="fw-bold">No Audit Log Entries</h6>
             <p className="text-muted small">
-              Administrative actions will automatically generate immutable audit
-              entries here.
+              Administrative actions will automatically generate immutable audit entries here.
             </p>
           </div>
         ) : (
@@ -145,15 +144,11 @@ const AdminAuditLogs = () => {
                 {logs.map((log) => (
                   <tr key={log.id}>
                     <td className="text-muted text-nowrap">
-                      {log.createdAt
-                        ? new Date(log.createdAt).toLocaleString()
-                        : "--"}
+                      {log.createdAt ? new Date(log.createdAt).toLocaleString() : "--"}
                     </td>
                     <td className="fw-bold text-white">
                       {log.adminName}{" "}
-                      <small className="text-muted d-block">
-                        UID: #{log.adminUserId}
-                      </small>
+                      <small className="text-muted d-block">UID: #{log.adminUserId}</small>
                     </td>
                     <td>
                       <span

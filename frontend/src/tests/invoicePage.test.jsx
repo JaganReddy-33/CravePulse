@@ -35,9 +35,7 @@ describe("invoice order lookup", () => {
     renderInvoice("/orders/CP-BLR-2026-005/invoice");
 
     expect(await screen.findByRole("heading", { name: "Order receipt" })).toBeTruthy();
-    expect(api.get).toHaveBeenCalledWith(
-      "/orders/number/CP-BLR-2026-005",
-    );
+    expect(api.get).toHaveBeenCalledWith("/orders/number/CP-BLR-2026-005");
   });
 
   it("keeps numeric order ID lookup compatible", async () => {

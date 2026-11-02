@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import api from "../../services/api";
 import ModalPortal from "../../components/ModalPortal";
+import ImageUploadField from "../../components/common/ImageUploadField";
 
 const MenuManagement = () => {
   const { restaurant } = useOutletContext();
@@ -20,6 +21,7 @@ const MenuManagement = () => {
   const [variantItem, setVariantItem] = useState(null);
   const [addonItem, setAddonItem] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Add Item Form State
   const [name, setName] = useState("");
@@ -64,16 +66,11 @@ const MenuManagement = () => {
         } else if (Array.isArray(res.data)) {
           setItems(res.data);
         }
-        setCategories(
-          Array.isArray(res.data.categories) ? res.data.categories : [],
-        );
+        setCategories(Array.isArray(res.data.categories) ? res.data.categories : []);
       }
     } catch (e) {
       console.warn("API error fetching menu", e);
-      showNotification(
-        "Could not load menu: " + (e.message || "Server error"),
-        "danger",
-      );
+      showNotification("Could not load menu: " + (e.message || "Server error"), "danger");
     } finally {
       setLoading(false);
     }
@@ -84,9 +81,7 @@ const MenuManagement = () => {
   }, [restId]);
 
   useEffect(() => {
-    if (
-      !categories.some((category) => String(category.id) === String(categoryId))
-    ) {
+    if (!categories.some((category) => String(category.id) === String(categoryId))) {
       setCategoryId(categories.length > 0 ? String(categories[0].id) : "");
     }
   }, [categories, categoryId]);
@@ -95,24 +90,18 @@ const MenuManagement = () => {
     const updatedState = !item.isAvailable;
     // Optimistic UI update
     setItems((prev) =>
-      prev.map((it) =>
-        it.id === item.id ? { ...it, isAvailable: updatedState } : it,
-      ),
+      prev.map((it) => (it.id === item.id ? { ...it, isAvailable: updatedState } : it)),
     );
 
     try {
       await api.post(`/menu/item/${item.id}/toggle-availability`, {
         isAvailable: updatedState,
       });
-      showNotification(
-        `"${item.name}" marked as ${updatedState ? "In-Stock" : "Sold Out"}`,
-      );
+      showNotification(`"${item.name}" marked as ${updatedState ? "In-Stock" : "Sold Out"}`);
     } catch (e) {
       // Revert optimistic update on failure
       setItems((prev) =>
-        prev.map((it) =>
-          it.id === item.id ? { ...it, isAvailable: !updatedState } : it,
-        ),
+        prev.map((it) => (it.id === item.id ? { ...it, isAvailable: !updatedState } : it)),
       );
       showNotification("Error updating availability: " + e.message, "danger");
     }
@@ -122,18 +111,13 @@ const MenuManagement = () => {
     if (!restId) return;
     try {
       const filteredItemIds = filteredItems.map((it) => it.id);
-      const res = await api.post(
-        `/menu/restaurant/${restId}/bulk-availability`,
-        {
-          isAvailable,
-          itemIds: filteredItemIds,
-        },
-      );
+      const res = await api.post(`/menu/restaurant/${restId}/bulk-availability`, {
+        isAvailable,
+        itemIds: filteredItemIds,
+      });
       if (res.success) {
         setItems((prev) =>
-          prev.map((it) =>
-            filteredItemIds.includes(it.id) ? { ...it, isAvailable } : it,
-          ),
+          prev.map((it) => (filteredItemIds.includes(it.id) ? { ...it, isAvailable } : it)),
         );
         showNotification(
           `Bulk updated ${filteredItemIds.length} dishes to ${isAvailable ? "In-Stock" : "Sold Out"}`,
@@ -163,15 +147,6 @@ const MenuManagement = () => {
     }
   };
 
-  const validateImageUrl = (url) => {
-    if (!url || typeof url !== "string") return false;
-    const trimmed = url.trim();
-    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://"))
-      return false;
-    if (trimmed.length > 500) return false;
-    return true;
-  };
-
   const handleAddItem = async (e) => {
     e.preventDefault();
     if (!restId) return;
@@ -180,10 +155,7 @@ const MenuManagement = () => {
       alert("Dish name is required");
       return;
     }
-    if (
-      !categoryId ||
-      !categories.some((category) => String(category.id) === String(categoryId))
-    ) {
+    if (!categoryId || !categories.some((category) => String(category.id) === String(categoryId))) {
       showNotification(
         "Create or select an active category for this restaurant before adding a dish.",
         "danger",
@@ -196,13 +168,6 @@ const MenuManagement = () => {
       alert("Please enter a valid positive platform price");
       return;
     }
-    if (imageUrl && !validateImageUrl(imageUrl)) {
-      alert(
-        "Image URL must start with http:// or https:// and cannot exceed 500 characters",
-      );
-      return;
-    }
-
     try {
       setSubmitting(true);
       const payload = {
@@ -214,8 +179,7 @@ const MenuManagement = () => {
         dineInPrice: dPrice,
         imageUrl: imageUrl.trim() || null,
         isVeg: isVeg,
-        prepTimeMinutes:
-          prepTimeMinutes === "" ? null : Number(prepTimeMinutes),
+        prepTimeMinutes: prepTimeMinutes === "" ? null : Number(prepTimeMinutes),
         calorieCount: calories === "" ? null : Number(calories),
         availableFrom: availableFrom || null,
         availableTo: availableTo || null,
@@ -255,24 +219,15 @@ const MenuManagement = () => {
       alert("Please enter valid positive prices");
       return;
     }
-    if (editingItem.imageUrl && !validateImageUrl(editingItem.imageUrl)) {
-      alert("Image URL must start with http:// or https://");
-      return;
-    }
-
     try {
       setSubmitting(true);
-      const res = await api.post(
-        `/menu/item/${editingItem.id}/update`,
-        {
-          ...editingItem,
-          calorieCount:
-            editingItem.calorieCount === "" ||
-            editingItem.calorieCount == null
-              ? null
-              : Number(editingItem.calorieCount),
-        },
-      );
+      const res = await api.post(`/menu/item/${editingItem.id}/update`, {
+        ...editingItem,
+        calorieCount:
+          editingItem.calorieCount === "" || editingItem.calorieCount == null
+            ? null
+            : Number(editingItem.calorieCount),
+      });
       if (res.success) {
         showNotification(`"${editingItem.name}" updated successfully!`);
         setEditingItem(null);
@@ -303,10 +258,7 @@ const MenuManagement = () => {
           );
         }
         showNotification(`Category "${newCatName}" created!`);
-        setCategories((prev) => [
-          ...prev,
-          { id: createdCategoryId, name: newCatName.trim() },
-        ]);
+        setCategories((prev) => [...prev, { id: createdCategoryId, name: newCatName.trim() }]);
         setCategoryId(String(createdCategoryId));
         setNewCatName("");
         setShowNewCatInput(false);
@@ -332,9 +284,7 @@ const MenuManagement = () => {
         isDefault: false,
       });
       if (res.success) {
-        showNotification(
-          `Variant "${variantName}" added to "${variantItem.name}"!`,
-        );
+        showNotification(`Variant "${variantName}" added to "${variantItem.name}"!`);
         setVariantItem(null);
         setVariantName("");
         setVariantPrice("");
@@ -383,9 +333,7 @@ const MenuManagement = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 bg-white p-3 rounded-4 shadow-sm border">
         <div>
           <div className="d-flex align-items-center gap-2">
-            <h4 className="fw-extrabold mb-0 text-dark">
-              Menu Catalog & Price Parity Engine
-            </h4>
+            <h4 className="fw-extrabold mb-0 text-dark">Menu Catalog & Price Parity Engine</h4>
             <span className="badge bg-success-subtle text-success border border-success-subtle">
               🛡️ 100% API-Driven
             </span>
@@ -447,27 +395,15 @@ const MenuManagement = () => {
           <button
             key={cat.id}
             className={`btn btn-sm rounded-pill px-3 text-nowrap fw-bold ${String(filterCategory) === String(cat.id) ? "btn-danger" : "btn-light border"}`}
-            style={
-              String(filterCategory) === String(cat.id)
-                ? { background: "#ff5c35" }
-                : {}
-            }
+            style={String(filterCategory) === String(cat.id) ? { background: "#ff5c35" } : {}}
             onClick={() => setFilterCategory(cat.id)}
           >
-            {cat.name} (
-            {
-              items.filter((it) => String(it.categoryId) === String(cat.id))
-                .length
-            }
-            )
+            {cat.name} ({items.filter((it) => String(it.categoryId) === String(cat.id)).length})
           </button>
         ))}
 
         {showNewCatInput ? (
-          <form
-            onSubmit={handleCreateCategory}
-            className="d-flex align-items-center gap-1 ms-2"
-          >
+          <form onSubmit={handleCreateCategory} className="d-flex align-items-center gap-1 ms-2">
             <input
               type="text"
               className="form-control form-control-sm rounded-pill"
@@ -477,10 +413,7 @@ const MenuManagement = () => {
               style={{ width: 140 }}
               autoFocus
             />
-            <button
-              type="submit"
-              className="btn btn-sm btn-success rounded-pill px-2"
-            >
+            <button type="submit" className="btn btn-sm btn-success rounded-pill px-2">
               Add
             </button>
             <button
@@ -505,16 +438,12 @@ const MenuManagement = () => {
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-danger" role="status"></div>
-          <p className="text-muted small mt-2">
-            Loading restaurant dishes from database...
-          </p>
+          <p className="text-muted small mt-2">Loading restaurant dishes from database...</p>
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="card border-0 rounded-4 shadow-sm p-5 text-center bg-white">
           <div className="fs-1 mb-2">🍽️</div>
-          <h5 className="fw-bold text-dark">
-            No dishes found in this category
-          </h5>
+          <h5 className="fw-bold text-dark">No dishes found in this category</h5>
           <p className="text-muted small mb-3">
             Add items to this category or choose another category filter.
           </p>
@@ -532,8 +461,7 @@ const MenuManagement = () => {
         <div className="row g-3">
           {filteredItems.map((item) => {
             const hasParity =
-              Number(item.platformPrice) <=
-              Number(item.dineInPrice || item.platformPrice);
+              Number(item.platformPrice) <= Number(item.dineInPrice || item.platformPrice);
             return (
               <div key={item.id} className="col-12 col-md-6 col-xl-4">
                 <div
@@ -574,12 +502,9 @@ const MenuManagement = () => {
                     <div className="d-flex justify-content-between align-items-start mb-1">
                       <h6 className="fw-bold text-dark mb-0">{item.name}</h6>
                       <div className="text-end">
-                        <strong className="fs-6 text-dark">
-                          ₹{item.platformPrice}
-                        </strong>
+                        <strong className="fs-6 text-dark">₹{item.platformPrice}</strong>
                         {item.dineInPrice &&
-                          Number(item.dineInPrice) !==
-                            Number(item.platformPrice) && (
+                          Number(item.dineInPrice) !== Number(item.platformPrice) && (
                             <div
                               className="text-muted small text-decoration-line-through"
                               style={{ fontSize: 11 }}
@@ -594,8 +519,7 @@ const MenuManagement = () => {
                       className="text-muted small mb-2 flex-grow-1 text-truncate-2"
                       style={{ fontSize: 12 }}
                     >
-                      {item.description ||
-                        "Authentic kitchen specialty prepared fresh upon order."}
+                      {item.description || "Authentic kitchen specialty prepared fresh upon order."}
                     </p>
 
                     {/* Parity Status Badge */}
@@ -616,12 +540,9 @@ const MenuManagement = () => {
                         </span>
                       )}
                       {item.availableFrom && item.availableTo && (
-                        <div
-                          className="text-muted small mt-1"
-                          style={{ fontSize: 11 }}
-                        >
-                          <i className="bi bi-clock"></i> Hours:{" "}
-                          {item.availableFrom} - {item.availableTo}
+                        <div className="text-muted small mt-1" style={{ fontSize: 11 }}>
+                          <i className="bi bi-clock"></i> Hours: {item.availableFrom} -{" "}
+                          {item.availableTo}
                         </div>
                       )}
                     </div>
@@ -691,12 +612,9 @@ const MenuManagement = () => {
               <div className="modal-content border-0 rounded-4 shadow-lg p-3">
                 <div className="modal-header border-0 pb-1">
                   <div>
-                    <h5 className="modal-title fw-bold text-dark">
-                      Add New Dish to Menu
-                    </h5>
+                    <h5 className="modal-title fw-bold text-dark">Add New Dish to Menu</h5>
                     <small className="text-muted">
-                      Create a new culinary offering with 0% markup dine-in
-                      price parity.
+                      Create a new culinary offering with 0% markup dine-in price parity.
                     </small>
                   </div>
                   <button
@@ -709,9 +627,7 @@ const MenuManagement = () => {
                   <div className="modal-body py-3">
                     <div className="row g-3">
                       <div className="col-12 col-md-8">
-                        <label className="form-label small fw-bold text-muted">
-                          Dish Name *
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Dish Name *</label>
                         <input
                           type="text"
                           className="form-control rounded-3"
@@ -722,9 +638,7 @@ const MenuManagement = () => {
                         />
                       </div>
                       <div className="col-12 col-md-4">
-                        <label className="form-label small fw-bold text-muted">
-                          Category *
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Category *</label>
                         <select
                           className="form-select rounded-3"
                           value={categoryId}
@@ -745,16 +659,13 @@ const MenuManagement = () => {
                         </select>
                         {categories.length === 0 && (
                           <small className="text-danger">
-                            Add a category using “+ New Category” before
-                            creating a dish.
+                            Add a category using “+ New Category” before creating a dish.
                           </small>
                         )}
                       </div>
 
                       <div className="col-12">
-                        <label className="form-label small fw-bold text-muted">
-                          Description
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Description</label>
                         <textarea
                           className="form-control rounded-3"
                           rows="2"
@@ -794,22 +705,18 @@ const MenuManagement = () => {
                         />
                       </div>
                       <div className="col-12">
-                        <label className="form-label small fw-bold text-muted">
-                          Dish Image URL (Validated HTTP/HTTPS, max 500 chars)
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control rounded-3"
-                          placeholder="Optional image URL"
+                        <ImageUploadField
+                          id="menu-item-image"
+                          label="Dish photo"
+                          purpose="menu-item"
                           value={imageUrl}
-                          onChange={(e) => setImageUrl(e.target.value)}
+                          onChange={setImageUrl}
+                          onUploadingChange={setUploadingImage}
                         />
                       </div>
 
                       <div className="col-12 col-md-3">
-                        <label className="form-label small fw-bold text-muted">
-                          Dietary Type
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Dietary Type</label>
                         <select
                           className="form-select rounded-3"
                           value={isVeg ? "true" : "false"}
@@ -881,10 +788,14 @@ const MenuManagement = () => {
                       className="btn btn-danger rounded-pill px-4 fw-bold"
                       style={{ background: "#ff5c35" }}
                       disabled={
-                        submitting || !categoryId || categories.length === 0
+                        submitting || uploadingImage || !categoryId || categories.length === 0
                       }
                     >
-                      {submitting ? "Creating..." : "Add Dish to Catalog"}
+                      {uploadingImage
+                        ? "Uploading image..."
+                        : submitting
+                          ? "Creating..."
+                          : "Add Dish to Catalog"}
                     </button>
                   </div>
                 </form>
@@ -906,12 +817,9 @@ const MenuManagement = () => {
               <div className="modal-content border-0 rounded-4 shadow-lg p-3">
                 <div className="modal-header border-0 pb-1">
                   <div>
-                    <h5 className="modal-title fw-bold text-dark">
-                      Edit "{editingItem.name}"
-                    </h5>
+                    <h5 className="modal-title fw-bold text-dark">Edit "{editingItem.name}"</h5>
                     <small className="text-muted">
-                      Update pricing, description, category, and schedule
-                      availability.
+                      Update pricing, description, category, and schedule availability.
                     </small>
                   </div>
                   <button
@@ -924,9 +832,7 @@ const MenuManagement = () => {
                   <div className="modal-body py-3">
                     <div className="row g-3">
                       <div className="col-12 col-md-8">
-                        <label className="form-label small fw-bold text-muted">
-                          Dish Name
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Dish Name</label>
                         <input
                           type="text"
                           className="form-control rounded-3"
@@ -941,9 +847,7 @@ const MenuManagement = () => {
                         />
                       </div>
                       <div className="col-12 col-md-4">
-                        <label className="form-label small fw-bold text-muted">
-                          Category
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Category</label>
                         <select
                           className="form-select rounded-3"
                           value={editingItem.categoryId}
@@ -963,9 +867,7 @@ const MenuManagement = () => {
                       </div>
 
                       <div className="col-12">
-                        <label className="form-label small fw-bold text-muted">
-                          Description
-                        </label>
+                        <label className="form-label small fw-bold text-muted">Description</label>
                         <textarea
                           className="form-control rounded-3"
                           rows="2"
@@ -1005,9 +907,7 @@ const MenuManagement = () => {
                           type="number"
                           step="0.01"
                           className="form-control rounded-3"
-                          value={
-                            editingItem.dineInPrice || editingItem.platformPrice
-                          }
+                          value={editingItem.dineInPrice || editingItem.platformPrice}
                           onChange={(e) =>
                             setEditingItem({
                               ...editingItem,
@@ -1037,19 +937,13 @@ const MenuManagement = () => {
                       </div>
 
                       <div className="col-12">
-                        <label className="form-label small fw-bold text-muted">
-                          Image URL (Validated HTTP/HTTPS)
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control rounded-3"
+                        <ImageUploadField
+                          id="edit-menu-item-image"
+                          label="Dish photo"
+                          purpose="menu-item"
                           value={editingItem.imageUrl || ""}
-                          onChange={(e) =>
-                            setEditingItem({
-                              ...editingItem,
-                              imageUrl: e.target.value,
-                            })
-                          }
+                          onChange={(imageUrl) => setEditingItem({ ...editingItem, imageUrl })}
+                          onUploadingChange={setUploadingImage}
                         />
                       </div>
 
@@ -1117,9 +1011,13 @@ const MenuManagement = () => {
                       type="submit"
                       className="btn btn-danger rounded-pill px-4 fw-bold"
                       style={{ background: "#ff5c35" }}
-                      disabled={submitting}
+                      disabled={submitting || uploadingImage}
                     >
-                      {submitting ? "Saving..." : "Save Modifications"}
+                      {uploadingImage
+                        ? "Uploading image..."
+                        : submitting
+                          ? "Saving..."
+                          : "Save Modifications"}
                     </button>
                   </div>
                 </form>
@@ -1145,8 +1043,7 @@ const MenuManagement = () => {
                       Add Portion Variant to "{variantItem.name}"
                     </h5>
                     <small className="text-muted">
-                      Define size or portion options (e.g., Half, Full, Large,
-                      Family Pack).
+                      Define size or portion options (e.g., Half, Full, Large, Family Pack).
                     </small>
                   </div>
                   <button
@@ -1157,9 +1054,7 @@ const MenuManagement = () => {
                 </div>
                 <form onSubmit={handleAddVariant}>
                   <div className="modal-body py-3">
-                    <label className="form-label small fw-bold text-muted">
-                      Variant Name *
-                    </label>
+                    <label className="form-label small fw-bold text-muted">Variant Name *</label>
                     <input
                       type="text"
                       className="form-control rounded-3 mb-3"
@@ -1168,9 +1063,7 @@ const MenuManagement = () => {
                       value={variantName}
                       onChange={(e) => setVariantName(e.target.value)}
                     />
-                    <label className="form-label small fw-bold text-muted">
-                      Price (₹) *
-                    </label>
+                    <label className="form-label small fw-bold text-muted">Price (₹) *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1220,8 +1113,7 @@ const MenuManagement = () => {
                       Add Add-on to "{addonItem.name}"
                     </h5>
                     <small className="text-muted">
-                      Configure optional customer add-ons (e.g. Extra Raita,
-                      Butter Naan, Cheese).
+                      Configure optional customer add-ons (e.g. Extra Raita, Butter Naan, Cheese).
                     </small>
                   </div>
                   <button
@@ -1232,9 +1124,7 @@ const MenuManagement = () => {
                 </div>
                 <form onSubmit={handleAddAddon}>
                   <div className="modal-body py-3">
-                    <label className="form-label small fw-bold text-muted">
-                      Add-on Name *
-                    </label>
+                    <label className="form-label small fw-bold text-muted">Add-on Name *</label>
                     <input
                       type="text"
                       className="form-control rounded-3 mb-3"
@@ -1263,10 +1153,7 @@ const MenuManagement = () => {
                         checked={addonVeg}
                         onChange={(e) => setAddonVeg(e.target.checked)}
                       />
-                      <label
-                        className="form-check-label small"
-                        htmlFor="addonVegCheck"
-                      >
+                      <label className="form-check-label small" htmlFor="addonVegCheck">
                         Vegetarian Add-on
                       </label>
                     </div>

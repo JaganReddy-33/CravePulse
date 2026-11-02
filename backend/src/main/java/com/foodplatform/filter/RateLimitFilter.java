@@ -5,7 +5,6 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +22,7 @@ public class RateLimitFilter implements Filter {
     private final Map<String, RequestCounter> loginAttempts = new ConcurrentHashMap<>();
 
     private static class RequestCounter {
+
         volatile long windowStart;
         final AtomicInteger count;
 
@@ -34,7 +34,7 @@ public class RateLimitFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
@@ -47,19 +47,27 @@ public class RateLimitFilter implements Filter {
         String clientIp = extractClientIp(req);
         long now = System.currentTimeMillis();
 
-        // 1. General IP Rate Limit
         if (!checkLimit(requestCounts, clientIp, now, MAX_REQUESTS_PER_MINUTE)) {
             cleanUpStaleEntries(requestCounts, now);
-            JsonUtil.sendError(res, 429, "Rate limit exceeded. Too many requests. Please wait a moment.");
+            JsonUtil.sendError(
+                res,
+                429,
+                "Rate limit exceeded. Too many requests. Please wait a moment."
+            );
             return;
         }
 
-        // 2. Strict Auth / Login Rate Limit per IP
         String uri = req.getRequestURI();
-        if (uri != null && uri.endsWith("/auth/login") && "POST".equalsIgnoreCase(req.getMethod())) {
+        if (
+            uri != null && uri.endsWith("/auth/login") && "POST".equalsIgnoreCase(req.getMethod())
+        ) {
             if (!checkLimit(loginAttempts, clientIp, now, MAX_LOGIN_REQUESTS_PER_MINUTE)) {
                 cleanUpStaleEntries(loginAttempts, now);
-                JsonUtil.sendError(res, 429, "Too many login attempts. Please wait 1 minute before retrying.");
+                JsonUtil.sendError(
+                    res,
+                    429,
+                    "Too many login attempts. Please wait 1 minute before retrying."
+                );
                 return;
             }
         }
@@ -67,7 +75,12 @@ public class RateLimitFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    private boolean checkLimit(Map<String, RequestCounter> map, String key, long now, int maxRequests) {
+    private boolean checkLimit(
+        Map<String, RequestCounter> map,
+        String key,
+        long now,
+        int maxRequests
+    ) {
         RequestCounter counter = map.computeIfAbsent(key, k -> new RequestCounter(now));
         synchronized (counter) {
             if (now - counter.windowStart > 60000) {
@@ -96,7 +109,9 @@ public class RateLimitFilter implements Filter {
 
     private void cleanUpStaleEntries(Map<String, RequestCounter> map, long now) {
         if (map.size() > MAX_MAP_SIZE_BEFORE_CLEANUP) {
-            map.entrySet().removeIf(entry -> now - entry.getValue().windowStart > ENTRY_EXPIRY_MILLIS);
+            map.entrySet().removeIf(
+                entry -> now - entry.getValue().windowStart > ENTRY_EXPIRY_MILLIS
+            );
         }
     }
 }

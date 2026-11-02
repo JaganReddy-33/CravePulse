@@ -26,9 +26,7 @@ const RestaurantCategoryNav = ({
           <button
             type="button"
             className={`btn btn-sm rounded-pill px-3 py-1 text-nowrap fw-semibold touch-target ${
-              !activeCategory
-                ? "btn-danger text-white"
-                : "btn-light border text-dark"
+              !activeCategory ? "btn-danger text-white" : "btn-light border text-dark"
             }`}
             onClick={() => onSelectCategory(null)}
           >
@@ -39,9 +37,7 @@ const RestaurantCategoryNav = ({
               key={cat.id}
               type="button"
               className={`btn btn-sm rounded-pill px-3 py-1 text-nowrap fw-semibold touch-target ${
-                activeCategory === cat.id
-                  ? "btn-danger text-white"
-                  : "btn-light border text-dark"
+                activeCategory === cat.id ? "btn-danger text-white" : "btn-light border text-dark"
               }`}
               onClick={() => onSelectCategory(cat.id)}
             >

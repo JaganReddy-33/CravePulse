@@ -2,13 +2,12 @@ package com.foodplatform.websocket;
 
 import com.foodplatform.util.JsonUtil;
 import jakarta.websocket.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class RealtimeSessionRegistry {
 
@@ -22,8 +21,7 @@ public final class RealtimeSessionRegistry {
     // Map sessionId -> userId
     private final Map<String, Long> sessionUserMap = new ConcurrentHashMap<>();
 
-    private RealtimeSessionRegistry() {
-    }
+    private RealtimeSessionRegistry() {}
 
     public static RealtimeSessionRegistry getInstance() {
         return INSTANCE;
@@ -37,8 +35,12 @@ public final class RealtimeSessionRegistry {
     }
 
     public void subscribe(Session session, String channel) {
-        channelSubscriptions.computeIfAbsent(channel, k -> new CopyOnWriteArraySet<>()).add(session);
-        sessionChannels.computeIfAbsent(session.getId(), k -> new CopyOnWriteArraySet<>()).add(channel);
+        channelSubscriptions
+            .computeIfAbsent(channel, k -> new CopyOnWriteArraySet<>())
+            .add(session);
+        sessionChannels
+            .computeIfAbsent(session.getId(), k -> new CopyOnWriteArraySet<>())
+            .add(channel);
         logger.debug("Session {} subscribed to channel {}", session.getId(), channel);
     }
 
@@ -89,7 +91,11 @@ public final class RealtimeSessionRegistry {
                 try {
                     s.getBasicRemote().sendText(json);
                 } catch (IOException e) {
-                    logger.warn("Error sending message to session {}: {}", s.getId(), e.getMessage());
+                    logger.warn(
+                        "Error sending message to session {}: {}",
+                        s.getId(),
+                        e.getMessage()
+                    );
                 }
             }
         }

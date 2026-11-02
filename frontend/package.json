@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "format": "prettier --ignore-path ../.prettierignore --write \"src/**/*.{js,jsx,css,scss,json,html,md}\" \"*.{js,json,html}\" \"../backend/pom.xml\" \"../backend/src/**/*.{java,sql,xml,json,yml,yaml,md}\" \"../docs/**/*.md\" \"../scripts/**/*.{js,jsx,css,json,html,sql,md}\" \"../*.{md,json,yml,yaml}\" \"../.github/**/*.{yml,yaml,md,json}\" \"../docker-compose.yml\"",
+    "format:check": "prettier --ignore-path ../.prettierignore --check \"src/**/*.{js,jsx,css,scss,json,html,md}\" \"*.{js,json,html}\" \"../backend/pom.xml\" \"../backend/src/**/*.{java,sql,xml,json,yml,yaml,md}\" \"../docs/**/*.md\" \"../scripts/**/*.{js,jsx,css,json,html,sql,md}\" \"../*.{md,json,yml,yaml}\" \"../.github/**/*.{yml,yaml,md,json}\" \"../docker-compose.yml\"",
+    "format:python": "..\\.venv\\Scripts\\ruff.exe format ..\\backend\\src\\main\\resources\\db"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -21,10 +24,14 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@prettier/plugin-xml": "3.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@vitejs/plugin-react": "^6.1.2",
     "jsdom": "^29.1.1",
+    "prettier": "3.9.10",
+    "prettier-plugin-java": "2.11.0",
+    "prettier-plugin-sql": "0.20.0",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }

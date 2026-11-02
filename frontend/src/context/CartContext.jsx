@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-  useState,
-  useRef,
-} from "react";
+import React, { createContext, useContext, useReducer, useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import { useAuth } from "./AuthContext";
 import { isValidBillQuote } from "../utils/address";
@@ -25,11 +18,7 @@ const cartReducer = (state, action) => {
       } = action.payload;
 
       // Single-restaurant cart validation
-      if (
-        state.restaurantId &&
-        state.restaurantId !== restaurantId &&
-        state.items.length > 0
-      ) {
+      if (state.restaurantId && state.restaurantId !== restaurantId && state.items.length > 0) {
         if (
           !window.confirm(
             `Your cart already contains dishes from "${state.restaurantName}". Would you like to clear your cart and start a new order from "${restaurantName}"?`,
@@ -238,8 +227,7 @@ export const CartProvider = ({ children }) => {
         const res = await api.post("/cart/calculate", payload);
         if (!res.success || !isValidBillQuote(res.data)) {
           throw new Error(
-            res.message ||
-              "The server did not return a valid price quote. Please try again.",
+            res.message || "The server did not return a valid price quote. Please try again.",
           );
         }
         if (active) {
@@ -279,8 +267,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const addItem = (payload) => dispatch({ type: "ADD_ITEM", payload });
-  const removeItem = (cartKey) =>
-    dispatch({ type: "REMOVE_ITEM", payload: { cartKey } });
+  const removeItem = (cartKey) => dispatch({ type: "REMOVE_ITEM", payload: { cartKey } });
   const clearCart = () => dispatch({ type: "CLEAR_CART" });
   const setCart = (payload) => dispatch({ type: "SET_CART", payload });
 

@@ -24,23 +24,23 @@ This is a repository audit with a frontend production build and frontend unit te
 
 ## High priority findings
 
-| Priority | Location | Problem and required correction |
-|---|---|---|
-| P1 | backend/.../config/DatabaseMigrationRunner.java | Only V1–V11 are listed. V12 jobs tables are not automatically created. Register V12 and verify both tables. |
-| P1 | backend/.../ServerMain.java | JobServlet is absent from explicit servlet registrations. This uses `tomcat.addContext`, not normal webapp annotation discovery. Register `/api/jobs` and `/api/jobs/*` explicitly like other servlets. Careers and admin jobs cannot be considered wired merely because JobServlet exists. |
-| P1 | backend/.../config/DatabaseMigrationRunner.java | Statement errors are swallowed and the migration is subsequently recorded as applied. Missing files also return without failure. Startup continues after migration failure. Propagate failures, stop startup, record only success, add checksums and migration locking; inspect schema before repairing existing history. |
-| P1 | db/migration/V1__init.sql | Begins by dropping application tables. Removing migration history or manually replaying V1 on an existing database can destroy data. Never rerun V1 as a repair procedure. |
-| P1 | db/migration/V4, V5, V7 | Use `ADD COLUMN IF NOT EXISTS`, outside the documented MySQL 8.0 ADD COLUMN syntax. TiDB compatibility must be tested separately. Use supported DDL or metadata checks; do not assume MySQL and TiDB execute these scripts identically. |
-| P1 | backend/.../service/RazorpayGatewayClient.java | createOrder and createRefund manufacture successful-looking responses after real HTTP failures or exceptions. A declined/failed refund can look processed without money moving. Fail closed, preserve pending/failed states, and reconcile with the provider. |
-| P1 | backend/.../service/RazorpayGatewayClient.java | Demo configuration accepts the literal `simulated_valid_sig` instead of a verified gateway signature. Remove this path from real-data deployments and isolate test doubles in test code. |
-| P1 | backend/.../config/AppProperties.java | Missing/short JWT secrets fall back to a public hardcoded signing secret. Fail startup instead. Missing payment credentials also select demo defaults. Require explicit real configuration. |
-| P1 | frontend/src/hooks/useCheckout.js | Initializes three invented addresses. Empty or failed address fetches leave these selectable. Failed address saves create Date.now IDs and show them as usable. Start empty, require successful server saves, and block checkout without a persisted address. |
-| P1 | frontend/src/hooks/useCheckout.js | Payment confirmation exceptions are caught but still followed by confetti, cart clearing, and `paymentSuccess=true`. Only show confirmed success after a successful backend response; retain the cart and provide pending/retry UI otherwise. Also handle a missing Razorpay SDK explicitly. |
-| P1 | frontend/src/pages/rider/RiderEarnings.jsx | Instant payout only uses a timer, deducts React state, and invents an IMPS reference. No actual withdrawal request is made in that handler. Implement a server-owned withdrawal ledger and provider integration before enabling it. |
-| P1 | frontend/src/pages/customer/ContactPage.jsx | Submit generates a random ticket number after a timer. No support submission is persisted. Add a validated support endpoint and display its returned ticket number. |
-| P1 | frontend/src/pages/customer/JobDetailPage.jsx | Sends `resumeFilename: resumeFile.name`, not the file bytes, while claiming the resume entered recruitment. Implement upload/storage/download authorization or remove the attachment claim and require a real resume URL. |
-| P1 | backend/.../servlet/NotificationServlet.java; service/NotificationService.java; daoImpl/WalletDaoImpl.java | Mark-read updates by notification ID alone, without user ownership. An authenticated caller can target another user's notification. Pass authenticated user ID through the service and use `WHERE id = ? AND user_id = ?`. |
-| P1 | docs/clear_sample_data.sql | Reset misses dependent tables and retains coupons. With FK checks disabled it can leave orphaned records referencing reused IDs. It also refers to nonexistent Flyway history rather than the actual `schema_migrations`. Do not use unchanged. |
+| Priority | Location                                                                                                   | Problem and required correction                                                                                                                                                                                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1       | backend/.../config/DatabaseMigrationRunner.java                                                            | Only V1–V11 are listed. V12 jobs tables are not automatically created. Register V12 and verify both tables.                                                                                                                                                                                                               |
+| P1       | backend/.../ServerMain.java                                                                                | JobServlet is absent from explicit servlet registrations. This uses `tomcat.addContext`, not normal webapp annotation discovery. Register `/api/jobs` and `/api/jobs/*` explicitly like other servlets. Careers and admin jobs cannot be considered wired merely because JobServlet exists.                               |
+| P1       | backend/.../config/DatabaseMigrationRunner.java                                                            | Statement errors are swallowed and the migration is subsequently recorded as applied. Missing files also return without failure. Startup continues after migration failure. Propagate failures, stop startup, record only success, add checksums and migration locking; inspect schema before repairing existing history. |
+| P1       | db/migration/V1__init.sql                                                                                  | Begins by dropping application tables. Removing migration history or manually replaying V1 on an existing database can destroy data. Never rerun V1 as a repair procedure.                                                                                                                                                |
+| P1       | db/migration/V4, V5, V7                                                                                    | Use `ADD COLUMN IF NOT EXISTS`, outside the documented MySQL 8.0 ADD COLUMN syntax. TiDB compatibility must be tested separately. Use supported DDL or metadata checks; do not assume MySQL and TiDB execute these scripts identically.                                                                                   |
+| P1       | backend/.../service/RazorpayGatewayClient.java                                                             | createOrder and createRefund manufacture successful-looking responses after real HTTP failures or exceptions. A declined/failed refund can look processed without money moving. Fail closed, preserve pending/failed states, and reconcile with the provider.                                                             |
+| P1       | backend/.../service/RazorpayGatewayClient.java                                                             | Demo configuration accepts the literal `simulated_valid_sig` instead of a verified gateway signature. Remove this path from real-data deployments and isolate test doubles in test code.                                                                                                                                  |
+| P1       | backend/.../config/AppProperties.java                                                                      | Missing/short JWT secrets fall back to a public hardcoded signing secret. Fail startup instead. Missing payment credentials also select demo defaults. Require explicit real configuration.                                                                                                                               |
+| P1       | frontend/src/hooks/useCheckout.js                                                                          | Initializes three invented addresses. Empty or failed address fetches leave these selectable. Failed address saves create Date.now IDs and show them as usable. Start empty, require successful server saves, and block checkout without a persisted address.                                                             |
+| P1       | frontend/src/hooks/useCheckout.js                                                                          | Payment confirmation exceptions are caught but still followed by confetti, cart clearing, and `paymentSuccess=true`. Only show confirmed success after a successful backend response; retain the cart and provide pending/retry UI otherwise. Also handle a missing Razorpay SDK explicitly.                              |
+| P1       | frontend/src/pages/rider/RiderEarnings.jsx                                                                 | Instant payout only uses a timer, deducts React state, and invents an IMPS reference. No actual withdrawal request is made in that handler. Implement a server-owned withdrawal ledger and provider integration before enabling it.                                                                                       |
+| P1       | frontend/src/pages/customer/ContactPage.jsx                                                                | Submit generates a random ticket number after a timer. No support submission is persisted. Add a validated support endpoint and display its returned ticket number.                                                                                                                                                       |
+| P1       | frontend/src/pages/customer/JobDetailPage.jsx                                                              | Sends `resumeFilename: resumeFile.name`, not the file bytes, while claiming the resume entered recruitment. Implement upload/storage/download authorization or remove the attachment claim and require a real resume URL.                                                                                                 |
+| P1       | backend/.../servlet/NotificationServlet.java; service/NotificationService.java; daoImpl/WalletDaoImpl.java | Mark-read updates by notification ID alone, without user ownership. An authenticated caller can target another user's notification. Pass authenticated user ID through the service and use `WHERE id = ? AND user_id = ?`.                                                                                                |
+| P1       | docs/clear_sample_data.sql                                                                                 | Reset misses dependent tables and retains coupons. With FK checks disabled it can leave orphaned records referencing reused IDs. It also refers to nonexistent Flyway history rather than the actual `schema_migrations`. Do not use unchanged.                                                                           |
 
 MySQL syntax reference: https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 
@@ -62,20 +62,20 @@ MySQL syntax reference: https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 
 Folder is `backend/src/main/resources/db/migration`, singular, not db/migrate.
 
-| Version | Purpose | Fresh-data concern |
-|---|---|---|
-| V1 | Core schema | Destructive DROP statements; only safe for a new/disposable database. |
-| V2 | Demo users, restaurants, menus, orders, reviews, notifications, etc.; platform settings too | Not optional in current runner. Settings must be separated from sample business data. |
-| V3 | Delivery OTP and event actor role | Schema change. |
-| V4 | Wallet/payment enum, refund columns, webhook ledger | Check MySQL syntax. |
-| V5 | Catalog columns, parity proofs, coupon usages, notifications | Invented GST/locality/rating defaults; check MySQL syntax and repeated table definitions. |
-| V6 | Large Bangalore catalog | Automatically inserts sample restaurants/menu content and parity records. |
-| V7 | Dispatch milestones, tips, rider cash and COD ledger | Check MySQL syntax. |
-| V8 | Order messages | Schema change. |
-| V9 | Partner schema, hours and payout ledger | Payout status defaults to PAID: review before using for real payout creation. |
-| V10 | Fraud flag, tip/coupon columns, admin audit, operational settings | Repeats columns introduced earlier. Preserve settings during cleanup. |
-| V11 | Favorites, support, audit, refunds, documents, idempotency and zones; hardening | `CREATE TABLE IF NOT EXISTS coupon_usages` does not upgrade V5's existing definition: V11's discount column, unique key and restrictive order relationship are not installed by that CREATE. Apply explicit forward ALTERs. |
-| V12 | Jobs and applications | Exists on disk but is absent from runner. |
+| Version | Purpose                                                                                     | Fresh-data concern                                                                                                                                                                                                          |
+| ------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V1      | Core schema                                                                                 | Destructive DROP statements; only safe for a new/disposable database.                                                                                                                                                       |
+| V2      | Demo users, restaurants, menus, orders, reviews, notifications, etc.; platform settings too | Not optional in current runner. Settings must be separated from sample business data.                                                                                                                                       |
+| V3      | Delivery OTP and event actor role                                                           | Schema change.                                                                                                                                                                                                              |
+| V4      | Wallet/payment enum, refund columns, webhook ledger                                         | Check MySQL syntax.                                                                                                                                                                                                         |
+| V5      | Catalog columns, parity proofs, coupon usages, notifications                                | Invented GST/locality/rating defaults; check MySQL syntax and repeated table definitions.                                                                                                                                   |
+| V6      | Large Bangalore catalog                                                                     | Automatically inserts sample restaurants/menu content and parity records.                                                                                                                                                   |
+| V7      | Dispatch milestones, tips, rider cash and COD ledger                                        | Check MySQL syntax.                                                                                                                                                                                                         |
+| V8      | Order messages                                                                              | Schema change.                                                                                                                                                                                                              |
+| V9      | Partner schema, hours and payout ledger                                                     | Payout status defaults to PAID: review before using for real payout creation.                                                                                                                                               |
+| V10     | Fraud flag, tip/coupon columns, admin audit, operational settings                           | Repeats columns introduced earlier. Preserve settings during cleanup.                                                                                                                                                       |
+| V11     | Favorites, support, audit, refunds, documents, idempotency and zones; hardening             | `CREATE TABLE IF NOT EXISTS coupon_usages` does not upgrade V5's existing definition: V11's discount column, unique key and restrictive order relationship are not installed by that CREATE. Apply explicit forward ALTERs. |
+| V12     | Jobs and applications                                                                       | Exists on disk but is absent from runner.                                                                                                                                                                                   |
 
 The project uses a custom runner, not Flyway. Tracking is `schema_migrations(version, description, applied_at)`. There are no checksums or automatic resource discovery. Do not use Flyway repair commands here.
 
@@ -124,35 +124,62 @@ Open http://localhost:5173. Do not run either `scripts/seed-demo.sql` or `backen
 Current runner applies its listed migrations at backend startup in numeric order. It does NOT apply “all files in the folder.” Until repaired, startup is not evidence of schema success. Inspect read-only:
 
 ```sql
-SELECT DATABASE(), VERSION();
-SELECT version, description, applied_at FROM schema_migrations ORDER BY applied_at;
+SELECT
+  DATABASE (),
+  VERSION ();
+
+SELECT
+  version,
+  description,
+  applied_at
+FROM
+  schema_migrations
+ORDER BY
+  applied_at;
+
 SHOW TABLES;
-SHOW CREATE TABLE coupon_usages;
-SHOW CREATE TABLE job_postings;
-SHOW CREATE TABLE job_applications;
+
+SHOW
+CREATE TABLE coupon_usages;
+
+SHOW
+CREATE TABLE job_postings;
+
+SHOW
+CREATE TABLE job_applications;
 ```
 
 Do not manually execute all SQL files against the current database. A manual SQL run also does not automatically populate this runner's tracking table.
 
 ## Browser storage inventory and replacement
 
-| Keys | Current purpose | Required real-data behavior |
-|---|---|---|
-| accessToken, refreshToken, user | Authentication and cached identity | These are session data, not sample records. For zero localStorage, move authentication to a designed secure cookie/session approach with backend and cross-origin handling. Never just remove token reads without replacing auth. |
-| cart | Persistent browser cart | Move to a user-owned server cart API and database; revalidate prices/availability on the server. Decide anonymous-cart behavior explicitly. |
-| cravepulse_favs | Customer favorites | Use user-scoped endpoints and existing favorites table. |
-| cravepulse_notifications | Notification cache and fake welcome | Fetch server state, persist read/clear operations; remove fake welcome and unscoped cache. |
-| cravepulse_rider_name, cravepulse_rider_phone, cravepulse_rider_avatar, cravepulse_rider_vehicle | Browser overrides of rider identity/profile | Replace with validated profile APIs and real upload storage. |
-| cravepulse_hub | Selected/detected locality | Treat as preference or fetch user selection from backend; do not represent fallback Bangalore data as detected location. |
-| cravepulse_recent_searches | Search history | Use an optional user-owned history endpoint or in-memory history for no browser persistence. |
+| Keys                                                                                             | Current purpose                             | Required real-data behavior                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| accessToken, refreshToken, user                                                                  | Authentication and cached identity          | These are session data, not sample records. For zero localStorage, move authentication to a designed secure cookie/session approach with backend and cross-origin handling. Never just remove token reads without replacing auth. |
+| cart                                                                                             | Persistent browser cart                     | Move to a user-owned server cart API and database; revalidate prices/availability on the server. Decide anonymous-cart behavior explicitly.                                                                                       |
+| cravepulse_favs                                                                                  | Customer favorites                          | Use user-scoped endpoints and existing favorites table.                                                                                                                                                                           |
+| cravepulse_notifications                                                                         | Notification cache and fake welcome         | Fetch server state, persist read/clear operations; remove fake welcome and unscoped cache.                                                                                                                                        |
+| cravepulse_rider_name, cravepulse_rider_phone, cravepulse_rider_avatar, cravepulse_rider_vehicle | Browser overrides of rider identity/profile | Replace with validated profile APIs and real upload storage.                                                                                                                                                                      |
+| cravepulse_hub                                                                                   | Selected/detected locality                  | Treat as preference or fetch user selection from backend; do not represent fallback Bangalore data as detected location.                                                                                                          |
+| cravepulse_recent_searches                                                                       | Search history                              | Use an optional user-owned history endpoint or in-memory history for no browser persistence.                                                                                                                                      |
 
 To clear only these current app keys, run in browser DevTools for the application's origin (this logs you out and clears the browser cart):
 
 ```javascript
-['accessToken', 'refreshToken', 'user', 'cart', 'cravepulse_favs',
- 'cravepulse_notifications', 'cravepulse_rider_name', 'cravepulse_rider_phone',
- 'cravepulse_rider_avatar', 'cravepulse_rider_vehicle', 'cravepulse_hub',
- 'cravepulse_recent_searches'].forEach(key => localStorage.removeItem(key));
+[
+  "accessToken",
+  "refreshToken",
+  "user",
+  "cart",
+  "cravepulse_favs",
+  "cravepulse_notifications",
+  "cravepulse_rider_name",
+  "cravepulse_rider_phone",
+  "cravepulse_rider_avatar",
+  "cravepulse_rider_vehicle",
+  "cravepulse_hub",
+  "cravepulse_recent_searches",
+].forEach((key) => localStorage.removeItem(key));
 location.reload();
 ```
 

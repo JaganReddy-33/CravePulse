@@ -49,9 +49,7 @@ const PriceBreakdownModal = ({ show, onClose, billDetails }) => {
                   <i className="bi bi-shield-check"></i>
                 </div>
                 <div>
-                  <h5 className="modal-title fw-bold mb-1">
-                    Radical Price Transparency
-                  </h5>
+                  <h5 className="modal-title fw-bold mb-1">Radical Price Transparency</h5>
                   <p className="text-muted small mb-0">
                     Direct comparison with restaurant dine-in menu prices
                   </p>
@@ -115,15 +113,11 @@ const PriceBreakdownModal = ({ show, onClose, billDetails }) => {
                         <td>
                           <div className="fw-bold">{item.name}</div>
                           {item.variantName && (
-                            <small className="text-muted">
-                              {item.variantName}
-                            </small>
+                            <small className="text-muted">{item.variantName}</small>
                           )}
                         </td>
                         <td className="text-center">{item.quantity}</td>
-                        <td className="text-end text-muted">
-                          ₹{item.dineInPrice}
-                        </td>
+                        <td className="text-end text-muted">₹{item.dineInPrice}</td>
                         <td className="text-end fw-bold">₹{item.unitPrice}</td>
                         <td className="text-end">
                           {item.hasPriceParity ? (
@@ -149,21 +143,16 @@ const PriceBreakdownModal = ({ show, onClose, billDetails }) => {
               <div className="list-group list-group-flush rounded-3 border">
                 <div className="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <div className="fw-semibold">
-                      100% to Restaurant Kitchen
-                    </div>
+                    <div className="fw-semibold">100% to Restaurant Kitchen</div>
                     <small className="text-muted">
-                      Direct compensation for fresh ingredients and culinary
-                      preparation
+                      Direct compensation for fresh ingredients and culinary preparation
                     </small>
                   </div>
                   <span className="fw-bold">₹{subtotal}</span>
                 </div>
                 <div className="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <div className="fw-semibold">
-                      Tamper-Evident Thermal Packaging
-                    </div>
+                    <div className="fw-semibold">Tamper-Evident Thermal Packaging</div>
                     <small className="text-muted">
                       Leak-proof, insulated, food-safe containers
                     </small>
@@ -172,33 +161,25 @@ const PriceBreakdownModal = ({ show, onClose, billDetails }) => {
                 </div>
                 <div className="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <div className="fw-semibold">
-                      Delivery Partner Distance Fare
-                    </div>
+                    <div className="fw-semibold">Delivery Partner Distance Fare</div>
                     <small className="text-muted">
-                      100% paid to rider based on distance and honest wait-time
-                      compensation
+                      100% paid to rider based on distance and honest wait-time compensation
                     </small>
                   </div>
                   <span className="fw-bold">₹{deliveryFee}</span>
                 </div>
                 <div className="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <div className="fw-semibold">
-                      Platform Convenience & Live Tracking Fee
-                    </div>
+                    <div className="fw-semibold">Platform Convenience & Live Tracking Fee</div>
                     <small className="text-muted">
-                      Subsidizes cloud maps, real-time GPS streaming, and
-                      payment security
+                      Subsidizes cloud maps, real-time GPS streaming, and payment security
                     </small>
                   </div>
                   <span className="fw-bold">₹{platformFee}</span>
                 </div>
                 <div className="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div>
-                    <div className="fw-semibold">
-                      Government Restaurant GST (5%)
-                    </div>
+                    <div className="fw-semibold">Government Restaurant GST (5%)</div>
                     <small className="text-muted">
                       Direct tax remittance (2.5% CGST + 2.5% SGST)
                     </small>
@@ -219,11 +200,7 @@ const PriceBreakdownModal = ({ show, onClose, billDetails }) => {
             </div>
 
             <div className="modal-footer border-0 bg-light p-3">
-              <button
-                type="button"
-                className="btn btn-secondary px-4 rounded-3"
-                onClick={onClose}
-              >
+              <button type="button" className="btn btn-secondary px-4 rounded-3" onClick={onClose}>
                 Close Explainer
               </button>
             </div>

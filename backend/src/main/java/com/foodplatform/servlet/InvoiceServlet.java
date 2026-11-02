@@ -7,7 +7,6 @@ import com.foodplatform.model.OrderItem;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -32,8 +31,7 @@ public class InvoiceServlet extends BaseServlet {
                     try {
                         orderId = Long.parseLong(parts[i + 1]);
                         break;
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
@@ -58,7 +56,15 @@ public class InvoiceServlet extends BaseServlet {
     }
 
     private static String html(Object value) {
-        return value == null ? "" : value.toString().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+        return value == null
+            ? ""
+            : value
+                  .toString()
+                  .replace("&", "&amp;")
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;")
+                  .replace("\"", "&quot;")
+                  .replace("'", "&#39;");
     }
 
     public static void renderInvoiceHtml(Order order, HttpServletResponse res) throws IOException {
@@ -70,67 +76,171 @@ public class InvoiceServlet extends BaseServlet {
         BigDecimal sgst = cgst;
 
         out.println("<!DOCTYPE html>");
-        out.println("<html><head><meta charset='UTF-8'><title>Order Receipt - " + html(order.getOrderNumber()) + "</title>");
+        out.println(
+            "<html><head><meta charset='UTF-8'><title>Order Receipt - " +
+                html(order.getOrderNumber()) +
+                "</title>"
+        );
         out.println("<style>");
-        out.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #1e293b; background: #fff; }");
-        out.println(".invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }");
-        out.println(".header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }");
-        out.println(".logo { font-size: 26px; font-weight: 800; color: #ff5722; letter-spacing: -0.5px; }");
-        out.println(".badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }");
-        out.println(".info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin: 25px 0; font-size: 14px; line-height: 1.6; }");
+        out.println(
+            "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #1e293b; background: #fff; }"
+        );
+        out.println(
+            ".invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }"
+        );
+        out.println(
+            ".header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }"
+        );
+        out.println(
+            ".logo { font-size: 26px; font-weight: 800; color: #ff5722; letter-spacing: -0.5px; }"
+        );
+        out.println(
+            ".badge { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }"
+        );
+        out.println(
+            ".info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin: 25px 0; font-size: 14px; line-height: 1.6; }"
+        );
         out.println("table { width: 100%; border-collapse: collapse; margin-top: 20px; }");
-        out.println("th { background: #f8fafc; text-align: left; padding: 12px; font-size: 13px; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; }");
+        out.println(
+            "th { background: #f8fafc; text-align: left; padding: 12px; font-size: 13px; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; }"
+        );
         out.println("td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }");
-        out.println(".totals { margin-top: 20px; width: min(350px, 100%); margin-left: auto; font-size: 14px; }");
-        out.println(".totals-row { display: flex; justify-content: space-between; padding: 6px 0; color: #475569; }");
-        out.println(".totals-grand { font-size: 18px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; padding-top: 10px; margin-top: 10px; }");
-        out.println(".guarantee-box { margin-top: 30px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 10px; }");
-        out.println(".print-btn { background: #ff5722; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }");
-        out.println("@media print { .print-btn { display: none; } body { margin: 0; } .invoice-box { border: none; box-shadow: none; padding: 0; } }");
+        out.println(
+            ".totals { margin-top: 20px; width: min(350px, 100%); margin-left: auto; font-size: 14px; }"
+        );
+        out.println(
+            ".totals-row { display: flex; justify-content: space-between; padding: 6px 0; color: #475569; }"
+        );
+        out.println(
+            ".totals-grand { font-size: 18px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; padding-top: 10px; margin-top: 10px; }"
+        );
+        out.println(
+            ".guarantee-box { margin-top: 30px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 10px; }"
+        );
+        out.println(
+            ".print-btn { background: #ff5722; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }"
+        );
+        out.println(
+            "@media print { .print-btn { display: none; } body { margin: 0; } .invoice-box { border: none; box-shadow: none; padding: 0; } }"
+        );
         out.println("</style></head><body>");
 
         out.println("<div class='invoice-box'>");
         out.println("<button class='print-btn' onclick='window.print()'>🖨️ Print Invoice</button>");
         out.println("<div class='header'>");
-        out.println("<div><div class='logo'>CravePulse Platform</div><div style='font-size: 13px; color: #64748b;'>Order Receipt</div></div>");
-        out.println("<div style='text-align: right;'><span class='badge'>Payment status: " + html(order.getPaymentStatus()) + "</span><div style='font-weight: 700; margin-top: 5px;'>" + html(order.getOrderNumber()) + "</div><div style='font-size: 12px; color: #94a3b8;'>" + (order.getCreatedAt() != null ? order.getCreatedAt() : "") + "</div></div>");
+        out.println(
+            "<div><div class='logo'>CravePulse Platform</div><div style='font-size: 13px; color: #64748b;'>Order Receipt</div></div>"
+        );
+        out.println(
+            "<div style='text-align: right;'><span class='badge'>Payment status: " +
+                html(order.getPaymentStatus()) +
+                "</span><div style='font-weight: 700; margin-top: 5px;'>" +
+                html(order.getOrderNumber()) +
+                "</div><div style='font-size: 12px; color: #94a3b8;'>" +
+                (order.getCreatedAt() != null ? order.getCreatedAt() : "") +
+                "</div></div>"
+        );
         out.println("</div>");
 
         out.println("<div class='info-grid'>");
-        out.println("<div><strong>Billed From:</strong><br>" + (order.getRestaurantName() != null ? html(order.getRestaurantName()) : "Restaurant Partner") + "</div>");
-        out.println("<div><strong>Delivered To:</strong><br>" + (order.getCustomerName() != null ? html(order.getCustomerName()) : "Customer") + "<br>Phone: " + (order.getCustomerPhone() != null ? html(order.getCustomerPhone()) : "N/A") + "<br>" + (order.getDeliveryAddressText() != null ? html(order.getDeliveryAddressText()) : "") + "</div>");
+        out.println(
+            "<div><strong>Billed From:</strong><br>" +
+                (order.getRestaurantName() != null
+                    ? html(order.getRestaurantName())
+                    : "Restaurant Partner") +
+                "</div>"
+        );
+        out.println(
+            "<div><strong>Delivered To:</strong><br>" +
+                (order.getCustomerName() != null ? html(order.getCustomerName()) : "Customer") +
+                "<br>Phone: " +
+                (order.getCustomerPhone() != null ? html(order.getCustomerPhone()) : "N/A") +
+                "<br>" +
+                (order.getDeliveryAddressText() != null
+                    ? html(order.getDeliveryAddressText())
+                    : "") +
+                "</div>"
+        );
         out.println("</div>");
 
-        out.println("<table><thead><tr><th>Item Description</th><th>Variant / Addons</th><th>Qty</th><th>Price</th><th style='text-align: right;'>Amount</th></tr></thead><tbody>");
+        out.println(
+            "<table><thead><tr><th>Item Description</th><th>Variant / Addons</th><th>Qty</th><th>Price</th><th style='text-align: right;'>Amount</th></tr></thead><tbody>"
+        );
         if (order.getItems() != null) {
             for (OrderItem it : order.getItems()) {
                 out.println("<tr>");
                 out.println("<td><strong>" + html(it.getItemName()) + "</strong></td>");
-                out.println("<td style='color: #64748b; font-size: 12px;'>" + (it.getVariantName() != null ? html(it.getVariantName()) : "-") + (it.getAddonNames() != null ? "<br>+ " + it.getAddonNames() : "") + "</td>");
+                out.println(
+                    "<td style='color: #64748b; font-size: 12px;'>" +
+                        (it.getVariantName() != null ? html(it.getVariantName()) : "-") +
+                        (it.getAddonNames() != null ? "<br>+ " + it.getAddonNames() : "") +
+                        "</td>"
+                );
                 out.println("<td>" + it.getQuantity() + "</td>");
                 out.println("<td>₹" + it.getUnitPrice() + "</td>");
-                out.println("<td style='text-align: right; font-weight: 600;'>₹" + it.getTotalPrice() + "</td>");
+                out.println(
+                    "<td style='text-align: right; font-weight: 600;'>₹" +
+                        it.getTotalPrice() +
+                        "</td>"
+                );
                 out.println("</tr>");
             }
         }
         out.println("</tbody></table>");
 
         out.println("<div class='totals'>");
-        out.println("<div class='totals-row'><span>Item Subtotal:</span><span>₹" + order.getSubtotal() + "</span></div>");
-        if (order.getCouponDiscount() != null && order.getCouponDiscount().compareTo(BigDecimal.ZERO) > 0) {
-            out.println("<div class='totals-row' style='color: #16a34a;'><span>Coupon Discount:</span><span>-₹" + order.getCouponDiscount() + "</span></div>");
+        out.println(
+            "<div class='totals-row'><span>Item Subtotal:</span><span>₹" +
+                order.getSubtotal() +
+                "</span></div>"
+        );
+        if (
+            order.getCouponDiscount() != null &&
+            order.getCouponDiscount().compareTo(BigDecimal.ZERO) > 0
+        ) {
+            out.println(
+                "<div class='totals-row' style='color: #16a34a;'><span>Coupon Discount:</span><span>-₹" +
+                    order.getCouponDiscount() +
+                    "</span></div>"
+            );
         }
-        out.println("<div class='totals-row'><span>Packaging Fee:</span><span>₹" + (order.getPackagingFee() != null ? order.getPackagingFee() : BigDecimal.ZERO) + "</span></div>");
-        out.println("<div class='totals-row'><span>Delivery Partner Fee:</span><span>₹" + (order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO) + "</span></div>");
-        out.println("<div class='totals-row'><span>Platform Convenience Fee:</span><span>₹" + (order.getPlatformFee() != null ? order.getPlatformFee() : BigDecimal.ZERO) + "</span></div>");
-        out.println("<div class='totals-row'><span>CGST (2.5%):</span><span>₹" + cgst + "</span></div>");
-        out.println("<div class='totals-row'><span>SGST (2.5%):</span><span>₹" + sgst + "</span></div>");
-        out.println("<div class='totals-row totals-grand'><span>Order Total (" + html(order.getPaymentMode()) + "):</span><span>₹" + order.getTotalAmount() + "</span></div>");
+        out.println(
+            "<div class='totals-row'><span>Packaging Fee:</span><span>₹" +
+                (order.getPackagingFee() != null ? order.getPackagingFee() : BigDecimal.ZERO) +
+                "</span></div>"
+        );
+        out.println(
+            "<div class='totals-row'><span>Delivery Partner Fee:</span><span>₹" +
+                (order.getDeliveryFee() != null ? order.getDeliveryFee() : BigDecimal.ZERO) +
+                "</span></div>"
+        );
+        out.println(
+            "<div class='totals-row'><span>Platform Convenience Fee:</span><span>₹" +
+                (order.getPlatformFee() != null ? order.getPlatformFee() : BigDecimal.ZERO) +
+                "</span></div>"
+        );
+        out.println(
+            "<div class='totals-row'><span>CGST (2.5%):</span><span>₹" + cgst + "</span></div>"
+        );
+        out.println(
+            "<div class='totals-row'><span>SGST (2.5%):</span><span>₹" + sgst + "</span></div>"
+        );
+        out.println(
+            "<div class='totals-row totals-grand'><span>Order Total (" +
+                html(order.getPaymentMode()) +
+                "):</span><span>₹" +
+                order.getTotalAmount() +
+                "</span></div>"
+        );
         out.println("</div>");
 
         out.println("<div class='guarantee-box'>");
         out.println("<span style='font-size: 20px;'>🛡️</span>");
-        out.println("<div><strong>Order details:</strong> This receipt reflects recorded order amounts. Delivery partner: " + (order.getRiderName() != null ? html(order.getRiderName()) : "Partner Rider") + ".</div>");
+        out.println(
+            "<div><strong>Order details:</strong> This receipt reflects recorded order amounts. Delivery partner: " +
+                (order.getRiderName() != null ? html(order.getRiderName()) : "Partner Rider") +
+                ".</div>"
+        );
         out.println("</div>");
 
         out.println("</div></body></html>");

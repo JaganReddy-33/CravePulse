@@ -1,5 +1,8 @@
 package com.foodplatform;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.foodplatform.dao.OrderMessageDao;
 import com.foodplatform.dao.RestaurantDao;
 import com.foodplatform.dao.RiderDao;
@@ -12,6 +15,11 @@ import com.foodplatform.websocket.RealtimeSessionRegistry;
 import jakarta.websocket.CloseReason;
 import jakarta.websocket.RemoteEndpoint;
 import jakarta.websocket.Session;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,30 +27,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 public class RealtimeSecurityDepthTest {
 
     @Mock
     private RealtimeSessionRegistry registry;
+
     @Mock
     private RiderDao riderDao;
+
     @Mock
     private RestaurantDao restaurantDao;
+
     @Mock
     private OrderMessageDao orderMessageDao;
+
     @Mock
     private UserDao userDao;
+
     @Mock
     private Session session;
+
     @Mock
     private RemoteEndpoint.Basic basicRemote;
 
@@ -51,7 +56,13 @@ public class RealtimeSecurityDepthTest {
 
     @BeforeEach
     void setUp() {
-        endpoint = new RealtimeEndpoint(registry, riderDao, restaurantDao, orderMessageDao, userDao);
+        endpoint = new RealtimeEndpoint(
+            registry,
+            riderDao,
+            restaurantDao,
+            orderMessageDao,
+            userDao
+        );
         sessionProperties = new HashMap<>();
         lenient().when(session.getUserProperties()).thenReturn(sessionProperties);
         lenient().when(session.isOpen()).thenReturn(true);
@@ -85,7 +96,9 @@ public class RealtimeSecurityDepthTest {
 
         // Order subscription requires chat/order membership check
         when(orderMessageDao.isUserAllowedInOrderChat(501L, customerUserId, role)).thenReturn(true);
-        when(orderMessageDao.isUserAllowedInOrderChat(502L, customerUserId, role)).thenReturn(false);
+        when(orderMessageDao.isUserAllowedInOrderChat(502L, customerUserId, role)).thenReturn(
+            false
+        );
 
         assertTrue(endpoint.isAuthorizedForChannel(customerUserId, role, "order:501"));
         assertFalse(endpoint.isAuthorizedForChannel(customerUserId, role, "order:502"));
@@ -144,7 +157,9 @@ public class RealtimeSecurityDepthTest {
     }
 
     @Test
-    @DisplayName("WebSocket Rate Limiter permits 40 messages and throttles 41st message within 10s window")
+    @DisplayName(
+        "WebSocket Rate Limiter permits 40 messages and throttles 41st message within 10s window"
+    )
     void testWebSocketRateLimiterSlidingWindow() throws IOException {
         for (int i = 1; i <= 40; i++) {
             boolean allowed = endpoint.checkRateLimit(session);
@@ -167,9 +182,12 @@ public class RealtimeSecurityDepthTest {
 
         endpoint.onMessage(largePayload.toString(), session);
 
-        verify(session, times(1)).close(argThat(closeReason ->
-                closeReason.getCloseCode().getCode() == CloseReason.CloseCodes.TOO_BIG.getCode()
-        ));
+        verify(session, times(1)).close(
+            argThat(
+                closeReason ->
+                    closeReason.getCloseCode().getCode() == CloseReason.CloseCodes.TOO_BIG.getCode()
+            )
+        );
     }
 
     @Test
