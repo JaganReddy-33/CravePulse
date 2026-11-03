@@ -3,53 +3,32 @@
 -- Database: MySQL 8.0+
 -- Migration: V1__init.sql
 -- ==============================================================================
-SET
-    FOREIGN_KEY_CHECKS = 0;
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS wallet_transactions;
-
 DROP TABLE IF EXISTS notifications;
-
 DROP TABLE IF EXISTS reviews;
-
 DROP TABLE IF EXISTS disputes;
-
 DROP TABLE IF EXISTS payments;
-
 DROP TABLE IF EXISTS rider_location_logs;
-
 DROP TABLE IF EXISTS delivery_dispatches;
-
 DROP TABLE IF EXISTS order_events;
-
 DROP TABLE IF EXISTS order_items;
-
 DROP TABLE IF EXISTS orders;
-
 DROP TABLE IF EXISTS rider_profiles;
-
 DROP TABLE IF EXISTS coupons;
-
 DROP TABLE IF EXISTS menu_item_addons;
-
 DROP TABLE IF EXISTS menu_item_variants;
-
 DROP TABLE IF EXISTS menu_items;
-
 DROP TABLE IF EXISTS menu_categories;
-
 DROP TABLE IF EXISTS restaurant_profiles;
-
 DROP TABLE IF EXISTS user_addresses;
-
 DROP TABLE IF EXISTS user_tokens;
-
 DROP TABLE IF EXISTS platform_settings;
-
 DROP TABLE IF EXISTS users;
 
-SET
-    FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Users Table (Customer, Restaurant Owner, Delivery Rider, Admin Ops)
 CREATE TABLE users (
@@ -63,12 +42,12 @@ CREATE TABLE users (
     failed_attempts INT NOT NULL DEFAULT 0,
     locked_until TIMESTAMP NULL DEFAULT NULL,
     avatar_url VARCHAR(500) DEFAULT NULL,
-    wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    wallet_balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_role (role),
     INDEX idx_user_status (status)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. User Refresh Tokens
 CREATE TABLE user_tokens (
@@ -78,9 +57,9 @@ CREATE TABLE user_tokens (
     expires_at TIMESTAMP NOT NULL,
     revoked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_token_lookup (refresh_token, revoked)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Customer Address Book
 CREATE TABLE user_addresses (
@@ -97,9 +76,9 @@ CREATE TABLE user_addresses (
     maps_url VARCHAR(500) DEFAULT NULL,
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_addr_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_addr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user_addresses (user_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Restaurant Profiles (with Overload Protection & Price Parity config)
 CREATE TABLE restaurant_profiles (
@@ -131,10 +110,10 @@ CREATE TABLE restaurant_profiles (
     is_kyc_approved BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_restaurant_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_restaurant_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_rest_geo (latitude, longitude),
     INDEX idx_rest_open (is_open, is_auto_throttled)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. Menu Categories
 CREATE TABLE menu_categories (
@@ -144,9 +123,9 @@ CREATE TABLE menu_categories (
     display_order INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_cat_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles (id) ON DELETE CASCADE,
+    CONSTRAINT fk_cat_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles(id) ON DELETE CASCADE,
     INDEX idx_cat_rest (restaurant_id, display_order)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Menu Items (with Radical Price Transparency: Dine-In vs Platform Price)
 CREATE TABLE menu_items (
@@ -166,11 +145,11 @@ CREATE TABLE menu_items (
     total_orders INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_item_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles (id) ON DELETE CASCADE,
-    CONSTRAINT fk_item_category FOREIGN KEY (category_id) REFERENCES menu_categories (id) ON DELETE CASCADE,
+    CONSTRAINT fk_item_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles(id) ON DELETE CASCADE,
+    CONSTRAINT fk_item_category FOREIGN KEY (category_id) REFERENCES menu_categories(id) ON DELETE CASCADE,
     INDEX idx_item_rest (restaurant_id, is_available),
     INDEX idx_item_cat (category_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. Item Variants (e.g., Small, Medium, Large)
 CREATE TABLE menu_item_variants (
@@ -180,8 +159,8 @@ CREATE TABLE menu_item_variants (
     price_adjustment DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_variant_item FOREIGN KEY (menu_item_id) REFERENCES menu_items (id) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+    CONSTRAINT fk_variant_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Item Add-ons (e.g., Extra Cheese, Sauce, Fries)
 CREATE TABLE menu_item_addons (
@@ -190,8 +169,8 @@ CREATE TABLE menu_item_addons (
     addon_name VARCHAR(100) NOT NULL,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_addon_item FOREIGN KEY (menu_item_id) REFERENCES menu_items (id) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+    CONSTRAINT fk_addon_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. Coupons and Discounts
 CREATE TABLE coupons (
@@ -208,7 +187,7 @@ CREATE TABLE coupons (
     times_used INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 10. Rider Profiles (with Fair Pay stats & real-time telemetry)
 CREATE TABLE rider_profiles (
@@ -229,9 +208,9 @@ CREATE TABLE rider_profiles (
     wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_rider_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_rider_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_rider_status (is_online, is_available)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 11. Orders Table (Comprehensive state machine, ETA engine confidence & SLA goodwill tracking)
 CREATE TABLE orders (
@@ -241,17 +220,7 @@ CREATE TABLE orders (
     restaurant_id BIGINT NOT NULL,
     rider_id BIGINT DEFAULT NULL,
     delivery_address_id BIGINT NOT NULL,
-    status ENUM(
-        'PLACED',
-        'ACCEPTED',
-        'PREPARING',
-        'READY',
-        'PICKED_UP',
-        'DELIVERED',
-        'CANCELLED',
-        'REJECTED',
-        'REFUNDED'
-    ) NOT NULL DEFAULT 'PLACED',
+    status ENUM('PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP', 'DELIVERED', 'CANCELLED', 'REJECTED', 'REFUNDED') NOT NULL DEFAULT 'PLACED',
     subtotal DECIMAL(10, 2) NOT NULL,
     restaurant_discount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     coupon_id BIGINT DEFAULT NULL,
@@ -273,16 +242,16 @@ CREATE TABLE orders (
     cancellation_reason VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_order_cust FOREIGN KEY (customer_id) REFERENCES users (id),
-    CONSTRAINT fk_order_rest FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles (id),
-    CONSTRAINT fk_order_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles (id),
-    CONSTRAINT fk_order_addr FOREIGN KEY (delivery_address_id) REFERENCES user_addresses (id),
-    CONSTRAINT fk_order_coupon FOREIGN KEY (coupon_id) REFERENCES coupons (id),
+    CONSTRAINT fk_order_cust FOREIGN KEY (customer_id) REFERENCES users(id),
+    CONSTRAINT fk_order_rest FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles(id),
+    CONSTRAINT fk_order_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles(id),
+    CONSTRAINT fk_order_addr FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id),
+    CONSTRAINT fk_order_coupon FOREIGN KEY (coupon_id) REFERENCES coupons(id),
     INDEX idx_order_cust_status (customer_id, status),
     INDEX idx_order_rest_status (restaurant_id, status),
     INDEX idx_order_rider_status (rider_id, status),
     INDEX idx_order_created (created_at)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. Order Items
 CREATE TABLE order_items (
@@ -296,10 +265,10 @@ CREATE TABLE order_items (
     total_price DECIMAL(10, 2) NOT NULL,
     addon_names TEXT DEFAULT NULL,
     addon_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    CONSTRAINT fk_oi_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
-    CONSTRAINT fk_oi_item FOREIGN KEY (menu_item_id) REFERENCES menu_items (id),
+    CONSTRAINT fk_oi_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_oi_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id),
     INDEX idx_oi_order (order_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Order Events Audit Trail
 CREATE TABLE order_events (
@@ -312,9 +281,9 @@ CREATE TABLE order_events (
     latitude DECIMAL(10, 7) DEFAULT NULL,
     longitude DECIMAL(10, 7) DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_event_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     INDEX idx_event_order (order_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 14. Delivery Dispatches (Fair-Pay Protocol: Upfront breakdowns, wait-time compensation, zero-penalty rejection)
 CREATE TABLE delivery_dispatches (
@@ -332,11 +301,11 @@ CREATE TABLE delivery_dispatches (
     wait_time_minutes INT NOT NULL DEFAULT 0,
     wait_time_pay DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     rejection_reason VARCHAR(255) DEFAULT NULL,
-    CONSTRAINT fk_dispatch_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
-    CONSTRAINT fk_dispatch_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles (id) ON DELETE CASCADE,
+    CONSTRAINT fk_dispatch_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dispatch_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles(id) ON DELETE CASCADE,
     INDEX idx_dispatch_status (dispatch_status),
     INDEX idx_dispatch_order (order_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 15. Real-Time Rider Telemetry Logs
 CREATE TABLE rider_location_logs (
@@ -348,9 +317,9 @@ CREATE TABLE rider_location_logs (
     speed DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
     heading DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
     logged_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_log_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles (id) ON DELETE CASCADE,
+    CONSTRAINT fk_log_rider FOREIGN KEY (rider_id) REFERENCES rider_profiles(id) ON DELETE CASCADE,
     INDEX idx_log_rider (rider_id, logged_at)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 16. Payment Gateway Ledger
 CREATE TABLE payments (
@@ -367,22 +336,16 @@ CREATE TABLE payments (
     raw_response TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     INDEX idx_payment_order (order_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. Instant Dispute Resolution (Photo evidence, rule-based auto-refunds, admin escalation)
 CREATE TABLE disputes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_id BIGINT NOT NULL,
     customer_id BIGINT NOT NULL,
-    issue_type ENUM(
-        'MISSING_ITEM',
-        'SPOILED_FOOD',
-        'WRONG_ITEM',
-        'SEVERE_DELAY',
-        'SPILLAGE'
-    ) NOT NULL,
+    issue_type ENUM('MISSING_ITEM', 'SPOILED_FOOD', 'WRONG_ITEM', 'SEVERE_DELAY', 'SPILLAGE') NOT NULL,
     description TEXT NOT NULL,
     photo_evidence_url VARCHAR(500) DEFAULT NULL,
     requested_refund_amount DECIMAL(10, 2) NOT NULL,
@@ -392,10 +355,10 @@ CREATE TABLE disputes (
     resolved_by_user_id BIGINT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP NULL DEFAULT NULL,
-    CONSTRAINT fk_dispute_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
-    CONSTRAINT fk_dispute_customer FOREIGN KEY (customer_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_dispute_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dispute_customer FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_dispute_status (admin_status)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 18. Multi-Dimensional Customer Reviews (Food, Packaging, Delivery)
 CREATE TABLE reviews (
@@ -410,11 +373,11 @@ CREATE TABLE reviews (
     review_text TEXT DEFAULT NULL,
     reply_text TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_review_order FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_customer FOREIGN KEY (customer_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_rest FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles (id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_customer FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_rest FOREIGN KEY (restaurant_id) REFERENCES restaurant_profiles(id) ON DELETE CASCADE,
     INDEX idx_review_rest (restaurant_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 19. Persistent Notification Center
 CREATE TABLE notifications (
@@ -426,9 +389,9 @@ CREATE TABLE notifications (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     reference_id VARCHAR(100) DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_notif_user_unread (user_id, is_read)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 20. Customer & Rider Wallet Transaction Ledger
 CREATE TABLE wallet_transactions (
@@ -440,9 +403,9 @@ CREATE TABLE wallet_transactions (
     reference_order_id BIGINT DEFAULT NULL,
     balance_after DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_wallet_user (user_id)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 21. Dynamic Platform Settings
 CREATE TABLE platform_settings (
@@ -451,4 +414,4 @@ CREATE TABLE platform_settings (
     config_value VARCHAR(255) NOT NULL,
     description VARCHAR(255) DEFAULT NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
