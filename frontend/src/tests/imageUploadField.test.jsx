@@ -72,4 +72,42 @@ describe("ImageUploadField", () => {
     expect(api.post).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("accepts HTTPS image URLs when enabled", () => {
+    const onChange = vi.fn();
+    render(
+      <ImageUploadField
+        id="restaurant-banner"
+        label="Restaurant banner"
+        purpose="restaurant-banner"
+        value=""
+        onChange={onChange}
+        allowUrl
+      />,
+    );
+
+    const urlInput = screen.getByLabelText("Or paste an image URL");
+    fireEvent.change(urlInput, {
+      target: { value: "https://images.example.com/restaurant.jpg" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith("https://images.example.com/restaurant.jpg");
+    expect(urlInput.checkValidity()).toBe(true);
+  });
+
+  it("rejects non-HTTPS image URLs when enabled", () => {
+    render(
+      <ImageUploadField
+        id="menu-item"
+        label="Dish photo"
+        purpose="menu-item"
+        value="http://images.example.com/dish.jpg"
+        onChange={vi.fn()}
+        allowUrl
+      />,
+    );
+
+    const urlInput = screen.getByLabelText("Or paste an image URL");
+    expect(urlInput.checkValidity()).toBe(false);
+  });
 });

@@ -3,6 +3,7 @@ package com.foodplatform.servlet;
 import com.foodplatform.dao.MenuDao;
 import com.foodplatform.daoImpl.MenuDaoImpl;
 import com.foodplatform.model.MenuItem;
+import com.foodplatform.util.ImageUrlValidator;
 import com.foodplatform.util.JsonUtil;
 import com.google.gson.JsonObject;
 import jakarta.servlet.annotation.WebServlet;
@@ -152,6 +153,19 @@ public class MenuServlet extends BaseServlet {
             }
             if (!requireRestaurantOwner(req, res, item.getRestaurantId())) return;
             if (
+                item.getImageUrl() != null &&
+                !item.getImageUrl().isBlank() &&
+                !ImageUrlValidator.isValidHttpsUrl(item.getImageUrl())
+            ) {
+                JsonUtil.sendError(
+                    res,
+                    400,
+                    "imageUrl must be a valid HTTPS image URL no longer than 500 characters"
+                );
+                return;
+            }
+            if (item.getImageUrl() != null) item.setImageUrl(item.getImageUrl().trim());
+            if (
                 !menuDao.categoryBelongsToRestaurant(item.getCategoryId(), item.getRestaurantId())
             ) {
                 JsonUtil.sendError(
@@ -185,6 +199,7 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (!validateImageUrlIfChanged(requestBody, existing, res)) return;
             MenuItem update =
                 requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
@@ -356,6 +371,7 @@ public class MenuServlet extends BaseServlet {
             if (!requireRestaurantOwner(req, res, existing.getRestaurantId())) return;
 
             JsonObject requestBody = JsonUtil.readRequestBody(req, JsonObject.class);
+            if (!validateImageUrlIfChanged(requestBody, existing, res)) return;
             MenuItem update =
                 requestBody == null ? null : applyUpdateDefaults(requestBody, existing, itemId);
             if (update != null) {
@@ -367,6 +383,32 @@ public class MenuServlet extends BaseServlet {
         JsonUtil.sendError(res, 404, "Endpoint not found: " + path);
     }
 
+    private boolean validateImageUrlIfChanged(
+        JsonObject requestBody,
+        MenuItem existing,
+        HttpServletResponse response
+    ) throws IOException {
+        if (
+            requestBody == null ||
+            !requestBody.has("imageUrl") ||
+            requestBody.get("imageUrl").isJsonNull()
+        ) return true;
+
+        String imageUrl = requestBody.get("imageUrl").getAsString().trim();
+        if (
+            imageUrl.isBlank() ||
+            imageUrl.equals(existing.getImageUrl()) ||
+            ImageUrlValidator.isValidHttpsUrl(imageUrl)
+        ) return true;
+
+        JsonUtil.sendError(
+            response,
+            400,
+            "imageUrl must be a valid HTTPS image URL no longer than 500 characters"
+        );
+        return false;
+    }
+
     static MenuItem applyUpdateDefaults(JsonObject requestBody, MenuItem existing, Long itemId) {
         MenuItem update = JsonUtil.getGson().fromJson(requestBody, MenuItem.class);
         update.setId(itemId);
@@ -375,6 +417,7 @@ public class MenuServlet extends BaseServlet {
         if (update.getPlatformPrice() == null) update.setPlatformPrice(existing.getPlatformPrice());
         if (update.getDineInPrice() == null) update.setDineInPrice(existing.getDineInPrice());
         if (update.getImageUrl() == null) update.setImageUrl(existing.getImageUrl());
+        else update.setImageUrl(update.getImageUrl().trim());
         if (!requestBody.has("calorieCount")) update.setCalorieCount(existing.getCalorieCount());
         if (update.getPrepTimeMinutes() == null) update.setPrepTimeMinutes(
             existing.getPrepTimeMinutes()

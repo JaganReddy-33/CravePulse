@@ -712,6 +712,7 @@ const MenuManagement = () => {
                           value={imageUrl}
                           onChange={setImageUrl}
                           onUploadingChange={setUploadingImage}
+                          allowUrl
                         />
                       </div>
 
@@ -944,6 +945,7 @@ const MenuManagement = () => {
                           value={editingItem.imageUrl || ""}
                           onChange={(imageUrl) => setEditingItem({ ...editingItem, imageUrl })}
                           onUploadingChange={setUploadingImage}
+                          allowUrl
                         />
                       </div>
 

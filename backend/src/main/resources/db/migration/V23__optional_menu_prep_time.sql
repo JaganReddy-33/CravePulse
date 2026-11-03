@@ -1,1 +1,2 @@
-ALTER TABLE menu_items MODIFY COLUMN prep_time_minutes INT NULL DEFAULT NULL;
+ALTER TABLE menu_items
+MODIFY COLUMN prep_time_minutes INT NULL DEFAULT NULL;

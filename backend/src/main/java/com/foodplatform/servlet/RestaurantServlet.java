@@ -5,6 +5,7 @@ import com.foodplatform.daoImpl.PayoutRequestDaoImpl;
 import com.foodplatform.daoImpl.RestaurantDaoImpl;
 import com.foodplatform.model.Restaurant;
 import com.foodplatform.service.AnalyticsService;
+import com.foodplatform.util.ImageUrlValidator;
 import com.foodplatform.util.JsonUtil;
 import com.foodplatform.websocket.RealtimeSessionRegistry;
 import com.google.gson.JsonObject;
@@ -376,6 +377,19 @@ public class RestaurantServlet extends BaseServlet {
                     body.has("bannerImage") && !body.get("bannerImage").isJsonNull()
                         ? body.get("bannerImage").getAsString()
                         : null;
+                if (banner != null) banner = banner.trim();
+                if (
+                    banner != null &&
+                    !banner.isBlank() &&
+                    !ImageUrlValidator.isValidHttpsUrl(banner)
+                ) {
+                    JsonUtil.sendError(
+                        res,
+                        400,
+                        "bannerImage must be a valid HTTPS image URL no longer than 500 characters"
+                    );
+                    return;
+                }
                 String bankAccount =
                     body.has("bankAccountNumber") && !body.get("bankAccountNumber").isJsonNull()
                         ? body.get("bankAccountNumber").getAsString()

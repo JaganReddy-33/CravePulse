@@ -12,6 +12,7 @@ export default function ImageUploadField({
   onChange,
   onUploadingChange,
   allowClear = true,
+  allowUrl = false,
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -68,6 +69,33 @@ export default function ImageUploadField({
         disabled={uploading}
       />
       <div className="form-text">JPEG, PNG, or WebP; maximum 5 MB.</div>
+      {allowUrl && (
+        <div className="mt-3">
+          <label className="form-label small" htmlFor={`${id}-url`}>
+            Or paste an image URL
+          </label>
+          <input
+            id={`${id}-url`}
+            className="form-control"
+            type="url"
+            inputMode="url"
+            autoComplete="url"
+            maxLength={500}
+            pattern="https://.+"
+            title="Enter a valid HTTPS image URL."
+            placeholder="https://example.com/image.jpg"
+            value={value || ""}
+            onChange={(event) => {
+              setError("");
+              onChange(event.target.value);
+            }}
+            disabled={uploading}
+          />
+          <div className="form-text">
+            Use a direct HTTPS link to an image; a Google Maps place link is not an image URL.
+          </div>
+        </div>
+      )}
       {uploading && (
         <p className="small text-secondary mt-2 mb-0" role="status">
           Uploading image…

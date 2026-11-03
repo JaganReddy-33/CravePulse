@@ -371,7 +371,7 @@ All demo accounts use the password: `Password@123`
 | `VITE_API_URL`           | `/api` locally           | Frontend API base URL; configure the deployed backend origin for production                             |
 | `VITE_WS_URL`            | empty                    | Optional WebSocket URL or backend origin; defaults to the WebSocket endpoint on the configured API host |
 
-Profile photos, restaurant banners, menu photos, and discovery-category images are uploaded through the authenticated backend to Cloudinary. The database stores each returned secure image URL. Configure all three Cloudinary variables in the backend environment (including Render); do not add them to Vercel's `VITE_` variables or commit real credentials.
+Profile photos and discovery-category images are uploaded through the authenticated backend to Cloudinary. Restaurant banners and menu photos support either Cloudinary upload or a direct HTTPS image URL. The database stores image URLs, not image bytes. Configure all three Cloudinary variables in the backend environment (including Render); do not add them to Vercel's `VITE_` variables or commit real credentials.
 
 ---
 

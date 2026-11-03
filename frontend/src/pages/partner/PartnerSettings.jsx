@@ -257,6 +257,7 @@ const PartnerSettings = () => {
                   value={bannerImage}
                   onChange={setBannerImage}
                   onUploadingChange={setUploadingImage}
+                  allowUrl
                 />
               </div>
 
